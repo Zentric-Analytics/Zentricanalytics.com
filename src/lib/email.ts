@@ -1,0 +1,2 @@
+export type EmailEvent = { to: string; subject: string; applicationId: string; portalUrl: string; template: string };
+export async function sendHiringEmail(event: EmailEvent) { console.info('Hiring email queued', { to: event.to, subject: event.subject, applicationId: event.applicationId, template: event.template }); return { provider: process.env.EMAIL_PROVIDER ?? 'console', status: 'queued' as const }; }
