@@ -2,6 +2,8 @@ import { z } from 'zod';
 export const stageStatuses = ['Locked','Available','In Progress','Submitted','Under Review','Approved','Correction Requested','Rejected','Completed'] as const;
 export const applicationStatuses = ['Application Submitted','Screening','Candidate Information Required','Interview Scheduled','Assessment Required','Offer Pending','Offer Sent','Offer Accepted','Agreement Pending','Onboarding Pending','Final Review','Enrollment Completed','Hired','Rejected'] as const;
 export type StageStatus = typeof stageStatuses[number];
+export function isStageStatus(value: unknown): value is StageStatus { return typeof value === 'string' && (stageStatuses as readonly string[]).includes(value); }
+export function toStageStatus(value: unknown, fallback: StageStatus = 'Locked'): StageStatus { return isStageStatus(value) ? value : fallback; }
 export const stages = [
   { order: 1, key: 'initial-application', title: 'Initial Application', applicantAction: 'Submit your first-stage application and signed privacy consent.' },
   { order: 2, key: 'candidate-information', title: 'Candidate Information / Identity Verification', applicantAction: 'Provide HR and identity details after Stage 1 approval.' },
