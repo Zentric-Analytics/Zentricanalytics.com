@@ -27,6 +27,13 @@ export function buildFullLegalName(firstName: string, middleInitial: string | nu
   return [firstName, middleInitial, lastName].map((part) => part?.trim()).filter(Boolean).join(' ');
 }
 
+const mobilePrefixes: Partial<Record<string, RegExp>> = {
+  NG: /^[789][01]\d{8}$/,
+  US: /^[2-9]\d{2}[2-9]\d{6}$/,
+  CA: /^[2-9]\d{2}[2-9]\d{6}$/,
+  GB: /^(?:7\d{9}|[123]\d{8,9})$/,
+};
+
 function stripSelectedDialCode(digits: string, dialDigits: string) {
   return digits.startsWith(dialDigits) ? digits.slice(dialDigits.length) : digits;
 }
@@ -37,25 +44,25 @@ export function normalizePhoneForCountry(iso: string, rawNationalNumber: string)
 
   const raw = rawNationalNumber.trim();
   if (!raw) return { valid: false as const, error: 'Enter a phone number.' };
-  if (!/^[0-9+() .-]+$/.test(raw)) return { valid: false as const, error: 'Enter a valid phone number for the selected country.' };
+  if (!/^[0-9+() .-]+$/.test(raw) || (raw.match(/\+/g)?.length ?? 0) > 1 || (raw.includes('+') && !raw.startsWith('+'))) return { valid: false as const, error: 'Enter a valid phone number for the selected country.' };
 
   const dialDigits = country.dialCode.replace(/\D/g, '');
-  const startsInternational = raw.startsWith('+');
   let national = raw.replace(/\D/g, '');
 
-  if (startsInternational) {
+  if (raw.startsWith('00' + dialDigits)) national = national.slice(dialDigits.length + 2);
+  else if (raw.startsWith('+')) {
     if (!national.startsWith(dialDigits)) return { valid: false as const, error: 'Enter a valid phone number for the selected country.' };
     national = stripSelectedDialCode(national, dialDigits);
   } else if (national.startsWith(dialDigits) && national.length > country.maxLength) {
     national = stripSelectedDialCode(national, dialDigits);
   }
 
-  if (national.startsWith('00' + dialDigits)) national = national.slice(dialDigits.length + 2);
   if (national.startsWith('0') && national.length > country.maxLength) national = national.replace(/^0+/, '');
 
   const validLength = national.length >= country.minLength && national.length <= country.maxLength;
   const repeated = /^(\d)\1+$/.test(national);
-  if (!validLength || repeated) return { valid: false as const, error: 'Enter a valid phone number for the selected country.' };
+  const plausiblePattern = mobilePrefixes[country.iso]?.test(national) ?? true;
+  if (!validLength || repeated || !plausiblePattern) return { valid: false as const, error: 'Enter a valid phone number for the selected country.' };
 
   return { valid: true as const, iso: country.iso, countryName: country.name, dialCode: country.dialCode, nationalNumber: national, e164: `${country.dialCode}${national}` };
 }

@@ -8,12 +8,42 @@ import { savePrivateUpload, validateCvFile } from '@/lib/storage';
 import { sha256 } from '@/lib/security';
 import { createStageRows, nextApplicationId } from '@/lib/workflow';
 import { sendAndRecordEmail } from '@/lib/email';
+import type { Stage1Field, Stage1FormState } from './form-state';
 
-export async function submitStage1Application(formData: FormData) {
-  const file = formData.get('cv') as File;
-  const fileError = validateCvFile(file);
+function valueOf(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === 'string' ? value : '';
+}
+
+function preserveValues(formData: FormData) {
+  return ['firstName','middleInitial','lastName','email','phoneCountryIso','phoneNational','location','role','otherRole','workMode','experienceLevel','skills','portfolioUrl','message','privacyConsent','signatureName','signatureConsent'].reduce<Record<string,string>>((acc, key) => {
+    acc[key] = valueOf(formData, key);
+    return acc;
+  }, {});
+}
+
+function formatFieldErrors(formData: FormData, fileError: string | null) {
   const parsed = initialApplicationSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success || fileError) redirect('/apply?error=validation');
+  const fieldErrors: Partial<Record<Stage1Field,string>> = {};
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) {
+      const field = issue.path[0] as Stage1Field | undefined;
+      if (field && !fieldErrors[field]) fieldErrors[field] = issue.message;
+    }
+  }
+  if (fileError) fieldErrors.cv = fileError;
+  return { parsed, fieldErrors };
+}
+
+export async function submitStage1Application(_previousState: Stage1FormState, formData: FormData): Promise<Stage1FormState> {
+  const fileValue = formData.get('cv');
+  const file = fileValue instanceof File ? fileValue : null;
+  const fileError = validateCvFile(file);
+  const { parsed, fieldErrors } = formatFieldErrors(formData, fileError);
+  if (!parsed.success || fileError || !file) {
+    return { ok: false, message: 'Please correct the highlighted fields.', values: preserveValues(formData), fieldErrors };
+  }
+
   const data = toStage1SubmissionPayload(parsed.data);
   const applicationPublicId = await nextApplicationId();
   const upload = await savePrivateUpload(file, applicationPublicId);
@@ -27,7 +57,7 @@ export async function submitStage1Application(formData: FormData) {
   const stage1 = await prisma.hiringStage.findFirstOrThrow({ where: { applicationId: app.id, stageOrder: 1 } });
   await prisma.hiringStage.update({ where: { id: stage1.id }, data: { submittedAt: new Date(), status: 'Under Review' } });
   const submission = await prisma.stageSubmission.create({ data: { stageId: stage1.id, version: 1, status: 'Under Review', payload: data, submittedAt: new Date() } });
-  const doc = await prisma.uploadedDocument.create({ data: { applicationId: app.id, kind: 'Stage 1 CV', fileName: file.name, mimeType: file.type, sizeBytes: file.size, storageKey: upload.storageKey } });
+  const doc = await prisma.uploadedDocument.create({ data: { applicationId: app.id, kind: 'Stage 1 CV', fileName: file.name, mimeType: file.type || 'application/octet-stream', sizeBytes: file.size, storageKey: upload.storageKey } });
   await prisma.applicantDocument.create({ data: { submissionId: submission.id, uploadedDocumentId: doc.id } });
   await prisma.electronicSignature.create({ data: { submissionId: submission.id, typedName: data.signatureName, confirmed: true, ipHash: sha256(h.get('x-forwarded-for') ?? 'unknown'), userAgent: h.get('user-agent') } });
   await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'applicant', actorRef: data.email.toLowerCase(), action: 'Application submitted', metadata: { applicationId: applicationPublicId } } });
