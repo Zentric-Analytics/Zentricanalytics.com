@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomToken } from './security';
 
@@ -53,6 +53,31 @@ export async function savePrivateUpload(file: File, applicationId: string) {
 
 export async function deletePrivateUpload(storageKey: string, provider = 'local-private') {
   if (provider !== 'local-private') return;
-  const root = process.env.PRIVATE_UPLOAD_ROOT ?? path.join(process.cwd(), '.private-uploads');
-  await rm(path.join(root, storageKey), { force: true });
+  await rm(resolvePrivateUploadPath(storageKey), { force: true });
+}
+
+
+export function privateUploadRoot() {
+  return path.resolve(process.env.PRIVATE_UPLOAD_ROOT ?? path.join(process.cwd(), '.private-uploads'));
+}
+
+export function resolvePrivateUploadPath(storageKey: string) {
+  if (!storageKey || path.isAbsolute(storageKey)) throw new Error('Invalid private upload key.');
+  const root = privateUploadRoot();
+  const resolved = path.resolve(root, storageKey);
+  const relative = path.relative(root, resolved);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('Invalid private upload key.');
+  return resolved;
+}
+
+export async function readPrivateUpload(storageKey: string, provider = 'local-private') {
+  if (provider !== 'local-private') throw new Error(`${provider} storage is configured but no private read adapter is enabled in this build.`);
+  const fullPath = resolvePrivateUploadPath(storageKey);
+  const [buffer, metadata] = await Promise.all([readFile(fullPath), stat(fullPath)]);
+  return { buffer, metadata, sizeBytes: metadata.size };
+}
+
+export function sanitizeDownloadFilename(name: string) {
+  const sanitized = name.replace(/[\/\r\n\0]/g, '_').replace(/[^a-zA-Z0-9._ -]/g, '_').trim();
+  return sanitized || 'document';
 }
