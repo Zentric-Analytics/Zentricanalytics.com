@@ -1,6 +1,6 @@
 import { PageShell } from '@/components/PageShell';
 import { Section } from '@/components/Section';
-import { requestAccessCode, verifyAccessCode } from './actions';
+import { TrackForms } from './TrackForms';
 
 type TrackSearchParams = Promise<Record<string, string | undefined>>;
 
@@ -10,62 +10,14 @@ export default async function Track({ searchParams }: { searchParams: TrackSearc
   return (
     <PageShell>
       <Section eyebrow="Secure tracking" title="Track your application without creating an account.">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <form action={requestAccessCode} className="card space-y-4 p-6">
-            <p>
-              Enter your Application ID and email. If they match, a one-time access code
-              will be sent. For privacy, this page does not reveal whether a record exists.
-            </p>
-
-            {params.requested ? (
-              <p className="rounded-xl bg-green-50 p-3 text-green-700">
-                If the details match our records, an access code has been sent.
-              </p>
-            ) : null}
-
-            <label className="field">
-              Application ID
-              <input
-                className="input"
-                name="applicationId"
-                defaultValue={params.applicationId}
-                placeholder="ZA-APP-2026-00041"
-                required
-              />
-            </label>
-
-            <label className="field">
-              Email
-              <input className="input" name="email" defaultValue={params.email} type="email" required />
-            </label>
-
-            <button className="btn btn-primary" type="submit">
-              Send one-time access code
-            </button>
-          </form>
-
-          <form action={verifyAccessCode} className="card space-y-4 p-6">
-            <h2 className="text-xl font-bold">Enter access code</h2>
-
-            {params.verified === '0' ? (
-              <p className="rounded-xl bg-red-50 p-3 text-red-700">
-                We could not verify that code. Please request a new code if it expired.
-              </p>
-            ) : null}
-
-            <input type="hidden" name="applicationId" value={params.applicationId ?? ''} />
-            <input type="hidden" name="email" value={params.email ?? ''} />
-
-            <label className="field">
-              One-time code
-              <input className="input" name="code" inputMode="numeric" required />
-            </label>
-
-            <button className="btn btn-primary" type="submit">
-              Open candidate portal
-            </button>
-          </form>
-        </div>
+        <TrackForms
+          applicationId={params.applicationId}
+          email={params.email}
+          requested={params.requested === '1'}
+          limited={params.limited === '1'}
+          error={params.error === '1'}
+          verifiedFailed={params.verified === '0'}
+        />
       </Section>
     </PageShell>
   );
