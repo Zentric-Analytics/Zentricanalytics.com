@@ -10,15 +10,29 @@ export const ALLOWED_CV_MIME_TYPES = new Set([
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'image/jpeg',
+  'image/pjpeg',
+  'image/jpg',
   'image/png',
+  'image/x-png',
   'image/webp',
 ]);
+export const ALLOWED_CV_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'webp']);
+const GENERIC_UPLOAD_MIME_TYPES = new Set(['', 'application/octet-stream', 'binary/octet-stream']);
 
-export function validateCvFile(file: File) {
-  if (!file || file.size === 0) return 'CV/resume upload is required.';
-  if (file.size > MAX_CV_BYTES) return 'CV/resume must be 20MB or smaller.';
-  if (!ALLOWED_CV_MIME_TYPES.has(file.type)) return 'CV/resume must be a PDF, DOC, DOCX, JPG, PNG, or WEBP file.';
-  return null;
+function fileExtension(name: string) {
+  return name.split('.').pop()?.toLowerCase() ?? '';
+}
+
+export function validateCvFile(file: File | null | undefined) {
+  if (!file || file.size === 0) return 'Upload your CV/resume or supporting document.';
+  if (file.size > MAX_CV_BYTES) return 'Upload a file that is 20MB or smaller.';
+  const extension = fileExtension(file.name);
+  const extensionAllowed = ALLOWED_CV_EXTENSIONS.has(extension);
+  const mimeAllowed = ALLOWED_CV_MIME_TYPES.has(file.type);
+  const safeFallbackMime = GENERIC_UPLOAD_MIME_TYPES.has(file.type);
+  if (mimeAllowed && extensionAllowed) return null;
+  if (safeFallbackMime && extensionAllowed) return null;
+  return 'Upload a PDF, DOC, DOCX, JPG, JPEG, PNG, or WEBP file.';
 }
 
 export async function savePrivateUpload(file: File, applicationId: string) {
