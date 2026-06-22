@@ -16,7 +16,14 @@ export async function adminStage1Action(formData: FormData) {
     await approveStage1(applicationId, adminEmail, notes);
     const app = await prisma.jobApplication.findUniqueOrThrow({ where: { id: applicationId }, include: { applicant: true } });
     await sendAndRecordEmail({ applicationId, to: app.applicant.email, template: 'stage-2-unlocked', subject: `Next stage unlocked: ${app.applicationId}`, body: `Stage 1 has been approved. Please return to Track Application to continue.` });
-  } else if (action === 'reject') await recordAdminStage1Action(applicationId, 'Rejected', adminEmail, notes);
-  else await recordAdminStage1Action(applicationId, 'Correction Requested', adminEmail, notes);
+  } else if (action === 'reject') {
+    await recordAdminStage1Action(applicationId, 'Rejected', adminEmail, notes);
+    const app = await prisma.jobApplication.findUniqueOrThrow({ where: { id: applicationId }, include: { applicant: true } });
+    await sendAndRecordEmail({ applicationId, to: app.applicant.email, template: 'application-rejected', subject: `Application update: ${app.applicationId}`, body: `Thank you for your interest in Zentric Analytics. We are unable to move your application forward at this time.` });
+  } else {
+    await recordAdminStage1Action(applicationId, 'Correction Requested', adminEmail, notes);
+    const app = await prisma.jobApplication.findUniqueOrThrow({ where: { id: applicationId }, include: { applicant: true } });
+    await sendAndRecordEmail({ applicationId, to: app.applicant.email, template: 'correction-requested', subject: `Correction requested: ${app.applicationId}`, body: `A correction has been requested for your application. Please return to Track Application to review the request.` });
+  }
   revalidatePath('/admin/applications');
 }
