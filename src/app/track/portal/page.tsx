@@ -4,7 +4,7 @@ import { DocumentCard } from '@/components/DocumentCard';
 import { PageShell } from '@/components/PageShell';
 import { Section } from '@/components/Section';
 import { StatusBadge } from '@/components/StatusBadge';
-import { stages as stageDefs } from '@/lib/hiring';
+import { stages as stageDefs, toStageStatus } from '@/lib/hiring';
 import { prisma } from '@/lib/prisma';
 import { sha256 } from '@/lib/security';
 
@@ -100,7 +100,7 @@ export default async function Portal({
                 <span>
                   {definition.order}. {definition.title}
                 </span>
-                <StatusBadge status={stage?.status ?? 'Locked'} />
+                <StatusBadge status={toStageStatus(stage?.status)} />
               </div>
             );
           })}
@@ -109,7 +109,7 @@ export default async function Portal({
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           <DocumentCard
             title="Signed Stage 1 Submitted Form"
-            status={stageOne?.status ?? 'Locked'}
+            status={toStageStatus(stageOne?.status)}
             signed={signed}
             submittedAt={stageOne?.submittedAt?.toISOString()}
           />
