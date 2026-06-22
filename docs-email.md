@@ -31,11 +31,15 @@ Admin access no longer uses URL query-string secrets. Configure:
 - `ADMIN_PASSWORD_HASH` — PBKDF2 hash, never a plaintext password.
 - `ADMIN_SESSION_SECRET` — at least 32 random characters for signed httpOnly admin sessions.
 
-Generate a password hash locally with:
+Generate a password hash locally with this shell-safe command. The plaintext password is used only as the command argument and later in the admin login form; do not store the plaintext password in Render:
 
 ```bash
-node -e "const crypto=require('crypto');const p=process.argv[1];const s=crypto.randomBytes(16).toString('hex');const i=310000;const h=crypto.pbkdf2Sync(p,s,i,32,'sha256').toString('hex');console.log(`pbkdf2_sha256$${i}$${s}$${h}`)" 'replace-with-admin-password'
+node -e "const crypto=require('crypto');const p=process.argv[1];const d=String.fromCharCode(36);const s=crypto.randomBytes(16).toString('hex');const i=310000;const h=crypto.pbkdf2Sync(p,s,i,32,'sha256').toString('hex');console.log(['pbkdf2_sha256',i,s,h].join(d));" "YOUR_NEW_ADMIN_PASSWORD"
 ```
+
+Copy only the generated output beginning with `pbkdf2_sha256$...` into the Render `ADMIN_PASSWORD_HASH` value field. Do not paste `ADMIN_PASSWORD_HASH=` into the value field, and do not wrap any Render admin environment values in single or double quotes. Redeploy or restart the staging service after changing `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`, or `ADMIN_SESSION_SECRET`.
+
+Failed admin login attempts write safe boolean diagnostics to server logs so staging can distinguish email mismatch, malformed hash, password mismatch, and session-secret configuration without logging submitted emails, plaintext passwords, password hashes, salts, session secrets, or session tokens.
 
 Private upload storage:
 
