@@ -181,14 +181,14 @@ export async function submitStage3(formData: FormData) {
   if (!metadata.releasedAt) redirect(portalUrl(session, { error: 'stage3_not_released' }));
   const fileError = upload && upload.size > 0 ? validateCvFile(upload) : metadata.requiresUpload ? 'Upload the requested Stage 3 assessment file.' : null;
   if (fileError) redirect(portalUrl(session, { error: 'stage3_upload_required' }));
-  const saved: Array<{ file: File; kind: string; privateKey: string; provider: string; restricted: boolean }> = [];
+  const saved: Array<{ file: File; kind: string; storageKey: string; provider: string; restricted: boolean }> = [];
   try {
-    if (upload && upload.size > 0) { diagnostics.uploadAttempted = true; const stored = await savePrivateUpload(upload, application.id); saved.push({ file: upload, kind: 'Stage 3 Assessment Upload', privateKey: stored['storage' + 'Key' as keyof typeof stored] as string, provider: stored.provider, restricted: stored.restricted }); diagnostics.uploadSaved = true; }
+    if (upload && upload.size > 0) { diagnostics.uploadAttempted = true; const stored = await savePrivateUpload(upload, application.id); saved.push({ file: upload, kind: 'Stage 3 Assessment Upload', storageKey: stored.storageKey, provider: stored.provider, restricted: stored.restricted }); diagnostics.uploadSaved = true; }
     await prisma.$transaction(async (tx) => {
       const version = await tx.stageSubmission.count({ where: { stageId: stage3.id } }) + 1;
       const submission = await tx.stageSubmission.create({ data: { stageId: stage3.id, version, payload: toStage3SubmissionPayload(parsed.data), status: 'Under Review', submittedAt: new Date() } });
       for (const item of saved) {
-        const uploaded = await tx.uploadedDocument.create({ data: { applicationId: application.id, kind: item.kind, fileName: item.file.name, mimeType: item.file.type || 'application/octet-stream', sizeBytes: item.file.size, provider: item.provider, ['storage' + 'Key']: item.privateKey, restricted: item.restricted } });
+        const uploaded = await tx.uploadedDocument.create({ data: { applicationId: application.id, kind: item.kind, fileName: item.file.name, mimeType: item.file.type || 'application/octet-stream', sizeBytes: item.file.size, provider: item.provider, storageKey: item.storageKey, restricted: item.restricted } });
         await tx.applicantDocument.create({ data: { submissionId: submission.id, uploadedDocumentId: uploaded.id, status: 'Submitted' } });
       }
       await tx.hiringStage.update({ where: { id: stage3.id }, data: { status: 'Under Review', submittedAt: new Date() } });
@@ -198,7 +198,7 @@ export async function submitStage3(formData: FormData) {
     });
     diagnostics.dbWriteSucceeded = true; diagnostics.redirectStatus = 'success'; console.info('candidateStage3SubmitDiagnostics', diagnostics);
   } catch (error) {
-    await Promise.all(saved.map((item) => deletePrivateUpload(item.privateKey, item.provider)));
+    await Promise.all(saved.map((item) => deletePrivateUpload(item.storageKey, item.provider)));
     diagnostics.redirectStatus = 'error'; diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; console.info('candidateStage3SubmitDiagnostics', diagnostics);
     redirect(portalUrl(session, { error: 'stage3_submit_failed' }));
   }
