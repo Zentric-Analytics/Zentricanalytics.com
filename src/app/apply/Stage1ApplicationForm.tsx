@@ -67,11 +67,6 @@ export function Stage1ApplicationForm() {
   return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8">
     {state.message ? <div className="min-w-0 break-words rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{state.message}</div> : null}
 
-    <div className="grid gap-4 rounded-[1.75rem] border border-brand/15 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6 md:grid-cols-[1fr_auto] md:items-center">
-      <div><p className="text-xs font-bold uppercase tracking-[0.22em] text-brand">Before you begin</p><h2 className="mt-2 text-2xl font-bold text-ink">A focused first-stage review</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">This form captures your contact details, role preference, CV, and signed declaration. Most applicants complete it in 5–7 minutes.</p></div>
-      <div className="rounded-2xl bg-accent/10 px-4 py-3 text-sm font-bold text-ink">Required fields <Required /></div>
-    </div>
-
     <FormSection eyebrow="Step 01" title="Personal details" helper="Use the same contact information you want our hiring team to use for updates.">
       <TextField state={state} name="firstName" label="First name" autoComplete="given-name" required width="compact" />
       <TextField state={state} name="middleInitial" label="Middle name / initial" autoComplete="additional-name" maxLength={50} width="compact" />
