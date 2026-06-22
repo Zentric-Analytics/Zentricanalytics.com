@@ -46,10 +46,17 @@ function actionBanner(params: SearchParams) {
   if (params.success === 'already_approved') messages.push('Stage 1 is already approved.');
   if (params.success === 'rejected') messages.push('Application was rejected.');
   if (params.success === 'correction') messages.push('Correction was requested.');
+  if (params.success === 'soft_deleted') messages.push('Application moved to deleted records.');
+  if (params.success === 'restored') messages.push('Application restored.');
+  if (params.success === 'permanent_deleted') messages.push('Application permanently deleted.');
   if (params.warning === 'email_failed') messages.push('Stage action was saved, but the email could not be sent. Please retry email delivery or contact the candidate manually.');
   if (params.error === 'action_failed') messages.push('The admin action could not be completed. Please refresh and try again.');
   if (params.error === 'missing_stage') messages.push('Required hiring stage data is missing. Please contact an administrator.');
   if (params.error === 'invalid_action') messages.push('Invalid admin action.');
+  if (params.error === 'invalid_confirmation') messages.push('Confirmation did not match. No records were deleted.');
+  if (params.error === 'restore_before_stage_action') messages.push('Restore this application before taking stage actions.');
+  if (params.error === 'delete_failed') messages.push('Delete failed. Please refresh and try again.');
+  if (params.error === 'file_delete_failed') messages.push('Private file deletion failed, so the application was not permanently deleted.');
   return messages;
 }
 
@@ -69,9 +76,12 @@ export default async function AdminApplications({
   }
 
   const query = params.q;
+  const deleteFilter = params.deleted === 'all' ? 'all' : params.deleted === 'true' ? 'deleted' : 'active';
+  const deletedWhere = deleteFilter === 'all' ? {} : deleteFilter === 'deleted' ? { deletedAt: { not: null } } : { deletedAt: null };
   const applications = await prisma.jobApplication.findMany({
     where: query
       ? {
+          ...deletedWhere,
           OR: [
             { applicationId: { contains: query, mode: 'insensitive' } },
             { roleAppliedFor: { contains: query, mode: 'insensitive' } },
@@ -87,7 +97,7 @@ export default async function AdminApplications({
             },
           ],
         }
-      : {},
+      : deletedWhere,
     include: {
       applicant: true,
       stages: {
@@ -149,6 +159,7 @@ export default async function AdminApplications({
           <option>Approved</option>
         </select>
         <button className="btn btn-primary">Search</button>
+        <div className="flex gap-2 text-sm md:col-span-4"><Link className="btn btn-secondary" href="/admin/applications">Active applications</Link><Link className="btn btn-secondary" href="/admin/applications/deleted">Deleted applications</Link><Link className="btn btn-secondary" href="/admin/applications?deleted=all">All applications</Link></div>
       </form>
 
       <section className="space-y-6">
@@ -175,7 +186,7 @@ export default async function AdminApplications({
                   </p>
                   <p>{application.roleAppliedFor} · {application.experienceLevel ?? 'Experience not provided'}</p><p>{application.applicant.phoneCountryName ?? 'Country not captured'} · {application.applicant.phoneE164 ?? application.applicant.phone ?? 'No phone'}</p>
                 </div>
-                <StatusBadge status={stageOne?.status ?? application.status} />
+                <div className="flex flex-col items-end gap-2"><StatusBadge status={stageOne?.status ?? application.status} />{application.deletedAt ? <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">Deleted</span> : null}</div>
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-3">
@@ -221,7 +232,7 @@ export default async function AdminApplications({
                 </ul>
               </details>
 
-              <form action={adminStage1Action} className="mt-4 flex flex-wrap gap-2">
+              {!application.deletedAt ? <form action={adminStage1Action} className="mt-4 flex flex-wrap gap-2">
                 <input
                   type="hidden"
                   name="applicationDbId"
@@ -245,7 +256,7 @@ export default async function AdminApplications({
                 <button className="btn btn-secondary" name="action" value="reject">
                   Reject
                 </button>
-              </form>
+              </form> : <p className="mt-4 text-sm font-semibold text-red-700">Restore this application before taking stage actions.</p>}
             </article>
           );
         })}
