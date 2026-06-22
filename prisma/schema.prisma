@@ -1,16 +1,184 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
-model Applicant { id String @id @default(cuid()) fullName String email String phone String? location String? createdAt DateTime @default(now()) applications JobApplication[] }
-model JobApplication { id String @id @default(cuid()) applicationId String @unique applicantId String applicant Applicant @relation(fields:[applicantId], references:[id]) roleAppliedFor String workModePreference String? experienceLevel String? skills String? portfolioUrl String? message String? privacyConsent Boolean @default(false) status String currentStageOrder Int @default(1) stages HiringStage[] documents UploadedDocument[] emails EmailNotification[] notes AdminNote[] auditLogs AuditLog[] accessCodes ApplicationAccessCode[] createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
-model HiringStage { id String @id @default(cuid()) applicationId String application JobApplication @relation(fields:[applicationId], references:[id]) stageKey String stageOrder Int title String status String @default("Locked") unlockedAt DateTime? submittedAt DateTime? approvedAt DateTime? submissions StageSubmission[] approvals StageApproval[] }
-model StageSubmission { id String @id @default(cuid()) stageId String stage HiringStage @relation(fields:[stageId], references:[id]) version Int payload Json status String submittedAt DateTime? signature ElectronicSignature? documents ApplicantDocument[] createdAt DateTime @default(now()) }
-model StageApproval { id String @id @default(cuid()) stageId String stage HiringStage @relation(fields:[stageId], references:[id]) action String adminEmail String notes String? createdAt DateTime @default(now()) }
-model UploadedDocument { id String @id @default(cuid()) applicationId String application JobApplication @relation(fields:[applicationId], references:[id]) kind String fileName String mimeType String sizeBytes Int storageKey String restricted Boolean @default(true) createdAt DateTime @default(now()) applicantDocuments ApplicantDocument[] }
-model ApplicantDocument { id String @id @default(cuid()) submissionId String submission StageSubmission @relation(fields:[submissionId], references:[id]) uploadedDocumentId String uploadedDocument UploadedDocument @relation(fields:[uploadedDocumentId], references:[id]) status String @default("Submitted") }
-model ElectronicSignature { id String @id @default(cuid()) submissionId String @unique submission StageSubmission @relation(fields:[submissionId], references:[id]) typedName String confirmed Boolean signedAt DateTime @default(now()) ipHash String? userAgent String? }
-model AdminNote { id String @id @default(cuid()) applicationId String application JobApplication @relation(fields:[applicationId], references:[id]) adminEmail String note String createdAt DateTime @default(now()) }
-model EmailNotification { id String @id @default(cuid()) applicationId String application JobApplication @relation(fields:[applicationId], references:[id]) toEmail String template String subject String status String providerMessageId String? failureReason String? createdAt DateTime @default(now()) }
-model Offer { id String @id @default(cuid()) applicationId String @unique roleOffered String salary String startDate DateTime workMode String reportingManager String? probationPeriod String? offerExpiryDate DateTime? specialConditions String? status String @default("Draft") createdAt DateTime @default(now()) }
-model EmploymentAgreement { id String @id @default(cuid()) applicationId String @unique version Int @default(1) agreementText String roleSchedule Json status String @default("Draft") createdAt DateTime @default(now()) }
-model AuditLog { id String @id @default(cuid()) applicationId String? application JobApplication? @relation(fields:[applicationId], references:[id]) actorType String actorRef String? action String metadata Json? createdAt DateTime @default(now()) }
-model ApplicationAccessCode { id String @id @default(cuid()) applicationId String application JobApplication @relation(fields:[applicationId], references:[id]) codeHash String expiresAt DateTime usedAt DateTime? verifiedSessionTokenHash String? sessionExpiresAt DateTime? createdAt DateTime @default(now()) }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Applicant {
+  id           String           @id @default(cuid())
+  fullName     String
+  email        String
+  phone        String?
+  location     String?
+  createdAt    DateTime         @default(now())
+  applications JobApplication[]
+}
+
+model JobApplication {
+  id                 String                  @id @default(cuid())
+  applicationId      String                  @unique
+  applicantId        String
+  applicant          Applicant               @relation(fields: [applicantId], references: [id])
+  roleAppliedFor     String
+  workModePreference String?
+  experienceLevel    String?
+  skills             String?
+  portfolioUrl       String?
+  message            String?
+  privacyConsent     Boolean                 @default(false)
+  status             String
+  currentStageOrder  Int                     @default(1)
+  stages             HiringStage[]
+  documents          UploadedDocument[]
+  emails             EmailNotification[]
+  notes              AdminNote[]
+  auditLogs          AuditLog[]
+  accessCodes        ApplicationAccessCode[]
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+}
+
+model HiringStage {
+  id            String            @id @default(cuid())
+  applicationId String
+  application   JobApplication    @relation(fields: [applicationId], references: [id])
+  stageKey      String
+  stageOrder    Int
+  title         String
+  status        String            @default("Locked")
+  unlockedAt    DateTime?
+  submittedAt   DateTime?
+  approvedAt    DateTime?
+  submissions   StageSubmission[]
+  approvals     StageApproval[]
+}
+
+model StageSubmission {
+  id          String               @id @default(cuid())
+  stageId     String
+  stage       HiringStage          @relation(fields: [stageId], references: [id])
+  version     Int
+  payload     Json
+  status      String
+  submittedAt DateTime?
+  signature   ElectronicSignature?
+  documents   ApplicantDocument[]
+  createdAt   DateTime             @default(now())
+}
+
+model StageApproval {
+  id         String      @id @default(cuid())
+  stageId    String
+  stage      HiringStage @relation(fields: [stageId], references: [id])
+  action     String
+  adminEmail String
+  notes      String?
+  createdAt  DateTime    @default(now())
+}
+
+model UploadedDocument {
+  id                 String              @id @default(cuid())
+  applicationId      String
+  application        JobApplication      @relation(fields: [applicationId], references: [id])
+  kind               String
+  fileName           String
+  mimeType           String
+  sizeBytes          Int
+  storageKey         String
+  restricted         Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  applicantDocuments ApplicantDocument[]
+}
+
+model ApplicantDocument {
+  id                 String           @id @default(cuid())
+  submissionId       String
+  submission         StageSubmission  @relation(fields: [submissionId], references: [id])
+  uploadedDocumentId String
+  uploadedDocument   UploadedDocument @relation(fields: [uploadedDocumentId], references: [id])
+  status             String           @default("Submitted")
+}
+
+model ElectronicSignature {
+  id           String          @id @default(cuid())
+  submissionId String          @unique
+  submission   StageSubmission @relation(fields: [submissionId], references: [id])
+  typedName    String
+  confirmed    Boolean
+  signedAt     DateTime        @default(now())
+  ipHash       String?
+  userAgent    String?
+}
+
+model AdminNote {
+  id            String         @id @default(cuid())
+  applicationId String
+  application   JobApplication @relation(fields: [applicationId], references: [id])
+  adminEmail    String
+  note          String
+  createdAt     DateTime       @default(now())
+}
+
+model EmailNotification {
+  id                String         @id @default(cuid())
+  applicationId     String
+  application       JobApplication @relation(fields: [applicationId], references: [id])
+  toEmail           String
+  template          String
+  subject           String
+  status            String
+  providerMessageId String?
+  failureReason     String?
+  createdAt         DateTime       @default(now())
+}
+
+model Offer {
+  id                String    @id @default(cuid())
+  applicationId     String    @unique
+  roleOffered       String
+  salary            String
+  startDate         DateTime
+  workMode          String
+  reportingManager  String?
+  probationPeriod   String?
+  offerExpiryDate   DateTime?
+  specialConditions String?
+  status            String    @default("Draft")
+  createdAt         DateTime  @default(now())
+}
+
+model EmploymentAgreement {
+  id            String   @id @default(cuid())
+  applicationId String   @unique
+  version       Int      @default(1)
+  agreementText String
+  roleSchedule  Json
+  status        String   @default("Draft")
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id            String          @id @default(cuid())
+  applicationId String?
+  application   JobApplication? @relation(fields: [applicationId], references: [id])
+  actorType     String
+  actorRef      String?
+  action        String
+  metadata      Json?
+  createdAt     DateTime        @default(now())
+}
+
+model ApplicationAccessCode {
+  id                       String         @id @default(cuid())
+  applicationId            String
+  application              JobApplication @relation(fields: [applicationId], references: [id])
+  codeHash                 String
+  expiresAt                DateTime
+  usedAt                   DateTime?
+  verifiedSessionTokenHash String?
+  sessionExpiresAt         DateTime?
+  createdAt                DateTime       @default(now())
+}
