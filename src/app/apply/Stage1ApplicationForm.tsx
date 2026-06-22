@@ -43,8 +43,8 @@ function FormSection({ eyebrow, title, helper, children }: { eyebrow: string; ti
   );
 }
 
-function TextField({ state, name, label, required = false, width = 'standard', helper, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { state: Stage1FormState; name: Stage1Field; label: string; required?: boolean; width?: Width; helper?: string }) {
-  return <label className={`field ${fieldWidth(width)}`}><span className="text-sm font-bold text-ink">{label} {required ? <Required /> : null}</span>{helper ? <span className="text-xs leading-5 text-slate-500">{helper}</span> : null}<input className={inputClass(state, name)} name={name} defaultValue={state.values[name]} required={required} aria-invalid={Boolean(errorFor(state, name))} aria-describedby={errorFor(state, name) ? `${name}-error` : undefined} {...props} /><FieldError state={state} field={name} /></label>;
+function TextField({ state, name, label, required = false, width = 'standard', helper, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { state: Stage1FormState; name: Stage1Field; label: string; required?: boolean; width?: Width; helper?: string }) {
+  return <label className={`field ${className ?? fieldWidth(width)}`}><span className="text-sm font-bold text-ink">{label} {required ? <Required /> : null}</span>{helper ? <span className="text-xs leading-5 text-slate-500">{helper}</span> : null}<input className={inputClass(state, name)} name={name} defaultValue={state.values[name]} required={required} aria-invalid={Boolean(errorFor(state, name))} aria-describedby={errorFor(state, name) ? `${name}-error` : undefined} {...props} /><FieldError state={state} field={name} /></label>;
 }
 function SelectField({ state, name, label, options, required = true, width = 'standard' }: { state: Stage1FormState; name: Stage1Field; label: string; options: readonly string[]; required?: boolean; width?: Width }) {
   return <label className={`field ${fieldWidth(width)}`}><span className="text-sm font-bold text-ink">{label} {required ? <Required /> : null}</span><select className={inputClass(state, name)} name={name} required={required} defaultValue={state.values[name] || options[0]} aria-invalid={Boolean(errorFor(state, name))}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select><FieldError state={state} field={name} /></label>;
@@ -68,13 +68,21 @@ export function Stage1ApplicationForm() {
     {state.message ? <div className="min-w-0 break-words rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{state.message}</div> : null}
 
     <FormSection eyebrow="Step 01" title="Personal details" helper="Use the same contact information you want our hiring team to use for updates.">
-      <TextField state={state} name="firstName" label="First name" autoComplete="given-name" required width="compact" />
-      <TextField state={state} name="middleInitial" label="Middle name / initial" autoComplete="additional-name" maxLength={50} width="compact" />
-      <TextField state={state} name="lastName" label="Last name" autoComplete="family-name" required width="compact" />
-      <TextField state={state} name="preferredName" label="Preferred name" width="compact" />
-      <TextField state={state} name="email" label="Email" type="email" autoComplete="email" required width="standard" />
-      <div className={`${fieldWidth('standard')} field`}><span className="text-sm font-bold text-ink">Phone <Required /></span><div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]"><select className={inputClass(state,'phoneCountryIso')} name="phoneCountryIso" aria-label="Phone country" required defaultValue={values.phoneCountryIso || 'NG'}>{countryPhoneOptions.map((country)=><option key={country.iso} value={country.iso}>{country.name} {country.dialCode}</option>)}</select><input className={inputClass(state,'phoneNational')} name="phoneNational" inputMode="tel" autoComplete="tel" defaultValue={values.phoneNational} required aria-label="Phone number" /></div><FieldError state={state} field="phoneCountryIso" /><FieldError state={state} field="phoneNational" /></div>
-      <TextField state={state} name="residentialAddress" label="Current city/state or residential location" autoComplete="street-address" placeholder="e.g. Ikeja, Lagos" required width="wide" />
+      <div className="md:col-span-6 grid min-w-0 grid-cols-1 gap-4 md:grid-cols-12 md:gap-5">
+        <TextField state={state} name="firstName" label="First name" autoComplete="given-name" required className="md:col-span-5" />
+        <TextField state={state} name="middleInitial" label="Middle name / initial" autoComplete="additional-name" maxLength={50} className="md:col-span-2" />
+        <TextField state={state} name="lastName" label="Last name" autoComplete="family-name" required className="md:col-span-5" />
+      </div>
+
+      <div className="md:col-span-6 grid min-w-0 grid-cols-1 gap-4 md:grid-cols-12 md:items-start md:gap-5">
+        <TextField state={state} name="preferredName" label="Preferred name" className="md:col-span-3" />
+        <TextField state={state} name="email" label="Email" type="email" autoComplete="email" required className="md:col-span-5" />
+        <div className="field md:col-span-4"><span className="text-sm font-bold text-ink">Phone <Required /></span><div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,9rem)_minmax(0,1fr)]"><select className={inputClass(state,'phoneCountryIso')} name="phoneCountryIso" aria-label="Phone country" required defaultValue={values.phoneCountryIso || 'NG'}>{countryPhoneOptions.map((country)=><option key={country.iso} value={country.iso}>{country.name} {country.dialCode}</option>)}</select><input className={inputClass(state,'phoneNational')} name="phoneNational" inputMode="tel" autoComplete="tel" defaultValue={values.phoneNational} required aria-label="Phone number" /></div><FieldError state={state} field="phoneCountryIso" /><FieldError state={state} field="phoneNational" /></div>
+      </div>
+
+      <div className="md:col-span-6 grid min-w-0 grid-cols-1 md:grid-cols-12">
+        <TextField state={state} name="residentialAddress" label="Current city/state or residential location" autoComplete="street-address" placeholder="e.g. Ikeja, Lagos" required className="md:col-span-8" />
+      </div>
     </FormSection>
 
     <FormSection eyebrow="Step 02" title="Role preference" helper="Select the role and work arrangement that best match this application.">
