@@ -1,9 +1,9 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Prisma } from '@prisma/client';
 
 import { StatusBadge } from '@/components/StatusBadge';
 import { prisma } from '@/lib/prisma';
-import { isAdminSecretValid } from '@/lib/security';
+import { getAdminSession } from '@/lib/admin-auth';
 
 type AdminApplication = Prisma.JobApplicationGetPayload<{
   include: {
@@ -37,7 +37,7 @@ type AuditLog = AdminApplication['auditLogs'][number];
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ adminSecret?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 };
 
 function formatDateTime(value?: Date | null) {
@@ -48,18 +48,8 @@ export default async function AdminApplicationDetail({
   params,
   searchParams,
 }: PageProps) {
-  const [resolvedParams, resolvedSearchParams] = await Promise.all([
-    params,
-    searchParams,
-  ]);
-
-  if (!isAdminSecretValid(resolvedSearchParams.adminSecret)) {
-    return (
-      <main className="mx-auto max-w-xl px-4 py-10">
-        <h1 className="text-3xl font-bold">Unauthorized</h1>
-      </main>
-    );
-  }
+  const [resolvedParams, adminSession] = await Promise.all([params, getAdminSession()]);
+  if (!adminSession) redirect('/admin/login');
 
   const application = await prisma.jobApplication.findUnique({
     where: { id: resolvedParams.id },

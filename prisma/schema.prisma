@@ -95,6 +95,7 @@ model UploadedDocument {
   fileName           String
   mimeType           String
   sizeBytes          Int
+  provider           String              @default("local-private")
   storageKey         String
   restricted         Boolean             @default(true)
   createdAt          DateTime            @default(now())
@@ -189,4 +190,20 @@ model ApplicationAccessCode {
   verifiedSessionTokenHash String?
   sessionExpiresAt         DateTime?
   createdAt                DateTime       @default(now())
+}
+
+
+model ApplicationSequence {
+  year      Int      @id
+  nextValue Int      @default(1)
+  updatedAt DateTime @updatedAt
+}
+
+model RateLimitEvent {
+  id         String   @id @default(cuid())
+  scope      String
+  keyHash    String
+  createdAt  DateTime @default(now())
+
+  @@index([scope, keyHash, createdAt])
 }

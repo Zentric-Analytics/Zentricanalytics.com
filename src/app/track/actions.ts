@@ -1,12 +1,18 @@
 'use server';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { randomDigits, randomToken, sha256 } from '@/lib/security';
 import { sendAndRecordEmail } from '@/lib/email';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function requestAccessCode(formData: FormData) {
   const applicationId = String(formData.get('applicationId') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const h = await headers();
+  const ipHash = sha256(h.get('x-forwarded-for') ?? 'unknown');
+  const limit = await checkRateLimit({ scope: 'access-code-request', key: `${applicationId}:${email}:${ipHash}`, limit: 3, windowMs: 15 * 60 * 1000 });
+  if (!limit.allowed) redirect(`/track?requested=1&applicationId=${encodeURIComponent(applicationId)}&email=${encodeURIComponent(email)}`);
   const app = await prisma.jobApplication.findUnique({ where: { applicationId }, include: { applicant: true } });
   if (app && app.applicant.email.toLowerCase() === email) {
     const code = randomDigits();
@@ -21,6 +27,10 @@ export async function verifyAccessCode(formData: FormData) {
   const applicationId = String(formData.get('applicationId') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   const code = String(formData.get('code') ?? '').trim();
+  const h = await headers();
+  const ipHash = sha256(h.get('x-forwarded-for') ?? 'unknown');
+  const limit = await checkRateLimit({ scope: 'access-code-verify', key: `${applicationId}:${email}:${ipHash}`, limit: 5, windowMs: 15 * 60 * 1000 });
+  if (!limit.allowed) redirect('/track?verified=0');
   const app = await prisma.jobApplication.findUnique({ where: { applicationId }, include: { applicant: true } });
   if (!app || app.applicant.email.toLowerCase() !== email) redirect('/track?verified=0');
   const access = await prisma.applicationAccessCode.findFirst({ where: { applicationId: app.id, codeHash: sha256(code), usedAt: null, expiresAt: { gt: new Date() } }, orderBy: { createdAt: 'desc' } });

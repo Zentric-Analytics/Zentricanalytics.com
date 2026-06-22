@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomToken } from './security';
 
@@ -35,12 +35,24 @@ export function validateCvFile(file: File | null | undefined) {
   return 'Upload a PDF, DOC, DOCX, JPG, JPEG, PNG, or WEBP file.';
 }
 
+export function selectedStorageProvider() {
+  return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER || 'local-private';
+}
+
 export async function savePrivateUpload(file: File, applicationId: string) {
+  const provider = selectedStorageProvider();
+  if (provider !== 'local-private') throw new Error(`${provider} storage is configured but no private object storage adapter is enabled in this build.`);
   const root = process.env.PRIVATE_UPLOAD_ROOT ?? path.join(process.cwd(), '.private-uploads');
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const key = path.join(applicationId, `${randomToken(12)}-${safeName}`);
   const fullPath = path.join(root, key);
   await mkdir(path.dirname(fullPath), { recursive: true });
   await writeFile(fullPath, Buffer.from(await file.arrayBuffer()));
-  return { storageKey: key, provider: 'local-private' };
+  return { storageKey: key, provider: 'local-private', restricted: true };
+}
+
+export async function deletePrivateUpload(storageKey: string, provider = 'local-private') {
+  if (provider !== 'local-private') return;
+  const root = process.env.PRIVATE_UPLOAD_ROOT ?? path.join(process.cwd(), '.private-uploads');
+  await rm(path.join(root, storageKey), { force: true });
 }

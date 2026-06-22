@@ -1,68 +1,43 @@
 import { maskSensitive } from './hiring';
 
-export type PdfField = {
-  label: string;
-  value: string;
-  sensitive?: boolean;
-};
-
-type SubmittedDocumentInput = {
-  title: string;
-  applicantName: string;
-  applicationId: string;
-  documentRef?: string;
-  role?: string;
-  fields: PdfField[];
-  documents?: PdfField[];
-  signatureName: string;
-  submittedAt: string;
-  signedAt?: string;
-  version: number;
-  status: string;
-};
+export type PdfField = { label: string; value: string; sensitive?: boolean };
+type SubmittedDocumentInput = { title: string; applicantName: string; applicationId: string; documentRef?: string; role?: string; fields: PdfField[]; documents?: PdfField[]; signatureName: string; submittedAt: string; signedAt?: string; version: number; status: string };
 
 export function renderSubmittedDocumentText(input: SubmittedDocumentInput) {
-  const candidateRows = input.fields.map((field) => renderRow(field)).join('');
-  const documentRows = getDocumentFields(input).map((field) => renderRow(field)).join('');
-  const skillsRows = input.fields
-    .filter((field) => ['Skills', 'Portfolio link', 'Message'].includes(field.label))
-    .map((field) => renderRow(field))
-    .join('');
-  const documentReference = input.documentRef ?? buildDocumentReference(input.applicationId);
-
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(input.title)}</title><style>${documentStyles}</style></head><body><main class="doc"><header class="top"><div class="confidential">PRIVATE &amp; CONFIDENTIAL</div><div class="brand">Zentric Analytics Ltd</div><div class="meta">Official recruitment communication</div><div class="meta">RC No.: Company Records | Registered Office: Zentric Analytics Ltd Registered Office | Email: hr@zentricanalytics.com | Website: zentricanalytics.com</div><div class="meta">Ref: ${escapeHtml(documentReference)}</div></header><section class="title"><h1>Employment Application</h1><p>Candidate Information Form</p></section><h2>Candidate Details</h2><table>${renderRow({ label: 'Full legal name', value: input.applicantName })}${renderRow({ label: 'Application ID', value: input.applicationId })}${candidateRows}</table><h2>Role Interest and Availability</h2><table>${renderRow({ label: 'Role applied for', value: input.role ?? '' })}${renderRow({ label: 'Document status', value: input.status })}${renderRow({ label: 'Submission timestamp', value: input.submittedAt })}${renderRow({ label: 'Document version', value: String(input.version) })}</table><h2>Documents Submitted</h2><table>${documentRows}</table><h2>Skills / Portfolio Summary</h2><table>${skillsRows}</table><h2>Candidate Declaration</h2><div class="declaration">I declare that the information submitted in this Stage 1 employment application is true and complete to the best of my knowledge. I understand that inaccurate information may affect my application.</div><h2>Candidate Data Privacy Acknowledgement</h2><div class="declaration">I acknowledge that Zentric Analytics Ltd may process my application data and private uploaded documents for recruitment review, verification, communication, and recruitment records management.</div><h2>Candidate Signature</h2><table>${renderRow({ label: 'Electronic signature name', value: input.signatureName })}${renderRow({ label: 'Signature confirmation', value: 'Confirmed as electronic signature' })}${renderRow({ label: 'Signature timestamp', value: input.signedAt ?? input.submittedAt })}<tr><th>Signature box</th><td class="signature">${escapeHtml(input.signatureName)}</td></tr></table><h2>For Zentric Use Only</h2><table>${renderRow({ label: 'HR reviewer', value: '' })}${renderRow({ label: 'Stage 1 admin decision', value: '' })}${renderRow({ label: 'Internal notes', value: '' })}</table><p class="footer-note">Zentric Analytics Ltd | Recruitment Records | Private & Confidential</p></main></body></html>`;
+  const rows = [
+    'Zentric Analytics Ltd', 'PRIVATE & CONFIDENTIAL', 'Official recruitment communication', `Ref: ${input.documentRef ?? `ZA/HR/APP/${new Date().getUTCFullYear()}/${input.applicationId}`}`,
+    'Employment Application', 'Candidate Information Form', 'Candidate Details', `Full legal name: ${input.applicantName}`, `Application ID: ${input.applicationId}`,
+    ...input.fields.map(renderPlainRow), 'Role Interest and Availability', `Role applied for: ${input.role ?? ''}`, `Document status: ${input.status}`, `Submission timestamp: ${input.submittedAt}`, `Document version: ${input.version}`,
+    'Documents Submitted', ...(input.documents?.length ? input.documents : [{ label: 'Documents submitted', value: 'Recorded in private recruitment storage' }]).map(renderPlainRow),
+    'Candidate Declaration', 'I declare that the information submitted in this Stage 1 employment application is true and complete to the best of my knowledge. I understand that inaccurate information may affect my application.',
+    'Candidate Data Privacy Acknowledgement', 'I acknowledge that Zentric Analytics Ltd may process my application data and private uploaded documents for recruitment review, verification, communication, and recruitment records management.',
+    'Candidate Signature', `Electronic signature name: ${input.signatureName}`, 'Signature confirmation: Confirmed as electronic signature', `Signature timestamp: ${input.signedAt ?? input.submittedAt}`,
+    'For Zentric Use Only', 'HR reviewer:', 'Stage 1 admin decision:', 'Internal notes:', 'Zentric Analytics Ltd | Recruitment Records | Private & Confidential',
+  ];
+  return rows.join('\n');
 }
 
-function getDocumentFields(input: SubmittedDocumentInput) {
-  if (input.documents?.length) {
-    return input.documents;
-  }
-
-  return [{ label: 'Documents submitted', value: 'Recorded in private recruitment storage' }];
+export async function renderSubmittedDocumentPdf(input: SubmittedDocumentInput) {
+  const text = renderSubmittedDocumentText(input);
+  return buildSimplePdf(text);
 }
 
-function renderRow({ label, value, sensitive = false }: PdfField) {
-  const displayValue = sensitive ? maskSensitive(value) : value || '—';
-
-  return `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(displayValue)}</td></tr>`;
+function renderPlainRow({ label, value, sensitive = false }: PdfField) { return `${label}: ${sensitive ? maskSensitive(value) : (value || '—')}`; }
+function pdfEscape(value: string) { return value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)'); }
+function wrap(line: string, width = 92) { const words = line.split(/\s+/); const out: string[] = []; let cur = ''; for (const w of words) { if ((cur + ' ' + w).trim().length > width) { out.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); } if (cur) out.push(cur); return out.length ? out : ['']; }
+function buildSimplePdf(text: string) {
+  const lines = text.split('\n').flatMap((l) => wrap(l));
+  const content = ['BT', '/F1 10 Tf', '50 780 Td', '14 TL', ...lines.map((line, i) => `${i === 0 ? '' : 'T* '}(${pdfEscape(line)}) Tj`), 'ET'].join('\n');
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    `<< /Length ${Buffer.byteLength(content)} >>\nstream\n${content}\nendstream`,
+  ];
+  let pdf = '%PDF-1.4\n'; const offsets = [0];
+  objects.forEach((obj, index) => { offsets.push(Buffer.byteLength(pdf)); pdf += `${index + 1} 0 obj\n${obj}\nendobj\n`; });
+  const xref = Buffer.byteLength(pdf);
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.slice(1).map((o) => String(o).padStart(10, '0') + ' 00000 n ').join('\n')}\ntrailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  return Buffer.from(pdf);
 }
-
-function buildDocumentReference(applicationId: string) {
-  return `ZA/HR/APP/${new Date().getUTCFullYear()}/${applicationId}`;
-}
-
-function escapeHtml(value: string) {
-  return String(value).replace(
-    /[&<>'"]/g,
-    (character) =>
-      ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;',
-      })[character]!,
-  );
-}
-
-const documentStyles = `@page{margin:24mm 18mm;@bottom-center{content:"Zentric Analytics Ltd | Recruitment Records | Private & Confidential | Page " counter(page) " of " counter(pages);font-size:9px;color:#475569}}body{font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.45}.doc{max-width:800px;margin:0 auto}.top{border-bottom:3px solid #0f172a;padding-bottom:12px;margin-bottom:18px}.brand{font-size:24px;font-weight:800;letter-spacing:.04em}.confidential{float:right;border:1px solid #0f172a;padding:6px 10px;font-weight:700;font-size:12px}.meta{font-size:12px;color:#334155}.title{text-align:center;margin:22px 0}.title h1{font-size:22px;margin:0;text-transform:uppercase}.title p{margin:4px 0 0;font-size:14px}h2{font-size:14px;text-transform:uppercase;border-bottom:1px solid #94a3b8;padding-bottom:4px;margin-top:20px}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #cbd5e1;padding:8px;vertical-align:top;font-size:12px}th{width:34%;text-align:left;background:#f8fafc}.declaration{border:1px solid #cbd5e1;padding:12px;font-size:12px}.signature{height:70px}.footer-note{margin-top:18px;font-size:11px;color:#475569}`;
