@@ -4,13 +4,7 @@ import type { Prisma } from '@prisma/client';
 import { PageShell } from '@/components/PageShell';
 import { Section } from '@/components/Section';
 import { StatusBadge } from '@/components/StatusBadge';
-import {
-  isStage1DownloadEligible,
-  stages as stageDefs,
-  toStageStatus,
-  type StageStatus,
-} from '@/lib/hiring';
-import { Stage1DownloadButton } from './Stage1DownloadButton';
+import { stages as stageDefs, toStageStatus, type StageStatus } from '@/lib/hiring';
 import { prisma } from '@/lib/prisma';
 import { sha256 } from '@/lib/security';
 
@@ -122,19 +116,7 @@ export default async function Portal({
   const progressPercent = Math.round((completedStageCount / stageDefs.length) * 100);
   const currentStage = portalStages.find((stage) => stage.isCurrent) ?? portalStages[0];
   const stageOne = portalStages[0]?.stage;
-  const stageOneStatus = portalStages[0]?.status ?? 'Locked';
-  const stageOneSubmission = stageOne?.submissions[0];
-  const stageOneSignature = stageOneSubmission?.signature;
-  const stageOneSigned = Boolean(stageOneSignature?.confirmed);
-  const stageOneDownloadEligible = isStage1DownloadEligible({
-    stagePresent: Boolean(stageOne),
-    submissionPresent: Boolean(stageOneSubmission),
-    submissionSubmitted: Boolean(stageOneSubmission?.submittedAt),
-    signaturePresent: Boolean(stageOneSignature),
-    signatureConfirmed: Boolean(stageOneSignature?.confirmed),
-    signedAtPresent: Boolean(stageOneSignature?.signedAt),
-    stageStatus: stageOneStatus,
-  });
+  const stageOneSignature = portalStages[0]?.stage?.submissions[0]?.signature;
 
   return (
     <PageShell>
@@ -182,38 +164,20 @@ export default async function Portal({
             </div>
           </section>
 
-          <aside className="card p-5 sm:p-6" aria-labelledby="portal-download-title">
+          <aside className="card p-5 sm:p-6" aria-labelledby="portal-documents-title">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-sm font-semibold uppercase tracking-widest text-accent">PDF downloads</p>
-                <h2 id="portal-download-title" className="mt-2 text-xl font-bold text-ink">Approved forms</h2>
+                <p className="text-sm font-semibold uppercase tracking-widest text-accent">Documents</p>
+                <h2 id="portal-documents-title" className="mt-2 text-xl font-bold text-ink">Application documents</h2>
               </div>
-              <StatusBadge status={stageOneDownloadEligible ? 'Download Available' : stageOneStatus} />
             </div>
 
             <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <h3 className="font-bold text-ink">Initial application form</h3>
+              <h3 className="font-bold text-ink">Submitted documents</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                {stageOneDownloadEligible
-                  ? 'Approved and ready to download.'
-                  : stageOneSigned
-                    ? 'Signed. Waiting for review approval.'
-                    : 'Available after this form is signed and approved.'}
+                Submitted documents are available for admin review. You can track your application status here.
               </p>
-              <div className="mt-4">
-                {stageOneDownloadEligible ? (
-                  <Stage1DownloadButton session={session!} label="Download PDF" />
-                ) : (
-                  <p className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600">
-                    Download locked
-                  </p>
-                )}
-              </div>
             </div>
-
-            <p className="mt-4 text-sm leading-6 text-slate-600">
-              More PDFs will appear here after each stage is approved.
-            </p>
           </aside>
         </div>
 
@@ -226,7 +190,7 @@ export default async function Portal({
               </h2>
             </div>
             <p className="max-w-xl text-sm leading-6 text-slate-600">
-              Check each step, see what is pending, and download approved PDFs from the download panel.
+              Check each step and see what is pending as your application progresses.
             </p>
           </div>
 

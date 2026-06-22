@@ -109,6 +109,7 @@ export default async function AdminApplicationDetail({
   const stageOneStatus = stageOne?.status ?? application.status;
   const signature = stageOneSubmission?.signature;
   const documents = stageOneSubmission?.documents ?? [];
+  const stageOnePdfAvailable = Boolean(stageOneSubmission?.submittedAt && signature?.confirmed && signature?.signedAt);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
@@ -150,21 +151,47 @@ export default async function AdminApplicationDetail({
       </section>
 
       <section className="card mt-6 p-5">
-        <h2 className="font-bold">Uploaded document metadata</h2>
-        {documents.length > 0 ? (
-          documents.map((document: ApplicantDocument) => {
-            const uploadedDocument = document.uploadedDocument;
-
-            return (
-              <p key={document.id}>
-                {uploadedDocument?.fileName ?? 'Missing uploaded document'} ·{' '}
-                {uploadedDocument?.mimeType ?? 'Unknown MIME type'} ·{' '}
-                {uploadedDocument?.sizeBytes ?? 0} bytes
-              </p>
-            );
-          })
+        <h2 className="font-bold">Official documents</h2>
+        {stageOnePdfAvailable ? (
+          <a className="btn btn-primary mt-4 w-fit" href={`/api/admin/applications/${application.id}/documents/stage-1`}>
+            Download Stage 1 PDF
+          </a>
         ) : (
-          <p>No uploaded documents found.</p>
+          <p className="mt-3 text-sm text-slate-600">Stage 1 PDF is not available yet.</p>
+        )}
+      </section>
+
+      <section className="card mt-6 p-5">
+        <h2 className="font-bold">Uploaded documents</h2>
+        {documents.length > 0 ? (
+          <div className="mt-4 grid gap-3">
+            {documents.map((document: ApplicantDocument) => {
+              const uploadedDocument = document.uploadedDocument;
+              const isPreviewable = uploadedDocument ? ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'].includes(uploadedDocument.mimeType) : false;
+
+              return uploadedDocument ? (
+                <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4" key={document.id}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <h3 className="break-words font-semibold text-ink">{uploadedDocument.fileName}</h3>
+                      <p className="mt-1 text-sm text-slate-600">{uploadedDocument.kind} · {uploadedDocument.mimeType} · {uploadedDocument.sizeBytes} bytes</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-500">Uploaded {formatDateTime(uploadedDocument.createdAt)}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {isPreviewable ? (
+                        <a className="btn btn-secondary" href={`/api/admin/applications/${application.id}/uploads/${uploadedDocument.id}`} target="_blank" rel="noreferrer">View</a>
+                      ) : null}
+                      <a className="btn btn-primary" href={`/api/admin/applications/${application.id}/uploads/${uploadedDocument.id}?download=1`}>Download</a>
+                    </div>
+                  </div>
+                </article>
+              ) : (
+                <p key={document.id}>Missing uploaded document.</p>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-600">No uploaded documents found.</p>
         )}
       </section>
 
