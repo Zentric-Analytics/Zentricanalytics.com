@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { AdminLogoutButton } from '@/components/AdminLogoutButton';
 import { getAdminSession } from '@/lib/admin-auth';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { maskEmail, maskGeneric } from '@/lib/security';
 
 export default async function TrackingDiagnosticsPage() {
   const adminSession = await getAdminSession();
+  console.info('adminSessionPresentOnPageLoad', { page: '/admin/tracking-diagnostics', present: Boolean(adminSession) });
   if (!adminSession) redirect('/admin/login');
 
   if (!isDatabaseConfigured()) {
@@ -49,7 +51,7 @@ export default async function TrackingDiagnosticsPage() {
         <div className="flex flex-col gap-2 text-sm text-slate-600 sm:items-end">
           <span>Signed in as {adminSession.email}</span>
           <Link className="btn btn-secondary" href="/admin/applications">Applications</Link>
-          <Link className="btn btn-secondary" href="/admin/logout">Logout</Link>
+          <AdminLogoutButton />
         </div>
       </header>
 

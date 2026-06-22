@@ -128,19 +128,31 @@ describe('track access-code flow', () => {
 });
 
 describe('admin and track UI source checks', () => {
-  it('admin dashboard pages include logout links without adminSecret query strings', () => {
+  it('admin dashboard pages use POST-safe logout controls without adminSecret query strings', () => {
     const list = readFileSync('src/app/admin/applications/page.tsx', 'utf8');
     const detail = readFileSync('src/app/admin/applications/[id]/page.tsx', 'utf8');
-    expect(list).toContain('href="/admin/logout"');
-    expect(detail).toContain('href="/admin/logout"');
+    const diagnostics = readFileSync('src/app/admin/tracking-diagnostics/page.tsx', 'utf8');
+    const logoutButton = readFileSync('src/components/AdminLogoutButton.tsx', 'utf8');
+    expect(`${list}\n${detail}\n${diagnostics}`).not.toContain('href="/admin/logout"');
     expect(`${list}\n${detail}`).not.toContain('adminSecret');
+    expect(list).toContain('<AdminLogoutButton />');
+    expect(detail).toContain('<AdminLogoutButton />');
+    expect(diagnostics).toContain('<AdminLogoutButton />');
+    expect(logoutButton).toContain('<form action={adminLogoutAction}>');
+    expect(logoutButton).toContain('type="submit"');
   });
 
-  it('admin logout route clears the admin session', () => {
+  it('admin logout is not triggered by GET and only POST/server action clears the session', () => {
     const route = readFileSync('src/app/admin/logout/route.ts', 'utf8');
+    const action = readFileSync('src/app/admin/logout/actions.ts', 'utf8');
     const auth = readFileSync('src/lib/admin-auth.ts', 'utf8');
-    expect(route).toContain('clearAdminSession');
-    expect(route).toContain("redirect('/admin/login')");
+    const getBody = route.slice(route.indexOf('export async function GET'), route.indexOf('export async function POST'));
+    const postBody = route.slice(route.indexOf('export async function POST'));
+    expect(getBody).not.toContain('clearAdminSession');
+    expect(getBody).toContain("redirect('/admin/applications')");
+    expect(postBody).toContain('clearAdminSession');
+    expect(action).toContain('clearAdminSession');
+    expect(action).toContain("redirect('/admin/login')");
     expect(auth).toContain('maxAge: 0');
   });
 

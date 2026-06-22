@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import type { Prisma } from '@prisma/client';
 
+import { AdminLogoutButton } from '@/components/AdminLogoutButton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { prisma } from '@/lib/prisma';
 import { getAdminSession } from '@/lib/admin-auth';
@@ -64,6 +64,7 @@ export default async function AdminApplicationDetail({
   searchParams,
 }: PageProps) {
   const [resolvedParams, resolvedSearchParams, adminSession] = await Promise.all([params, searchParams, getAdminSession()]);
+  console.info('adminSessionPresentOnPageLoad', { page: '/admin/applications/[id]', present: Boolean(adminSession) });
   if (!adminSession) redirect('/admin/login');
 
   const application = await prisma.jobApplication.findUnique({
@@ -112,7 +113,7 @@ export default async function AdminApplicationDetail({
         </div>
         <div className="flex flex-col gap-2 text-sm text-slate-600 sm:items-end">
           <span>Signed in as {adminSession.email}</span>
-          <Link className="btn btn-secondary" href="/admin/logout">Logout</Link>
+          <AdminLogoutButton />
         </div>
       </header>
 
