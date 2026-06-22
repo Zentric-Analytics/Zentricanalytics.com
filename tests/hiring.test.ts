@@ -28,6 +28,9 @@ import {
   validateCvFile,
 } from "../src/lib/storage";
 import { existsSync, readFileSync } from "node:fs";
+import { mkdtemp, rm, unlink } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
 const payload = {
   firstName: "Ada",
@@ -440,7 +443,15 @@ import {
   STAGE_1_TEMPLATE_PATH,
 } from "../src/lib/pdf";
 import { hashRateLimitKey } from "../src/lib/rate-limit";
-import { selectedStorageProvider } from "../src/lib/storage";
+import {
+  deletePrivateUpload,
+  privateUploadConfigurationStatus,
+  privateUploadExists,
+  readPrivateUpload,
+  resolvePrivateUploadPath,
+  savePrivateUpload,
+  selectedStorageProvider,
+} from "../src/lib/storage";
 
 describe("production hardening helpers", () => {
   it("hashes and verifies admin passwords without plaintext storage", () => {
@@ -602,6 +613,90 @@ describe("production hardening helpers", () => {
       ),
     ).toBe(true);
   });
+
+  it("saves, reads, checks, and deletes local-private uploads through one safe helper", async () => {
+    const previousRoot = process.env.PRIVATE_UPLOAD_ROOT;
+    const previousProvider = process.env.PRIVATE_OBJECT_STORAGE_PROVIDER;
+    const root = await mkdtemp(path.join(os.tmpdir(), "zentric-private-"));
+    process.env.PRIVATE_UPLOAD_ROOT = root;
+    process.env.PRIVATE_OBJECT_STORAGE_PROVIDER = "local-private";
+    try {
+      const upload = await savePrivateUpload(
+        file("../Ada CV.pdf", "application/pdf", 5),
+        "ZA-APP-2026-00001",
+      );
+      expect(upload.provider).toBe("local-private");
+      expect(upload.restricted).toBe(true);
+      expect(upload.storageKey).toContain("ZA-APP-2026-00001");
+      expect(upload.storageKey).not.toContain("..");
+      expect(await privateUploadExists(upload.storageKey, upload.provider)).toBe(true);
+      const stored = await readPrivateUpload(upload.storageKey, upload.provider);
+      expect(stored.sizeBytes).toBe(5);
+      await deletePrivateUpload(upload.storageKey, upload.provider);
+      expect(await privateUploadExists(upload.storageKey, upload.provider)).toBe(false);
+    } finally {
+      if (previousRoot === undefined) delete process.env.PRIVATE_UPLOAD_ROOT;
+      else process.env.PRIVATE_UPLOAD_ROOT = previousRoot;
+      if (previousProvider === undefined) delete process.env.PRIVATE_OBJECT_STORAGE_PROVIDER;
+      else process.env.PRIVATE_OBJECT_STORAGE_PROVIDER = previousProvider;
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("prevents storage keys escaping the private upload directory", async () => {
+    const previousRoot = process.env.PRIVATE_UPLOAD_ROOT;
+    const root = await mkdtemp(path.join(os.tmpdir(), "zentric-private-"));
+    process.env.PRIVATE_UPLOAD_ROOT = root;
+    try {
+      expect(() => resolvePrivateUploadPath("../secret.pdf")).toThrow(
+        "Invalid private upload key.",
+      );
+      expect(() => resolvePrivateUploadPath(path.resolve(root, "x.pdf"))).toThrow(
+        "Invalid private upload key.",
+      );
+    } finally {
+      if (previousRoot === undefined) delete process.env.PRIVATE_UPLOAD_ROOT;
+      else process.env.PRIVATE_UPLOAD_ROOT = previousRoot;
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("reports a controlled missing-file condition for orphaned upload metadata", async () => {
+    const previousRoot = process.env.PRIVATE_UPLOAD_ROOT;
+    const root = await mkdtemp(path.join(os.tmpdir(), "zentric-private-"));
+    process.env.PRIVATE_UPLOAD_ROOT = root;
+    try {
+      const upload = await savePrivateUpload(file("cv.pdf", "application/pdf", 3), "app-1");
+      await unlink(resolvePrivateUploadPath(upload.storageKey));
+      expect(await privateUploadExists(upload.storageKey, upload.provider)).toBe(false);
+      await expect(readPrivateUpload(upload.storageKey, upload.provider)).rejects.toMatchObject({ code: "ENOENT" });
+    } finally {
+      if (previousRoot === undefined) delete process.env.PRIVATE_UPLOAD_ROOT;
+      else process.env.PRIVATE_UPLOAD_ROOT = previousRoot;
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+
+  it("saves private bytes before committing uploaded document metadata", () => {
+    const action = readFileSync("src/app/apply/actions.ts", "utf8");
+    expect(action.indexOf("await savePrivateUpload(file, applicationPublicId)")).toBeGreaterThan(-1);
+    expect(action.indexOf("await savePrivateUpload(file, applicationPublicId)")).toBeLessThan(
+      action.indexOf("tx.uploadedDocument.create"),
+    );
+    expect(action).toContain("savedUploads.push(upload)");
+    expect(action).toContain("deletePrivateUpload(upload.storageKey, upload.provider)");
+  });
+
+  it("documents that local-private production storage needs a persistent private volume", () => {
+    const envExample = readFileSync(".env.staging.example", "utf8");
+    delete process.env.PRIVATE_UPLOAD_ROOT;
+    const status = privateUploadConfigurationStatus();
+    expect(status.localPrivateUsesDefaultEphemeralPath).toBe(true);
+    expect(envExample).toContain("persistent private volume");
+    expect(envExample).toContain("PRIVATE_OBJECT_STORAGE_PROVIDER=local-private");
+  });
+
   it("selects local-private storage fallback and hashes rate-limit keys", () => {
     delete process.env.PRIVATE_OBJECT_STORAGE_PROVIDER;
     expect(selectedStorageProvider()).toBe("local-private");
@@ -781,7 +876,7 @@ describe("Stage 1 download and admin safety source checks", () => {
     expect(actions).toContain("fetch");
     expect(actions).toContain("window.open");
     expect(actions).toContain(
-      "File metadata exists, but the private file is not available in storage. Please check private upload storage configuration.",
+      "The file record exists, but the stored file could not be found. Re-upload may be required.",
     );
     expect(detail).toContain(
       "/api/admin/applications/${application.id}/uploads/${uploadedDocument.id}",

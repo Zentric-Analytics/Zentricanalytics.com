@@ -41,7 +41,7 @@ export function AdminDocumentActions({
     setError(null);
     const fallback = stageOne
       ? "Stage 1 PDF could not be prepared. Please refresh and try again."
-      : "File metadata exists, but the private file is not available in storage. Please check private upload storage configuration.";
+      : "The file record exists, but the stored file could not be found. Re-upload may be required.";
 
     try {
       const response = await fetch(
