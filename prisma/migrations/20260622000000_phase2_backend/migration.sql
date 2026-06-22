@@ -1,0 +1,10 @@
+ALTER TABLE "Applicant" ADD COLUMN IF NOT EXISTS "location" TEXT;
+ALTER TABLE "JobApplication" ADD COLUMN IF NOT EXISTS "workModePreference" TEXT;
+ALTER TABLE "JobApplication" ADD COLUMN IF NOT EXISTS "experienceLevel" TEXT;
+ALTER TABLE "JobApplication" ADD COLUMN IF NOT EXISTS "skills" TEXT;
+ALTER TABLE "JobApplication" ADD COLUMN IF NOT EXISTS "portfolioUrl" TEXT;
+ALTER TABLE "JobApplication" ADD COLUMN IF NOT EXISTS "message" TEXT;
+ALTER TABLE "JobApplication" ADD COLUMN IF NOT EXISTS "privacyConsent" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "StageSubmission" ADD COLUMN IF NOT EXISTS "submittedAt" TIMESTAMP(3);
+ALTER TABLE "ApplicationAccessCode" ADD COLUMN IF NOT EXISTS "verifiedSessionTokenHash" TEXT;
+ALTER TABLE "ApplicationAccessCode" ADD COLUMN IF NOT EXISTS "sessionExpiresAt" TIMESTAMP(3);
