@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { initialApplicationSchema, toStage1SubmissionPayload } from '@/lib/hiring';
+import { stage1ApplicantFieldNames } from '@/lib/stage1-fields';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { deletePrivateUpload, savePrivateUpload, validateCvFile } from '@/lib/storage';
@@ -12,7 +13,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import type { Stage1Field, Stage1FormState } from './form-state';
 
 function valueOf(formData: FormData, key: string) { const value = formData.get(key); return typeof value === 'string' ? value : ''; }
-function preserveValues(formData: FormData) { return ['firstName','middleInitial','lastName','email','phoneCountryIso','phoneNational','location','role','otherRole','workMode','experienceLevel','skills','portfolioUrl','message','privacyConsent','signatureName','signatureConsent'].reduce<Record<string,string>>((acc, key) => { acc[key] = valueOf(formData, key); return acc; }, {}); }
+function preserveValues(formData: FormData) { return stage1ApplicantFieldNames.reduce<Record<string,string>>((acc, key) => { acc[key] = valueOf(formData, key); return acc; }, {}); }
 function formatFieldErrors(formData: FormData, fileError: string | null) { const parsed = initialApplicationSchema.safeParse(Object.fromEntries(formData)); const fieldErrors: Partial<Record<Stage1Field,string>> = {}; if (!parsed.success) for (const issue of parsed.error.issues) { const field = issue.path[0] as Stage1Field | undefined; if (field && !fieldErrors[field]) fieldErrors[field] = issue.message; } if (fileError) fieldErrors.cv = fileError; return { parsed, fieldErrors }; }
 
 export async function submitStage1Application(_previousState: Stage1FormState, formData: FormData): Promise<Stage1FormState> {
