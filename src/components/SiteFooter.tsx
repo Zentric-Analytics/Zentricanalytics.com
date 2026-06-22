@@ -50,7 +50,7 @@ export function SiteFooter() {
         <div className="grid min-w-0 gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,1fr)]">
           <section className="min-w-0" aria-labelledby="footer-brand">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand">
-              Zentric Analytics LTD
+              Zentric Analytics
             </p>
             <h2 id="footer-brand" className="mt-4 max-w-xl break-words text-2xl font-bold tracking-tight text-ink sm:text-3xl">
               Reliable software, data, and AI systems for serious work.
@@ -103,7 +103,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 flex min-w-0 flex-col gap-2 border-t border-slate-200 pt-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p className="min-w-0 break-words">© {year} Zentric Analytics LTD. All rights reserved.</p>
+          <p className="min-w-0 break-words">© {year} Zentric Analytics. All rights reserved.</p>
           <p className="min-w-0 break-words">Software • Web • AI • Data Analytics • R&D</p>
         </div>
       </div>
