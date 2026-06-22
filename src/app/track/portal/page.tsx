@@ -69,6 +69,7 @@ export default async function Portal({
         where: {
           verifiedSessionTokenHash: sha256(session),
           sessionExpiresAt: { gt: new Date() },
+          application: { deletedAt: null },
         },
         include: {
           application: {

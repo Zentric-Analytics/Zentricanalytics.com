@@ -37,7 +37,7 @@ export async function requestAccessCode(formData: FormData) {
     const limit = await checkRateLimit({ scope: 'access-code-request', key: `${applicationId}:${email}:${ipHash}`, limit: accessCodeRateLimitConfig.requestLimit(), windowMs: accessCodeRateLimitConfig.windowMs() });
     safeDiagnostics('request', { ...baseDiagnostics, rateLimitAllowed: limit.allowed });
 
-    const app = await prisma.jobApplication.findUnique({ where: { applicationId }, include: { applicant: true } });
+    const app = await prisma.jobApplication.findFirst({ where: { applicationId, deletedAt: null }, include: { applicant: true } });
     const matchingApplicationFound = Boolean(app && app.applicant.email.toLowerCase() === email);
 
     if (!limit.allowed) {
@@ -93,7 +93,7 @@ export async function verifyAccessCode(formData: FormData) {
   const failedUrl = `/track?verified=0&applicationId=${encodeURIComponent(applicationId)}&email=${encodeURIComponent(email)}`;
   const limit = await checkRateLimit({ scope: 'access-code-verify', key: `${applicationId}:${email}:${ipHash}`, limit: accessCodeRateLimitConfig.verifyLimit(), windowMs: accessCodeRateLimitConfig.windowMs() });
   if (!limit.allowed) redirect(failedUrl);
-  const app = await prisma.jobApplication.findUnique({ where: { applicationId }, include: { applicant: true } });
+  const app = await prisma.jobApplication.findFirst({ where: { applicationId, deletedAt: null }, include: { applicant: true } });
   if (!app || app.applicant.email.toLowerCase() !== email) redirect(failedUrl);
   const access = await prisma.applicationAccessCode.findFirst({ where: { applicationId: app.id, codeHash: sha256(code), usedAt: null, expiresAt: { gt: new Date() } }, orderBy: { createdAt: 'desc' } });
   if (!access) redirect(failedUrl);

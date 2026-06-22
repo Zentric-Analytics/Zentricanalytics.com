@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   redirects: [] as string[],
   rateLimitCount: 0,
   jobApplicationFindUnique: vi.fn(),
+  jobApplicationFindFirst: vi.fn(),
   accessCodeCreate: vi.fn(async ({ data }) => data),
   auditLogCreate: vi.fn(async ({ data }) => data),
   emailNotificationCreate: vi.fn(async ({ data }) => data),
@@ -19,7 +20,7 @@ vi.mock('@/lib/prisma', () => ({
       count: vi.fn(async () => mocks.rateLimitCount),
       create: vi.fn(async ({ data }) => data),
     },
-    jobApplication: { findUnique: mocks.jobApplicationFindUnique },
+    jobApplication: { findUnique: mocks.jobApplicationFindUnique, findFirst: mocks.jobApplicationFindFirst },
     applicationAccessCode: { create: mocks.accessCodeCreate, findFirst: vi.fn(), update: vi.fn() },
     auditLog: { create: mocks.auditLogCreate },
     emailNotification: { create: mocks.emailNotificationCreate },
@@ -58,6 +59,7 @@ describe('track access-code flow', () => {
     mocks.redirects.length = 0;
     mocks.rateLimitCount = 0;
     mocks.jobApplicationFindUnique.mockResolvedValue({ id: 'app_db_1', applicationId: 'ZA-APP-2026-00041', applicant: { email: 'ada@example.com' } });
+    mocks.jobApplicationFindFirst.mockResolvedValue({ id: 'app_db_1', applicationId: 'ZA-APP-2026-00041', applicant: { email: 'ada@example.com' } });
     mocks.sendAndRecordEmail.mockResolvedValue({ status: 'sent' });
   });
 
@@ -79,6 +81,7 @@ describe('track access-code flow', () => {
 
   it('keeps unknown application/email requests privacy-safe and generic', async () => {
     mocks.jobApplicationFindUnique.mockResolvedValue(null);
+    mocks.jobApplicationFindFirst.mockResolvedValue(null);
     const { requestAccessCode } = await loadTrackActions();
     await expect(requestAccessCode(form('ZA-APP-2026-99999', 'unknown@example.com'))).rejects.toThrow('redirect:');
     expect(mocks.redirects.at(-1)).toContain('requested=1');
@@ -185,6 +188,50 @@ describe('admin and track UI source checks', () => {
     expect(diagnostics).toContain("template: 'access-code'");
     expect(diagnostics).not.toContain('codeHash');
     expect(diagnostics).not.toContain('session=');
+  });
+
+
+  it('admin soft delete, restore, and permanent delete controls are protected and explicit', () => {
+    const schema = readFileSync('prisma/schema.prisma', 'utf8');
+    const list = readFileSync('src/app/admin/applications/page.tsx', 'utf8');
+    const detail = readFileSync('src/app/admin/applications/[id]/page.tsx', 'utf8');
+    const deleted = readFileSync('src/app/admin/applications/deleted/page.tsx', 'utf8');
+    const actions = readFileSync('src/app/admin/applications/actions.ts', 'utf8');
+    expect(schema).toContain('deletedAt');
+    expect(schema).toContain('deletedByAdminEmail');
+    expect(schema).toContain('deleteReason');
+    expect(list).toContain('deletedAt: null');
+    expect(list).toContain('Deleted applications');
+    expect(deleted).toContain('where: { deletedAt: { not: null } }');
+    expect(detail).toContain('Move to deleted records');
+    expect(detail).toContain('Permanently delete');
+    expect(actions).toContain('getAdminSession');
+    expect(actions).toContain('softDeleteApplicationAction');
+    expect(actions).toContain('restoreApplicationAction');
+    expect(actions).toContain('permanentlyDeleteApplicationAction');
+    expect(actions).toContain("confirmation !== 'DELETE'");
+    expect(actions).toContain('app.applicationId !== typedPublicId');
+    expect(actions).toContain('deletePrivateUpload');
+    expect(actions).toContain('Admin soft deleted application');
+    expect(actions).toContain('Admin restored application');
+  });
+
+  it('candidate tracking and portal ignore soft-deleted applications', () => {
+    const actions = readFileSync('src/app/track/actions.ts', 'utf8');
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    expect(actions).toContain('deletedAt: null');
+    expect(portal).toContain('application: { deletedAt: null }');
+  });
+
+  it('permanent delete diagnostics avoid private fields and storage keys', () => {
+    const actions = readFileSync('src/app/admin/applications/actions.ts', 'utf8');
+    const diagnosticStart = actions.indexOf("adminAction: 'permanent_delete_application'");
+    const diagnosticBlock = actions.slice(diagnosticStart, actions.indexOf('const adminSession', diagnosticStart));
+    expect(diagnosticBlock).toContain('applicationPublicIdPresent');
+    expect(diagnosticBlock).toContain('privateFilesDeleted');
+    expect(diagnosticBlock).not.toContain('email');
+    expect(diagnosticBlock).not.toContain('storageKey');
+    expect(diagnosticBlock).not.toContain('token');
   });
 
 });

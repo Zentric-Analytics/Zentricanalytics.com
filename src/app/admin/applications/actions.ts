@@ -5,6 +5,7 @@ import { getAdminSession } from '@/lib/admin-auth';
 import { approveStage1, recordAdminStage1Action, StageActionError } from '@/lib/workflow';
 import { sendAndRecordEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
+import { deletePrivateUpload } from '@/lib/storage';
 
 function logAdminDiagnostics(diagnostics: Record<string, unknown>) { console.info('adminStageActionDiagnostics', diagnostics); }
 function redirectPath(applicationId?: string | null, params = '') { return applicationId ? `/admin/applications/${applicationId}${params}` : `/admin/applications${params}`; }
@@ -44,11 +45,14 @@ export async function adminStage1Action(formData: FormData) {
       diagnostics.redirectStatus = 'invalid_action';
       destination = redirectPath(applicationId, '?error=invalid_action');
     } else {
-      const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, select: { id: true, applicationId: true } });
+      const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, select: { id: true, applicationId: true, deletedAt: true } });
       diagnostics.applicationFound = Boolean(app);
       if (!app) {
         diagnostics.redirectStatus = 'missing_application';
         destination = redirectPath(null, '?error=action_failed');
+      } else if (app.deletedAt) {
+        diagnostics.redirectStatus = 'restore_before_stage_action';
+        destination = redirectPath(applicationId, '?error=restore_before_stage_action');
       } else if (action === 'approve') {
       const result = await approveStage1(applicationId, adminSession.email, notes);
       diagnostics.stage1Found = result.stage1Found; diagnostics.stage2Found = result.stage2Found; diagnostics.previousStage1Status = result.previousStage1Status; diagnostics.approvalTransactionSucceeded = true;
@@ -75,5 +79,93 @@ export async function adminStage1Action(formData: FormData) {
     diagnostics.redirectStatus = destination;
     logAdminDiagnostics(diagnostics);
   }
+  redirect(destination);
+}
+
+function deleteRedirect(code: string, applicationId?: string | null) {
+  return redirectPath(applicationId, code ? `?${code}` : '');
+}
+
+function safeReason(value: FormDataEntryValue | null) {
+  return typeof value === 'string' ? value.trim().slice(0, 500) : '';
+}
+
+export async function softDeleteApplicationAction(formData: FormData) {
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  const confirmation = String(formData.get('confirmDelete') ?? '');
+  const reason = safeReason(formData.get('deleteReason'));
+  let destination = deleteRedirect('error=delete_failed', applicationId);
+  const adminSession = await getAdminSession();
+  if (!adminSession) redirect('/admin/login');
+  if (!applicationId || confirmation !== 'DELETE') redirect(deleteRedirect('error=invalid_confirmation', applicationId));
+  try {
+    const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, select: { id: true, deletedAt: true } });
+    if (!app) destination = deleteRedirect('error=action_failed', null);
+    else {
+      await prisma.$transaction(async (tx) => {
+        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin soft delete requested', metadata: { reasonPresent: Boolean(reason) } } });
+        await tx.jobApplication.update({ where: { id: applicationId }, data: { deletedAt: new Date(), deletedByAdminEmail: adminSession.email, deleteReason: reason || null, restoredAt: null, restoredByAdminEmail: null } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin soft deleted application', metadata: { reasonPresent: Boolean(reason) } } });
+      });
+      destination = '/admin/applications?success=soft_deleted';
+    }
+  } catch { destination = deleteRedirect('error=delete_failed', applicationId); }
+  revalidatePath('/admin/applications'); revalidatePath('/admin/applications/deleted'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`);
+  redirect(destination);
+}
+
+export async function restoreApplicationAction(formData: FormData) {
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  let destination = '/admin/applications/deleted?error=action_failed';
+  const adminSession = await getAdminSession();
+  if (!adminSession) redirect('/admin/login');
+  try {
+    const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, select: { id: true, deletedAt: true } });
+    if (app?.deletedAt) {
+      await prisma.jobApplication.update({ where: { id: applicationId }, data: { deletedAt: null, deletedByAdminEmail: null, deleteReason: null, restoredAt: new Date(), restoredByAdminEmail: adminSession.email, auditLogs: { create: { actorType: 'admin', actorRef: adminSession.email, action: 'Admin restored application' } } } });
+      destination = `/admin/applications/${applicationId}?success=restored`;
+    }
+  } catch { destination = '/admin/applications/deleted?error=action_failed'; }
+  revalidatePath('/admin/applications'); revalidatePath('/admin/applications/deleted'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`);
+  redirect(destination);
+}
+
+export async function permanentlyDeleteApplicationAction(formData: FormData) {
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  const typedPublicId = String(formData.get('confirmationApplicationId') ?? '').trim();
+  let destination = '/admin/applications/deleted?error=delete_failed';
+  const diagnostics: Record<string, unknown> = { adminAction: 'permanent_delete_application', applicationPublicIdPresent: Boolean(typedPublicId), applicationFound: false, isSoftDeleted: false, confirmationMatches: false, relatedRecordsCounted: false, privateFilesDeleted: false, dbDeleteSucceeded: false, redirectStatus: null };
+  const adminSession = await getAdminSession();
+  if (!adminSession) redirect('/admin/login');
+  try {
+    const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, include: { documents: { select: { id: true, storageKey: true, provider: true } } } });
+    diagnostics.applicationFound = Boolean(app); diagnostics.isSoftDeleted = Boolean(app?.deletedAt); diagnostics.confirmationMatches = Boolean(app && app.applicationId === typedPublicId);
+    if (!app || !app.deletedAt) destination = '/admin/applications/deleted?error=restore_before_stage_action';
+    else if (app.applicationId !== typedPublicId) destination = `/admin/applications/${applicationId}?error=invalid_confirmation`;
+    else {
+      const stageIds = (await prisma.hiringStage.findMany({ where: { applicationId }, select: { id: true } })).map((s) => s.id);
+      const submissionIds = (await prisma.stageSubmission.findMany({ where: { stageId: { in: stageIds } }, select: { id: true } })).map((s) => s.id);
+      diagnostics.relatedRecordsCounted = true;
+      let filesReady = false;
+      try { await Promise.all(app.documents.map((d) => deletePrivateUpload(d.storageKey, d.provider))); diagnostics.privateFilesDeleted = true; filesReady = true; } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; destination = `/admin/applications/${applicationId}?error=file_delete_failed`; console.info('adminPermanentDeleteDiagnostics', { ...diagnostics, redirectStatus: destination }); }
+      if (filesReady) await prisma.$transaction(async (tx) => {
+        await tx.applicantDocument.deleteMany({ where: { OR: [{ submissionId: { in: submissionIds } }, { uploadedDocumentId: { in: app.documents.map((d) => d.id) } }] } });
+        await tx.electronicSignature.deleteMany({ where: { submissionId: { in: submissionIds } } });
+        await tx.stageSubmission.deleteMany({ where: { id: { in: submissionIds } } });
+        await tx.stageApproval.deleteMany({ where: { stageId: { in: stageIds } } });
+        await tx.hiringStage.deleteMany({ where: { id: { in: stageIds } } });
+        await tx.emailNotification.deleteMany({ where: { applicationId } });
+        await tx.adminNote.deleteMany({ where: { applicationId } });
+        await tx.applicationAccessCode.deleteMany({ where: { applicationId } });
+        await tx.auditLog.deleteMany({ where: { applicationId } });
+        await tx.uploadedDocument.deleteMany({ where: { applicationId } });
+        await tx.jobApplication.delete({ where: { id: applicationId } });
+        const remaining = await tx.jobApplication.count({ where: { applicantId: app.applicantId } });
+        if (remaining === 0) await tx.applicant.delete({ where: { id: app.applicantId } });
+      });
+      if (filesReady) { diagnostics.dbDeleteSucceeded = true; destination = '/admin/applications/deleted?success=permanent_deleted'; }
+    }
+  } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; destination = '/admin/applications/deleted?error=delete_failed'; }
+  finally { diagnostics.redirectStatus = destination; console.info('adminPermanentDeleteDiagnostics', diagnostics); revalidatePath('/admin/applications'); revalidatePath('/admin/applications/deleted'); }
   redirect(destination);
 }
