@@ -6,12 +6,15 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/admin-auth";
 import { privateUploadExists } from "@/lib/storage";
+import { parseStage3Metadata, stage3InterviewModes, stage3ScreeningTypes } from "@/lib/hiring";
 import {
   adminStage1Action,
   permanentlyDeleteApplicationAction,
   restoreApplicationAction,
   softDeleteApplicationAction,
   adminStage2Action,
+  adminStage3Action,
+  adminStage3InstructionAction,
 } from "../actions";
 import { AdminDocumentActions } from "./AdminDocumentActions";
 
@@ -70,6 +73,11 @@ function actionBanner(params: Record<string, string | undefined>) {
   if (params.success === "stage2_already_approved") messages.push("Stage 2 is already approved.");
   if (params.success === "stage2_correction") messages.push("Stage 2 correction was requested.");
   if (params.success === "stage2_rejected") messages.push("Stage 2 was rejected.");
+  if (params.success === "stage3_released") messages.push("Stage 3 instructions were released/updated.");
+  if (params.success === "stage3_approved") messages.push("Stage 3 was approved and Stage 4 is now available.");
+  if (params.success === "stage3_already_approved") messages.push("Stage 3 is already approved.");
+  if (params.success === "stage3_correction") messages.push("Stage 3 correction was requested.");
+  if (params.success === "stage3_rejected") messages.push("Stage 3 was rejected.");
   if (params.warning === "email_failed")
     messages.push(
       "Stage 1 was approved, but the unlock email could not be sent. Please retry email delivery or contact the candidate manually.",
@@ -147,6 +155,11 @@ export default async function AdminApplicationDetail({
   const stageTwoPayload = (stageTwoSubmission?.payload ?? {}) as Record<string, string | boolean>;
   const stageTwoSignature = stageTwoSubmission?.signature;
   const stageTwoDocuments = stageTwoSubmission?.documents ?? [];
+  const stageThree = application.stages.find((stage: ApplicationStage) => stage.stageOrder === 3);
+  const stageThreeMetadata = parseStage3Metadata(stageThree?.metadata);
+  const stageThreeSubmission = stageThree?.submissions[0];
+  const stageThreePayload = (stageThreeSubmission?.payload ?? {}) as Record<string, string | boolean>;
+  const stageThreeDocuments = stageThreeSubmission?.documents ?? [];
   const signature = stageOneSubmission?.signature;
   const documents = stageOneSubmission?.documents ?? [];
   const documentsWithAvailability: Array<{
@@ -164,6 +177,7 @@ export default async function AdminApplicationDetail({
     })),
   );
   const stageTwoDocumentsWithAvailability = await Promise.all(stageTwoDocuments.map(async (document: ApplicantDocument) => ({ document, privateFileAvailable: document.uploadedDocument ? await privateUploadExists(document.uploadedDocument.storageKey, document.uploadedDocument.provider) : false })));
+  const stageThreeDocumentsWithAvailability = await Promise.all(stageThreeDocuments.map(async (document: ApplicantDocument) => ({ document, privateFileAvailable: document.uploadedDocument ? await privateUploadExists(document.uploadedDocument.storageKey, document.uploadedDocument.provider) : false })));
   const stageOnePdfAvailable = Boolean(
     stageOneSubmission?.submittedAt &&
     signature?.confirmed &&
@@ -351,6 +365,23 @@ export default async function AdminApplicationDetail({
           </div>
         ) : <p className="mt-3 text-sm text-slate-600">No Stage 2 submission found.</p>}
       </section>
+
+
+      {stageThree && ['Available','In Progress','Correction Requested','Submitted','Under Review','Approved'].includes(stageThree.status) ? (
+      <section className="card mt-6 p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><h2 className="font-bold">Stage 3 Screening / Interview / Assessment</h2><StatusBadge status={stageThree.status} /></div>
+        {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 3 actions.</p> : (
+          <form action={adminStage3InstructionAction} className="mt-5 space-y-4 rounded-2xl border border-slate-200 p-4">
+            <input type="hidden" name="applicationDbId" value={application.id} />
+            <div className="grid gap-4 md:grid-cols-2"><label className="text-sm font-semibold">Screening type<select className="input mt-1" name="screeningType" defaultValue={stageThreeMetadata.screeningType ?? 'Screening'}>{stage3ScreeningTypes.map((type) => <option key={type}>{type}</option>)}</select></label><label className="text-sm font-semibold">Title<input className="input mt-1" name="title" defaultValue={stageThreeMetadata.title ?? ''} required /></label><label className="text-sm font-semibold md:col-span-2">Instructions<textarea className="input mt-1 min-h-32" name="instructions" defaultValue={stageThreeMetadata.instructions ?? ''} required /></label><label className="text-sm font-semibold">Interview mode<select className="input mt-1" name="interviewMode" defaultValue={stageThreeMetadata.interviewMode ?? 'Not applicable'}>{stage3InterviewModes.map((mode) => <option key={mode}>{mode}</option>)}</select></label><label className="text-sm font-semibold">Meeting link<input className="input mt-1" name="meetingLink" defaultValue={stageThreeMetadata.meetingLink ?? ''} /></label><label className="text-sm font-semibold">Location<input className="input mt-1" name="location" defaultValue={stageThreeMetadata.location ?? ''} /></label><label className="text-sm font-semibold">Scheduled at<input className="input mt-1" name="scheduledAt" type="datetime-local" defaultValue={stageThreeMetadata.scheduledAt ?? ''} /></label><label className="text-sm font-semibold">Assessment deadline<input className="input mt-1" name="deadlineAt" type="datetime-local" defaultValue={stageThreeMetadata.deadlineAt ?? ''} /></label><label className="text-sm font-semibold">Upload note<input className="input mt-1" name="allowedUploadNote" defaultValue={stageThreeMetadata.allowedUploadNote ?? ''} /></label></div>
+            <div className="flex flex-wrap gap-4 text-sm font-semibold"><label className="flex gap-2"><input name="requiresCandidateResponse" type="checkbox" defaultChecked={stageThreeMetadata.requiresCandidateResponse ?? true} /> Candidate response required</label><label className="flex gap-2"><input name="requiresUpload" type="checkbox" defaultChecked={stageThreeMetadata.requiresUpload ?? false} /> Assessment upload required</label></div>
+            <button className="btn btn-primary">Release/update Stage 3 instructions</button>
+          </form>
+        )}
+        <div className="mt-5 grid gap-4 lg:grid-cols-2"><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Released instructions</h3><p className="mt-2 text-sm">{stageThreeMetadata.title ?? 'Not released'}</p><p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{stageThreeMetadata.instructions ?? 'No instructions released yet.'}</p><p className="mt-2 text-xs text-slate-500">Released: {stageThreeMetadata.releasedAt ?? '—'} · By: {stageThreeMetadata.releasedByAdminEmail ?? '—'}</p></div><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Candidate response</h3>{stageThreeSubmission ? <div className="mt-2 text-sm"><p><strong>Availability:</strong> {String(stageThreePayload.availability ?? '—')}</p><p className="whitespace-pre-wrap"><strong>Message:</strong> {String(stageThreePayload.responseMessage ?? '—')}</p><p><strong>Declared accurate:</strong> {stageThreePayload.declarationAccuracy ? 'Yes' : 'No'}</p><p>Submitted: {formatDateTime(stageThreeSubmission.submittedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 3 response submitted.</p>}</div></div>
+        <div className="mt-5"><h3 className="font-semibold">Uploaded Stage 3 files</h3><div className="mt-3 grid gap-3">{stageThreeDocumentsWithAvailability.length ? stageThreeDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? (<article className="rounded-2xl border border-slate-200 p-4" key={document.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{document.uploadedDocument.kind}</p><p className="text-sm text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType} · {document.uploadedDocument.sizeBytes} bytes</p>{!privateFileAvailable ? <p className="mt-2 text-sm font-semibold text-amber-700">Private file unavailable in storage.</p> : null}</div><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={['application/pdf','image/jpeg','image/png','image/webp'].includes(document.uploadedDocument.mimeType)} /></div></article>) : null) : <p className="text-sm text-slate-600">No Stage 3 uploads.</p>}</div></div>
+        {application.deletedAt ? null : <form action={adminStage3Action} className="mt-5 flex flex-wrap gap-2"><input type="hidden" name="applicationDbId" value={application.id} /><input className="input max-w-xs" name="notes" placeholder="Optional notes" /><button className="btn btn-secondary" name="action" value="approve">Approve Stage 3</button><button className="btn btn-secondary" name="action" value="correction">Request correction</button><button className="btn btn-secondary" name="action" value="reject">Reject Stage 3</button></form>}
+      </section>) : null}
 
       <section className="card mt-6 p-5">
         <h2 className="font-bold">Stage 2 admin actions</h2>

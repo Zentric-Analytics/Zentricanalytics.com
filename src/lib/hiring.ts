@@ -124,3 +124,35 @@ export function toStage2SubmissionPayload(data: Stage2SubmissionInput) {
   };
 }
 export function getStage2ApprovalEffects() { return { stage2Status: 'Approved', stage3Status: 'Available', applicationStatus: 'Screening', currentStageOrder: 3 } as const; }
+
+export const stage3ScreeningTypes = ['Screening','Interview','Assessment','Interview + Assessment'] as const;
+export const stage3InterviewModes = ['Online','Phone','In person','Not applicable'] as const;
+export const stage3InstructionSchema = z.object({
+  screeningType: z.enum(stage3ScreeningTypes),
+  title: z.string().trim().min(2, 'Enter a Stage 3 title.').max(160),
+  instructions: z.string().trim().min(5, 'Enter Stage 3 instructions.').max(5000),
+  interviewMode: z.enum(stage3InterviewModes),
+  meetingLink: optionalUrl,
+  location: optionalText(500),
+  scheduledAt: optionalText(80),
+  deadlineAt: optionalText(80),
+  requiresCandidateResponse: z.coerce.boolean().default(false),
+  requiresUpload: z.coerce.boolean().default(false),
+  allowedUploadNote: optionalText(500),
+});
+export type Stage3InstructionInput = z.infer<typeof stage3InstructionSchema>;
+export type Stage3Metadata = Stage3InstructionInput & { releasedAt?: string; releasedByAdminEmail?: string; updatedAt?: string };
+export function parseStage3Metadata(value: unknown): Partial<Stage3Metadata> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Partial<Stage3Metadata> : {};
+}
+export const stage3SubmissionSchema = z.object({
+  session: z.string().min(16, 'Open the portal with a valid session.'),
+  availability: z.string().trim().min(2, 'Confirm your availability or response.').max(500),
+  responseMessage: optionalText(3000),
+  declarationAccuracy: z.literal('on', { errorMap: () => ({ message: 'Confirm the declaration.' }) }),
+});
+export type Stage3SubmissionInput = z.infer<typeof stage3SubmissionSchema>;
+export function toStage3SubmissionPayload(data: Stage3SubmissionInput) {
+  const { session: _session, declarationAccuracy, ...safeData } = data;
+  return { ...safeData, declarationAccuracy: declarationAccuracy === 'on' };
+}

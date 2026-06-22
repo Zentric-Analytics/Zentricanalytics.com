@@ -4,8 +4,8 @@ import type { Prisma } from '@prisma/client';
 import { PageShell } from '@/components/PageShell';
 import { Section } from '@/components/Section';
 import { StatusBadge } from '@/components/StatusBadge';
-import { idTypes, stages as stageDefs, toStageStatus, type StageStatus } from '@/lib/hiring';
-import { submitStage2 } from '../actions';
+import { idTypes, parseStage3Metadata, stages as stageDefs, toStageStatus, type StageStatus } from '@/lib/hiring';
+import { submitStage2, submitStage3 } from '../actions';
 import { Stage2SubmitButton } from './Stage2SubmitButton';
 import { prisma } from '@/lib/prisma';
 import { sha256 } from '@/lib/security';
@@ -120,6 +120,10 @@ export default async function Portal({
   const stageOne = portalStages[0]?.stage;
   const stageTwo = portalStages[1]?.stage;
   const stageTwoStatus = portalStages[1]?.status ?? 'Locked';
+  const stageThree = portalStages[2]?.stage;
+  const stageThreeStatus = portalStages[2]?.status ?? 'Locked';
+  const stageThreeMetadata = parseStage3Metadata(stageThree?.metadata);
+  const stageThreeReleased = Boolean(stageThreeMetadata.releasedAt);
   const stageOneApproved = portalStages[0]?.status === 'Approved';
   const stageOnePayload = (stageOne?.submissions[0]?.payload ?? {}) as Record<string, string>;
   const stageOneSignature = portalStages[0]?.stage?.submissions[0]?.signature;
@@ -239,6 +243,32 @@ export default async function Portal({
                 <div className="rounded-2xl border border-slate-200 p-4 sm:p-5"><h3 className="font-bold text-ink">Declaration and Consent</h3><div className="mt-4 space-y-3 text-sm"><label className="flex gap-2"><input name="declarationAccuracy" type="checkbox" required /> I confirm my ID information is accurate.</label><label className="flex gap-2"><input name="identityProcessingConsent" type="checkbox" required /> I consent to Zentric Analytics Ltd processing identity data for recruitment verification.</label><label className="block font-semibold">Typed electronic signature<input className="input mt-1" name="signatureName" defaultValue={application.applicant.fullName} required /></label><label className="flex gap-2"><input name="signatureConsent" type="checkbox" required /> I confirm this typed name is my electronic signature.</label></div></div>
                 <Stage2SubmitButton />
               </form>
+            ) : null}
+          </div>
+        </section>
+
+
+        <section className="mt-8" aria-labelledby="stage3-title">
+          <div className="card p-5 sm:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div><p className="text-sm font-semibold uppercase tracking-widest text-accent">Stage 3</p><h2 id="stage3-title" className="mt-2 text-2xl font-bold tracking-tight text-ink">Screening / Interview / Assessment</h2></div>
+              <StatusBadge status={stageThreeStatus} />
+            </div>
+            {stageTwoStatus !== 'Approved' && stageThreeStatus === 'Locked' ? (
+              <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Stage 3 unlocks after Stage 2 approval.</p>
+            ) : !stageThreeReleased ? (
+              <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Screening details will be shared by the admin.</p>
+            ) : ['Submitted','Under Review'].includes(stageThreeStatus) ? (
+              <p className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-800">Stage 3 submitted and under review.</p>
+            ) : stageThreeStatus === 'Approved' ? (
+              <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Stage 3 approved. Offer stage is now available.</p>
+            ) : stageThreeStatus === 'Rejected' ? (
+              <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">Stage 3 was not accepted. Please check your email for a safe application update.</p>
+            ) : ['Available','In Progress','Correction Requested'].includes(stageThreeStatus) ? (
+              <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5"><h3 className="text-lg font-bold text-ink">{stageThreeMetadata.title ?? 'Stage 3 instructions'}</h3><div className="mt-3 space-y-2 text-sm leading-6 text-slate-700"><p><strong>Type:</strong> {stageThreeMetadata.screeningType ?? 'Screening'}</p><p><strong>Interview mode:</strong> {stageThreeMetadata.interviewMode ?? 'Not applicable'}</p>{stageThreeMetadata.meetingLink ? <p><strong>Meeting link:</strong> <a className="text-accent underline" href={stageThreeMetadata.meetingLink}>Open meeting link</a></p> : null}{stageThreeMetadata.location ? <p><strong>Location:</strong> {stageThreeMetadata.location}</p> : null}{stageThreeMetadata.scheduledAt ? <p><strong>Scheduled:</strong> {stageThreeMetadata.scheduledAt}</p> : null}{stageThreeMetadata.deadlineAt ? <p><strong>Deadline:</strong> {stageThreeMetadata.deadlineAt}</p> : null}<p className="whitespace-pre-wrap rounded-xl bg-white p-3">{stageThreeMetadata.instructions}</p></div></div>
+                <form action={submitStage3} className="rounded-2xl border border-slate-200 p-4 sm:p-5 space-y-4"><input type="hidden" name="session" value={session ?? ''} /><h3 className="font-bold text-ink">Your response</h3>{stageThreeStatus === 'Correction Requested' ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">Correction requested. Please resubmit your Stage 3 response.</p> : null}<label className="block text-sm font-semibold">Availability / confirmation<input className="input mt-1" name="availability" required placeholder="Example: I am available and confirm." /></label><label className="block text-sm font-semibold">Response message<textarea className="input mt-1 min-h-28" name="responseMessage" /></label>{stageThreeMetadata.requiresUpload ? <label className="block rounded-2xl border border-dashed border-slate-300 p-4 text-sm font-semibold">Assessment upload<input className="mt-3 block w-full text-sm" name="assessmentFile" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" required /><span className="mt-2 block text-xs text-slate-500">{stageThreeMetadata.allowedUploadNote || 'Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG, WEBP. Max 20MB. Files are stored privately.'}</span></label> : null}<label className="flex gap-2 text-sm font-semibold"><input name="declarationAccuracy" type="checkbox" required /> I confirm this Stage 3 response is accurate.</label><button className="btn btn-primary" type="submit">Submit Stage 3</button><p className="text-xs text-slate-500">Submitting...</p></form>
+              </div>
             ) : null}
           </div>
         </section>

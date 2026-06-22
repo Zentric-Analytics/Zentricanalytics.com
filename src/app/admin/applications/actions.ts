@@ -2,10 +2,11 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getAdminSession } from '@/lib/admin-auth';
-import { approveStage1, approveStage2, recordAdminStage1Action, recordAdminStage2Action, StageActionError } from '@/lib/workflow';
+import { approveStage1, approveStage2, approveStage3, recordAdminStage1Action, recordAdminStage2Action, recordAdminStage3Action, StageActionError } from '@/lib/workflow';
 import { sendAndRecordEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import { deletePrivateUpload } from '@/lib/storage';
+import { parseStage3Metadata, stage3InstructionSchema } from '@/lib/hiring';
 
 function logAdminDiagnostics(diagnostics: Record<string, unknown>) { console.info('adminStageActionDiagnostics', diagnostics); }
 function redirectPath(applicationId?: string | null, params = '') { return applicationId ? `/admin/applications/${applicationId}${params}` : `/admin/applications${params}`; }
@@ -201,5 +202,72 @@ export async function adminStage2Action(formData: FormData) {
     }
   } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; destination = redirectPath(applicationId, '?error=action_failed'); }
   finally { revalidatePath('/admin/applications'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`); logAdminDiagnostics(diagnostics); }
+  redirect(destination);
+}
+
+export async function adminStage3InstructionAction(formData: FormData) {
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  const diagnostics: Record<string, unknown> = { stage3InstructionActionRequested: true, adminAuthenticated: false, applicationFound: false, stage3Found: false, metadataSaved: false, emailAttempted: false, emailStatus: 'not_attempted' };
+  let destination = redirectPath(applicationId, '?error=action_failed');
+  try {
+    const adminSession = await getAdminSession();
+    diagnostics.adminAuthenticated = Boolean(adminSession);
+    if (!adminSession) destination = '/admin/login';
+    else {
+      const parsed = stage3InstructionSchema.safeParse({
+        screeningType: String(formData.get('screeningType') ?? ''), title: String(formData.get('title') ?? ''), instructions: String(formData.get('instructions') ?? ''), interviewMode: String(formData.get('interviewMode') ?? 'Not applicable'), meetingLink: String(formData.get('meetingLink') ?? ''), location: String(formData.get('location') ?? ''), scheduledAt: String(formData.get('scheduledAt') ?? ''), deadlineAt: String(formData.get('deadlineAt') ?? ''), requiresCandidateResponse: formData.get('requiresCandidateResponse') === 'on', requiresUpload: formData.get('requiresUpload') === 'on', allowedUploadNote: String(formData.get('allowedUploadNote') ?? ''),
+      });
+      if (!parsed.success) destination = redirectPath(applicationId, '?error=stage3_validation');
+      else {
+        const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, include: { stages: true } });
+        diagnostics.applicationFound = Boolean(app);
+        const stage3 = app?.stages.find((s) => s.stageOrder === 3);
+        diagnostics.stage3Found = Boolean(stage3);
+        if (!app) destination = redirectPath(null, '?error=action_failed');
+        else if (app.deletedAt) destination = redirectPath(applicationId, '?error=restore_before_stage_action');
+        else if (!stage3 || !['Available','In Progress','Correction Requested','Submitted','Under Review','Approved'].includes(stage3.status)) destination = redirectPath(applicationId, '?error=missing_stage');
+        else {
+          const metadata = { ...parseStage3Metadata(stage3.metadata), ...parsed.data, releasedAt: parseStage3Metadata(stage3.metadata).releasedAt ?? new Date().toISOString(), releasedByAdminEmail: adminSession.email, updatedAt: new Date().toISOString() };
+          const status = ['Approved','Under Review','Correction Requested'].includes(stage3.status) ? stage3.status : 'In Progress';
+          const appStatus = parsed.data.screeningType.includes('Interview') ? 'Interview Scheduled' : parsed.data.screeningType === 'Assessment' ? 'Assessment Required' : 'Screening';
+          await prisma.$transaction(async (tx) => {
+            await tx.hiringStage.update({ where: { id: stage3.id }, data: { metadata, status, unlockedAt: stage3.unlockedAt ?? new Date() } });
+            await tx.jobApplication.update({ where: { id: applicationId }, data: { status: appStatus, currentStageOrder: 3 } });
+            await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin released Stage 3 instructions', metadata: { screeningType: parsed.data.screeningType, requiresCandidateResponse: parsed.data.requiresCandidateResponse, requiresUpload: parsed.data.requiresUpload } } });
+          });
+          diagnostics.metadataSaved = true;
+          const email = await safeSendEmail({ applicationId, template: 'stage-3-instructions-available', subject: `Stage 3 instructions are available: ${app.applicationId}`, body: 'Stage 3 instructions are available. Please return to Track Application to review and respond.' });
+          diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
+          destination = redirectPath(applicationId, `?success=stage3_released${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+        }
+      }
+    }
+  } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; }
+  finally { revalidatePath('/admin/applications'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`); logAdminDiagnostics(diagnostics); }
+  redirect(destination);
+}
+
+export async function adminStage3Action(formData: FormData) {
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  const action = String(formData.get('action') ?? '');
+  const notes = String(formData.get('notes') ?? '').slice(0, 500);
+  let destination = redirectPath(applicationId, '?error=action_failed');
+  const adminSession = await getAdminSession();
+  if (!adminSession) redirect('/admin/login');
+  const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, select: { applicationId: true, deletedAt: true } });
+  if (!app) redirect(redirectPath(null, '?error=action_failed'));
+  if (app.deletedAt) redirect(redirectPath(applicationId, '?error=restore_before_stage_action'));
+  try {
+    if (action === 'approve') {
+      const result = await approveStage3(applicationId, adminSession.email, notes);
+      const email = await safeSendEmail({ applicationId, template: 'stage-4-unlocked', subject: `Offer stage available: ${app.applicationId}`, body: 'Stage 3 has been approved. The Offer Stage is now available.' });
+      destination = redirectPath(applicationId, `?success=${result.alreadyApproved ? 'stage3_already_approved' : 'stage3_approved'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+    } else if (['correction','reject'].includes(action)) {
+      await recordAdminStage3Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes);
+      const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-3-rejected' : 'stage-3-correction-requested', subject: action === 'reject' ? `Application update: ${app.applicationId}` : `Stage 3 correction requested: ${app.applicationId}`, body: action === 'reject' ? 'We are unable to move your application forward after Stage 3 review.' : 'A correction has been requested for Stage 3. Please return to Track Application to update your response.' });
+      destination = redirectPath(applicationId, `?success=${action === 'reject' ? 'stage3_rejected' : 'stage3_correction'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+    } else destination = redirectPath(applicationId, '?error=invalid_action');
+  } catch { destination = redirectPath(applicationId, '?error=action_failed'); }
+  revalidatePath('/admin/applications'); revalidatePath(`/admin/applications/${applicationId}`);
   redirect(destination);
 }

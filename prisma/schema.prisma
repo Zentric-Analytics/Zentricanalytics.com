@@ -65,6 +65,7 @@ model HiringStage {
   unlockedAt    DateTime?
   submittedAt   DateTime?
   approvedAt    DateTime?
+  metadata      Json?
   submissions   StageSubmission[]
   approvals     StageApproval[]
 }
