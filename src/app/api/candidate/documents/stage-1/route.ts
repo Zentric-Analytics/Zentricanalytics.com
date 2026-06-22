@@ -28,10 +28,32 @@ export async function GET(request: NextRequest) {
   });
 
   const app = access?.application;
-  const stage = app?.stages[0];
-  const submission = stage?.submissions[0];
-  const signature = submission?.signature;
-  if (!app || !stage || !submission || !canDownloadDocument(toStageStatus(stage.status), Boolean(signature?.confirmed), submission.submittedAt?.toISOString())) return new NextResponse('Document unavailable', { status: 403 });
+  if (!app) return new NextResponse('Document unavailable', { status: 403 });
+
+  const stage = app.stages[0];
+  if (!stage) return new NextResponse('Document unavailable', { status: 403 });
+
+  const submission = stage.submissions[0];
+  if (!submission?.submittedAt) {
+    return new NextResponse('Document unavailable', { status: 403 });
+  }
+
+  const signature = submission.signature;
+  if (!signature?.confirmed || !signature.signedAt) {
+    return new NextResponse('Document unavailable', { status: 403 });
+  }
+
+  const submittedAt = submission.submittedAt;
+  const signedAt = signature.signedAt;
+  const documentEligible = canDownloadDocument(
+    toStageStatus(stage.status),
+    signature.confirmed,
+    submittedAt.toISOString(),
+  );
+
+  if (!documentEligible) {
+    return new NextResponse('Document unavailable', { status: 403 });
+  }
 
   const payload = submission.payload as Record<string, string>;
   const text = renderSubmittedDocumentText({
@@ -61,8 +83,8 @@ export async function GET(request: NextRequest) {
       value: `${document.fileName} (${document.mimeType}, ${document.sizeBytes} bytes)`,
     })),
     signatureName: signature.typedName,
-    submittedAt: submission.submittedAt!.toISOString(),
-    signedAt: signature.signedAt.toISOString(),
+    submittedAt: submittedAt.toISOString(),
+    signedAt: signedAt.toISOString(),
     version: submission.version,
     status: submission.status,
   });
