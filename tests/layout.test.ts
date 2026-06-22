@@ -13,7 +13,25 @@ const publicPages = [
 
 const headerLinks = ['Home', 'About', 'Services', 'Careers', 'Apply Now', 'Track Application'];
 
+const publicFacingBrandSourceFiles = [
+  'src/components/SiteHeader.tsx',
+  'src/components/SiteFooter.tsx',
+  'src/app/layout.tsx',
+  'src/app/page.tsx',
+  'src/app/about/page.tsx',
+  'src/app/apply/page.tsx',
+  'src/app/apply/Stage1ApplicationForm.tsx',
+];
+
 describe('public layout shell', () => {
+
+  it.each(publicFacingBrandSourceFiles)('%s uses the public brand name without the legal suffix', (sourcePath) => {
+    const source = readFileSync(sourcePath, 'utf8');
+
+    expect(source).not.toContain('Zentric Analytics Ltd');
+    expect(source).not.toContain('Zentric Analytics LTD');
+  });
+
   it('renders the site header in normal document flow', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
 

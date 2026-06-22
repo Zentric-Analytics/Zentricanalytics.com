@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Zentric Analytics Ltd',
+  title: 'Zentric Analytics',
   description: 'Technology company website and hiring enrollment portal.',
 };
 
