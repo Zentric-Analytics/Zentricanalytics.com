@@ -156,26 +156,26 @@ describe('admin and track UI source checks', () => {
     expect(auth).toContain('maxAge: 0');
   });
 
-  it('track form renders Step 1 and Step 2 with clear one-time passcode controls', () => {
+  it('track form renders secure access and verification passcode controls', () => {
     const page = readFileSync('src/app/track/page.tsx', 'utf8');
     const forms = readFileSync('src/app/track/TrackForms.tsx', 'utf8');
     expect(page).toContain('applicationId={params.applicationId}');
     expect(page).toContain('email={params.email}');
-    expect(forms).toContain('Step 1');
-    expect(forms).toContain('Step 2: Enter your one-time passcode');
+    expect(forms).toContain('Secure access');
+    expect(forms).toContain('Enter passcode');
     expect(forms).toContain('One-time passcode');
-    expect(forms).toContain('Open candidate portal');
+    expect(forms).toContain('Open portal');
     expect(forms).toContain('Sending...');
     expect(forms).toContain('Verifying...');
-    expect(forms).toContain('If your details match our records, an access code will be sent.');
+    expect(forms).toContain('We will send a one-time passcode if the details match our records.');
   });
 
-  it('requested=1 highlights and focuses Step 2', () => {
+  it('requested=1 highlights and focuses the passcode form', () => {
     const forms = readFileSync('src/app/track/TrackForms.tsx', 'utf8');
-    expect(forms).toContain('step2Active = requested || verifiedFailed');
+    expect(forms).toContain('codeFormActive = requested || verifiedFailed');
     expect(forms).toContain('scrollIntoView');
     expect(forms).toContain('focus({ preventScroll: true })');
-    expect(forms).toContain('border-teal-500 bg-teal-50/60 ring-4 ring-teal-100');
+    expect(forms).toContain('border-brand bg-white shadow-lg ring-4 ring-blue-50');
   });
 
   it('admin tracking diagnostics are protected and omit OTP fields', () => {

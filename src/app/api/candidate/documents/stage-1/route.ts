@@ -78,14 +78,31 @@ export async function GET(request: NextRequest) {
     }
 
     const payload = submission.payload as Record<string, string>;
+    const fieldValue = (key: string, fallback = '') => payload[key] ?? fallback;
     const pdf = await renderSubmittedDocumentPdf({
       title: 'Stage 1 Initial Application Submitted Form',
       applicantName: app.applicant.fullName,
       applicationId: app.applicationId,
       role: app.roleAppliedFor,
       fields: [
-        ['First name', 'firstName'], ['Initial / Middle Initial', 'middleInitial'], ['Last name', 'lastName'], ['Full legal name', 'fullName'], ['Email', 'email'], ['Country', 'phoneCountryName'], ['Phone number', 'phoneE164'], ['Location', 'location'], ['Role selected', 'role'], ['Role applied for', 'roleAppliedFor'], ['Work mode preference', 'workMode'], ['Experience level', 'experienceLevel'], ['Skills', 'skills'], ['Portfolio link', 'portfolioUrl'], ['Message', 'message'],
-      ].map(([label, key]) => ({ label, value: payload[key] ?? '' })),
+        { label: 'First name', value: fieldValue('firstName', app.applicant.firstName ?? '') },
+        { label: 'Middle initial', value: fieldValue('middleInitial', app.applicant.middleInitial ?? '') },
+        { label: 'Last name', value: fieldValue('lastName', app.applicant.lastName ?? '') },
+        { label: 'Full legal name', value: fieldValue('fullName', app.applicant.fullName) },
+        { label: 'Email', value: fieldValue('email', app.applicant.email) },
+        { label: 'Phone country name', value: fieldValue('phoneCountryName', app.applicant.phoneCountryName ?? '') },
+        { label: 'Phone E164', value: fieldValue('phoneE164', app.applicant.phoneE164 ?? app.applicant.phone ?? '') },
+        { label: 'Phone display', value: [fieldValue('phoneCountryName', app.applicant.phoneCountryName ?? ''), fieldValue('phoneE164', app.applicant.phoneE164 ?? app.applicant.phone ?? '')].filter(Boolean).join(' ') },
+        { label: 'Location', value: fieldValue('location', app.applicant.location ?? '') },
+        { label: 'Role', value: fieldValue('role', app.roleAppliedFor) },
+        { label: 'Role applied for', value: fieldValue('roleAppliedFor', app.roleAppliedFor) },
+        { label: 'Work mode', value: fieldValue('workMode', app.workModePreference ?? '') },
+        { label: 'Experience level', value: fieldValue('experienceLevel', app.experienceLevel ?? '') },
+        { label: 'Skills', value: fieldValue('skills', app.skills ?? '') },
+        { label: 'Portfolio URL', value: fieldValue('portfolioUrl', app.portfolioUrl ?? '') },
+        { label: 'Message', value: fieldValue('message', app.message ?? '') },
+        { label: 'Privacy consent', value: app.privacyConsent ? 'true' : '' },
+      ],
       documents: app.documents.map((document) => ({ label: document.kind, value: `${document.fileName} (${document.mimeType}, ${document.sizeBytes} bytes)` })),
       signatureName: signature.typedName,
       submittedAt: submission.submittedAt.toISOString(),
