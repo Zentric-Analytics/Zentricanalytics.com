@@ -8,13 +8,21 @@ datasource db {
 }
 
 model Applicant {
-  id           String           @id @default(cuid())
-  fullName     String
-  email        String
-  phone        String?
-  location     String?
-  createdAt    DateTime         @default(now())
-  applications JobApplication[]
+  id                  String           @id @default(cuid())
+  fullName            String
+  firstName           String?
+  middleInitial       String?
+  lastName            String?
+  email               String
+  phone               String?
+  phoneCountryIso     String?
+  phoneCountryName    String?
+  phoneDialCode       String?
+  phoneNationalNumber String?
+  phoneE164           String?
+  location            String?
+  createdAt           DateTime         @default(now())
+  applications        JobApplication[]
 }
 
 model JobApplication {

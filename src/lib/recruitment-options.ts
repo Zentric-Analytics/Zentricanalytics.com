@@ -1,0 +1,3 @@
+export const roleAppliedForOptions = ['Junior Frontend Developer','Frontend Developer','Backend Developer','Full-Stack Developer','Software Developer','Web Developer','UI/UX Designer','Product Designer','AI / Machine Learning Assistant','AI Engineer','Data Analyst','Data Engineer','QA Tester','DevOps / Cloud Assistant','Technical Support Assistant','Project / Product Assistant','Research Assistant','Intern / Trainee','General Application','Other'] as const;
+export const experienceLevelOptions = ['No professional experience yet','Intern / Trainee','Entry Level','Junior','Mid-Level','Senior','Lead','Manager','Not sure'] as const;
+export function resolveRoleAppliedFor(role: string, otherRole?: string) { return role === 'Other' ? (otherRole ?? '').trim() : role; }

@@ -1,7 +1,7 @@
 'use server';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { initialApplicationSchema } from '@/lib/hiring';
+import { initialApplicationSchema, toStage1SubmissionPayload } from '@/lib/hiring';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { savePrivateUpload, validateCvFile } from '@/lib/storage';
@@ -14,13 +14,13 @@ export async function submitStage1Application(formData: FormData) {
   const fileError = validateCvFile(file);
   const parsed = initialApplicationSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success || fileError) redirect('/apply?error=validation');
-  const data = parsed.data;
+  const data = toStage1SubmissionPayload(parsed.data);
   const applicationPublicId = await nextApplicationId();
   const upload = await savePrivateUpload(file, applicationPublicId);
   const h = await headers();
   const app = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    const applicant = await tx.applicant.create({ data: { fullName: data.fullName, email: data.email.toLowerCase(), phone: data.phone, location: data.location } });
-    const application = await tx.jobApplication.create({ data: { applicationId: applicationPublicId, applicantId: applicant.id, roleAppliedFor: data.role, workModePreference: data.workMode, experienceLevel: data.experienceLevel, skills: data.skills, portfolioUrl: data.portfolioUrl || null, message: data.message, privacyConsent: true, status: 'Application Submitted', currentStageOrder: 1 } });
+    const applicant = await tx.applicant.create({ data: { fullName: data.fullName, firstName: data.firstName, middleInitial: data.middleInitial || null, lastName: data.lastName, email: data.email.toLowerCase(), phone: data.phoneE164, phoneCountryIso: data.phoneCountryIso, phoneCountryName: data.phoneCountryName, phoneDialCode: data.phoneDialCode, phoneNationalNumber: data.phoneNational, phoneE164: data.phoneE164, location: data.location } });
+    const application = await tx.jobApplication.create({ data: { applicationId: applicationPublicId, applicantId: applicant.id, roleAppliedFor: data.roleAppliedFor, workModePreference: data.workMode, experienceLevel: data.experienceLevel, skills: data.skills, portfolioUrl: data.portfolioUrl || null, message: data.message, privacyConsent: true, status: 'Application Submitted', currentStageOrder: 1 } });
     return application;
   });
   await createStageRows(app.id);

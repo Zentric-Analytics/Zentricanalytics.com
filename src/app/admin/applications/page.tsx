@@ -153,10 +153,9 @@ export default async function AdminApplications({
                     </Link>
                   </h2>
                   <p>
-                    {application.applicant.fullName} ·{' '}
-                    {application.applicant.email}
+                    {application.applicant.fullName} · {application.applicant.email}
                   </p>
-                  <p>{application.roleAppliedFor}</p>
+                  <p>{application.roleAppliedFor} · {application.experienceLevel ?? 'Experience not provided'}</p><p>{application.applicant.phoneCountryName ?? 'Country not captured'} · {application.applicant.phoneE164 ?? application.applicant.phone ?? 'No phone'}</p>
                 </div>
                 <StatusBadge status={stageOne?.status ?? application.status} />
               </div>
@@ -168,7 +167,7 @@ export default async function AdminApplications({
                   <p>Skills: {application.skills}</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold">CV metadata</h3>
+                  <h3 className="font-semibold">Uploaded document metadata</h3>
                   {documents.length > 0 ? (
                     documents.map((document: ApplicantDocument) => (
                       <p key={document.id}>
