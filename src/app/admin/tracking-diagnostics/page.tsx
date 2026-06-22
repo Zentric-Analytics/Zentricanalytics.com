@@ -13,7 +13,7 @@ export default async function TrackingDiagnosticsPage() {
     return <main>DATABASE_URL is required for tracking diagnostics.</main>;
   }
 
-  const [emails, rateLimitEvents] = await Promise.all([
+  const [emails, rateLimitEvents, stageEmails, stageAuditLogs] = await Promise.all([
     prisma.emailNotification.findMany({
       where: { template: 'access-code' },
       orderBy: { createdAt: 'desc' },
@@ -24,6 +24,18 @@ export default async function TrackingDiagnosticsPage() {
       where: { scope: { in: ['access-code-request', 'access-code-verify'] } },
       orderBy: { createdAt: 'desc' },
       take: 25,
+    }),
+    prisma.emailNotification.findMany({
+      where: { template: { in: ['stage-2-unlocked', 'application-rejected', 'correction-requested'] } },
+      orderBy: { createdAt: 'desc' },
+      take: 25,
+      select: { id: true, applicationId: true, toEmail: true, template: true, status: true, providerMessageId: true, failureReason: true, createdAt: true },
+    }),
+    prisma.auditLog.findMany({
+      where: { action: { in: ['Admin approved Stage 1', 'Admin rejected Stage 1', 'Admin requested correction', 'Admin approval skipped; Stage 1 already approved'] } },
+      orderBy: { createdAt: 'desc' },
+      take: 25,
+      select: { id: true, applicationId: true, actorType: true, action: true, createdAt: true },
     }),
   ]);
 
@@ -57,6 +69,22 @@ export default async function TrackingDiagnosticsPage() {
               </tr>
             ))}
           </tbody>
+        </table>
+      </section>
+
+      <section className="mt-8 card overflow-x-auto p-5">
+        <h2 className="text-xl font-bold">Recent stage-action emails</h2>
+        <table className="mt-4 min-w-full text-left text-sm">
+          <thead><tr><th className="p-2">Created</th><th className="p-2">Application</th><th className="p-2">Email</th><th className="p-2">Template</th><th className="p-2">Status</th><th className="p-2">Failure</th></tr></thead>
+          <tbody>{stageEmails.map((email) => (<tr className="border-t" key={email.id}><td className="p-2">{email.createdAt.toISOString()}</td><td className="p-2">{maskGeneric(email.applicationId)}</td><td className="p-2">{maskEmail(email.toEmail)}</td><td className="p-2">{email.template}</td><td className="p-2 font-semibold">{email.status}</td><td className="p-2">{email.failureReason ?? '—'}</td></tr>))}</tbody>
+        </table>
+      </section>
+
+      <section className="mt-8 card overflow-x-auto p-5">
+        <h2 className="text-xl font-bold">Recent stage-action audit logs</h2>
+        <table className="mt-4 min-w-full text-left text-sm">
+          <thead><tr><th className="p-2">Created</th><th className="p-2">Application</th><th className="p-2">Actor</th><th className="p-2">Action</th></tr></thead>
+          <tbody>{stageAuditLogs.map((log) => (<tr className="border-t" key={log.id}><td className="p-2">{log.createdAt.toISOString()}</td><td className="p-2">{log.applicationId ? maskGeneric(log.applicationId) : '—'}</td><td className="p-2">{log.actorType}</td><td className="p-2">{log.action}</td></tr>))}</tbody>
         </table>
       </section>
 

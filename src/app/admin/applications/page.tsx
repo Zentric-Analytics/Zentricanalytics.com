@@ -39,6 +39,19 @@ type AuditLog = AdminApplicationListItem['auditLogs'][number];
 
 type SearchParams = Record<string, string | undefined>;
 
+function actionBanner(params: SearchParams) {
+  const messages: string[] = [];
+  if (params.success === 'approved') messages.push('Stage 1 was approved and Stage 2 is now available.');
+  if (params.success === 'already_approved') messages.push('Stage 1 is already approved.');
+  if (params.success === 'rejected') messages.push('Application was rejected.');
+  if (params.success === 'correction') messages.push('Correction was requested.');
+  if (params.warning === 'email_failed') messages.push('Stage action was saved, but the email could not be sent. Please retry email delivery or contact the candidate manually.');
+  if (params.error === 'action_failed') messages.push('The admin action could not be completed. Please refresh and try again.');
+  if (params.error === 'missing_stage') messages.push('Required hiring stage data is missing. Please contact an administrator.');
+  if (params.error === 'invalid_action') messages.push('Invalid admin action.');
+  return messages;
+}
+
 export default async function AdminApplications({
   searchParams,
 }: {
@@ -109,6 +122,10 @@ export default async function AdminApplications({
           <Link className="btn btn-secondary" href="/admin/logout">Logout</Link>
         </div>
       </header>
+
+      {actionBanner(params).map((message) => (
+        <p className="card mt-4 border border-amber-200 bg-amber-50 p-4 text-sm" key={message}>{message}</p>
+      ))}
 
       <form className="my-6 grid gap-3 md:grid-cols-4">
         <input
