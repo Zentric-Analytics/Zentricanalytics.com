@@ -2,21 +2,21 @@
 
 import { useState } from 'react';
 
-export function Stage1DownloadButton({ session }: { session: string }) {
+export function Stage1DownloadButton({ session, label = 'Download PDF' }: { session: string; label?: string }) {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function download() {
     setBusy(true);
-    setMessage('Preparing download...');
+    setMessage('Preparing PDF...');
     try {
       const response = await fetch(`/api/candidate/documents/stage-1?session=${encodeURIComponent(session)}`, { cache: 'no-store' });
       if (response.status === 401 || response.status === 403) {
-        setMessage('Your secure session expired. Please request a new one-time passcode.');
+        setMessage('Session expired. Request a new passcode.');
         return;
       }
       if (!response.ok) {
-        setMessage('Download failed. Please refresh and try again.');
+        setMessage('Download failed. Please try again.');
         return;
       }
       const blob = await response.blob();
@@ -32,16 +32,16 @@ export function Stage1DownloadButton({ session }: { session: string }) {
       URL.revokeObjectURL(url);
       setMessage('');
     } catch {
-      setMessage('Download failed. Please refresh and try again.');
+      setMessage('Download failed. Please try again.');
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="space-y-2">
-      <button className="btn btn-primary" type="button" onClick={download} disabled={busy}>
-        {busy ? 'Preparing download...' : 'Download signed Stage 1 PDF'}
+    <div className="min-w-0 space-y-2">
+      <button className="btn btn-primary w-full justify-center sm:w-auto" type="button" onClick={download} disabled={busy}>
+        {busy ? 'Preparing...' : label}
       </button>
       {message ? <p className="text-sm text-slate-600" role="status">{message}</p> : null}
     </div>
