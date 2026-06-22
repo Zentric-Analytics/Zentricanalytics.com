@@ -160,7 +160,7 @@ export default async function Portal({
             <div className="grid gap-4 p-5 sm:p-6 md:grid-cols-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Current step</p>
-                <p className="mt-2 text-base font-bold text-ink">{currentStage.title}</p>
+                <p className="mt-2 text-base font-bold text-ink">{currentStage?.title ?? 'Not available'}</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Progress</p>
