@@ -4,7 +4,8 @@ import type { Prisma } from '@prisma/client';
 import { StatusBadge } from '@/components/StatusBadge';
 import { stages } from '@/lib/hiring';
 import { prisma, isDatabaseConfigured } from '@/lib/prisma';
-import { isAdminSecretValid } from '@/lib/security';
+import { getAdminSession } from '@/lib/admin-auth';
+import { redirect } from 'next/navigation';
 
 import { adminStage1Action } from './actions';
 
@@ -45,17 +46,8 @@ export default async function AdminApplications({
 }) {
   const params = await searchParams;
 
-  if (!isAdminSecretValid(params.adminSecret)) {
-    return (
-      <main className="mx-auto max-w-xl px-4 py-10">
-        <h1 className="text-3xl font-bold">Admin access</h1>
-        <p className="mt-2">
-          Append <code>?adminSecret=...</code> with the configured
-          ADMIN_SESSION_SECRET to view applicant records.
-        </p>
-      </main>
-    );
-  }
+  const adminSession = await getAdminSession();
+  if (!adminSession) redirect('/admin/login');
 
   if (!isDatabaseConfigured()) {
     return <main>DATABASE_URL is required for admin records.</main>;
@@ -106,12 +98,11 @@ export default async function AdminApplications({
     <main className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="text-3xl font-bold">Hiring admin dashboard</h1>
       <p className="mt-2 text-slate-600">
-        Protected by ADMIN_SESSION_SECRET. Records below are live database
+        Protected by admin session. Records below are live database
         records.
       </p>
 
       <form className="my-6 grid gap-3 md:grid-cols-4">
-        <input type="hidden" name="adminSecret" value={params.adminSecret} />
         <input
           className="input"
           name="q"
@@ -147,7 +138,7 @@ export default async function AdminApplications({
                 <div>
                   <h2 className="font-bold">
                     <Link
-                      href={`/admin/applications/${application.id}?adminSecret=${params.adminSecret}`}
+                      href={`/admin/applications/${application.id}`}
                     >
                       {application.applicationId}
                     </Link>
@@ -204,11 +195,6 @@ export default async function AdminApplications({
               </details>
 
               <form action={adminStage1Action} className="mt-4 flex flex-wrap gap-2">
-                <input
-                  type="hidden"
-                  name="adminSecret"
-                  value={params.adminSecret}
-                />
                 <input
                   type="hidden"
                   name="applicationDbId"

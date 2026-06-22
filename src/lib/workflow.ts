@@ -1,13 +1,31 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { stages, generateApplicationId } from './hiring';
 
-export async function nextApplicationId() {
-  const count = await prisma.jobApplication.count();
-  return generateApplicationId(count + 1);
+export async function nextApplicationId(tx: Prisma.TransactionClient | typeof prisma = prisma, date = new Date()) {
+  const year = date.getUTCFullYear();
+  const sequence = await tx.applicationSequence.upsert({
+    where: { year },
+    create: { year, nextValue: 2 },
+    update: { nextValue: { increment: 1 } },
+  });
+  return generateApplicationId(sequence.nextValue - 1, date);
 }
 
-export async function createStageRows(applicationId: string) {
-  await prisma.hiringStage.createMany({ data: stages.map((stage) => ({
+export async function createApplicationWithRetry<T>(create: (applicationId: string) => Promise<T>, date = new Date(), attempts = 3) {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const applicationId = await nextApplicationId(prisma, date);
+    try { return await create(applicationId); } catch (error) {
+      lastError = error;
+      if (!(typeof error === 'object' && error && 'code' in error && error.code === 'P2002')) throw error;
+    }
+  }
+  throw lastError;
+}
+
+export async function createStageRows(applicationId: string, tx: Prisma.TransactionClient | typeof prisma = prisma) {
+  await tx.hiringStage.createMany({ data: stages.map((stage) => ({
     applicationId, stageKey: stage.key, stageOrder: stage.order, title: stage.title,
     status: stage.order === 1 ? 'Under Review' : 'Locked', unlockedAt: stage.order === 1 ? new Date() : null,
   })) });

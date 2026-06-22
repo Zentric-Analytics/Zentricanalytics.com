@@ -1,17 +1,16 @@
 'use server';
 import { revalidatePath } from 'next/cache';
-import { isAdminSecretValid } from '@/lib/security';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { approveStage1, recordAdminStage1Action } from '@/lib/workflow';
 import { sendAndRecordEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 
 export async function adminStage1Action(formData: FormData) {
-  const secret = String(formData.get('adminSecret') ?? '');
-  if (!isAdminSecretValid(secret)) throw new Error('Unauthorized');
+  const adminSession = await requireAdminSession();
   const applicationId = String(formData.get('applicationDbId'));
   const action = String(formData.get('action'));
   const notes = String(formData.get('notes') ?? '');
-  const adminEmail = String(formData.get('adminEmail') ?? 'admin@zentricanalytics.com');
+  const adminEmail = adminSession.email;
   if (action === 'approve') {
     await approveStage1(applicationId, adminEmail, notes);
     const app = await prisma.jobApplication.findUniqueOrThrow({ where: { id: applicationId }, include: { applicant: true } });

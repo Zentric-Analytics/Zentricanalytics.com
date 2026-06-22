@@ -22,3 +22,27 @@ NEXT_PUBLIC_SITE_URL=https://staging.zentricanalytics.com
 ```
 
 Do not prefix `RESEND_API_KEY` with `NEXT_PUBLIC_`. The app reads it only in server actions. If the key is missing, the send attempt is recorded as failed without showing provider details to applicants.
+
+## Production hardening environment variables
+
+Admin access no longer uses URL query-string secrets. Configure:
+
+- `ADMIN_EMAIL` — the admin login email.
+- `ADMIN_PASSWORD_HASH` — PBKDF2 hash, never a plaintext password.
+- `ADMIN_SESSION_SECRET` — at least 32 random characters for signed httpOnly admin sessions.
+
+Generate a password hash locally with:
+
+```bash
+node -e "const crypto=require('crypto');const p=process.argv[1];const s=crypto.randomBytes(16).toString('hex');const i=310000;const h=crypto.pbkdf2Sync(p,s,i,32,'sha256').toString('hex');console.log(`pbkdf2_sha256$${i}$${s}$${h}`)" 'replace-with-admin-password'
+```
+
+Private upload storage:
+
+- `PRIVATE_UPLOAD_ROOT` — staging/local private filesystem root. Do not point this at `public/`.
+- `PRIVATE_OBJECT_STORAGE_PROVIDER` — defaults to `local-private`. Non-local private object storage is intentionally a production placeholder in this build; if set without an adapter, uploads fail closed instead of becoming public.
+- `UPLOAD_MAX_BYTES` — optional override; default remains 20MB.
+
+Rate limiting:
+
+- `RATE_LIMIT_SALT` — optional salt for hashed rate-limit keys. If omitted, the admin session secret is used where available.

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sha256 } from '@/lib/security';
 import { canDownloadDocument, toStageStatus } from '@/lib/hiring';
-import { renderSubmittedDocumentText } from '@/lib/pdf';
+import { renderSubmittedDocumentPdf } from '@/lib/pdf';
 
 export async function GET(request: NextRequest) {
   const session = request.nextUrl.searchParams.get('session');
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
   }
 
   const payload = submission.payload as Record<string, string>;
-  const text = renderSubmittedDocumentText({
+  const pdf = await renderSubmittedDocumentPdf({
     title: 'Stage 1 Initial Application Submitted Form',
     applicantName: app.applicant.fullName,
     applicationId: app.applicationId,
@@ -89,5 +89,5 @@ export async function GET(request: NextRequest) {
     status: submission.status,
   });
   await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'applicant', actorRef: app.applicant.email, action: 'Document downloaded', metadata: { document: 'stage-1-submitted-form' } } });
-  return new NextResponse(text, { headers: { 'content-type': 'text/html; charset=utf-8', 'content-disposition': `attachment; filename="${app.applicationId}-stage-1-official.html"` } });
+  return new NextResponse(pdf, { headers: { 'content-type': 'application/pdf', 'content-disposition': `attachment; filename="${app.applicationId}-stage-1-official.pdf"` } });
 }
