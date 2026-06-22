@@ -30,6 +30,6 @@ export async function submitStage1Application(formData: FormData) {
   await prisma.applicantDocument.create({ data: { submissionId: submission.id, uploadedDocumentId: doc.id } });
   await prisma.electronicSignature.create({ data: { submissionId: submission.id, typedName: data.signatureName, confirmed: true, ipHash: sha256(h.get('x-forwarded-for') ?? 'unknown'), userAgent: h.get('user-agent') } });
   await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'applicant', actorRef: data.email.toLowerCase(), action: 'Application submitted', metadata: { applicationId: applicationPublicId } } });
-  await sendAndRecordEmail({ applicationId: app.id, to: data.email, template: 'application-received', subject: `Application received: ${applicationPublicId}`, portalUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://staging.zentricanalytics.com'}/track`, body: `Hello ${data.fullName}, your application ${applicationPublicId} was received. Track it at /track.` });
+  await sendAndRecordEmail({ applicationId: app.id, to: data.email, template: 'application-received', subject: `Application received: ${applicationPublicId}`, portalUrl: `${process.env.APP_BASE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://staging.zentricanalytics.com'}/track`, body: `Hello ${data.fullName}, your application ${applicationPublicId} was received. Track it at /track.` });
   redirect(`/apply?submitted=${encodeURIComponent(applicationPublicId)}`);
 }

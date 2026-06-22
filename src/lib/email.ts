@@ -1,14 +1,116 @@
 import { prisma } from './prisma';
-export type EmailEvent = { to: string; subject: string; applicationId: string; portalUrl?: string; template: string; body?: string };
-export async function sendHiringEmail(event: EmailEvent) {
-  const provider = process.env.EMAIL_PROVIDER ?? 'console';
-  console.info('Hiring email', { provider, to: event.to, subject: event.subject, applicationId: event.applicationId, template: event.template, body: event.body });
-  return { provider, status: provider === 'console' ? 'sent' as const : 'queued' as const };
+
+export type EmailEvent = {
+  to: string;
+  subject: string;
+  applicationId: string;
+  portalUrl?: string;
+  template: string;
+  body?: string;
+  html?: string;
+};
+
+type EmailSendResult = {
+  provider: 'console' | 'resend';
+  status: 'sent' | 'failed';
+  providerMessageId?: string;
+  failureReason?: string;
+};
+
+const RESEND_EMAIL_URL = 'https://api.resend.com/emails';
+const DEFAULT_FROM = 'careers@zentricanalytics.com';
+
+function selectedProvider() {
+  return process.env.EMAIL_PROVIDER === 'resend' ? 'resend' : 'console';
 }
+
+function emailFrom() {
+  return process.env.EMAIL_FROM || DEFAULT_FROM;
+}
+
+function safeFailureReason(error: unknown) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const message = error instanceof Error ? error.message : String(error || 'Unknown email provider error');
+  return apiKey ? message.split(apiKey).join('[redacted]') : message;
+}
+
+function textToHtml(text: string) {
+  return `<p>${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br />')}</p>`;
+}
+
+async function sendConsoleEmail(event: EmailEvent): Promise<EmailSendResult> {
+  console.info('Hiring email delivery', {
+    provider: 'console',
+    status: 'sent',
+    to: event.to,
+    subject: event.subject,
+    applicationId: event.applicationId,
+    template: event.template,
+    body: event.body,
+  });
+  return { provider: 'console', status: 'sent' };
+}
+
+async function sendResendEmail(event: EmailEvent): Promise<EmailSendResult> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return { provider: 'resend', status: 'failed', failureReason: 'RESEND_API_KEY is required when EMAIL_PROVIDER=resend' };
+
+  try {
+    const response = await fetch(RESEND_EMAIL_URL, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: emailFrom(),
+        to: [event.to],
+        subject: event.subject,
+        text: event.body ?? '',
+        html: event.html ?? (event.body ? textToHtml(event.body) : undefined),
+      }),
+    });
+    const payload = await response.json().catch(() => ({})) as { id?: string; message?: string; name?: string; error?: string };
+    if (!response.ok) {
+      const providerMessage = payload.message || payload.error || payload.name || `Resend request failed with status ${response.status}`;
+      return { provider: 'resend', status: 'failed', failureReason: safeFailureReason(providerMessage) };
+    }
+    return { provider: 'resend', status: 'sent', providerMessageId: payload.id };
+  } catch (error) {
+    return { provider: 'resend', status: 'failed', failureReason: safeFailureReason(error) };
+  }
+}
+
+export async function sendHiringEmail(event: EmailEvent): Promise<EmailSendResult> {
+  return selectedProvider() === 'resend' ? sendResendEmail(event) : sendConsoleEmail(event);
+}
+
 export async function sendAndRecordEmail(event: EmailEvent) {
-  let status = 'sent';
-  try { const result = await sendHiringEmail(event); status = result.status; } catch { status = 'failed'; }
-  const record = await prisma.emailNotification.create({ data: { applicationId: event.applicationId, toEmail: event.to, template: event.template, subject: event.subject, status } });
-  await prisma.auditLog.create({ data: { applicationId: event.applicationId, actorType: 'system', action: 'Email notification queued/sent', metadata: { template: event.template, status } } });
+  const result = await sendHiringEmail(event);
+  console.info('Hiring email delivery status', {
+    provider: result.provider,
+    status: result.status,
+    to: event.to,
+    applicationId: event.applicationId,
+    template: event.template,
+    providerMessageId: result.providerMessageId,
+    failureReason: result.failureReason,
+  });
+  const record = await prisma.emailNotification.create({
+    data: {
+      applicationId: event.applicationId,
+      toEmail: event.to,
+      template: event.template,
+      subject: event.subject,
+      status: result.status,
+      providerMessageId: result.providerMessageId,
+      failureReason: result.failureReason,
+    },
+  });
+  await prisma.auditLog.create({
+    data: {
+      applicationId: event.applicationId,
+      actorType: 'system',
+      action: 'Email notification queued/sent',
+      metadata: { template: event.template, status: result.status, provider: result.provider, providerMessageId: result.providerMessageId, failureReason: result.failureReason },
+    },
+  });
   return record;
 }
