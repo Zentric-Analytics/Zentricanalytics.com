@@ -12,17 +12,19 @@ const publicPages = [
 ];
 
 describe('public layout shell', () => {
-  it('renders the site header as a fixed viewport header', () => {
+  it('renders the site header in normal document flow', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
 
-    expect(header).toContain('fixed inset-x-0 top-0 z-50');
+    expect(header).toContain('border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur');
+    expect(header).not.toContain('fixed inset-x-0 top-0 z-50');
   });
 
-  it('offsets page content so the fixed header does not cover it', () => {
+  it('renders page content without a fixed-header top offset', () => {
     const shell = readFileSync('src/components/PageShell.tsx', 'utf8');
 
     expect(shell).toContain('<SiteHeader />');
-    expect(shell).toContain('pt-[4.5rem]');
+    expect(shell).toContain('<main>{children}</main>');
+    expect(shell).not.toContain('pt-[4.5rem]');
   });
 
   it.each(publicPages)('%s uses PageShell for the shared header layout', (pagePath) => {
