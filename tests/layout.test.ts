@@ -52,10 +52,45 @@ describe('public layout shell', () => {
     expect(header).toContain('Menu');
     expect(header).toContain('Close navigation menu');
     expect(header).toContain('fixed inset-0 z-50');
-    expect(header).toContain('overflow-y-auto bg-white');
+    expect(header).toContain('h-screen min-h-dvh');
+    expect(header).toContain('overflow-hidden bg-white');
+    expect(header).toContain('overflow-y-auto overscroll-contain');
     expect(header).toContain('md:hidden');
     expect(header).toContain('onClick={() => setIsMobileMenuOpen(false)}');
     headerLinks.forEach((label) => expect(header).toContain(label));
+  });
+
+
+  it('locks body and html scrolling while preserving the page scroll position', () => {
+    const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
+
+    expect(header).toContain('const previousScrollY = window.scrollY');
+    expect(header).toContain('const previousBodyOverflow = document.body.style.overflow');
+    expect(header).toContain('const previousBodyPosition = document.body.style.position');
+    expect(header).toContain('const previousBodyTop = document.body.style.top');
+    expect(header).toContain('const previousBodyWidth = document.body.style.width');
+    expect(header).toContain('const previousHtmlOverflow = document.documentElement.style.overflow');
+    expect(header).toContain("document.documentElement.style.overflow = 'hidden'");
+    expect(header).toContain("document.body.style.overflow = 'hidden'");
+    expect(header).toContain("document.body.style.position = 'fixed'");
+    expect(header).toContain('document.body.style.top = `-${previousScrollY}px`');
+    expect(header).toContain("document.body.style.width = '100%'");
+    expect(header).toContain('document.body.style.overflow = previousBodyOverflow');
+    expect(header).toContain('document.body.style.position = previousBodyPosition');
+    expect(header).toContain('document.body.style.top = previousBodyTop');
+    expect(header).toContain('document.body.style.width = previousBodyWidth');
+    expect(header).toContain('document.documentElement.style.overflow = previousHtmlOverflow');
+    expect(header).toContain('window.scrollTo(0, previousScrollY)');
+  });
+
+  it('keeps Escape closing behavior on the mobile drawer', () => {
+    const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
+
+    expect(header).toContain('const handleKeyDown = (event: KeyboardEvent)');
+    expect(header).toContain("if (event.key === 'Escape')");
+    expect(header).toContain('setIsMobileMenuOpen(false)');
+    expect(header).toContain("window.addEventListener('keydown', handleKeyDown)");
+    expect(header).toContain("window.removeEventListener('keydown', handleKeyDown)");
   });
 
   it('groups the full-screen mobile drawer into premium navigation sections', () => {

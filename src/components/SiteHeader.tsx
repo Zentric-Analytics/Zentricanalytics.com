@@ -44,8 +44,18 @@ export function SiteHeader() {
   useEffect(() => {
     if (!isMobileMenuOpen) return;
 
-    const previousOverflow = document.body.style.overflow;
+    const previousScrollY = window.scrollY;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPosition = document.body.style.position;
+    const previousBodyTop = document.body.style.top;
+    const previousBodyWidth = document.body.style.width;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${previousScrollY}px`;
+    document.body.style.width = '100%';
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -56,7 +66,12 @@ export function SiteHeader() {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.position = previousBodyPosition;
+      document.body.style.top = previousBodyTop;
+      document.body.style.width = previousBodyWidth;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      window.scrollTo(0, previousScrollY);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isMobileMenuOpen]);
@@ -101,9 +116,9 @@ export function SiteHeader() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="mobile-menu-title"
-          className="fixed inset-0 z-50 flex min-h-screen w-full flex-col overflow-y-auto bg-white px-5 py-5 md:hidden sm:px-8"
+          className="fixed inset-0 z-50 flex h-screen min-h-dvh w-full flex-col overflow-hidden bg-white md:hidden"
         >
-          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-slate-200 pb-5">
+          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-slate-200 px-5 py-5 sm:px-8">
             <h2 id="mobile-menu-title" className="text-3xl font-bold tracking-tight text-slate-950">
               Menu
             </h2>
@@ -120,7 +135,7 @@ export function SiteHeader() {
             </button>
           </div>
 
-          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-7 py-7">
+          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-7 overflow-y-auto overscroll-contain px-5 py-7 sm:px-8">
             {mobileMenuSections.map((section) => (
               <section className="border-b border-slate-200 pb-6 last:border-b-0 last:pb-0" key={section.label}>
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{section.label}</p>
