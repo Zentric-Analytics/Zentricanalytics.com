@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import type { Prisma } from '@prisma/client';
 
@@ -90,8 +91,16 @@ export default async function AdminApplicationDetail({
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="text-3xl font-bold">{application.applicationId}</h1>
-      <StatusBadge status={stageOneStatus} />
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">{application.applicationId}</h1>
+          <div className="mt-2"><StatusBadge status={stageOneStatus} /></div>
+        </div>
+        <div className="flex flex-col gap-2 text-sm text-slate-600 sm:items-end">
+          <span>Signed in as {adminSession.email}</span>
+          <Link className="btn btn-secondary" href="/admin/logout">Logout</Link>
+        </div>
+      </header>
 
       <section className="card mt-6 p-5">
         <h2 className="font-bold">Applicant</h2>

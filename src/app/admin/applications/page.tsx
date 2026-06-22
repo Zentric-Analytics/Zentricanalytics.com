@@ -96,11 +96,19 @@ export default async function AdminApplications({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-3xl font-bold">Hiring admin dashboard</h1>
-      <p className="mt-2 text-slate-600">
-        Protected by admin session. Records below are live database
-        records.
-      </p>
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Hiring admin dashboard</h1>
+          <p className="mt-2 text-slate-600">
+            Protected by admin session. Records below are live database
+            records.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 text-sm text-slate-600 sm:items-end">
+          <span>Signed in as {adminSession.email}</span>
+          <Link className="btn btn-secondary" href="/admin/logout">Logout</Link>
+        </div>
+      </header>
 
       <form className="my-6 grid gap-3 md:grid-cols-4">
         <input
