@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
-import { randomDigits, randomToken, sha256 } from '@/lib/security';
+import { maskGeneric, randomDigits, randomToken, sha256 } from '@/lib/security';
 import { sendAndRecordEmail } from '@/lib/email';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { accessCodeRateLimitConfig } from '@/lib/access-code-config';
@@ -25,11 +25,13 @@ export async function requestAccessCode(formData: FormData) {
   const h = await headers();
   const ipHash = sha256(h.get('x-forwarded-for') ?? 'unknown');
   const baseDiagnostics = {
-    accessCodeRequestReceived: true,
+    requestReceived: true,
     applicationIdPresent: applicationId.length > 0,
+    applicationIdHash: applicationId ? maskGeneric(sha256(applicationId)).slice(0, 12) : null,
     emailPresent: email.length > 0,
+    emailHash: email ? maskGeneric(sha256(email)).slice(0, 12) : null,
   };
-  let destination = trackUrl('error', applicationId, email);
+  let destination = '';
 
   try {
     const limit = await checkRateLimit({ scope: 'access-code-request', key: `${applicationId}:${email}:${ipHash}`, limit: accessCodeRateLimitConfig.requestLimit(), windowMs: accessCodeRateLimitConfig.windowMs() });
@@ -42,33 +44,44 @@ export async function requestAccessCode(formData: FormData) {
       if (app && matchingApplicationFound) {
         await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'applicant', actorRef: 'masked-email', action: 'Access code request rate limited', metadata: { scope: 'access-code-request' } } });
       }
-      safeDiagnostics('requestLimited', { ...baseDiagnostics, rateLimitAllowed: false, matchingApplicationFound, emailAttempted: false, emailStatus: 'not-attempted', redirectStatus: 'limited' });
+      safeDiagnostics('requestLimited', { ...baseDiagnostics, rateLimitAllowed: false, matchingApplicationFound, accessCodeCreated: false, emailAttempted: false, emailStatus: 'not-attempted', redirectStatus: 'limited' });
       destination = trackUrl('limited', applicationId, email);
     } else {
       let emailAttempted = false;
       let emailStatus = 'not-attempted';
+      let accessCodeCreated = false;
       if (app && matchingApplicationFound) {
         const code = randomDigits();
         await prisma.applicationAccessCode.create({ data: { applicationId: app.id, codeHash: sha256(code), expiresAt: new Date(Date.now() + 10 * 60 * 1000) } });
+        accessCodeCreated = true;
         await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'applicant', actorRef: 'masked-email', action: 'Access code requested' } });
         emailAttempted = true;
         try {
           const emailRecord = await sendAndRecordEmail({ applicationId: app.id, to: email, template: 'access-code', subject: `Your Zentric Analytics access code`, body: `Your one-time access code is ${code}. It expires in 10 minutes.` });
           emailStatus = emailRecord.status;
+          if (emailRecord.status === 'failed') {
+            await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'system', action: 'Access code email delivery failed', metadata: { template: 'access-code' } } });
+            safeDiagnostics('requestComplete', { ...baseDiagnostics, rateLimitAllowed: true, matchingApplicationFound, accessCodeCreated, emailAttempted, emailStatus, redirectStatus: 'error' });
+            destination = trackUrl('error', applicationId, email);
+          }
         } catch (error) {
           emailStatus = 'failed';
-          safeDiagnostics('emailRecordFailure', { ...baseDiagnostics, matchingApplicationFound, emailAttempted: true, emailStatus, errorName: error instanceof Error ? error.name : 'UnknownError' });
+          await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'system', action: 'Access code email delivery failed', metadata: { template: 'access-code', errorName: error instanceof Error ? error.name : 'UnknownError' } } });
+          safeDiagnostics('emailRecordFailure', { ...baseDiagnostics, rateLimitAllowed: true, matchingApplicationFound, accessCodeCreated, emailAttempted: true, emailStatus, redirectStatus: 'error', errorName: error instanceof Error ? error.name : 'UnknownError' });
+          destination = trackUrl('error', applicationId, email);
         }
       }
-      safeDiagnostics('requestComplete', { ...baseDiagnostics, rateLimitAllowed: true, matchingApplicationFound, emailAttempted, emailStatus, redirectStatus: 'requested' });
-      destination = trackUrl('requested', applicationId, email);
+      if (!destination.includes('error=1')) {
+        safeDiagnostics('requestComplete', { ...baseDiagnostics, rateLimitAllowed: true, matchingApplicationFound, accessCodeCreated, emailAttempted, emailStatus, redirectStatus: 'requested' });
+        destination = trackUrl('requested', applicationId, email);
+      }
     }
   } catch (error) {
-    safeDiagnostics('requestError', { ...baseDiagnostics, rateLimitAllowed: null, matchingApplicationFound: null, emailAttempted: false, emailStatus: 'failed', redirectStatus: 'error', errorName: error instanceof Error ? error.name : 'UnknownError' });
+    safeDiagnostics('requestError', { ...baseDiagnostics, rateLimitAllowed: null, matchingApplicationFound: null, accessCodeCreated: false, emailAttempted: false, emailStatus: 'failed', redirectStatus: 'error', errorName: error instanceof Error ? error.name : 'UnknownError' });
     destination = trackUrl('error', applicationId, email);
   }
 
-  redirect(destination);
+  redirect(destination || trackUrl('error', applicationId, email));
 }
 
 export async function verifyAccessCode(formData: FormData) {

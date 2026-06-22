@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { maskEmail, maskGeneric } from './security';
 
 export type EmailEvent = {
   to: string;
@@ -42,11 +43,10 @@ async function sendConsoleEmail(event: EmailEvent): Promise<EmailSendResult> {
   console.info('Hiring email delivery', {
     provider: 'console',
     status: 'sent',
-    to: event.to,
+    to: maskEmail(event.to),
     subject: event.subject,
-    applicationId: event.applicationId,
+    applicationId: maskGeneric(event.applicationId),
     template: event.template,
-    body: event.body,
   });
   return { provider: 'console', status: 'sent' };
 }
@@ -87,8 +87,8 @@ export async function sendAndRecordEmail(event: EmailEvent) {
   console.info('Hiring email delivery status', {
     provider: result.provider,
     status: result.status,
-    to: event.to,
-    applicationId: event.applicationId,
+    to: maskEmail(event.to),
+    applicationId: maskGeneric(event.applicationId),
     template: event.template,
     providerMessageId: result.providerMessageId,
     failureReason: result.failureReason,
