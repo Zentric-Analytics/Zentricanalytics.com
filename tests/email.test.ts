@@ -64,4 +64,12 @@ describe('email provider abstraction', () => {
     expect(JSON.stringify(mocks.emailNotificationCreate.mock.calls)).not.toContain('secret-key');
     expect(JSON.stringify(info.mock.calls)).not.toContain('secret-key');
   });
+
+  it('does not log one-time passcodes from email body', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    const { sendAndRecordEmail } = await loadEmailModule();
+    await sendAndRecordEmail({ applicationId: 'app_1', to: 'ada@example.com', template: 'access-code', subject: 'Code', body: 'Your one-time access code is 123456.' });
+    expect(JSON.stringify(info.mock.calls)).not.toContain('123456');
+  });
+
 });

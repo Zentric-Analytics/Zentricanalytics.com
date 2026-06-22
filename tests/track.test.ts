@@ -85,11 +85,28 @@ describe('track access-code flow', () => {
     expect(mocks.sendAndRecordEmail).not.toHaveBeenCalled();
   });
 
-  it('does not crash request flow when email recording fails', async () => {
+  it('returns safe error state when email recording fails for a matching application', async () => {
     mocks.sendAndRecordEmail.mockRejectedValue(new Error('provider unavailable'));
     const { requestAccessCode } = await loadTrackActions();
     await expect(requestAccessCode(form())).rejects.toThrow('redirect:');
-    expect(mocks.redirects.at(-1)).toContain('requested=1');
+    expect(mocks.redirects.at(-1)).toContain('error=1');
+    expect(mocks.redirects.at(-1)).not.toContain('provider');
+  });
+
+  it('creates an access code and records/sends email for a matching application/email', async () => {
+    const { requestAccessCode } = await loadTrackActions();
+    await expect(requestAccessCode(form())).rejects.toThrow('redirect:');
+    expect(mocks.accessCodeCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ applicationId: 'app_db_1', codeHash: expect.any(String), expiresAt: expect.any(Date) }) });
+    expect(mocks.sendAndRecordEmail).toHaveBeenCalledWith(expect.objectContaining({ applicationId: 'app_db_1', to: 'ada@example.com', template: 'access-code' }));
+    expect(mocks.auditLogCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ action: 'Access code requested' }) });
+  });
+
+  it('returns safe error state when Resend records a failed status', async () => {
+    mocks.sendAndRecordEmail.mockResolvedValue({ status: 'failed' });
+    const { requestAccessCode } = await loadTrackActions();
+    await expect(requestAccessCode(form())).rejects.toThrow('redirect:');
+    expect(mocks.redirects.at(-1)).toContain('error=1');
+    expect(mocks.redirects.at(-1)).not.toContain('failed');
   });
 
   it('diagnostics never log the one-time code', async () => {
@@ -127,13 +144,35 @@ describe('admin and track UI source checks', () => {
     expect(auth).toContain('maxAge: 0');
   });
 
-  it('track form keeps application ID/email after request and has pending button labels', () => {
+  it('track form renders Step 1 and Step 2 with clear one-time passcode controls', () => {
     const page = readFileSync('src/app/track/page.tsx', 'utf8');
     const forms = readFileSync('src/app/track/TrackForms.tsx', 'utf8');
     expect(page).toContain('applicationId={params.applicationId}');
     expect(page).toContain('email={params.email}');
+    expect(forms).toContain('Step 1');
+    expect(forms).toContain('Step 2: Enter your one-time passcode');
+    expect(forms).toContain('One-time passcode');
+    expect(forms).toContain('Open candidate portal');
     expect(forms).toContain('Sending...');
     expect(forms).toContain('Verifying...');
     expect(forms).toContain('If your details match our records, an access code will be sent.');
   });
+
+  it('requested=1 highlights and focuses Step 2', () => {
+    const forms = readFileSync('src/app/track/TrackForms.tsx', 'utf8');
+    expect(forms).toContain('step2Active = requested || verifiedFailed');
+    expect(forms).toContain('scrollIntoView');
+    expect(forms).toContain('focus({ preventScroll: true })');
+    expect(forms).toContain('border-teal-500 bg-teal-50/60 ring-4 ring-teal-100');
+  });
+
+  it('admin tracking diagnostics are protected and omit OTP fields', () => {
+    const diagnostics = readFileSync('src/app/admin/tracking-diagnostics/page.tsx', 'utf8');
+    expect(diagnostics).toContain('getAdminSession');
+    expect(diagnostics).toContain("redirect('/admin/login')");
+    expect(diagnostics).toContain("template: 'access-code'");
+    expect(diagnostics).not.toContain('codeHash');
+    expect(diagnostics).not.toContain('session=');
+  });
+
 });
