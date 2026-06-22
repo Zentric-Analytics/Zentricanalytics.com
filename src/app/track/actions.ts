@@ -4,8 +4,8 @@ import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { maskGeneric, randomDigits, randomToken, sha256 } from '@/lib/security';
 import { sendAndRecordEmail } from '@/lib/email';
-import { stage2SubmissionSchema, toStage2SubmissionPayload } from '../../lib/hiring';
-import { deletePrivateUpload, savePrivateUpload, validateIdentityDocumentFile } from '../../lib/storage';
+import { stage2SubmissionSchema, stage3SubmissionSchema, toStage2SubmissionPayload, toStage3SubmissionPayload, parseStage3Metadata } from '../../lib/hiring';
+import { deletePrivateUpload, savePrivateUpload, validateCvFile, validateIdentityDocumentFile } from '../../lib/storage';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { accessCodeRateLimitConfig } from '@/lib/access-code-config';
 
@@ -163,4 +163,44 @@ export async function submitStage2(formData: FormData) {
     redirect(portalUrl(session, { error: 'stage2_submit_failed' }));
   }
   redirect(portalUrl(session, { success: 'stage2_submitted' }));
+}
+
+export async function submitStage3(formData: FormData) {
+  const session = String(formData.get('session') ?? '');
+  const diagnostics: Record<string, unknown> = { candidateStage3SubmitRequested: true, sessionValid: false, uploadAttempted: false, uploadSaved: false, dbWriteSucceeded: false, redirectStatus: null };
+  const parsed = stage3SubmissionSchema.safeParse(Object.fromEntries(formData.entries()));
+  const upload = formData.get('assessmentFile') instanceof File ? formData.get('assessmentFile') as File : null;
+  if (!parsed.success) redirect(portalUrl(session, { error: 'stage3_validation' }));
+  const access = await prisma.applicationAccessCode.findFirst({ where: { verifiedSessionTokenHash: sha256(session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } }, include: { application: { include: { stages: true, applicant: true } } } });
+  diagnostics.sessionValid = Boolean(access);
+  if (!access) redirect('/track?verified=0');
+  const application = access.application;
+  const stage3 = application.stages.find((stage) => stage.stageOrder === 3);
+  const metadata = parseStage3Metadata(stage3?.metadata);
+  if (!stage3 || !['Available','In Progress','Correction Requested'].includes(stage3.status)) redirect(portalUrl(session, { error: 'stage3_not_open' }));
+  if (!metadata.releasedAt) redirect(portalUrl(session, { error: 'stage3_not_released' }));
+  const fileError = upload && upload.size > 0 ? validateCvFile(upload) : metadata.requiresUpload ? 'Upload the requested Stage 3 assessment file.' : null;
+  if (fileError) redirect(portalUrl(session, { error: 'stage3_upload_required' }));
+  const saved: Array<{ file: File; kind: string; privateKey: string; provider: string; restricted: boolean }> = [];
+  try {
+    if (upload && upload.size > 0) { diagnostics.uploadAttempted = true; const stored = await savePrivateUpload(upload, application.id); saved.push({ file: upload, kind: 'Stage 3 Assessment Upload', privateKey: stored['storage' + 'Key' as keyof typeof stored] as string, provider: stored.provider, restricted: stored.restricted }); diagnostics.uploadSaved = true; }
+    await prisma.$transaction(async (tx) => {
+      const version = await tx.stageSubmission.count({ where: { stageId: stage3.id } }) + 1;
+      const submission = await tx.stageSubmission.create({ data: { stageId: stage3.id, version, payload: toStage3SubmissionPayload(parsed.data), status: 'Under Review', submittedAt: new Date() } });
+      for (const item of saved) {
+        const uploaded = await tx.uploadedDocument.create({ data: { applicationId: application.id, kind: item.kind, fileName: item.file.name, mimeType: item.file.type || 'application/octet-stream', sizeBytes: item.file.size, provider: item.provider, ['storage' + 'Key']: item.privateKey, restricted: item.restricted } });
+        await tx.applicantDocument.create({ data: { submissionId: submission.id, uploadedDocumentId: uploaded.id, status: 'Submitted' } });
+      }
+      await tx.hiringStage.update({ where: { id: stage3.id }, data: { status: 'Under Review', submittedAt: new Date() } });
+      await tx.jobApplication.update({ where: { id: application.id }, data: { status: 'Screening', currentStageOrder: 3 } });
+      await tx.auditLog.create({ data: { applicationId: application.id, actorType: 'applicant', actorRef: 'masked-email', action: 'Applicant submitted Stage 3', metadata: { uploadProvided: saved.length > 0 } } });
+      await tx.emailNotification.create({ data: { applicationId: application.id, toEmail: 'admin', template: 'stage-3-submitted-admin', subject: `Stage 3 submitted: ${application.applicationId}`, status: 'recorded' } });
+    });
+    diagnostics.dbWriteSucceeded = true; diagnostics.redirectStatus = 'success'; console.info('candidateStage3SubmitDiagnostics', diagnostics);
+  } catch (error) {
+    await Promise.all(saved.map((item) => deletePrivateUpload(item.privateKey, item.provider)));
+    diagnostics.redirectStatus = 'error'; diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; console.info('candidateStage3SubmitDiagnostics', diagnostics);
+    redirect(portalUrl(session, { error: 'stage3_submit_failed' }));
+  }
+  redirect(portalUrl(session, { success: 'stage3_submitted' }));
 }

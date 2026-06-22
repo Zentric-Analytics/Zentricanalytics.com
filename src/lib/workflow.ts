@@ -92,3 +92,37 @@ export async function recordAdminStage2Action(applicationId: string, action: 'Re
     return { alreadySameStatus, stage2Found: true, previousStage2Status: stage2.status };
   });
 }
+
+export async function approveStage3(applicationId: string, adminEmail: string, notes?: string) {
+  return prisma.$transaction(async (tx) => {
+    const app = await tx.jobApplication.findUnique({ where: { id: applicationId } });
+    if (!app || app.deletedAt) throw new StageActionError('missing_application', 'Application not found.');
+    const [stage3, stage4] = await Promise.all([
+      tx.hiringStage.findFirst({ where: { applicationId, stageOrder: 3 } }),
+      tx.hiringStage.findFirst({ where: { applicationId, stageOrder: 4 } }),
+    ]);
+    if (!stage3 || !stage4) throw new StageActionError('missing_stage', 'Required stage row is missing.');
+    const alreadyApproved = stage3.status === 'Approved';
+    if (!alreadyApproved) await tx.hiringStage.update({ where: { id: stage3.id }, data: { status: 'Approved', approvedAt: new Date() } });
+    if (stage4.status === 'Locked') await tx.hiringStage.update({ where: { id: stage4.id }, data: { status: 'Available', unlockedAt: stage4.unlockedAt ?? new Date() } });
+    await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Offer Pending', currentStageOrder: 4 } });
+    if (!alreadyApproved) await tx.stageApproval.create({ data: { stageId: stage3.id, action: 'Approved', adminEmail, notes } });
+    await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminEmail, action: alreadyApproved ? 'Admin approval skipped; Stage 3 already approved' : 'Admin approved Stage 3', metadata: { alreadyApproved } } });
+    return { alreadyApproved, stage3Found: true, stage4Found: true, previousStage3Status: stage3.status };
+  });
+}
+
+export async function recordAdminStage3Action(applicationId: string, action: 'Rejected' | 'Correction Requested', adminEmail: string, notes?: string) {
+  return prisma.$transaction(async (tx) => {
+    const app = await tx.jobApplication.findUnique({ where: { id: applicationId } });
+    if (!app || app.deletedAt) throw new StageActionError('missing_application', 'Application not found.');
+    const stage3 = await tx.hiringStage.findFirst({ where: { applicationId, stageOrder: 3 } });
+    if (!stage3) throw new StageActionError('missing_stage', 'Stage 3 row is missing.');
+    const alreadySameStatus = stage3.status === action;
+    if (!alreadySameStatus) await tx.hiringStage.update({ where: { id: stage3.id }, data: { status: action } });
+    await tx.jobApplication.update({ where: { id: applicationId }, data: { status: action === 'Rejected' ? 'Rejected' : 'Screening', currentStageOrder: 3 } });
+    if (!alreadySameStatus) await tx.stageApproval.create({ data: { stageId: stage3.id, action, adminEmail, notes } });
+    await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminEmail, action: action === 'Rejected' ? 'Admin rejected Stage 3' : 'Admin requested Stage 3 correction', metadata: { alreadySameStatus } } });
+    return { alreadySameStatus, stage3Found: true, previousStage3Status: stage3.status };
+  });
+}
