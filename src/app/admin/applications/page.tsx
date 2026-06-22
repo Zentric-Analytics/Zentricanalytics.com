@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Prisma } from '@prisma/client';
 
+import { AdminLogoutButton } from '@/components/AdminLogoutButton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { stages } from '@/lib/hiring';
 import { prisma, isDatabaseConfigured } from '@/lib/prisma';
@@ -60,6 +61,7 @@ export default async function AdminApplications({
   const params = await searchParams;
 
   const adminSession = await getAdminSession();
+  console.info('adminSessionPresentOnPageLoad', { page: '/admin/applications', present: Boolean(adminSession) });
   if (!adminSession) redirect('/admin/login');
 
   if (!isDatabaseConfigured()) {
@@ -119,7 +121,7 @@ export default async function AdminApplications({
         </div>
         <div className="flex flex-col gap-2 text-sm text-slate-600 sm:items-end">
           <span>Signed in as {adminSession.email}</span>
-          <Link className="btn btn-secondary" href="/admin/logout">Logout</Link>
+          <AdminLogoutButton />
         </div>
       </header>
 

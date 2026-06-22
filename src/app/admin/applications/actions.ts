@@ -33,6 +33,7 @@ export async function adminStage1Action(formData: FormData) {
   try {
     const adminSession = await getAdminSession();
     diagnostics.adminAuthenticated = Boolean(adminSession);
+    diagnostics.adminActionSessionPresent = Boolean(adminSession);
     if (!adminSession) {
       diagnostics.redirectStatus = 'login';
       destination = '/admin/login';
