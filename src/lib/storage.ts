@@ -143,3 +143,25 @@ export function privateUploadConfigurationStatus() {
     provider: selectedStorageProvider(),
   };
 }
+
+export const ALLOWED_ID_DOCUMENT_MIME_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/pjpeg",
+  "image/jpg",
+  "image/png",
+  "image/x-png",
+  "image/webp",
+]);
+export const ALLOWED_ID_DOCUMENT_EXTENSIONS = new Set(["pdf", "jpg", "jpeg", "png", "webp"]);
+
+export function validateIdentityDocumentFile(file: File | null | undefined, requiredMessage: string) {
+  if (!file || file.size === 0) return requiredMessage;
+  if (file.size > MAX_CV_BYTES) return "Upload a file that is 20MB or smaller.";
+  const extension = fileExtension(file.name);
+  const extensionAllowed = ALLOWED_ID_DOCUMENT_EXTENSIONS.has(extension);
+  const mimeAllowed = ALLOWED_ID_DOCUMENT_MIME_TYPES.has(file.type);
+  const safeFallbackMime = GENERIC_UPLOAD_MIME_TYPES.has(file.type);
+  if ((mimeAllowed || safeFallbackMime) && extensionAllowed) return null;
+  return "Upload a PDF, JPG, JPEG, PNG, or WEBP file.";
+}

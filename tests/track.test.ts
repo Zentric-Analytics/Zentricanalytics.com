@@ -34,10 +34,146 @@ vi.mock('@/lib/rate-limit', () => ({
 vi.mock('@/lib/access-code-config', async () => {
   const actual = await vi.importActual<typeof import('../src/lib/access-code-config')>('../src/lib/access-code-config');
   return actual;
+  it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    expect(portal).toContain("stageOneApproved");
+    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
+    expect(portal).toContain("Stage 2 submitted and under review.");
+    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
+    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
+    expect(portal).not.toContain('/uploads/${');
+  });
+
+  it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
+    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    expect(button).toContain('Submitting...');
+    expect(button).toContain('Submit Stage 2');
+  });
+
+  it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
+    const actions = readFileSync('src/app/track/actions.ts', 'utf8');
+    expect(actions).toContain('export async function submitStage2');
+    expect(actions).toContain('verifiedSessionTokenHash: sha256(session)');
+    expect(actions).toContain('application: { deletedAt: null }');
+    expect(actions).toContain("stage1?.status !== 'Approved'");
+    expect(actions).toContain("stage2.status === 'Locked'");
+    expect(actions).toContain("['Available', 'In Progress', 'Correction Requested'].includes(stage2.status)");
+    expect(actions).toContain('savePrivateUpload');
+    expect(actions).toContain('stageSubmission.create');
+    expect(actions).toContain('uploadedDocument.create');
+    expect(actions).toContain('applicantDocument.create');
+    expect(actions).toContain('electronicSignature.create');
+    expect(actions).toContain("status: 'Under Review'");
+    expect(actions).toContain('deletePrivateUpload');
+    const failureLog = actions.slice(actions.indexOf("stage2SubmissionFailure"));
+    expect(failureLog).not.toContain('idNumber');
+    expect(failureLog).not.toContain('storageKey');
+  });
+
+  it('admin can review Stage 2 and perform protected Stage 2 actions that unlock Stage 3', () => {
+    const detail = readFileSync('src/app/admin/applications/[id]/page.tsx', 'utf8');
+    const actions = readFileSync('src/app/admin/applications/actions.ts', 'utf8');
+    const workflow = readFileSync('src/lib/workflow.ts', 'utf8');
+    expect(detail).toContain('Stage 2 identity verification');
+    expect(detail).toContain('Uploaded Stage 2 documents');
+    expect(detail).toContain('idNumberMasked');
+    expect(detail).toContain('adminStage2Action');
+    expect(actions).toContain('export async function adminStage2Action');
+    expect(actions).toContain('getAdminSession');
+    expect(actions).toContain('app.deletedAt');
+    expect(workflow).toContain('export async function approveStage2');
+    expect(workflow).toContain('stageOrder: 3');
+    expect(workflow).toContain("status: 'Available'");
+    expect(workflow).toContain('currentStageOrder: 3');
+    expect(workflow).toContain("Admin approved Stage 2");
+    expect(actions).toContain('recordAdminStage2Action');
+  });
+
+  it('Stage 2 uploads stay private and admin upload route remains protected', () => {
+    const storage = readFileSync('src/lib/storage.ts', 'utf8');
+    const uploadRoute = readFileSync('src/app/api/admin/applications/[applicationId]/uploads/[documentId]/route.ts', 'utf8');
+    expect(storage).toContain('ALLOWED_ID_DOCUMENT_MIME_TYPES');
+    expect(storage).toContain('privateUploadRoot');
+    expect(storage).not.toContain('public/');
+    expect(uploadRoute).toContain('requireAdminSession');
+    expect(uploadRoute).toContain('readPrivateUpload');
+    expect(uploadRoute).not.toContain('storageKey: document.storageKey');
+  });
+
 });
 vi.mock('@/lib/security', async () => {
   const actual = await vi.importActual<typeof import('../src/lib/security')>('../src/lib/security');
   return { ...actual, randomDigits: vi.fn(() => '654321') };
+  it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    expect(portal).toContain("stageOneApproved");
+    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
+    expect(portal).toContain("Stage 2 submitted and under review.");
+    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
+    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
+    expect(portal).not.toContain('/uploads/${');
+  });
+
+  it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
+    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    expect(button).toContain('Submitting...');
+    expect(button).toContain('Submit Stage 2');
+  });
+
+  it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
+    const actions = readFileSync('src/app/track/actions.ts', 'utf8');
+    expect(actions).toContain('export async function submitStage2');
+    expect(actions).toContain('verifiedSessionTokenHash: sha256(session)');
+    expect(actions).toContain('application: { deletedAt: null }');
+    expect(actions).toContain("stage1?.status !== 'Approved'");
+    expect(actions).toContain("stage2.status === 'Locked'");
+    expect(actions).toContain("['Available', 'In Progress', 'Correction Requested'].includes(stage2.status)");
+    expect(actions).toContain('savePrivateUpload');
+    expect(actions).toContain('stageSubmission.create');
+    expect(actions).toContain('uploadedDocument.create');
+    expect(actions).toContain('applicantDocument.create');
+    expect(actions).toContain('electronicSignature.create');
+    expect(actions).toContain("status: 'Under Review'");
+    expect(actions).toContain('deletePrivateUpload');
+    const failureLog = actions.slice(actions.indexOf("stage2SubmissionFailure"));
+    expect(failureLog).not.toContain('idNumber');
+    expect(failureLog).not.toContain('storageKey');
+  });
+
+  it('admin can review Stage 2 and perform protected Stage 2 actions that unlock Stage 3', () => {
+    const detail = readFileSync('src/app/admin/applications/[id]/page.tsx', 'utf8');
+    const actions = readFileSync('src/app/admin/applications/actions.ts', 'utf8');
+    const workflow = readFileSync('src/lib/workflow.ts', 'utf8');
+    expect(detail).toContain('Stage 2 identity verification');
+    expect(detail).toContain('Uploaded Stage 2 documents');
+    expect(detail).toContain('idNumberMasked');
+    expect(detail).toContain('adminStage2Action');
+    expect(actions).toContain('export async function adminStage2Action');
+    expect(actions).toContain('getAdminSession');
+    expect(actions).toContain('app.deletedAt');
+    expect(workflow).toContain('export async function approveStage2');
+    expect(workflow).toContain('stageOrder: 3');
+    expect(workflow).toContain("status: 'Available'");
+    expect(workflow).toContain('currentStageOrder: 3');
+    expect(workflow).toContain("Admin approved Stage 2");
+    expect(actions).toContain('recordAdminStage2Action');
+  });
+
+  it('Stage 2 uploads stay private and admin upload route remains protected', () => {
+    const storage = readFileSync('src/lib/storage.ts', 'utf8');
+    const uploadRoute = readFileSync('src/app/api/admin/applications/[applicationId]/uploads/[documentId]/route.ts', 'utf8');
+    expect(storage).toContain('ALLOWED_ID_DOCUMENT_MIME_TYPES');
+    expect(storage).toContain('privateUploadRoot');
+    expect(storage).not.toContain('public/');
+    expect(uploadRoute).toContain('requireAdminSession');
+    expect(uploadRoute).toContain('readPrivateUpload');
+    expect(uploadRoute).not.toContain('storageKey: document.storageKey');
+  });
+
 });
 
 async function loadTrackActions() {
@@ -128,6 +264,74 @@ describe('track access-code flow', () => {
     expect(accessCodeRateLimitConfig.verifyLimit()).toBe(4);
     expect(accessCodeRateLimitConfig.windowMs()).toBe(600000);
   });
+  it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    expect(portal).toContain("stageOneApproved");
+    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
+    expect(portal).toContain("Stage 2 submitted and under review.");
+    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
+    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
+    expect(portal).not.toContain('/uploads/${');
+  });
+
+  it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
+    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    expect(button).toContain('Submitting...');
+    expect(button).toContain('Submit Stage 2');
+  });
+
+  it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
+    const actions = readFileSync('src/app/track/actions.ts', 'utf8');
+    expect(actions).toContain('export async function submitStage2');
+    expect(actions).toContain('verifiedSessionTokenHash: sha256(session)');
+    expect(actions).toContain('application: { deletedAt: null }');
+    expect(actions).toContain("stage1?.status !== 'Approved'");
+    expect(actions).toContain("stage2.status === 'Locked'");
+    expect(actions).toContain("['Available', 'In Progress', 'Correction Requested'].includes(stage2.status)");
+    expect(actions).toContain('savePrivateUpload');
+    expect(actions).toContain('stageSubmission.create');
+    expect(actions).toContain('uploadedDocument.create');
+    expect(actions).toContain('applicantDocument.create');
+    expect(actions).toContain('electronicSignature.create');
+    expect(actions).toContain("status: 'Under Review'");
+    expect(actions).toContain('deletePrivateUpload');
+    const failureLog = actions.slice(actions.indexOf("stage2SubmissionFailure"));
+    expect(failureLog).not.toContain('idNumber');
+    expect(failureLog).not.toContain('storageKey');
+  });
+
+  it('admin can review Stage 2 and perform protected Stage 2 actions that unlock Stage 3', () => {
+    const detail = readFileSync('src/app/admin/applications/[id]/page.tsx', 'utf8');
+    const actions = readFileSync('src/app/admin/applications/actions.ts', 'utf8');
+    const workflow = readFileSync('src/lib/workflow.ts', 'utf8');
+    expect(detail).toContain('Stage 2 identity verification');
+    expect(detail).toContain('Uploaded Stage 2 documents');
+    expect(detail).toContain('idNumberMasked');
+    expect(detail).toContain('adminStage2Action');
+    expect(actions).toContain('export async function adminStage2Action');
+    expect(actions).toContain('getAdminSession');
+    expect(actions).toContain('app.deletedAt');
+    expect(workflow).toContain('export async function approveStage2');
+    expect(workflow).toContain('stageOrder: 3');
+    expect(workflow).toContain("status: 'Available'");
+    expect(workflow).toContain('currentStageOrder: 3');
+    expect(workflow).toContain("Admin approved Stage 2");
+    expect(actions).toContain('recordAdminStage2Action');
+  });
+
+  it('Stage 2 uploads stay private and admin upload route remains protected', () => {
+    const storage = readFileSync('src/lib/storage.ts', 'utf8');
+    const uploadRoute = readFileSync('src/app/api/admin/applications/[applicationId]/uploads/[documentId]/route.ts', 'utf8');
+    expect(storage).toContain('ALLOWED_ID_DOCUMENT_MIME_TYPES');
+    expect(storage).toContain('privateUploadRoot');
+    expect(storage).not.toContain('public/');
+    expect(uploadRoute).toContain('requireAdminSession');
+    expect(uploadRoute).toContain('readPrivateUpload');
+    expect(uploadRoute).not.toContain('storageKey: document.storageKey');
+  });
+
 });
 
 describe('admin and track UI source checks', () => {
@@ -232,6 +436,74 @@ describe('admin and track UI source checks', () => {
     expect(diagnosticBlock).not.toContain('email');
     expect(diagnosticBlock).not.toContain('storageKey');
     expect(diagnosticBlock).not.toContain('token');
+  });
+
+  it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    expect(portal).toContain("stageOneApproved");
+    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
+    expect(portal).toContain("Stage 2 submitted and under review.");
+    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
+    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
+    expect(portal).not.toContain('/uploads/${');
+  });
+
+  it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
+    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    expect(button).toContain('Submitting...');
+    expect(button).toContain('Submit Stage 2');
+  });
+
+  it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
+    const actions = readFileSync('src/app/track/actions.ts', 'utf8');
+    expect(actions).toContain('export async function submitStage2');
+    expect(actions).toContain('verifiedSessionTokenHash: sha256(session)');
+    expect(actions).toContain('application: { deletedAt: null }');
+    expect(actions).toContain("stage1?.status !== 'Approved'");
+    expect(actions).toContain("stage2.status === 'Locked'");
+    expect(actions).toContain("['Available', 'In Progress', 'Correction Requested'].includes(stage2.status)");
+    expect(actions).toContain('savePrivateUpload');
+    expect(actions).toContain('stageSubmission.create');
+    expect(actions).toContain('uploadedDocument.create');
+    expect(actions).toContain('applicantDocument.create');
+    expect(actions).toContain('electronicSignature.create');
+    expect(actions).toContain("status: 'Under Review'");
+    expect(actions).toContain('deletePrivateUpload');
+    const failureLog = actions.slice(actions.indexOf("stage2SubmissionFailure"));
+    expect(failureLog).not.toContain('idNumber');
+    expect(failureLog).not.toContain('storageKey');
+  });
+
+  it('admin can review Stage 2 and perform protected Stage 2 actions that unlock Stage 3', () => {
+    const detail = readFileSync('src/app/admin/applications/[id]/page.tsx', 'utf8');
+    const actions = readFileSync('src/app/admin/applications/actions.ts', 'utf8');
+    const workflow = readFileSync('src/lib/workflow.ts', 'utf8');
+    expect(detail).toContain('Stage 2 identity verification');
+    expect(detail).toContain('Uploaded Stage 2 documents');
+    expect(detail).toContain('idNumberMasked');
+    expect(detail).toContain('adminStage2Action');
+    expect(actions).toContain('export async function adminStage2Action');
+    expect(actions).toContain('getAdminSession');
+    expect(actions).toContain('app.deletedAt');
+    expect(workflow).toContain('export async function approveStage2');
+    expect(workflow).toContain('stageOrder: 3');
+    expect(workflow).toContain("status: 'Available'");
+    expect(workflow).toContain('currentStageOrder: 3');
+    expect(workflow).toContain("Admin approved Stage 2");
+    expect(actions).toContain('recordAdminStage2Action');
+  });
+
+  it('Stage 2 uploads stay private and admin upload route remains protected', () => {
+    const storage = readFileSync('src/lib/storage.ts', 'utf8');
+    const uploadRoute = readFileSync('src/app/api/admin/applications/[applicationId]/uploads/[documentId]/route.ts', 'utf8');
+    expect(storage).toContain('ALLOWED_ID_DOCUMENT_MIME_TYPES');
+    expect(storage).toContain('privateUploadRoot');
+    expect(storage).not.toContain('public/');
+    expect(uploadRoute).toContain('requireAdminSession');
+    expect(uploadRoute).toContain('readPrivateUpload');
+    expect(uploadRoute).not.toContain('storageKey: document.storageKey');
   });
 
 });
