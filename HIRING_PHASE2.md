@@ -9,6 +9,7 @@ This branch targets staging only: https://staging.zentricanalytics.com. Do not m
 - `ADMIN_SESSION_SECRET`: long random value required as `?adminSecret=...` for the temporary admin dashboard protection layer.
 - `EMAIL_PROVIDER`: defaults to `console`; production provider integration can be added later without changing callers.
 - `PRIVATE_UPLOAD_ROOT`: private filesystem path for local fallback uploads, for example `/var/data/zentric-private-uploads`. Files are not stored under `public/` and are not directly downloadable.
+- `UPLOAD_MAX_BYTES`: Stage 1 applicant upload limit in bytes. Use `20971520` for the required 20MB maximum.
 
 ## Staging commands
 
