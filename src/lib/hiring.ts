@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { countryPhoneOptions, normalizePhoneForCountry } from './phone';
+import { experienceLevelOptions, resolveRoleAppliedFor, roleAppliedForOptions } from './recruitment-options';
 export const stageStatuses = ['Locked','Available','In Progress','Submitted','Under Review','Approved','Correction Requested','Rejected','Completed'] as const;
 export const applicationStatuses = ['Application Submitted','Screening','Candidate Information Required','Interview Scheduled','Assessment Required','Offer Pending','Offer Sent','Offer Accepted','Agreement Pending','Onboarding Pending','Final Review','Enrollment Completed','Hired','Rejected'] as const;
 export type StageStatus = typeof stageStatuses[number];
@@ -16,19 +18,12 @@ export const stages = [
 ] as const;
 export const workModes = ['Office','Remote','Hybrid','Flexible'] as const;
 export const idTypes = ['National Identification Number / NIN','International Passport','Driver’s Licence','Voter’s Card','Other Government-issued ID'] as const;
-export const initialApplicationSchema = z.object({ fullName: z.string().min(2), email: z.string().email(), phone: z.string().min(7), location: z.string().min(2), role: z.string().min(2), workMode: z.enum(workModes), experienceLevel: z.string().min(2), skills: z.string().min(2), portfolioUrl: z.string().url().optional().or(z.literal('')), message: z.string().min(20).max(1500), privacyConsent: z.literal('on'), signatureName: z.string().min(2), signatureConsent: z.literal('on') });
+export const initialApplicationSchema = z.object({ firstName: z.string().trim().min(1), middleInitial: z.string().trim().max(20).optional().or(z.literal('')), lastName: z.string().trim().min(1), email: z.string().email(), phoneCountryIso: z.enum(countryPhoneOptions.map((country) => country.iso) as [string, ...string[]]), phoneNational: z.string().min(4), location: z.string().min(2), role: z.enum(roleAppliedForOptions), otherRole: z.string().trim().max(100).optional().or(z.literal('')), workMode: z.enum(workModes), experienceLevel: z.enum(experienceLevelOptions), skills: z.string().min(2), portfolioUrl: z.string().url().optional().or(z.literal('')), message: z.string().min(20).max(1500), privacyConsent: z.literal('on'), signatureName: z.string().min(2), signatureConsent: z.literal('on') }).superRefine((data, ctx) => { const phone = normalizePhoneForCountry(data.phoneCountryIso, data.phoneNational); if (!phone.valid) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['phoneNational'], message: phone.error }); if (data.role === 'Other' && !data.otherRole?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['otherRole'], message: 'Specify the role when Other is selected.' }); });
+export function toStage1SubmissionPayload(data: z.infer<typeof initialApplicationSchema>) { const phone = normalizePhoneForCountry(data.phoneCountryIso, data.phoneNational); if (!phone.valid) throw new Error(phone.error); return { ...data, roleAppliedFor: resolveRoleAppliedFor(data.role, data.otherRole), phoneCountryIso: phone.iso, phoneCountryName: phone.countryName, phoneDialCode: phone.dialCode, phoneNational: phone.nationalNumber, phoneE164: phone.e164, fullName: [data.firstName, data.middleInitial, data.lastName].filter(Boolean).join(' ') }; }
 export function generateApplicationId(sequence: number, date = new Date()) { return `ZA-APP-${date.getUTCFullYear()}-${String(sequence).padStart(5, '0')}`; }
 export function maskSensitive(value: string) { const clean = value.replace(/\s+/g, ''); return clean.length <= 4 ? '****' : `${'*'.repeat(Math.max(4, clean.length - 4))}${clean.slice(-4)}`; }
 export function canDownloadDocument(status: StageStatus, signed: boolean, submittedAt?: string | null) { return signed && Boolean(submittedAt) && ['Submitted','Under Review','Approved','Completed'].includes(status); }
 export const documentStatuses = ['Locked','Not Started','In Progress','Submitted','Signed','Under Review','Correction Requested','Approved','Download Available'] as const;
-export function isAccessCodeUsable(input: { expiresAt: Date; usedAt?: Date | null }, now = new Date()) {
-  return !input.usedAt && input.expiresAt.getTime() > now.getTime();
-}
-export function getStage1ApprovalEffects() {
-  return { stage1Status: 'Approved', stage2Status: 'Available', applicationStatus: 'Candidate Information Required', currentStageOrder: 2 } as const;
-}
-export function adminActionAuditName(action: 'approve' | 'reject' | 'correction') {
-  if (action === 'approve') return 'Admin approved Stage 1';
-  if (action === 'reject') return 'Admin rejected Stage 1';
-  return 'Admin requested correction';
-}
+export function isAccessCodeUsable(input: { expiresAt: Date; usedAt?: Date | null }, now = new Date()) { return !input.usedAt && input.expiresAt.getTime() > now.getTime(); }
+export function getStage1ApprovalEffects() { return { stage1Status: 'Approved', stage2Status: 'Available', applicationStatus: 'Candidate Information Required', currentStageOrder: 2 } as const; }
+export function adminActionAuditName(action: 'approve' | 'reject' | 'correction') { if (action === 'approve') return 'Admin approved Stage 1'; if (action === 'reject') return 'Admin rejected Stage 1'; return 'Admin requested correction'; }

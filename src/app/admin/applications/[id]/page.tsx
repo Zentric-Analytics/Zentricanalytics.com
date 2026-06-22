@@ -105,11 +105,13 @@ export default async function AdminApplicationDetail({
 
       <section className="card mt-6 p-5">
         <h2 className="font-bold">Applicant</h2>
-        <p>
-          {application.applicant.fullName} · {application.applicant.email} ·{' '}
-          {application.applicant.phone ?? 'No phone provided'}
-        </p>
+        <p><strong>Full name:</strong> {application.applicant.fullName}</p>
+        <p><strong>First:</strong> {application.applicant.firstName ?? 'Legacy record'} · <strong>Initial:</strong> {application.applicant.middleInitial ?? '—'} · <strong>Last:</strong> {application.applicant.lastName ?? 'Legacy record'}</p>
+        <p><strong>Email:</strong> {application.applicant.email}</p>
+        <p><strong>Country:</strong> {application.applicant.phoneCountryName ?? 'Not captured'} ({application.applicant.phoneDialCode ?? '—'})</p>
+        <p><strong>Phone:</strong> {application.applicant.phoneE164 ?? application.applicant.phone ?? 'No phone provided'}</p>
         <p>{application.applicant.location ?? 'No location provided'}</p>
+        <p><strong>Role selected:</strong> {application.roleAppliedFor} · <strong>Experience:</strong> {application.experienceLevel ?? 'Not provided'}</p>
       </section>
 
       <section className="card mt-6 p-5">
@@ -124,7 +126,7 @@ export default async function AdminApplicationDetail({
       </section>
 
       <section className="card mt-6 p-5">
-        <h2 className="font-bold">Uploaded CV metadata</h2>
+        <h2 className="font-bold">Uploaded document metadata</h2>
         {documents.length > 0 ? (
           documents.map((document: ApplicantDocument) => {
             const uploadedDocument = document.uploadedDocument;

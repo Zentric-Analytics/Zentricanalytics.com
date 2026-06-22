@@ -7,12 +7,15 @@ export const ALLOWED_CV_MIME_TYPES = new Set([
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
 ]);
 
 export function validateCvFile(file: File) {
   if (!file || file.size === 0) return 'CV/resume upload is required.';
   if (file.size > MAX_CV_BYTES) return 'CV/resume must be 5MB or smaller.';
-  if (!ALLOWED_CV_MIME_TYPES.has(file.type)) return 'CV/resume must be a PDF, DOC, or DOCX file.';
+  if (!ALLOWED_CV_MIME_TYPES.has(file.type)) return 'CV/resume must be a PDF, DOC, DOCX, JPG, PNG, or WEBP file.';
   return null;
 }
 
