@@ -1,11 +1,18 @@
-import { notFound, redirect } from 'next/navigation';
-import type { Prisma } from '@prisma/client';
+import { notFound, redirect } from "next/navigation";
+import type { Prisma } from "@prisma/client";
 
-import { AdminLogoutButton } from '@/components/AdminLogoutButton';
-import { StatusBadge } from '@/components/StatusBadge';
-import { prisma } from '@/lib/prisma';
-import { getAdminSession } from '@/lib/admin-auth';
-import { adminStage1Action, permanentlyDeleteApplicationAction, restoreApplicationAction, softDeleteApplicationAction } from '../actions';
+import { AdminLogoutButton } from "@/components/AdminLogoutButton";
+import { StatusBadge } from "@/components/StatusBadge";
+import { prisma } from "@/lib/prisma";
+import { getAdminSession } from "@/lib/admin-auth";
+import { privateUploadExists } from "@/lib/storage";
+import {
+  adminStage1Action,
+  permanentlyDeleteApplicationAction,
+  restoreApplicationAction,
+  softDeleteApplicationAction,
+} from "../actions";
+import { AdminDocumentActions } from "./AdminDocumentActions";
 
 type AdminApplication = Prisma.JobApplicationGetPayload<{
   include: {
@@ -30,12 +37,12 @@ type AdminApplication = Prisma.JobApplicationGetPayload<{
   };
 }>;
 
-type ApplicationStage = AdminApplication['stages'][number];
+type ApplicationStage = AdminApplication["stages"][number];
 type ApplicantDocument = NonNullable<
-  ApplicationStage['submissions'][number]
->['documents'][number];
-type EmailNotification = AdminApplication['emails'][number];
-type AuditLog = AdminApplication['auditLogs'][number];
+  ApplicationStage["submissions"][number]
+>["documents"][number];
+type EmailNotification = AdminApplication["emails"][number];
+type AuditLog = AdminApplication["auditLogs"][number];
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -43,25 +50,44 @@ type PageProps = {
 };
 
 function formatDateTime(value?: Date | null) {
-  return value ? value.toISOString() : 'Missing';
+  return value ? value.toISOString() : "Missing";
 }
 
 function actionBanner(params: Record<string, string | undefined>) {
   const messages: string[] = [];
-  if (params.success === 'approved') messages.push('Stage 1 was approved and Stage 2 is now available.');
-  if (params.success === 'already_approved') messages.push('Stage 1 is already approved.');
-  if (params.success === 'rejected') messages.push('Application was rejected.');
-  if (params.success === 'correction') messages.push('Correction was requested.');
-  if (params.success === 'soft_deleted') messages.push('Application moved to deleted records.');
-  if (params.success === 'restored') messages.push('Application restored.');
-  if (params.warning === 'email_failed') messages.push('Stage 1 was approved, but the unlock email could not be sent. Please retry email delivery or contact the candidate manually.');
-  if (params.error === 'action_failed') messages.push('The admin action could not be completed. Please refresh and try again.');
-  if (params.error === 'missing_stage') messages.push('Required hiring stage data is missing. Please contact an administrator.');
-  if (params.error === 'invalid_action') messages.push('Invalid admin action.');
-  if (params.error === 'invalid_confirmation') messages.push('Confirmation did not match. No records were deleted.');
-  if (params.error === 'restore_before_stage_action') messages.push('Restore this application before taking stage actions.');
-  if (params.error === 'delete_failed') messages.push('Delete failed. Please refresh and try again.');
-  if (params.error === 'file_delete_failed') messages.push('Private file deletion failed, so the application was not permanently deleted.');
+  if (params.success === "approved")
+    messages.push("Stage 1 was approved and Stage 2 is now available.");
+  if (params.success === "already_approved")
+    messages.push("Stage 1 is already approved.");
+  if (params.success === "rejected") messages.push("Application was rejected.");
+  if (params.success === "correction")
+    messages.push("Correction was requested.");
+  if (params.success === "soft_deleted")
+    messages.push("Application moved to deleted records.");
+  if (params.success === "restored") messages.push("Application restored.");
+  if (params.warning === "email_failed")
+    messages.push(
+      "Stage 1 was approved, but the unlock email could not be sent. Please retry email delivery or contact the candidate manually.",
+    );
+  if (params.error === "action_failed")
+    messages.push(
+      "The admin action could not be completed. Please refresh and try again.",
+    );
+  if (params.error === "missing_stage")
+    messages.push(
+      "Required hiring stage data is missing. Please contact an administrator.",
+    );
+  if (params.error === "invalid_action") messages.push("Invalid admin action.");
+  if (params.error === "invalid_confirmation")
+    messages.push("Confirmation did not match. No records were deleted.");
+  if (params.error === "restore_before_stage_action")
+    messages.push("Restore this application before taking stage actions.");
+  if (params.error === "delete_failed")
+    messages.push("Delete failed. Please refresh and try again.");
+  if (params.error === "file_delete_failed")
+    messages.push(
+      "Private file deletion failed, so the application was not permanently deleted.",
+    );
   return messages;
 }
 
@@ -69,16 +95,20 @@ export default async function AdminApplicationDetail({
   params,
   searchParams,
 }: PageProps) {
-  const [resolvedParams, resolvedSearchParams, adminSession] = await Promise.all([params, searchParams, getAdminSession()]);
-  console.info('adminSessionPresentOnPageLoad', { page: '/admin/applications/[id]', present: Boolean(adminSession) });
-  if (!adminSession) redirect('/admin/login');
+  const [resolvedParams, resolvedSearchParams, adminSession] =
+    await Promise.all([params, searchParams, getAdminSession()]);
+  console.info("adminSessionPresentOnPageLoad", {
+    page: "/admin/applications/[id]",
+    present: Boolean(adminSession),
+  });
+  if (!adminSession) redirect("/admin/login");
 
   const application = await prisma.jobApplication.findUnique({
     where: { id: resolvedParams.id },
     include: {
       applicant: true,
       stages: {
-        orderBy: { stageOrder: 'asc' },
+        orderBy: { stageOrder: "asc" },
         include: {
           submissions: {
             include: {
@@ -109,14 +139,39 @@ export default async function AdminApplicationDetail({
   const stageOneStatus = stageOne?.status ?? application.status;
   const signature = stageOneSubmission?.signature;
   const documents = stageOneSubmission?.documents ?? [];
-  const stageOnePdfAvailable = Boolean(stageOneSubmission?.submittedAt && signature?.confirmed && signature?.signedAt);
+  const documentsWithAvailability: Array<{
+    document: ApplicantDocument;
+    privateFileAvailable: boolean;
+  }> = await Promise.all(
+    documents.map(async (document: ApplicantDocument) => ({
+      document,
+      privateFileAvailable: document.uploadedDocument
+        ? await privateUploadExists(
+            document.uploadedDocument.storageKey,
+            document.uploadedDocument.provider,
+          )
+        : false,
+    })),
+  );
+  const stageOnePdfAvailable = Boolean(
+    stageOneSubmission?.submittedAt &&
+    signature?.confirmed &&
+    signature?.signedAt,
+  );
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
       <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">{application.applicationId}</h1>
-          <div className="mt-2 flex gap-2"><StatusBadge status={stageOneStatus} />{application.deletedAt ? <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">Deleted</span> : null}</div>
+          <div className="mt-2 flex gap-2">
+            <StatusBadge status={stageOneStatus} />
+            {application.deletedAt ? (
+              <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+                Deleted
+              </span>
+            ) : null}
+          </div>
         </div>
         <div className="flex flex-col gap-2 text-sm text-slate-600 sm:items-end">
           <span>Signed in as {adminSession.email}</span>
@@ -125,18 +180,46 @@ export default async function AdminApplicationDetail({
       </header>
 
       {actionBanner(resolvedSearchParams).map((message) => (
-        <p className="card mt-4 border border-amber-200 bg-amber-50 p-4 text-sm" key={message}>{message}</p>
+        <p
+          className="card mt-4 border border-amber-200 bg-amber-50 p-4 text-sm"
+          key={message}
+        >
+          {message}
+        </p>
       ))}
 
       <section className="card mt-6 p-5">
         <h2 className="font-bold">Applicant</h2>
-        <p><strong>Full name:</strong> {application.applicant.fullName}</p>
-        <p><strong>First:</strong> {application.applicant.firstName ?? 'Legacy record'} · <strong>Initial:</strong> {application.applicant.middleInitial ?? '—'} · <strong>Last:</strong> {application.applicant.lastName ?? 'Legacy record'}</p>
-        <p><strong>Email:</strong> {application.applicant.email}</p>
-        <p><strong>Country:</strong> {application.applicant.phoneCountryName ?? 'Not captured'} ({application.applicant.phoneDialCode ?? '—'})</p>
-        <p><strong>Phone:</strong> {application.applicant.phoneE164 ?? application.applicant.phone ?? 'No phone provided'}</p>
-        <p>{application.applicant.location ?? 'No location provided'}</p>
-        <p><strong>Role selected:</strong> {application.roleAppliedFor} · <strong>Experience:</strong> {application.experienceLevel ?? 'Not provided'}</p>
+        <p>
+          <strong>Full name:</strong> {application.applicant.fullName}
+        </p>
+        <p>
+          <strong>First:</strong>{" "}
+          {application.applicant.firstName ?? "Legacy record"} ·{" "}
+          <strong>Initial:</strong> {application.applicant.middleInitial ?? "—"}{" "}
+          · <strong>Last:</strong>{" "}
+          {application.applicant.lastName ?? "Legacy record"}
+        </p>
+        <p>
+          <strong>Email:</strong> {application.applicant.email}
+        </p>
+        <p>
+          <strong>Country:</strong>{" "}
+          {application.applicant.phoneCountryName ?? "Not captured"} (
+          {application.applicant.phoneDialCode ?? "—"})
+        </p>
+        <p>
+          <strong>Phone:</strong>{" "}
+          {application.applicant.phoneE164 ??
+            application.applicant.phone ??
+            "No phone provided"}
+        </p>
+        <p>{application.applicant.location ?? "No location provided"}</p>
+        <p>
+          <strong>Role selected:</strong> {application.roleAppliedFor} ·{" "}
+          <strong>Experience:</strong>{" "}
+          {application.experienceLevel ?? "Not provided"}
+        </p>
       </section>
 
       <section className="card mt-6 p-5">
@@ -153,45 +236,77 @@ export default async function AdminApplicationDetail({
       <section className="card mt-6 p-5">
         <h2 className="font-bold">Official documents</h2>
         {stageOnePdfAvailable ? (
-          <a className="btn btn-primary mt-4 w-fit" href={`/api/admin/applications/${application.id}/documents/stage-1`}>
-            Download Stage 1 PDF
-          </a>
+          <div className="mt-4 w-fit">
+            <AdminDocumentActions
+              url={`/api/admin/applications/${application.id}/documents/stage-1`}
+              filename={`${application.applicationId}-stage-1-official.pdf`}
+              stageOne
+            />
+          </div>
         ) : (
-          <p className="mt-3 text-sm text-slate-600">Stage 1 PDF is not available yet.</p>
+          <p className="mt-3 text-sm text-slate-600">
+            Stage 1 PDF is not available yet.
+          </p>
         )}
       </section>
 
       <section className="card mt-6 p-5">
         <h2 className="font-bold">Uploaded documents</h2>
-        {documents.length > 0 ? (
+        {documentsWithAvailability.length > 0 ? (
           <div className="mt-4 grid gap-3">
-            {documents.map((document: ApplicantDocument) => {
-              const uploadedDocument = document.uploadedDocument;
-              const isPreviewable = uploadedDocument ? ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'].includes(uploadedDocument.mimeType) : false;
-
-              return uploadedDocument ? (
-                <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4" key={document.id}>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      <h3 className="break-words font-semibold text-ink">{uploadedDocument.fileName}</h3>
-                      <p className="mt-1 text-sm text-slate-600">{uploadedDocument.kind} · {uploadedDocument.mimeType} · {uploadedDocument.sizeBytes} bytes</p>
-                      <p className="mt-1 text-xs font-semibold text-slate-500">Uploaded {formatDateTime(uploadedDocument.createdAt)}</p>
+            {documentsWithAvailability.map(
+              ({ document, privateFileAvailable }) => {
+                const uploadedDocument = document.uploadedDocument;
+                const isPreviewable = uploadedDocument
+                  ? [
+                      "application/pdf",
+                      "image/jpeg",
+                      "image/png",
+                      "image/webp",
+                    ].includes(uploadedDocument.mimeType)
+                  : false;
+                return uploadedDocument ? (
+                  <article
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                    key={document.id}
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <h3 className="break-words font-semibold text-ink">
+                          {uploadedDocument.fileName}
+                        </h3>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {uploadedDocument.kind} · {uploadedDocument.mimeType}{" "}
+                          · {uploadedDocument.sizeBytes} bytes
+                        </p>
+                        <p className="mt-1 text-xs font-semibold text-slate-500">
+                          Uploaded {formatDateTime(uploadedDocument.createdAt)}
+                        </p>
+                        {!privateFileAvailable ? (
+                          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
+                            File metadata exists, but the private file is not
+                            available in storage. Please check private upload
+                            storage configuration.
+                          </p>
+                        ) : null}
+                      </div>
+                      <AdminDocumentActions
+                        url={`/api/admin/applications/${application.id}/uploads/${uploadedDocument.id}`}
+                        filename={uploadedDocument.fileName}
+                        previewable={isPreviewable}
+                      />
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {isPreviewable ? (
-                        <a className="btn btn-secondary" href={`/api/admin/applications/${application.id}/uploads/${uploadedDocument.id}`} target="_blank" rel="noreferrer">View</a>
-                      ) : null}
-                      <a className="btn btn-primary" href={`/api/admin/applications/${application.id}/uploads/${uploadedDocument.id}?download=1`}>Download</a>
-                    </div>
-                  </div>
-                </article>
-              ) : (
-                <p key={document.id}>Missing uploaded document.</p>
-              );
-            })}
+                  </article>
+                ) : (
+                  <p key={document.id}>Missing uploaded document.</p>
+                );
+              },
+            )}
           </div>
         ) : (
-          <p className="mt-3 text-sm text-slate-600">No uploaded documents found.</p>
+          <p className="mt-3 text-sm text-slate-600">
+            No uploaded documents found.
+          </p>
         )}
       </section>
 
@@ -199,8 +314,8 @@ export default async function AdminApplicationDetail({
         <h2 className="font-bold">Signature</h2>
         {signature ? (
           <p>
-            {signature.typedName || 'Missing typed name'} ·{' '}
-            {signature.confirmed ? 'Confirmed' : 'Missing'} ·{' '}
+            {signature.typedName || "Missing typed name"} ·{" "}
+            {signature.confirmed ? "Confirmed" : "Missing"} ·{" "}
             {formatDateTime(signature.signedAt)}
           </p>
         ) : (
@@ -210,14 +325,39 @@ export default async function AdminApplicationDetail({
 
       <section className="card mt-6 p-5">
         <h2 className="font-bold">Stage 1 admin actions</h2>
-        {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking stage actions.</p> : (
-        <form action={adminStage1Action} className="mt-4 flex flex-wrap gap-2">
-          <input type="hidden" name="applicationDbId" value={application.id} />
-          <input className="input max-w-xs" name="notes" placeholder="Optional notes" />
-          <button className="btn btn-secondary" name="action" value="approve">Approve Stage 1</button>
-          <button className="btn btn-secondary" name="action" value="correction">Request correction</button>
-          <button className="btn btn-secondary" name="action" value="reject">Reject</button>
-        </form>
+        {application.deletedAt ? (
+          <p className="mt-3 text-sm font-semibold text-red-700">
+            Restore this application before taking stage actions.
+          </p>
+        ) : (
+          <form
+            action={adminStage1Action}
+            className="mt-4 flex flex-wrap gap-2"
+          >
+            <input
+              type="hidden"
+              name="applicationDbId"
+              value={application.id}
+            />
+            <input
+              className="input max-w-xs"
+              name="notes"
+              placeholder="Optional notes"
+            />
+            <button className="btn btn-secondary" name="action" value="approve">
+              Approve Stage 1
+            </button>
+            <button
+              className="btn btn-secondary"
+              name="action"
+              value="correction"
+            >
+              Request correction
+            </button>
+            <button className="btn btn-secondary" name="action" value="reject">
+              Reject
+            </button>
+          </form>
         )}
       </section>
 
@@ -225,26 +365,68 @@ export default async function AdminApplicationDetail({
         <h2 className="font-bold text-red-800">Delete controls</h2>
         {application.deletedAt ? (
           <div className="mt-4 space-y-4">
-            <p className="text-sm">Deleted {formatDateTime(application.deletedAt)} by {application.deletedByAdminEmail ?? 'unknown admin'}. Reason: {application.deleteReason || 'No reason provided'}.</p>
+            <p className="text-sm">
+              Deleted {formatDateTime(application.deletedAt)} by{" "}
+              {application.deletedByAdminEmail ?? "unknown admin"}. Reason:{" "}
+              {application.deleteReason || "No reason provided"}.
+            </p>
             <form action={restoreApplicationAction}>
-              <input type="hidden" name="applicationDbId" value={application.id} />
+              <input
+                type="hidden"
+                name="applicationDbId"
+                value={application.id}
+              />
               <button className="btn btn-secondary">Restore application</button>
             </form>
-            <form action={permanentlyDeleteApplicationAction} className="space-y-3 rounded border border-red-300 bg-white p-4">
-              <input type="hidden" name="applicationDbId" value={application.id} />
-              <p className="font-semibold text-red-800">This permanently deletes the application and cannot be undone.</p>
-              <label className="block text-sm font-semibold">Type {application.applicationId} to confirm permanent delete</label>
-              <input className="input" name="confirmationApplicationId" placeholder={application.applicationId} required />
-              <button className="btn bg-red-700 text-white hover:bg-red-800">Permanently delete</button>
+            <form
+              action={permanentlyDeleteApplicationAction}
+              className="space-y-3 rounded border border-red-300 bg-white p-4"
+            >
+              <input
+                type="hidden"
+                name="applicationDbId"
+                value={application.id}
+              />
+              <p className="font-semibold text-red-800">
+                This permanently deletes the application and cannot be undone.
+              </p>
+              <label className="block text-sm font-semibold">
+                Type {application.applicationId} to confirm permanent delete
+              </label>
+              <input
+                className="input"
+                name="confirmationApplicationId"
+                placeholder={application.applicationId}
+                required
+              />
+              <button className="btn bg-red-700 text-white hover:bg-red-800">
+                Permanently delete
+              </button>
             </form>
           </div>
         ) : (
           <form action={softDeleteApplicationAction} className="mt-4 space-y-3">
-            <input type="hidden" name="applicationDbId" value={application.id} />
-            <label className="block text-sm font-semibold">Optional reason</label>
+            <input
+              type="hidden"
+              name="applicationDbId"
+              value={application.id}
+            />
+            <label className="block text-sm font-semibold">
+              Optional reason
+            </label>
             <textarea className="input" name="deleteReason" maxLength={500} />
-            <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" name="confirmDelete" value="DELETE" required /> Confirm moving this application to deleted records</label>
-            <button className="btn bg-red-700 text-white hover:bg-red-800">Move to deleted records</button>
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <input
+                type="checkbox"
+                name="confirmDelete"
+                value="DELETE"
+                required
+              />{" "}
+              Confirm moving this application to deleted records
+            </label>
+            <button className="btn bg-red-700 text-white hover:bg-red-800">
+              Move to deleted records
+            </button>
           </form>
         )}
       </section>
@@ -254,7 +436,7 @@ export default async function AdminApplicationDetail({
         {application.emails.length > 0 ? (
           application.emails.map((email: EmailNotification) => (
             <p key={email.id}>
-              {formatDateTime(email.createdAt)} · {email.template} ·{' '}
+              {formatDateTime(email.createdAt)} · {email.template} ·{" "}
               {email.status} · {email.toEmail}
             </p>
           ))
