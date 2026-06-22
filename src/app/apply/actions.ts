@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { initialApplicationSchema } from '@/lib/hiring';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { savePrivateUpload, validateCvFile } from '@/lib/storage';
 import { sha256 } from '@/lib/security';
@@ -17,7 +18,7 @@ export async function submitStage1Application(formData: FormData) {
   const applicationPublicId = await nextApplicationId();
   const upload = await savePrivateUpload(file, applicationPublicId);
   const h = await headers();
-  const app = await prisma.$transaction(async (tx) => {
+  const app = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const applicant = await tx.applicant.create({ data: { fullName: data.fullName, email: data.email.toLowerCase(), phone: data.phone, location: data.location } });
     const application = await tx.jobApplication.create({ data: { applicationId: applicationPublicId, applicantId: applicant.id, roleAppliedFor: data.role, workModePreference: data.workMode, experienceLevel: data.experienceLevel, skills: data.skills, portfolioUrl: data.portfolioUrl || null, message: data.message, privacyConsent: true, status: 'Application Submitted', currentStageOrder: 1 } });
     return application;

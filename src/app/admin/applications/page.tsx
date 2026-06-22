@@ -1,2 +1,243 @@
-import Link from 'next/link';import { prisma, isDatabaseConfigured } from '@/lib/prisma';import { stages } from '@/lib/hiring';import { StatusBadge } from '@/components/StatusBadge';import { isAdminSecretValid } from '@/lib/security';import { adminStage1Action } from './actions';
-export default async function AdminApplications({ searchParams }: { searchParams: Promise<Record<string,string|undefined>> }){const p=await searchParams;if(!isAdminSecretValid(p.adminSecret))return <main className="mx-auto max-w-xl px-4 py-10"><h1 className="text-3xl font-bold">Admin access</h1><p className="mt-2">Append <code>?adminSecret=...</code> with the configured ADMIN_SESSION_SECRET to view applicant records.</p></main>;if(!isDatabaseConfigured())return <main>DATABASE_URL is required for admin records.</main>;const q=p.q;const apps=await prisma.jobApplication.findMany({where:q?{OR:[{applicationId:{contains:q,mode:'insensitive'}},{roleAppliedFor:{contains:q,mode:'insensitive'}},{applicant:{is:{fullName:{contains:q,mode:'insensitive'}}}},{applicant:{is:{email:{contains:q,mode:'insensitive'}}}}]}:{},include:{applicant:true,stages:{orderBy:{stageOrder:'asc'},include:{submissions:{include:{signature:true,documents:{include:{uploadedDocument:true}}},approvals:true}}},emails:true,auditLogs:true},orderBy:{createdAt:'desc'},take:50});return <main className="mx-auto max-w-6xl px-4 py-10"><h1 className="text-3xl font-bold">Hiring admin dashboard</h1><p className="mt-2 text-slate-600">Protected by ADMIN_SESSION_SECRET. Records below are live database records.</p><form className="my-6 grid gap-3 md:grid-cols-4"><input type="hidden" name="adminSecret" value={p.adminSecret}/><input className="input" name="q" defaultValue={q} placeholder="Search name, email, role, ID"/><select className="input" name="stage"><option>All stages</option>{stages.map(s=><option key={s.key}>{s.title}</option>)}</select><select className="input" name="status"><option>All statuses</option><option>Under Review</option><option>Correction Requested</option><option>Approved</option></select><button className="btn btn-primary">Search</button></form><section className="space-y-6">{apps.map(a=>{const s1=a.stages.find(s=>s.stageOrder===1);const sub=s1?.submissions[0];return <article className="card p-5" key={a.id}><div className="flex items-start justify-between gap-4"><div><h2 className="font-bold"><Link href={`/admin/applications/${a.id}?adminSecret=${p.adminSecret}`}>{a.applicationId}</Link></h2><p>{a.applicant.fullName} · {a.applicant.email}</p><p>{a.roleAppliedFor}</p></div><StatusBadge status={s1?.status??a.status}/></div><div className="mt-4 grid gap-4 md:grid-cols-3"><div><h3 className="font-semibold">Stage 1 answers</h3><p>{a.message}</p><p>Skills: {a.skills}</p></div><div><h3 className="font-semibold">CV metadata</h3>{sub?.documents.map(d=><p key={d.id}>{d.uploadedDocument.fileName} ({d.uploadedDocument.mimeType}, {d.uploadedDocument.sizeBytes} bytes)</p>)}</div><div><h3 className="font-semibold">Signature</h3><p>{sub?.signature?.typedName} · {sub?.signature?.confirmed?'Confirmed':'Missing'}</p></div></div><details className="mt-4"><summary>Email history and audit logs</summary><ul>{a.emails.map(e=><li key={e.id}>{e.template}: {e.status}</li>)}{a.auditLogs.map(l=><li key={l.id}>{l.action}</li>)}</ul></details><form action={adminStage1Action} className="mt-4 flex flex-wrap gap-2"><input type="hidden" name="adminSecret" value={p.adminSecret}/><input type="hidden" name="applicationDbId" value={a.id}/><input className="input max-w-xs" name="notes" placeholder="Optional notes"/><button className="btn btn-secondary" name="action" value="approve">Approve Stage 1</button><button className="btn btn-secondary" name="action" value="correction">Request correction</button><button className="btn btn-secondary" name="action" value="reject">Reject</button></form></article>})}</section></main>}
+import Link from 'next/link';
+import type { Prisma } from '@prisma/client';
+
+import { StatusBadge } from '@/components/StatusBadge';
+import { stages } from '@/lib/hiring';
+import { prisma, isDatabaseConfigured } from '@/lib/prisma';
+import { isAdminSecretValid } from '@/lib/security';
+
+import { adminStage1Action } from './actions';
+
+type AdminApplicationListItem = Prisma.JobApplicationGetPayload<{
+  include: {
+    applicant: true;
+    stages: {
+      include: {
+        submissions: {
+          include: {
+            signature: true;
+            documents: {
+              include: {
+                uploadedDocument: true;
+              };
+            };
+          };
+        };
+        approvals: true;
+      };
+    };
+    emails: true;
+    auditLogs: true;
+  };
+}>;
+
+type ApplicationStage = AdminApplicationListItem['stages'][number];
+type ApplicantDocument = ApplicationStage['submissions'][number]['documents'][number];
+type EmailNotification = AdminApplicationListItem['emails'][number];
+type AuditLog = AdminApplicationListItem['auditLogs'][number];
+
+type SearchParams = Record<string, string | undefined>;
+
+export default async function AdminApplications({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+
+  if (!isAdminSecretValid(params.adminSecret)) {
+    return (
+      <main className="mx-auto max-w-xl px-4 py-10">
+        <h1 className="text-3xl font-bold">Admin access</h1>
+        <p className="mt-2">
+          Append <code>?adminSecret=...</code> with the configured
+          ADMIN_SESSION_SECRET to view applicant records.
+        </p>
+      </main>
+    );
+  }
+
+  if (!isDatabaseConfigured()) {
+    return <main>DATABASE_URL is required for admin records.</main>;
+  }
+
+  const query = params.q;
+  const applications = await prisma.jobApplication.findMany({
+    where: query
+      ? {
+          OR: [
+            { applicationId: { contains: query, mode: 'insensitive' } },
+            { roleAppliedFor: { contains: query, mode: 'insensitive' } },
+            {
+              applicant: {
+                is: { fullName: { contains: query, mode: 'insensitive' } },
+              },
+            },
+            {
+              applicant: {
+                is: { email: { contains: query, mode: 'insensitive' } },
+              },
+            },
+          ],
+        }
+      : {},
+    include: {
+      applicant: true,
+      stages: {
+        orderBy: { stageOrder: 'asc' },
+        include: {
+          submissions: {
+            include: {
+              signature: true,
+              documents: { include: { uploadedDocument: true } },
+            },
+          },
+          approvals: true,
+        },
+      },
+      emails: true,
+      auditLogs: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
+
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-10">
+      <h1 className="text-3xl font-bold">Hiring admin dashboard</h1>
+      <p className="mt-2 text-slate-600">
+        Protected by ADMIN_SESSION_SECRET. Records below are live database
+        records.
+      </p>
+
+      <form className="my-6 grid gap-3 md:grid-cols-4">
+        <input type="hidden" name="adminSecret" value={params.adminSecret} />
+        <input
+          className="input"
+          name="q"
+          defaultValue={query}
+          placeholder="Search name, email, role, ID"
+        />
+        <select className="input" name="stage">
+          <option>All stages</option>
+          {stages.map((stage) => (
+            <option key={stage.key}>{stage.title}</option>
+          ))}
+        </select>
+        <select className="input" name="status">
+          <option>All statuses</option>
+          <option>Under Review</option>
+          <option>Correction Requested</option>
+          <option>Approved</option>
+        </select>
+        <button className="btn btn-primary">Search</button>
+      </form>
+
+      <section className="space-y-6">
+        {applications.map((application: AdminApplicationListItem) => {
+          const stageOne = application.stages.find(
+            (stage: ApplicationStage) => stage.stageOrder === 1,
+          );
+          const submission = stageOne?.submissions[0];
+          const documents = submission?.documents ?? [];
+
+          return (
+            <article className="card p-5" key={application.id}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="font-bold">
+                    <Link
+                      href={`/admin/applications/${application.id}?adminSecret=${params.adminSecret}`}
+                    >
+                      {application.applicationId}
+                    </Link>
+                  </h2>
+                  <p>
+                    {application.applicant.fullName} ·{' '}
+                    {application.applicant.email}
+                  </p>
+                  <p>{application.roleAppliedFor}</p>
+                </div>
+                <StatusBadge status={stageOne?.status ?? application.status} />
+              </div>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                <div>
+                  <h3 className="font-semibold">Stage 1 answers</h3>
+                  <p>{application.message}</p>
+                  <p>Skills: {application.skills}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">CV metadata</h3>
+                  {documents.length > 0 ? (
+                    documents.map((document: ApplicantDocument) => (
+                      <p key={document.id}>
+                        {document.uploadedDocument.fileName} (
+                        {document.uploadedDocument.mimeType},{' '}
+                        {document.uploadedDocument.sizeBytes} bytes)
+                      </p>
+                    ))
+                  ) : (
+                    <p>No uploaded documents found.</p>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-semibold">Signature</h3>
+                  <p>
+                    {submission?.signature?.typedName ?? 'Missing signature'} ·{' '}
+                    {submission?.signature?.confirmed ? 'Confirmed' : 'Missing'}
+                  </p>
+                </div>
+              </div>
+
+              <details className="mt-4">
+                <summary>Email history and audit logs</summary>
+                <ul>
+                  {application.emails.map((email: EmailNotification) => (
+                    <li key={email.id}>
+                      {email.template}: {email.status}
+                    </li>
+                  ))}
+                  {application.auditLogs.map((log: AuditLog) => (
+                    <li key={log.id}>{log.action}</li>
+                  ))}
+                </ul>
+              </details>
+
+              <form action={adminStage1Action} className="mt-4 flex flex-wrap gap-2">
+                <input
+                  type="hidden"
+                  name="adminSecret"
+                  value={params.adminSecret}
+                />
+                <input
+                  type="hidden"
+                  name="applicationDbId"
+                  value={application.id}
+                />
+                <input
+                  className="input max-w-xs"
+                  name="notes"
+                  placeholder="Optional notes"
+                />
+                <button className="btn btn-secondary" name="action" value="approve">
+                  Approve Stage 1
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  name="action"
+                  value="correction"
+                >
+                  Request correction
+                </button>
+                <button className="btn btn-secondary" name="action" value="reject">
+                  Reject
+                </button>
+              </form>
+            </article>
+          );
+        })}
+      </section>
+    </main>
+  );
+}
