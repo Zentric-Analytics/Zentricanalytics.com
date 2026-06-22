@@ -75,3 +75,52 @@ export const documentStatuses = ['Locked','Not Started','In Progress','Submitted
 export function isAccessCodeUsable(input: { expiresAt: Date; usedAt?: Date | null }, now = new Date()) { return !input.usedAt && input.expiresAt.getTime() > now.getTime(); }
 export function getStage1ApprovalEffects() { return { stage1Status: 'Approved', stage2Status: 'Available', applicationStatus: 'Candidate Information Required', currentStageOrder: 2 } as const; }
 export function adminActionAuditName(action: 'approve' | 'reject' | 'correction') { if (action === 'approve') return 'Admin approved Stage 1'; if (action === 'reject') return 'Admin rejected Stage 1'; return 'Admin requested correction'; }
+
+export const stage2GenderOptions = ['Male','Female','Prefer not to say'] as const;
+export const stage2IdTypeOptions = idTypes;
+export const stage2AcceptedMimeTypes = new Set(['application/pdf','image/jpeg','image/pjpeg','image/jpg','image/png','image/x-png','image/webp']);
+export const stage2AcceptedExtensions = new Set(['pdf','jpg','jpeg','png','webp']);
+export const stage2SubmissionSchema = z.object({
+  session: z.string().min(16, 'Open the portal with a valid session.'),
+  fullLegalName: z.string().trim().min(2, 'Enter your full legal name.'),
+  dateOfBirth: z.string().trim().min(1, 'Enter your date of birth.'),
+  gender: z.enum(stage2GenderOptions, { errorMap: () => ({ message: 'Select a gender option.' }) }),
+  nationality: z.string().trim().min(2, 'Enter your nationality.'),
+  stateOfOrigin: z.string().trim().min(2, 'Enter your state of origin.'),
+  stateOfResidence: z.string().trim().min(2, 'Enter your state of residence.'),
+  lga: z.string().trim().min(2, 'Enter your LGA.'),
+  residentialAddress: z.string().trim().min(5, 'Enter your residential address.'),
+  currentCity: z.string().trim().min(2, 'Enter your current city/location.'),
+  phoneNumber: z.string().trim().min(4, 'Enter your phone number.'),
+  email: z.string().trim().email('Enter a valid email address.'),
+  idType: z.enum(stage2IdTypeOptions, { errorMap: () => ({ message: 'Select an ID type.' }) }),
+  idNumber: z.string().trim().min(2, 'Enter your ID number.'),
+  idIssuingAuthority: optionalText(160),
+  idIssueDate: optionalText(40),
+  idExpiryDate: optionalText(40),
+  nin: optionalText(80),
+  taxId: optionalText(80),
+  emergencyContactName: z.string().trim().min(2, 'Enter emergency contact name.'),
+  emergencyContactRelationship: z.string().trim().min(2, 'Enter relationship.'),
+  emergencyContactPhone: z.string().trim().min(4, 'Enter emergency contact phone.'),
+  emergencyContactAddress: optionalText(500),
+  declarationAccuracy: z.literal('on', { errorMap: () => ({ message: 'Confirm the declaration.' }) }),
+  identityProcessingConsent: z.literal('on', { errorMap: () => ({ message: 'Consent is required.' }) }),
+  signatureName: z.string().trim().min(2, 'Type your name as your electronic signature.'),
+  signatureConsent: z.literal('on', { errorMap: () => ({ message: 'Confirm your electronic signature.' }) }),
+});
+export type Stage2SubmissionInput = z.infer<typeof stage2SubmissionSchema>;
+export function toStage2SubmissionPayload(data: Stage2SubmissionInput) {
+  const { session: _session, declarationAccuracy, identityProcessingConsent, signatureConsent, signatureName, idNumber, nin, taxId, ...safeData } = data;
+  return {
+    ...safeData,
+    idNumberMasked: maskSensitive(idNumber),
+    ninMasked: nin ? maskSensitive(nin) : '',
+    taxIdMasked: taxId ? maskSensitive(taxId) : '',
+    declarationAccuracy: declarationAccuracy === 'on',
+    identityProcessingConsent: identityProcessingConsent === 'on',
+    signatureConsent: signatureConsent === 'on',
+    signatureName,
+  };
+}
+export function getStage2ApprovalEffects() { return { stage2Status: 'Approved', stage3Status: 'Available', applicationStatus: 'Screening', currentStageOrder: 3 } as const; }

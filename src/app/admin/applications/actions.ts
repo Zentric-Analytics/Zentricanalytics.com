@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getAdminSession } from '@/lib/admin-auth';
-import { approveStage1, recordAdminStage1Action, StageActionError } from '@/lib/workflow';
+import { approveStage1, approveStage2, recordAdminStage1Action, recordAdminStage2Action, StageActionError } from '@/lib/workflow';
 import { sendAndRecordEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import { deletePrivateUpload } from '@/lib/storage';
@@ -167,5 +167,39 @@ export async function permanentlyDeleteApplicationAction(formData: FormData) {
     }
   } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; destination = '/admin/applications/deleted?error=delete_failed'; }
   finally { diagnostics.redirectStatus = destination; console.info('adminPermanentDeleteDiagnostics', diagnostics); revalidatePath('/admin/applications'); revalidatePath('/admin/applications/deleted'); }
+  redirect(destination);
+}
+
+export async function adminStage2Action(formData: FormData) {
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  const action = String(formData.get('action') ?? '');
+  const notes = String(formData.get('notes') ?? '').slice(0, 500);
+  let destination = redirectPath(applicationId, '?error=action_failed');
+  const diagnostics: Record<string, unknown> = { adminStage2ActionRequested: true, adminAuthenticated: false, action, applicationIdPresent: Boolean(applicationId), transactionSucceeded: false, emailAttempted: false, emailStatus: 'not_attempted' };
+  try {
+    const adminSession = await getAdminSession();
+    diagnostics.adminAuthenticated = Boolean(adminSession);
+    if (!adminSession) destination = '/admin/login';
+    else if (!['approve', 'reject', 'correction'].includes(action)) destination = redirectPath(applicationId, '?error=invalid_action');
+    else {
+      const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, select: { id: true, applicationId: true, deletedAt: true } });
+      if (!app) destination = redirectPath(null, '?error=action_failed');
+      else if (app.deletedAt) destination = redirectPath(applicationId, '?error=restore_before_stage_action');
+      else if (action === 'approve') {
+        const result = await approveStage2(applicationId, adminSession.email, notes);
+        diagnostics.transactionSucceeded = true;
+        const email = await safeSendEmail({ applicationId, template: 'stage-3-unlocked', subject: `Next stage unlocked: ${app.applicationId}`, body: 'Stage 2 has been approved. Please return to Track Application to view your next unlocked stage.' });
+        diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
+        destination = redirectPath(applicationId, `?success=${result.alreadyApproved ? 'stage2_already_approved' : 'stage2_approved'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+      } else {
+        const result = await recordAdminStage2Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes);
+        diagnostics.transactionSucceeded = true;
+        const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-2-rejected' : 'stage-2-correction-requested', subject: action === 'reject' ? `Application update: ${app.applicationId}` : `Stage 2 correction requested: ${app.applicationId}`, body: action === 'reject' ? 'We are unable to move your application forward after identity review.' : 'A correction has been requested for Stage 2. Please return to Track Application to update your information.' });
+        diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
+        destination = redirectPath(applicationId, `?success=${action === 'reject' ? 'stage2_rejected' : 'stage2_correction'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+      }
+    }
+  } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; destination = redirectPath(applicationId, '?error=action_failed'); }
+  finally { revalidatePath('/admin/applications'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`); logAdminDiagnostics(diagnostics); }
   redirect(destination);
 }

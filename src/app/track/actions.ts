@@ -4,6 +4,8 @@ import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { maskGeneric, randomDigits, randomToken, sha256 } from '@/lib/security';
 import { sendAndRecordEmail } from '@/lib/email';
+import { stage2SubmissionSchema, toStage2SubmissionPayload } from '../../lib/hiring';
+import { deletePrivateUpload, savePrivateUpload, validateIdentityDocumentFile } from '../../lib/storage';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { accessCodeRateLimitConfig } from '@/lib/access-code-config';
 
@@ -101,4 +103,64 @@ export async function verifyAccessCode(formData: FormData) {
   await prisma.applicationAccessCode.update({ where: { id: access.id }, data: { usedAt: new Date(), verifiedSessionTokenHash: sha256(token), sessionExpiresAt: new Date(Date.now() + 30 * 60 * 1000) } });
   await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'applicant', actorRef: 'masked-email', action: 'Access code verified' } });
   redirect(`/track/portal?session=${token}`);
+}
+
+function portalUrl(session: string, params: Record<string, string>) {
+  const search = new URLSearchParams({ session, ...params });
+  return `/track/portal?${search.toString()}`;
+}
+
+export async function submitStage2(formData: FormData) {
+  const session = String(formData.get('session') ?? '');
+  const parsed = stage2SubmissionSchema.safeParse(Object.fromEntries(formData.entries()));
+  const governmentIdFile = formData.get('governmentIdDocument') instanceof File ? formData.get('governmentIdDocument') as File : null;
+  const photoFile = formData.get('passportPhoto') instanceof File ? formData.get('passportPhoto') as File : null;
+  const additionalFile = formData.get('additionalIdentityDocument') instanceof File ? formData.get('additionalIdentityDocument') as File : null;
+  const fileErrors = [
+    validateIdentityDocumentFile(governmentIdFile, 'Upload your government ID document.'),
+    validateIdentityDocumentFile(photoFile, 'Upload your passport-style photograph.'),
+    additionalFile && additionalFile.size > 0 ? validateIdentityDocumentFile(additionalFile, 'Upload a supporting identity document.') : null,
+  ].filter(Boolean);
+  if (!parsed.success || fileErrors.length) redirect(portalUrl(session, { error: 'stage2_validation' }));
+
+  const access = await prisma.applicationAccessCode.findFirst({
+    where: { verifiedSessionTokenHash: sha256(session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } },
+    include: { application: { include: { stages: true, applicant: true } } },
+  });
+  if (!access) redirect('/track?verified=0');
+  const application = access.application;
+  const stage1 = application.stages.find((stage) => stage.stageOrder === 1);
+  const stage2 = application.stages.find((stage) => stage.stageOrder === 2);
+  if (!stage2 || stage1?.status !== 'Approved' || stage2.status === 'Locked') redirect(portalUrl(session, { error: 'stage2_locked' }));
+  if (!['Available', 'In Progress', 'Correction Requested'].includes(stage2.status)) redirect(portalUrl(session, { error: 'stage2_not_open' }));
+
+  const saved: Array<{ file: File; kind: string; storageKey: string; provider: string; restricted: boolean }> = [];
+  try {
+    for (const item of [
+      { file: governmentIdFile!, kind: 'Stage 2 Government ID' },
+      { file: photoFile!, kind: 'Stage 2 Passport Photo' },
+      ...(additionalFile && additionalFile.size > 0 ? [{ file: additionalFile, kind: 'Stage 2 Additional Identity Document' }] : []),
+    ]) {
+      const stored = await savePrivateUpload(item.file, application.id);
+      saved.push({ ...item, ...stored });
+    }
+    await prisma.$transaction(async (tx) => {
+      const version = await tx.stageSubmission.count({ where: { stageId: stage2.id } }) + 1;
+      const submission = await tx.stageSubmission.create({ data: { stageId: stage2.id, version, payload: toStage2SubmissionPayload(parsed.data), status: 'Under Review', submittedAt: new Date() } });
+      for (const item of saved) {
+        const uploaded = await tx.uploadedDocument.create({ data: { applicationId: application.id, kind: item.kind, fileName: item.file.name, mimeType: item.file.type || 'application/octet-stream', sizeBytes: item.file.size, provider: item.provider, storageKey: item.storageKey, restricted: item.restricted } });
+        await tx.applicantDocument.create({ data: { submissionId: submission.id, uploadedDocumentId: uploaded.id, status: 'Submitted' } });
+      }
+      await tx.electronicSignature.create({ data: { submissionId: submission.id, typedName: parsed.data.signatureName, confirmed: true } });
+      await tx.hiringStage.update({ where: { id: stage2.id }, data: { status: 'Under Review', submittedAt: new Date() } });
+      await tx.jobApplication.update({ where: { id: application.id }, data: { status: 'Candidate Information Required', currentStageOrder: 2 } });
+      await tx.auditLog.create({ data: { applicationId: application.id, actorType: 'applicant', actorRef: 'masked-email', action: 'Applicant submitted Stage 2', metadata: { documentsUploaded: saved.length } } });
+      await tx.emailNotification.create({ data: { applicationId: application.id, toEmail: 'admin', template: 'stage-2-submitted-admin', subject: `Stage 2 submitted: ${application.applicationId}`, status: 'recorded' } });
+    });
+  } catch (error) {
+    await Promise.all(saved.map((item) => deletePrivateUpload(item.storageKey, item.provider)));
+    console.info('stage2SubmissionFailure', { applicationFound: true, stage2Found: true, filesCleaned: saved.length, errorName: error instanceof Error ? error.name : 'UnknownError' });
+    redirect(portalUrl(session, { error: 'stage2_submit_failed' }));
+  }
+  redirect(portalUrl(session, { success: 'stage2_submitted' }));
 }

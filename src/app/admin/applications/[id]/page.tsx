@@ -11,6 +11,7 @@ import {
   permanentlyDeleteApplicationAction,
   restoreApplicationAction,
   softDeleteApplicationAction,
+  adminStage2Action,
 } from "../actions";
 import { AdminDocumentActions } from "./AdminDocumentActions";
 
@@ -65,6 +66,10 @@ function actionBanner(params: Record<string, string | undefined>) {
   if (params.success === "soft_deleted")
     messages.push("Application moved to deleted records.");
   if (params.success === "restored") messages.push("Application restored.");
+  if (params.success === "stage2_approved") messages.push("Stage 2 was approved and Stage 3 is now available.");
+  if (params.success === "stage2_already_approved") messages.push("Stage 2 is already approved.");
+  if (params.success === "stage2_correction") messages.push("Stage 2 correction was requested.");
+  if (params.success === "stage2_rejected") messages.push("Stage 2 was rejected.");
   if (params.warning === "email_failed")
     messages.push(
       "Stage 1 was approved, but the unlock email could not be sent. Please retry email delivery or contact the candidate manually.",
@@ -137,6 +142,11 @@ export default async function AdminApplicationDetail({
   );
   const stageOneSubmission = stageOne?.submissions[0];
   const stageOneStatus = stageOne?.status ?? application.status;
+  const stageTwo = application.stages.find((stage: ApplicationStage) => stage.stageOrder === 2);
+  const stageTwoSubmission = stageTwo?.submissions[0];
+  const stageTwoPayload = (stageTwoSubmission?.payload ?? {}) as Record<string, string | boolean>;
+  const stageTwoSignature = stageTwoSubmission?.signature;
+  const stageTwoDocuments = stageTwoSubmission?.documents ?? [];
   const signature = stageOneSubmission?.signature;
   const documents = stageOneSubmission?.documents ?? [];
   const documentsWithAvailability: Array<{
@@ -153,6 +163,7 @@ export default async function AdminApplicationDetail({
         : false,
     })),
   );
+  const stageTwoDocumentsWithAvailability = await Promise.all(stageTwoDocuments.map(async (document: ApplicantDocument) => ({ document, privateFileAvailable: document.uploadedDocument ? await privateUploadExists(document.uploadedDocument.storageKey, document.uploadedDocument.provider) : false })));
   const stageOnePdfAvailable = Boolean(
     stageOneSubmission?.submittedAt &&
     signature?.confirmed &&
@@ -320,6 +331,32 @@ export default async function AdminApplicationDetail({
           </p>
         ) : (
           <p>Missing signature.</p>
+        )}
+      </section>
+
+
+      <section className="card mt-6 p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <h2 className="font-bold">Stage 2 identity verification</h2>
+          <StatusBadge status={stageTwo?.status ?? "Locked"} />
+        </div>
+        {stageTwoSubmission ? (
+          <div className="mt-4 space-y-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Identity details</h3><p>Legal name: {String(stageTwoPayload.fullLegalName ?? "—")}</p><p>DOB: {String(stageTwoPayload.dateOfBirth ?? "—")}</p><p>Gender: {String(stageTwoPayload.gender ?? "—")}</p><p>Nationality: {String(stageTwoPayload.nationality ?? "—")}</p><p>Residence: {String(stageTwoPayload.currentCity ?? "—")}</p></div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Government ID</h3><p>ID type: {String(stageTwoPayload.idType ?? "—")}</p><p>ID number: {String(stageTwoPayload.idNumberMasked ?? "—")}</p><p>NIN: {String(stageTwoPayload.ninMasked ?? "—")}</p><p>Tax ID: {String(stageTwoPayload.taxIdMasked ?? "—")}</p><p>Authority: {String(stageTwoPayload.idIssuingAuthority ?? "—")}</p></div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Emergency contact</h3><p>Name: {String(stageTwoPayload.emergencyContactName ?? "—")}</p><p>Relationship: {String(stageTwoPayload.emergencyContactRelationship ?? "—")}</p><p>Phone: {String(stageTwoPayload.emergencyContactPhone ?? "—")}</p><p>Address: {String(stageTwoPayload.emergencyContactAddress ?? "—")}</p></div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Declaration / signature</h3><p>Accuracy confirmed: {stageTwoPayload.declarationAccuracy ? "Yes" : "No"}</p><p>Processing consent: {stageTwoPayload.identityProcessingConsent ? "Yes" : "No"}</p><p>Signature: {stageTwoSignature?.typedName ?? String(stageTwoPayload.signatureName ?? "—")}</p><p>Signed: {formatDateTime(stageTwoSignature?.signedAt)}</p></div>
+            </div>
+            <div><h3 className="font-semibold">Uploaded Stage 2 documents</h3><div className="mt-3 grid gap-3">{stageTwoDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? (<article className="rounded-2xl border border-slate-200 p-4" key={document.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{document.uploadedDocument.kind}</p><p className="text-sm text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType} · {document.uploadedDocument.sizeBytes} bytes</p>{!privateFileAvailable ? <p className="mt-2 text-sm font-semibold text-amber-700">Private file unavailable in storage.</p> : null}</div><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={["application/pdf", "image/jpeg", "image/png", "image/webp"].includes(document.uploadedDocument.mimeType)} /></div></article>) : null)}</div></div>
+          </div>
+        ) : <p className="mt-3 text-sm text-slate-600">No Stage 2 submission found.</p>}
+      </section>
+
+      <section className="card mt-6 p-5">
+        <h2 className="font-bold">Stage 2 admin actions</h2>
+        {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking stage actions.</p> : (
+          <form action={adminStage2Action} className="mt-4 flex flex-wrap gap-2"><input type="hidden" name="applicationDbId" value={application.id} /><input className="input max-w-xs" name="notes" placeholder="Optional notes" /><button className="btn btn-secondary" name="action" value="approve">Approve Stage 2</button><button className="btn btn-secondary" name="action" value="correction">Request correction</button><button className="btn btn-secondary" name="action" value="reject">Reject Stage 2</button></form>
         )}
       </section>
 

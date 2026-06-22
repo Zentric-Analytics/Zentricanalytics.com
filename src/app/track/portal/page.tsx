@@ -4,7 +4,9 @@ import type { Prisma } from '@prisma/client';
 import { PageShell } from '@/components/PageShell';
 import { Section } from '@/components/Section';
 import { StatusBadge } from '@/components/StatusBadge';
-import { stages as stageDefs, toStageStatus, type StageStatus } from '@/lib/hiring';
+import { idTypes, stages as stageDefs, toStageStatus, type StageStatus } from '@/lib/hiring';
+import { submitStage2 } from '../actions';
+import { Stage2SubmitButton } from './Stage2SubmitButton';
 import { prisma } from '@/lib/prisma';
 import { sha256 } from '@/lib/security';
 
@@ -116,6 +118,10 @@ export default async function Portal({
   const progressPercent = Math.round((completedStageCount / stageDefs.length) * 100);
   const currentStage = portalStages.find((stage) => stage.isCurrent) ?? portalStages[0];
   const stageOne = portalStages[0]?.stage;
+  const stageTwo = portalStages[1]?.stage;
+  const stageTwoStatus = portalStages[1]?.status ?? 'Locked';
+  const stageOneApproved = portalStages[0]?.status === 'Approved';
+  const stageOnePayload = (stageOne?.submissions[0]?.payload ?? {}) as Record<string, string>;
   const stageOneSignature = portalStages[0]?.stage?.submissions[0]?.signature;
 
   return (
@@ -180,6 +186,62 @@ export default async function Portal({
             </div>
           </aside>
         </div>
+
+
+        <section className="mt-8" aria-labelledby="stage2-title">
+          <div className="card p-5 sm:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-widest text-accent">Stage 2</p>
+                <h2 id="stage2-title" className="mt-2 text-2xl font-bold tracking-tight text-ink">Candidate Information / Identity Verification</h2>
+              </div>
+              <StatusBadge status={stageTwoStatus} />
+            </div>
+            {!stageOneApproved || stageTwoStatus === 'Locked' ? (
+              <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Stage 2 unlocks after Stage 1 approval.</p>
+            ) : ['Submitted', 'Under Review'].includes(stageTwoStatus) ? (
+              <p className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-800">Stage 2 submitted and under review.</p>
+            ) : stageTwoStatus === 'Approved' ? (
+              <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Stage 2 approved. Continue to the next unlocked stage.</p>
+            ) : ['Available', 'Correction Requested'].includes(stageTwoStatus) ? (
+              <form action={submitStage2} className="mt-6 space-y-6">
+                <input type="hidden" name="session" value={session ?? ''} />
+                <div className="rounded-2xl border border-slate-200 p-4 sm:p-5"><h3 className="font-bold text-ink">Personal Identity Details</h3><div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <label className="text-sm font-semibold">Full legal name<input className="input mt-1" name="fullLegalName" defaultValue={application.applicant.fullName} required /></label>
+                  <label className="text-sm font-semibold">Date of birth<input className="input mt-1" name="dateOfBirth" type="date" required /></label>
+                  <label className="text-sm font-semibold">Gender<select className="input mt-1" name="gender" required><option value="">Select</option><option>Male</option><option>Female</option><option>Prefer not to say</option></select></label>
+                  <label className="text-sm font-semibold">Nationality<input className="input mt-1" name="nationality" defaultValue={stageOnePayload.nationality ?? ''} required /></label>
+                  <label className="text-sm font-semibold">State of origin<input className="input mt-1" name="stateOfOrigin" required /></label>
+                  <label className="text-sm font-semibold">State of residence<input className="input mt-1" name="stateOfResidence" defaultValue={stageOnePayload.stateOfResidence ?? ''} required /></label>
+                  <label className="text-sm font-semibold">LGA<input className="input mt-1" name="lga" defaultValue={stageOnePayload.lgaOfResidence ?? ''} required /></label>
+                  <label className="text-sm font-semibold md:col-span-2">Residential address<input className="input mt-1" name="residentialAddress" defaultValue={stageOnePayload.residentialAddress ?? ''} required /></label>
+                  <label className="text-sm font-semibold">Current city/location<input className="input mt-1" name="currentCity" defaultValue={application.applicant.location ?? ''} required /></label>
+                  <label className="text-sm font-semibold">Phone number<input className="input mt-1" name="phoneNumber" defaultValue={application.applicant.phoneE164 ?? application.applicant.phone ?? ''} required /></label>
+                  <label className="text-sm font-semibold md:col-span-2">Email<input className="input mt-1" name="email" type="email" defaultValue={application.applicant.email} required /></label>
+                </div></div>
+                <div className="rounded-2xl border border-slate-200 p-4 sm:p-5"><h3 className="font-bold text-ink">Government ID Details</h3><div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <label className="text-sm font-semibold">ID type<select className="input mt-1" name="idType" required><option value="">Select</option>{idTypes.map((type) => <option key={type}>{type}</option>)}</select></label>
+                  <label className="text-sm font-semibold">ID number<input className="input mt-1" name="idNumber" required /></label>
+                  <label className="text-sm font-semibold">Issuing authority (optional)<input className="input mt-1" name="idIssuingAuthority" /></label>
+                  <label className="text-sm font-semibold">Issue date (optional)<input className="input mt-1" name="idIssueDate" type="date" /></label>
+                  <label className="text-sm font-semibold">Expiry date (optional)<input className="input mt-1" name="idExpiryDate" type="date" /></label>
+                  <label className="text-sm font-semibold">NIN, if separate<input className="input mt-1" name="nin" /></label>
+                  <label className="text-sm font-semibold">Tax ID (optional)<input className="input mt-1" name="taxId" /></label>
+                </div></div>
+                <div className="rounded-2xl border border-slate-200 p-4 sm:p-5"><h3 className="font-bold text-ink">Identity Document Uploads</h3><div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <label className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm font-semibold">Government ID document<input className="mt-3 block w-full text-sm" name="governmentIdDocument" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*" required /></label>
+                  <label className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm font-semibold">Passport/profile photo<input className="mt-3 block w-full text-sm" name="passportPhoto" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*" required /></label>
+                  <label className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm font-semibold">Additional support (optional)<input className="mt-3 block w-full text-sm" name="additionalIdentityDocument" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*" /></label>
+                </div><p className="mt-3 text-xs text-slate-500">Accepted formats: PDF, JPG, JPEG, PNG, WEBP. Max size 20MB each. Files are stored privately.</p></div>
+                <div className="rounded-2xl border border-slate-200 p-4 sm:p-5"><h3 className="font-bold text-ink">Emergency / Contact Confirmation</h3><div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <label className="text-sm font-semibold">Emergency contact name<input className="input mt-1" name="emergencyContactName" required /></label><label className="text-sm font-semibold">Relationship<input className="input mt-1" name="emergencyContactRelationship" required /></label><label className="text-sm font-semibold">Emergency contact phone<input className="input mt-1" name="emergencyContactPhone" required /></label><label className="text-sm font-semibold">Address (optional)<input className="input mt-1" name="emergencyContactAddress" /></label>
+                </div></div>
+                <div className="rounded-2xl border border-slate-200 p-4 sm:p-5"><h3 className="font-bold text-ink">Declaration and Consent</h3><div className="mt-4 space-y-3 text-sm"><label className="flex gap-2"><input name="declarationAccuracy" type="checkbox" required /> I confirm my ID information is accurate.</label><label className="flex gap-2"><input name="identityProcessingConsent" type="checkbox" required /> I consent to Zentric Analytics Ltd processing identity data for recruitment verification.</label><label className="block font-semibold">Typed electronic signature<input className="input mt-1" name="signatureName" defaultValue={application.applicant.fullName} required /></label><label className="flex gap-2"><input name="signatureConsent" type="checkbox" required /> I confirm this typed name is my electronic signature.</label></div></div>
+                <Stage2SubmitButton />
+              </form>
+            ) : null}
+          </div>
+        </section>
 
         <section className="mt-8" aria-labelledby="portal-progress-title">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
