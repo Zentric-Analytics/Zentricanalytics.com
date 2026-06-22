@@ -11,7 +11,7 @@ const publicPages = [
   'src/app/track/portal/page.tsx',
 ];
 
-const headerLinks = ['Home', 'About', 'Services', 'Careers', 'Track Application'];
+const headerLinks = ['Home', 'About', 'Services', 'Careers', 'Apply Now', 'Track Application'];
 
 describe('public layout shell', () => {
   it('renders the site header in normal document flow', () => {
@@ -46,9 +46,35 @@ describe('public layout shell', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
 
     expect(header).toContain('id={mobileMenuId}');
-    expect(header).toContain('w-full overflow-x-hidden');
+    expect(header).toContain('role="dialog"');
+    expect(header).toContain('aria-modal="true"');
+    expect(header).toContain('id="mobile-menu-title"');
+    expect(header).toContain('Menu');
+    expect(header).toContain('Close navigation menu');
+    expect(header).toContain('fixed inset-0 z-50');
+    expect(header).toContain('overflow-y-auto bg-white');
+    expect(header).toContain('md:hidden');
     expect(header).toContain('onClick={() => setIsMobileMenuOpen(false)}');
     headerLinks.forEach((label) => expect(header).toContain(label));
+  });
+
+  it('groups the full-screen mobile drawer into premium navigation sections', () => {
+    const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
+
+    expect(header).toContain('mobileMenuSections');
+    expect(header).toContain("label: 'MAIN'");
+    expect(header).toContain("label: 'CAREERS'");
+    expect(header).toContain("label: 'COMPANY'");
+    expect(header).toContain('uppercase tracking-[0.24em] text-slate-400');
+    expect(header).toContain('text-lg font-semibold text-slate-900');
+  });
+
+  it('keeps the mobile drawer hidden on desktop breakpoints', () => {
+    const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
+
+    expect(header).toContain('fixed inset-0 z-50');
+    expect(header).toContain('md:hidden');
+    expect(header).not.toContain('fixed inset-x-0 top-0 z-50');
   });
 
   it.each(publicPages)('%s uses PageShell for the shared header layout', (pagePath) => {
