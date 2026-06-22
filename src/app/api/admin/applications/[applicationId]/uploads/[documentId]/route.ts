@@ -104,6 +104,8 @@ export async function GET(
       uploadedDocumentFound: diagnostic.uploadedDocumentFound,
       provider: storageStatus.provider,
       privateUploadRootConfigured: storageStatus.rootConfigured,
+      localPrivateUsesDefaultEphemeralPath:
+        storageStatus.localPrivateUsesDefaultEphemeralPath,
       privateUploadReadSucceeded: false,
       responseStatus: errorName === "ENOENT" ? 410 : 500,
       errorName,
@@ -111,7 +113,7 @@ export async function GET(
     const status = errorName === "ENOENT" ? 410 : 500;
     return safeResponse(
       status === 410
-        ? "File metadata exists, but the private file is not available in storage. Please check private upload storage configuration."
+        ? "The file record exists, but the stored file could not be found. Re-upload may be required."
         : "Temporary document download error",
       status,
       diagnostic,

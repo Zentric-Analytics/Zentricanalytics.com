@@ -34,6 +34,7 @@ const GENERIC_UPLOAD_MIME_TYPES = new Set([
   "application/octet-stream",
   "binary/octet-stream",
 ]);
+const LOCAL_PRIVATE_PROVIDER = "local-private";
 
 function fileExtension(name: string) {
   return name.split(".").pop()?.toLowerCase() ?? "";
@@ -53,32 +54,19 @@ export function validateCvFile(file: File | null | undefined) {
 }
 
 export function selectedStorageProvider() {
-  return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER || "local-private";
+  return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER || LOCAL_PRIVATE_PROVIDER;
 }
 
-export async function savePrivateUpload(file: File, applicationId: string) {
-  const provider = selectedStorageProvider();
-  if (provider !== "local-private")
+function assertLocalPrivateProvider(provider: string, operation: string) {
+  if (provider !== LOCAL_PRIVATE_PROVIDER)
     throw new Error(
-      `${provider} storage is configured but no private object storage adapter is enabled in this build.`,
+      `${provider} storage is configured but no private ${operation} adapter is enabled in this build.`,
     );
-  const root =
-    process.env.PRIVATE_UPLOAD_ROOT ??
-    path.join(process.cwd(), ".private-uploads");
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const key = path.join(applicationId, `${randomToken(12)}-${safeName}`);
-  const fullPath = path.join(root, key);
-  await mkdir(path.dirname(fullPath), { recursive: true });
-  await writeFile(fullPath, Buffer.from(await file.arrayBuffer()));
-  return { storageKey: key, provider: "local-private", restricted: true };
 }
 
-export async function deletePrivateUpload(
-  storageKey: string,
-  provider = "local-private",
-) {
-  if (provider !== "local-private") return;
-  await rm(resolvePrivateUploadPath(storageKey), { force: true });
+function sanitizeStorageSegment(value: string) {
+  const sanitized = value.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^\.+$/, "_");
+  return sanitized || "upload";
 }
 
 export function privateUploadRoot() {
@@ -99,14 +87,31 @@ export function resolvePrivateUploadPath(storageKey: string) {
   return resolved;
 }
 
+export async function savePrivateUpload(file: File, applicationId: string) {
+  const provider = selectedStorageProvider();
+  assertLocalPrivateProvider(provider, "object storage");
+  const safeApplicationId = sanitizeStorageSegment(applicationId);
+  const safeName = sanitizeStorageSegment(file.name);
+  const key = path.join(safeApplicationId, `${randomToken(12)}-${safeName}`);
+  const fullPath = resolvePrivateUploadPath(key);
+  await mkdir(path.dirname(fullPath), { recursive: true });
+  await writeFile(fullPath, Buffer.from(await file.arrayBuffer()), { flag: "wx" });
+  return { storageKey: key, provider: LOCAL_PRIVATE_PROVIDER, restricted: true };
+}
+
+export async function deletePrivateUpload(
+  storageKey: string,
+  provider = LOCAL_PRIVATE_PROVIDER,
+) {
+  if (provider !== LOCAL_PRIVATE_PROVIDER) return;
+  await rm(resolvePrivateUploadPath(storageKey), { force: true });
+}
+
 export async function readPrivateUpload(
   storageKey: string,
-  provider = "local-private",
+  provider = LOCAL_PRIVATE_PROVIDER,
 ) {
-  if (provider !== "local-private")
-    throw new Error(
-      `${provider} storage is configured but no private read adapter is enabled in this build.`,
-    );
+  assertLocalPrivateProvider(provider, "read");
   const fullPath = resolvePrivateUploadPath(storageKey);
   const [buffer, metadata] = await Promise.all([
     readFile(fullPath),
@@ -125,9 +130,9 @@ export function sanitizeDownloadFilename(name: string) {
 
 export async function privateUploadExists(
   storageKey: string,
-  provider = "local-private",
+  provider = LOCAL_PRIVATE_PROVIDER,
 ) {
-  if (provider !== "local-private") return false;
+  if (provider !== LOCAL_PRIVATE_PROVIDER) return false;
   try {
     await access(resolvePrivateUploadPath(storageKey), constants.R_OK);
     return true;
@@ -141,6 +146,7 @@ export function privateUploadConfigurationStatus() {
   return {
     rootConfigured,
     provider: selectedStorageProvider(),
+    localPrivateUsesDefaultEphemeralPath: !rootConfigured,
   };
 }
 

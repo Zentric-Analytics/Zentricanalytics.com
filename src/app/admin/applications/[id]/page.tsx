@@ -295,9 +295,8 @@ export default async function AdminApplicationDetail({
                         </p>
                         {!privateFileAvailable ? (
                           <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
-                            File metadata exists, but the private file is not
-                            available in storage. Please check private upload
-                            storage configuration.
+                            The file record exists, but the stored file could not
+                            be found. Re-upload may be required.
                           </p>
                         ) : null}
                       </div>
