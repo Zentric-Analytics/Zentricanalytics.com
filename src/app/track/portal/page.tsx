@@ -4,7 +4,8 @@ import { DocumentCard } from '@/components/DocumentCard';
 import { PageShell } from '@/components/PageShell';
 import { Section } from '@/components/Section';
 import { StatusBadge } from '@/components/StatusBadge';
-import { stages as stageDefs, toStageStatus } from '@/lib/hiring';
+import { isStage1DownloadEligible, stages as stageDefs, toStageStatus } from '@/lib/hiring';
+import { Stage1DownloadButton } from './Stage1DownloadButton';
 import { prisma } from '@/lib/prisma';
 import { sha256 } from '@/lib/security';
 
@@ -68,7 +69,18 @@ export default async function Portal({
   const stageOne = application.stages.find(
     (stage: PortalStage) => stage.stageOrder === 1,
   );
-  const signed = Boolean(stageOne?.submissions[0]?.signature?.confirmed);
+  const stageOneSubmission = stageOne?.submissions[0];
+  const stageOneSignature = stageOneSubmission?.signature;
+  const signed = Boolean(stageOneSignature?.confirmed);
+  const stageOneDownloadEligible = isStage1DownloadEligible({
+    stagePresent: Boolean(stageOne),
+    submissionPresent: Boolean(stageOneSubmission),
+    submissionSubmitted: Boolean(stageOneSubmission?.submittedAt),
+    signaturePresent: Boolean(stageOneSignature),
+    signatureConfirmed: Boolean(stageOneSignature?.confirmed),
+    signedAtPresent: Boolean(stageOneSignature?.signedAt),
+    stageStatus: toStageStatus(stageOne?.status),
+  });
 
   return (
     <PageShell>
@@ -113,18 +125,11 @@ export default async function Portal({
             signed={signed}
             submittedAt={stageOne?.submittedAt?.toISOString()}
           />
-          {signed && stageOne?.submittedAt ? (
-            <a
-              className="btn btn-primary"
-              href={`/api/candidate/documents/stage-1?session=${encodeURIComponent(
-                session!,
-              )}`}
-            >
-              Download signed Stage 1 document
-            </a>
+          {stageOneDownloadEligible ? (
+            <Stage1DownloadButton session={session!} />
           ) : (
             <p className="text-sm text-slate-600">
-              Stage 1 download is available only after signature and submission.
+              Stage 1 download will be available after the submitted form is signed and accepted for review.
             </p>
           )}
           <DocumentCard
