@@ -7,12 +7,12 @@ describe('Stage 3 screening/interview/assessment source checks', () => {
     expect(readFileSync('prisma/migrations/20260622050000_stage3_metadata/migration.sql', 'utf8')).toContain('ADD COLUMN IF NOT EXISTS "metadata" JSONB');
   });
 
-  it('candidate portal gates Stage 3, shows released instructions, and never renders download links for uploads', () => {
+  it('candidate portal keeps Stage 3 out of lower duplicate presentation cards', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
-    expect(portal).toContain('Stage 3 unlocks after Stage 2 approval.');
-    expect(portal).toContain('Screening details will be shared by the admin.');
-    expect(portal).toContain('Submit Stage 3');
-    expect(portal).toContain('requiresUpload');
+    expect(portal).toContain('Application progress');
+    expect(portal).not.toContain('Stage 3 unlocks after Stage 2 approval.');
+    expect(portal).not.toContain('Screening details will be shared by the admin.');
+    expect(portal).not.toContain('Submit Stage 3');
     expect(portal).not.toContain('/api/admin/applications/${application.id}/uploads');
   });
 

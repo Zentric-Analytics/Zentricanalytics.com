@@ -36,18 +36,18 @@ vi.mock('@/lib/access-code-config', async () => {
   return actual;
   it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
-    expect(portal).toContain("stageOneApproved");
-    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
-    expect(portal).toContain("Stage 2 submitted and under review.");
-    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
-    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
+    expect(portal).toContain("Application progress");
+    expect(portal).not.toContain("Stage 2 unlocks after Stage 1 approval.");
+    expect(portal).not.toContain("Stage 2 submitted and under review.");
+    expect(portal).not.toContain("Stage 2 approved. Continue to the next unlocked stage.");
+    expect(portal).not.toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
     expect(portal).not.toContain('/uploads/${');
   });
 
   it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
-    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).not.toContain(`name="${name}"`));
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
   });
@@ -108,18 +108,18 @@ vi.mock('@/lib/security', async () => {
   return { ...actual, randomDigits: vi.fn(() => '654321') };
   it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
-    expect(portal).toContain("stageOneApproved");
-    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
-    expect(portal).toContain("Stage 2 submitted and under review.");
-    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
-    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
+    expect(portal).toContain("Application progress");
+    expect(portal).not.toContain("Stage 2 unlocks after Stage 1 approval.");
+    expect(portal).not.toContain("Stage 2 submitted and under review.");
+    expect(portal).not.toContain("Stage 2 approved. Continue to the next unlocked stage.");
+    expect(portal).not.toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
     expect(portal).not.toContain('/uploads/${');
   });
 
   it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
-    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).not.toContain(`name="${name}"`));
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
   });
@@ -266,18 +266,18 @@ describe('track access-code flow', () => {
   });
   it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
-    expect(portal).toContain("stageOneApproved");
-    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
-    expect(portal).toContain("Stage 2 submitted and under review.");
-    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
-    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
+    expect(portal).toContain("Application progress");
+    expect(portal).not.toContain("Stage 2 unlocks after Stage 1 approval.");
+    expect(portal).not.toContain("Stage 2 submitted and under review.");
+    expect(portal).not.toContain("Stage 2 approved. Continue to the next unlocked stage.");
+    expect(portal).not.toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
     expect(portal).not.toContain('/uploads/${');
   });
 
   it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
-    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).not.toContain(`name="${name}"`));
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
   });
@@ -440,18 +440,18 @@ describe('admin and track UI source checks', () => {
 
   it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
-    expect(portal).toContain("stageOneApproved");
-    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
-    expect(portal).toContain("Stage 2 submitted and under review.");
-    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
-    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
+    expect(portal).toContain("Application progress");
+    expect(portal).not.toContain("Stage 2 unlocks after Stage 1 approval.");
+    expect(portal).not.toContain("Stage 2 submitted and under review.");
+    expect(portal).not.toContain("Stage 2 approved. Continue to the next unlocked stage.");
+    expect(portal).not.toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
     expect(portal).not.toContain('/uploads/${');
   });
 
   it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
-    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).not.toContain(`name="${name}"`));
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
   });
