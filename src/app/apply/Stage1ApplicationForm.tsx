@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useId, useMemo, useState } from 'react';
+import { useActionState, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { countryPhoneOptions } from '@/lib/phone';
 import { roleAppliedForOptions } from '@/lib/recruitment-options';
 import { employmentTypeOptions, stage1WorkModeOptions } from '@/lib/stage1-fields';
@@ -61,6 +61,8 @@ export function Stage1ApplicationForm() {
   const [clearedErrors, setClearedErrors] = useState<Partial<Record<Stage1Field, boolean>>>({});
   const [selectedFile, setSelectedFile] = useState('');
   const [fileNeedsReselection, setFileNeedsReselection] = useState(false);
+  const [editedSinceServerError, setEditedSinceServerError] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputId = useId();
   const values = state.values;
   const displayState = useMemo<Stage1FormState>(() => ({
@@ -70,6 +72,7 @@ export function Stage1ApplicationForm() {
 
   useEffect(() => {
     setClearedErrors({});
+    setEditedSinceServerError(false);
     if (state.message) {
       setSelectedFile('');
       setFileNeedsReselection(true);
@@ -77,14 +80,22 @@ export function Stage1ApplicationForm() {
   }, [state]);
 
   const clearFieldError = (field: Stage1Field) => {
+    setEditedSinceServerError(true);
     setClearedErrors((current) => current[field] ? current : { ...current, [field]: true });
     if (field === 'cv') setFileNeedsReselection(false);
   };
+  const validateVisibleFileSelection = () => {
+    const hasFile = Boolean(fileInputRef.current?.files?.length);
+    setFileNeedsReselection(!hasFile);
+    return hasFile;
+  };
+  const visibleMessage = state.message && !editedSinceServerError ? state.message : undefined;
+  const fileErrorDescription = [errorFor(displayState, 'cv') ? 'cv-error' : '', fileNeedsReselection ? 'cv-reselection-error' : ''].filter(Boolean).join(' ') || undefined;
   const [selectedRole, setSelectedRole] = useState(values.role || roleAppliedForOptions[0]);
   const otherRoleIsSelected = selectedRole === 'Other';
 
-  return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8" onChange={(event) => { const name = (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as Stage1Field | undefined; if (name) clearFieldError(name); }}>
-    {state.message ? <div className="min-w-0 break-words rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{state.message}</div> : null}
+  return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8" onSubmit={() => { validateVisibleFileSelection(); }} onChange={(event) => { const name = (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as Stage1Field | undefined; if (name) clearFieldError(name); }}>
+    {visibleMessage ? <div className="min-w-0 break-words rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{visibleMessage}</div> : null}
 
     <FormSection eyebrow="Step 01" title="Personal details" helper="Use the same contact information you want our hiring team to use for updates.">
       <div className="md:col-span-6 grid min-w-0 grid-cols-1 gap-4 md:grid-cols-12 md:gap-5">
@@ -121,8 +132,8 @@ export function Stage1ApplicationForm() {
     <FormSection eyebrow="Step 04" title="CV/resume" helper="Upload one current document for recruitment review.">
       <div className="md:col-span-6 min-w-0 rounded-[1.5rem] border border-brand/20 bg-gradient-to-br from-brand/5 via-white to-accent/10 p-4 shadow-inner sm:p-5">
         <div className="grid gap-4 rounded-2xl border border-white/80 bg-white/85 p-4 sm:grid-cols-[1fr_auto] sm:items-center sm:p-5">
-          <div className="min-w-0"><p className="text-base font-bold text-ink">CV/resume <Required /></p><p className="mt-1 text-sm leading-6 text-slate-600">PDF, DOC, DOCX, JPG, PNG, or WEBP. Maximum file size: 20MB.</p>{selectedFile ? <p className="mt-3 max-w-full break-words rounded-xl bg-brand/10 px-3 py-2 text-sm font-semibold text-brand">Selected: {selectedFile}</p> : <p className="mt-3 text-sm font-semibold text-slate-500">No file selected yet.</p>}<FieldError state={displayState} field="cv" />{fileNeedsReselection && !selectedFile ? <p className="mt-2 text-sm font-semibold text-red-700" role="alert">Please reselect your CV/resume before submitting again.</p> : null}</div>
-          <div><input id={fileInputId} className="sr-only" name="cv" type="file" accept={uploadAccept} required onInvalid={()=>setFileNeedsReselection(true)} onChange={(event)=>{ setSelectedFile(event.currentTarget.files?.[0]?.name ?? ''); clearFieldError('cv'); }} /><label htmlFor={fileInputId} className="btn btn-secondary cursor-pointer border-brand/30 px-5 py-3 text-brand shadow-sm hover:bg-brand hover:text-white focus-within:ring-4 focus-within:ring-brand/10">Choose file</label></div>
+          <div className="min-w-0"><p className="text-base font-bold text-ink">CV/resume <Required /></p><p className="mt-1 text-sm leading-6 text-slate-600">PDF, DOC, DOCX, JPG, PNG, or WEBP. Maximum file size: 20MB.</p>{selectedFile ? <p className="mt-3 max-w-full break-words rounded-xl bg-brand/10 px-3 py-2 text-sm font-semibold text-brand">Selected: {selectedFile}</p> : <p className="mt-3 text-sm font-semibold text-slate-500">No file selected yet.</p>}<FieldError state={displayState} field="cv" />{fileNeedsReselection && !selectedFile ? <p className="mt-2 text-sm font-semibold text-red-700" id="cv-reselection-error" role="alert">Please reselect your CV/resume before submitting again.</p> : null}</div>
+          <div><input ref={fileInputRef} id={fileInputId} className="sr-only" name="cv" type="file" accept={uploadAccept} required aria-invalid={Boolean(errorFor(displayState, 'cv') || fileNeedsReselection)} aria-describedby={fileErrorDescription} onInvalid={()=>setFileNeedsReselection(true)} onChange={(event)=>{ setSelectedFile(event.currentTarget.files?.[0]?.name ?? ''); clearFieldError('cv'); }} /><label htmlFor={fileInputId} className="btn btn-secondary cursor-pointer border-brand/30 px-5 py-3 text-brand shadow-sm hover:bg-brand hover:text-white focus-within:ring-4 focus-within:ring-brand/10">Choose file</label></div>
         </div>
       </div>
     </FormSection>
