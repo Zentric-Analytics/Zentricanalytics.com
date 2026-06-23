@@ -172,8 +172,8 @@ export default async function AdminApplications({
 
           return (
             <article className="card p-5" key={application.id}>
-              <div className="flex items-start justify-between gap-4">
-                <div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-2">
                   <h2 className="font-bold">
                     <Link
                       href={`/admin/applications/${application.id}`}
@@ -181,12 +181,28 @@ export default async function AdminApplications({
                       {application.applicationId}
                     </Link>
                   </h2>
-                  <p>
-                    {application.applicant.fullName} · {application.applicant.email}
-                  </p>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Candidate name</p>
+                    <h3 className="text-base font-bold text-slate-950">
+                      <Link href={`/admin/applications/${application.id}`}>
+                        {application.applicant.fullName}
+                      </Link>
+                    </h3>
+                    <p>{application.applicant.email}</p>
+                    <p>{application.applicant.phoneE164 ?? application.applicant.phone ?? 'No phone'}</p>
+                    <p>{application.roleAppliedFor}</p>
+                    <p>Current status: {application.status}</p>
+                    <p>Current stage: {stageOne?.title ?? 'Stage 1'}</p>
+                  </div>
                   <p>{application.roleAppliedFor} · {application.experienceLevel ?? 'Experience not provided'}</p><p>{application.applicant.phoneCountryName ?? 'Country not captured'} · {application.applicant.phoneE164 ?? application.applicant.phone ?? 'No phone'}</p>
                 </div>
-                <div className="flex flex-col items-end gap-2"><StatusBadge status={stageOne?.status ?? application.status} />{application.deletedAt ? <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">Deleted</span> : null}</div>
+                <div className="flex flex-col items-start gap-2 sm:items-end">
+                  <Link className="btn btn-primary" href={`/admin/applications/${application.id}`}>
+                    View full profile
+                  </Link>
+                  <StatusBadge status={stageOne?.status ?? application.status} />
+                  {application.deletedAt ? <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">Deleted</span> : null}
+                </div>
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-3">

@@ -54,7 +54,7 @@ export default async function DeletedApplications({ searchParams }: { searchPara
             <StatusBadge status={stageOne?.status ?? application.status} />
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link className="btn btn-secondary" href={`/admin/applications/${application.id}`}>Open detail</Link>
+            <Link className="btn btn-secondary" href={`/admin/applications/${application.id}`}>View full profile</Link>
             <form action={restoreApplicationAction}><input type="hidden" name="applicationDbId" value={application.id} /><button className="btn btn-secondary">Restore application</button></form>
             <form action={permanentlyDeleteApplicationAction} className="flex flex-wrap items-center gap-2 rounded border border-red-200 bg-red-50 p-3">
               <input type="hidden" name="applicationDbId" value={application.id} />

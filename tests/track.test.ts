@@ -444,6 +444,32 @@ describe('admin and track UI source checks', () => {
     expect(actions).toContain('Admin restored application');
   });
 
+  it('admin application list exposes direct profile navigation separately from stage actions', () => {
+    const list = readFileSync('src/app/admin/applications/page.tsx', 'utf8');
+    const deleted = readFileSync('src/app/admin/applications/deleted/page.tsx', 'utf8');
+    const detail = readFileSync('src/app/admin/applications/[id]/page.tsx', 'utf8');
+    const files = [list, deleted, detail];
+
+    expect(list).toContain('View full profile');
+    expect(list).toContain('Candidate name');
+    expect(list).toContain('href={`/admin/applications/${application.id}`}');
+    expect(list).toContain('{application.applicationId}');
+    expect(list).toContain('{application.applicant.fullName}');
+    expect(list).toContain('Approve Stage 1');
+    expect(list).toContain('Request correction');
+    expect(list).toContain('Reject');
+    expect(deleted).toContain('View full profile');
+    expect(deleted).toContain('href={`/admin/applications/${application.id}`}');
+    expect(detail).toContain('← Back to applications');
+    expect(detail).toContain('href="/admin/applications"');
+    for (const file of files) {
+      expect(file).not.toContain('<<<<<<<');
+      expect(file).not.toContain('=======');
+      expect(file).not.toContain('>>>>>>>');
+    }
+  });
+
+
   it('candidate tracking and portal ignore soft-deleted applications', () => {
     const actions = readFileSync('src/app/track/actions.ts', 'utf8');
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
