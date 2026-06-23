@@ -11,7 +11,7 @@ describe('Stage 3 screening/interview/assessment source checks', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     expect(portal).not.toContain('Stage 3 unlocks after Stage 2 approval.');
     expect(portal).not.toContain('Screening details will be shared by the admin.');
-    expect(portal).toContain('Submit Stage 3');
+    expect(portal).not.toContain('Submit Stage 3');
     expect(portal).not.toContain('requiresUpload');
     expect(portal).not.toContain('/api/admin/applications/${application.id}/uploads');
   });

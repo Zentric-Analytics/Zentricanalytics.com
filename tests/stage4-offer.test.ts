@@ -10,8 +10,8 @@ const schema = readFileSync('prisma/schema.prisma', 'utf8');
 
 describe('Stage 4 offer workflow source checks', () => {
   it('keeps Stage 4 workflow logic while hiding non-actionable portal status copy', () => {
-    expect(portal).toContain('Stage4Workspace');
-    expect(portal).toContain('Offer stage unlocks after screening approval.');
+    expect(portal).toContain('showOfferDecision');
+    expect(portal).not.toContain('Offer stage unlocks after screening approval.');
     expect(workflow).toContain("status: 'Offer Pending'");
     expect(workflow).toContain('stageOrder: 4');
     expect(workflow).toContain("status: 'Available'");
@@ -28,7 +28,7 @@ describe('Stage 4 offer workflow source checks', () => {
   });
 
   it('renders released offers in the candidate portal and blocks unreleased/expired/withdrawn decisions', () => {
-    expect(portal).toContain('Offer details will appear here when released by admin.');
+    expect(portal).not.toContain('Offer details will appear here when released by admin.');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
     expect(trackActions).toContain("offer.status !== 'Released'");
@@ -41,7 +41,7 @@ describe('Stage 4 offer workflow source checks', () => {
     expect(workflow).toContain('currentStageOrder: 5');
     expect(trackActions).toContain("status: 'Declined'");
     expect(trackActions).toContain("status: 'Rejected', currentStageOrder: 4");
-    expect(portal).toContain('employment agreement stage is now available.');
+    expect(portal).not.toContain('Employment agreement stage is now available.');
   });
 
   it('blocks soft-deleted applications and avoids applicant document links/sensitive diagnostics', () => {
