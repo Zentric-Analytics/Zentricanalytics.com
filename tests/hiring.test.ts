@@ -747,11 +747,22 @@ describe("production hardening helpers", () => {
 
   it("documents that local-private production storage needs a persistent private volume", () => {
     const envExample = readFileSync(".env.staging.example", "utf8");
+    const renderConfig = readFileSync("render.yaml", "utf8");
+    const deploymentDocs = readFileSync("HIRING_PHASE2.md", "utf8");
     delete process.env.PRIVATE_UPLOAD_ROOT;
     const status = privateUploadConfigurationStatus();
     expect(status.localPrivateUsesDefaultEphemeralPath).toBe(true);
     expect(envExample).toContain("persistent private volume");
+    expect(envExample).toContain("PRIVATE_UPLOAD_ROOT=/var/data/zentric-private-uploads");
     expect(envExample).toContain("PRIVATE_OBJECT_STORAGE_PROVIDER=local-private");
+    expect(renderConfig).toContain("mountPath: /var/data");
+    expect(renderConfig).toContain("PRIVATE_UPLOAD_ROOT");
+    expect(renderConfig).toContain("/var/data/zentric-private-uploads");
+    expect(deploymentDocs).toContain("Stage 1 CV upload");
+    expect(deploymentDocs).toContain("Stage 2 government ID/photo upload");
+    expect(deploymentDocs).toContain("Stage 3 assessment upload");
+    expect(deploymentDocs).toContain("admin View/Download controls");
+    expect(deploymentDocs).toContain("missing-file warning");
   });
 
   it("selects local-private storage fallback and hashes rate-limit keys", () => {

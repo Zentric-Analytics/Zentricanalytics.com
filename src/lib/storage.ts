@@ -102,6 +102,28 @@ export function assertPrivateUploadStorageConfigured() {
   }
 }
 
+export async function ensurePrivateUploadStorageWritable() {
+  assertPrivateUploadStorageConfigured();
+  const provider = selectedStorageProvider();
+  assertLocalPrivateProvider(provider, "write");
+  const root = privateUploadRoot();
+  try {
+    await mkdir(root, { recursive: true });
+    await access(root, constants.R_OK | constants.W_OK);
+    const metadata = await stat(root);
+    if (!metadata.isDirectory()) {
+      throw new PrivateUploadStorageConfigurationError(
+        "PRIVATE_UPLOAD_ROOT must point to a writable private directory.",
+      );
+    }
+  } catch (error) {
+    if (error instanceof PrivateUploadStorageConfigurationError) throw error;
+    throw new PrivateUploadStorageConfigurationError(
+      `PRIVATE_UPLOAD_ROOT is not writable by the app: ${root}`,
+    );
+  }
+}
+
 
 export function resolvePrivateUploadPath(storageKey: string) {
   if (!storageKey || path.isAbsolute(storageKey))
@@ -116,7 +138,7 @@ export function resolvePrivateUploadPath(storageKey: string) {
 
 export async function savePrivateUpload(file: File, applicationId: string) {
   const provider = selectedStorageProvider();
-  assertPrivateUploadStorageConfigured();
+  await ensurePrivateUploadStorageWritable();
   const safeApplicationId = sanitizeStorageSegment(applicationId);
   const safeName = sanitizeStorageSegment(file.name);
   const key = path.join(safeApplicationId, `${randomToken(12)}-${safeName}`);
