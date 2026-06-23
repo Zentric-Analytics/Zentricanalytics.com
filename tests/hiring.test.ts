@@ -938,7 +938,7 @@ describe("Stage 1 download and admin safety source checks", () => {
       "utf8",
     );
     expect(portal).toContain(
-      "Submitted documents are available for admin review. You can track your application status here.",
+      "Your initial application is under review. The next step will appear here after admin approval.",
     );
     expect(portal).not.toContain("Stage1DownloadButton");
     expect(portal).not.toContain("/api/candidate/documents/stage-1");
