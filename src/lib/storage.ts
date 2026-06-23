@@ -35,6 +35,12 @@ const GENERIC_UPLOAD_MIME_TYPES = new Set([
   "binary/octet-stream",
 ]);
 export const LOCAL_PRIVATE_PROVIDER = "local-private";
+export class PrivateUploadStorageConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PrivateUploadStorageConfigurationError";
+  }
+}
 
 function fileExtension(name: string) {
   return name.split(".").pop()?.toLowerCase() ?? "";
@@ -90,7 +96,7 @@ export function assertPrivateUploadStorageConfigured() {
   const provider = selectedStorageProvider();
   assertLocalPrivateProvider(provider, "object storage");
   if (provider === LOCAL_PRIVATE_PROVIDER && isProductionLikeRuntime() && !process.env.PRIVATE_UPLOAD_ROOT) {
-    throw new Error(
+    throw new PrivateUploadStorageConfigurationError(
       "PRIVATE_UPLOAD_ROOT must be configured for local-private uploads in production/staging. Local .private-uploads storage is not safe on ephemeral hosting.",
     );
   }

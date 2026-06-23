@@ -446,6 +446,7 @@ import { hashRateLimitKey } from "../src/lib/rate-limit";
 import {
   assertPrivateUploadStorageConfigured,
   deletePrivateUpload,
+  PrivateUploadStorageConfigurationError,
   privateUploadConfigurationStatus,
   privateUploadDiagnostic,
   privateUploadExists,
@@ -720,6 +721,7 @@ describe("production hardening helpers", () => {
     delete process.env.PRIVATE_UPLOAD_ROOT;
     process.env.APP_ENV = "staging";
     try {
+      expect(() => assertPrivateUploadStorageConfigured()).toThrow(PrivateUploadStorageConfigurationError);
       expect(() => assertPrivateUploadStorageConfigured()).toThrow("PRIVATE_UPLOAD_ROOT must be configured");
     } finally {
       if (previousRoot === undefined) delete process.env.PRIVATE_UPLOAD_ROOT;
@@ -729,6 +731,18 @@ describe("production hardening helpers", () => {
       if (previousAppEnv === undefined) delete process.env.APP_ENV;
       else process.env.APP_ENV = previousAppEnv;
     }
+  });
+
+  it("returns a safe application form error when stage 1 upload storage is not configured", () => {
+    const action = readFileSync("src/app/apply/actions.ts", "utf8");
+    expect(action).toContain("error instanceof PrivateUploadStorageConfigurationError");
+    expect(action).toContain("Application upload storage is not configured. Please contact support.");
+    expect(action).toContain("applicationUploadStorageRejected");
+    expect(action).toContain("PRIVATE_UPLOAD_ROOT missing");
+    expect(action).toContain("upload rejected before DB metadata creation");
+    expect(action.indexOf("await savePrivateUpload(file, applicationPublicId)")).toBeLessThan(
+      action.indexOf("tx.uploadedDocument.create"),
+    );
   });
 
   it("documents that local-private production storage needs a persistent private volume", () => {
