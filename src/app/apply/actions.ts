@@ -9,6 +9,7 @@ import { deletePrivateUpload, savePrivateUpload, validateCvFile } from '@/lib/st
 import { sha256 } from '@/lib/security';
 import { createApplicationWithRetry, createStageRows } from '@/lib/workflow';
 import { sendAndRecordEmail } from '@/lib/email';
+import { applicationReceivedEmail } from '../../lib/email-templates';
 import { checkRateLimit } from '@/lib/rate-limit';
 import type { Stage1Field, Stage1FormState } from './form-state';
 
@@ -45,7 +46,8 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
         return application;
       });
     });
-    await sendAndRecordEmail({ applicationId: app.id, to: data.email, template: 'application-received', subject: `Application received: ${app.applicationId}`, portalUrl: `${process.env.APP_BASE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://staging.zentricanalytics.com'}/track`, body: `Hello ${data.fullName}, your application ${app.applicationId} was received. Track it at /track.` });
+    const email = applicationReceivedEmail({ applicationId: app.applicationId, candidateName: data.fullName });
+    await sendAndRecordEmail({ applicationId: app.id, to: data.email, template: 'application-received', portalUrl: `${process.env.APP_BASE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://staging.zentricanalytics.com'}/track`, ...email });
     redirect(`/apply?submitted=${encodeURIComponent(app.applicationId)}`);
   } catch (error) { await Promise.all(savedUploads.map((upload) => deletePrivateUpload(upload.storageKey, upload.provider))); throw error; }
 }

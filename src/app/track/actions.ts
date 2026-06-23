@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { maskGeneric, randomDigits, randomToken, sha256 } from '@/lib/security';
 import { sendAndRecordEmail } from '@/lib/email';
+import { accessCodeEmail, offerAcceptedEmail } from '../../lib/email-templates';
 import { stage2SubmissionSchema, stage3SubmissionSchema, toStage2SubmissionPayload, toStage3SubmissionPayload, parseStage3Metadata } from '../../lib/hiring';
 import { deletePrivateUpload, savePrivateUpload, validateCvFile, validateIdentityDocumentFile } from '../../lib/storage';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -65,7 +66,8 @@ export async function requestAccessCode(formData: FormData) {
         await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'applicant', actorRef: 'masked-email', action: 'Access code requested' } });
         emailAttempted = true;
         try {
-          const emailRecord = await sendAndRecordEmail({ applicationId: app.id, to: email, template: 'access-code', subject: `Your Zentric Analytics access code`, body: `Your one-time access code is ${code}. It expires in 10 minutes.` });
+          const accessEmail = accessCodeEmail({ applicationId: app.applicationId, candidateName: app.applicant.fullName, accessCode: code });
+          const emailRecord = await sendAndRecordEmail({ applicationId: app.id, to: email, template: 'access-code', ...accessEmail });
           emailStatus = emailRecord.status;
           if (emailRecord.status === 'failed') {
             await prisma.auditLog.create({ data: { applicationId: app.id, actorType: 'system', action: 'Access code email delivery failed', metadata: { template: 'access-code' } } });
@@ -231,7 +233,7 @@ export async function submitOfferDecision(formData: FormData) {
     if (parsed.data.decision === 'accept') {
       await acceptOffer(application.id, parsed.data.candidateDecisionNote || undefined);
       diagnostics.decisionAccepted = true; diagnostics.dbWriteSucceeded = true;
-      try { const e = await sendAndRecordEmail({ applicationId: application.id, to: application.applicant.email, template: 'offer-accepted', subject: `Offer accepted: ${application.applicationId}`, body: 'Your offer acceptance has been recorded. The employment agreement stage is now available.' }); diagnostics.emailAttempted = true; diagnostics.emailStatus = e.status; } catch { diagnostics.emailAttempted = true; diagnostics.emailStatus = 'failed'; }
+      try { const offerEmail = offerAcceptedEmail({ applicationId: application.applicationId, candidateName: application.applicant.fullName }); const e = await sendAndRecordEmail({ applicationId: application.id, to: application.applicant.email, template: 'offer-accepted', ...offerEmail }); diagnostics.emailAttempted = true; diagnostics.emailStatus = e.status; } catch { diagnostics.emailAttempted = true; diagnostics.emailStatus = 'failed'; }
       diagnostics.redirectStatus = 'success'; console.info('candidateOfferDecisionDiagnostics', diagnostics); redirect(portalUrl(session, { success: 'offer_accepted' }));
     } else {
       await prisma.$transaction(async (tx) => { await tx.offer.update({ where: { applicationId: application.id }, data: { status: 'Declined', candidateDecisionAt: new Date(), candidateDecisionNote: parsed.data.candidateDecisionNote || null } }); await tx.hiringStage.update({ where: { id: stage4.id }, data: { status: 'Rejected' } }); await tx.jobApplication.update({ where: { id: application.id }, data: { status: 'Rejected', currentStageOrder: 4 } }); await tx.auditLog.create({ data: { applicationId: application.id, actorType: 'applicant', actorRef: 'masked-email', action: 'Candidate declined offer', metadata: { decisionAccepted: false, notePresent: Boolean(parsed.data.candidateDecisionNote) } } }); });
