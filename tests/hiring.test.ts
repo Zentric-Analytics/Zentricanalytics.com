@@ -158,6 +158,14 @@ describe("hiring workflow helpers", () => {
       valid: true,
       e164: "+2349163456789",
     });
+    expect(normalizePhoneForCountry("NG", "0916 345 6789")).toMatchObject({
+      valid: true,
+      e164: "+2349163456789",
+    });
+    expect(normalizePhoneForCountry("NG", "9153456789")).toMatchObject({
+      valid: true,
+      e164: "+2349153456789",
+    });
     expect(normalizePhoneForCountry("GB", "+44 20 7946 0958")).toMatchObject({
       valid: true,
       e164: "+442079460958",
@@ -286,10 +294,14 @@ describe("hiring workflow helpers", () => {
       "utf8",
     );
     expect(page).toContain("clearedErrors");
+    expect(page).toContain("editedSinceServerError");
+    expect(page).toContain("visibleMessage");
     expect(page).toContain("clearFieldError(name)");
     expect(page).toContain("clearFieldError('cv')");
+    expect(page).toContain("validateVisibleFileSelection");
     expect(page).toContain("Please reselect your CV/resume before submitting again.");
     expect(page).toContain("onInvalid={()=>setFileNeedsReselection(true)}");
+    expect(page).toContain("disabled={pending}");
   });
   it("removed Stage 1 PDF fields are optional while a focused submission passes", () => {
     const focused = {
