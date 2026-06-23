@@ -44,6 +44,7 @@ Failed admin login attempts write safe boolean diagnostics to server logs so sta
 Private upload storage:
 
 - `PRIVATE_UPLOAD_ROOT` — staging/local private filesystem root. Do not point this at `public/`.
+- Render staging must mount a persistent private disk at `/var/data` and use `PRIVATE_UPLOAD_ROOT=/var/data/zentric-private-uploads`; local `.private-uploads` is only for development.
 - `PRIVATE_OBJECT_STORAGE_PROVIDER` — defaults to `local-private`. Non-local private object storage is intentionally a production placeholder in this build; if set without an adapter, uploads fail closed instead of becoming public.
 - `UPLOAD_MAX_BYTES` — optional override; default remains 20MB.
 
