@@ -174,19 +174,71 @@ export default async function Portal({
             </div>
           </section>
 
-          <aside className="card p-5 sm:p-6" aria-labelledby="portal-documents-title">
-            <div className="flex items-start justify-between gap-4">
+          <aside className="card p-5 sm:p-6" aria-labelledby="portal-progress-title">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between lg:flex-col">
               <div className="min-w-0">
-                <p className="text-sm font-semibold uppercase tracking-widest text-accent">Documents</p>
-                <h2 id="portal-documents-title" className="mt-2 text-xl font-bold text-ink">Application documents</h2>
+                <p className="text-sm font-semibold uppercase tracking-widest text-accent">Progress</p>
+                <h2 id="portal-progress-title" className="mt-2 text-xl font-bold text-ink">Application progress</h2>
+              </div>
+              <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-bold text-ink">
+                {completedStageCount} of {stageDefs.length} completed
               </div>
             </div>
 
             <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <h3 className="font-bold text-ink">Submitted documents</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Submitted documents are available for admin review. You can track your application status here.
-              </p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Current step</p>
+              <p className="mt-2 text-base font-bold text-ink">{currentStage?.title ?? 'Not available'}</p>
+            </div>
+
+            <div className="mt-5">
+              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-slate-500">
+                <span>Overall progress</span>
+                <span>{progressPercent}%</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100" aria-label={`${progressPercent}% complete`}>
+                <div className="h-full rounded-full bg-brand" style={{ width: `${progressPercent}%` }} />
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-2.5">
+              {portalStages.map((definition) => {
+                const stageClass = definition.isCurrent
+                  ? 'border-brand bg-brand/5 shadow-sm'
+                  : isComplete(definition.status)
+                    ? 'border-emerald-200 bg-emerald-50/50'
+                    : 'border-slate-200 bg-white';
+
+                return (
+                  <article className={`rounded-2xl border p-3 ${stageClass}`} key={definition.key}>
+                    <div className="flex gap-3">
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${definition.isCurrent ? 'bg-brand text-white' : 'bg-ink text-white'}`}>
+                        {definition.order}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between lg:flex-col xl:flex-row">
+                          <h3 className="break-words text-sm font-bold leading-5 text-ink">{definition.title}</h3>
+                          {definition.isCurrent ? (
+                            <span className="w-fit rounded-full bg-brand px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-white">
+                              Current
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <StatusBadge status={definition.status} />
+                          {definition.stage?.approvedAt ? (
+                            <span className="text-xs font-semibold text-emerald-700">
+                              Approved {formatDate(definition.stage.approvedAt)}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-2 text-xs leading-5 text-slate-600">
+                          {stageNote(definition.status, definition.applicantAction)}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </aside>
         </div>
@@ -273,60 +325,24 @@ export default async function Portal({
           </div>
         </section>
 
-        <section className="mt-8" aria-labelledby="portal-progress-title">
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-accent">Progress</p>
-              <h2 id="portal-progress-title" className="mt-2 text-2xl font-bold tracking-tight text-ink">
-                Application stages
-              </h2>
+        <section className="mt-8" aria-labelledby="portal-documents-title">
+          <div className="card p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold uppercase tracking-widest text-accent">Documents</p>
+                <h2 id="portal-documents-title" className="mt-2 text-2xl font-bold tracking-tight text-ink">Application documents</h2>
+              </div>
             </div>
-            <p className="max-w-xl text-sm leading-6 text-slate-600">
-              Check each step and see what is pending as your application progresses.
-            </p>
-          </div>
 
-          <div className="grid gap-3">
-            {portalStages.map((definition) => {
-              const stageClass = definition.isCurrent
-                ? 'border-brand bg-white shadow-lg shadow-slate-200/70'
-                : isComplete(definition.status)
-                  ? 'border-emerald-200 bg-emerald-50/40'
-                  : 'border-slate-200 bg-white';
-
-              return (
-                <article className={`rounded-2xl border p-4 ${stageClass}`} key={definition.key}>
-                  <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-start">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">
-                      {definition.order}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                        <h3 className="break-words font-bold text-ink">{definition.title}</h3>
-                        {definition.isCurrent ? (
-                          <span className="w-fit rounded-full bg-brand px-2.5 py-1 text-xs font-bold text-white">
-                            Current
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        {stageNote(definition.status, definition.applicantAction)}
-                      </p>
-                      {definition.stage?.approvedAt ? (
-                        <p className="mt-2 text-xs font-semibold text-emerald-700">
-                          Approved {formatDate(definition.stage.approvedAt)}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className="md:justify-self-end">
-                      <StatusBadge status={definition.status} />
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <h3 className="font-bold text-ink">Submitted documents</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Submitted documents are available for admin review. You can track your application status here.
+              </p>
+            </div>
           </div>
         </section>
+
       </Section>
     </PageShell>
   );
