@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 
@@ -255,6 +256,9 @@ export default async function AdminApplicationDetail({
     <main className="mx-auto max-w-5xl px-4 py-10">
       <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div>
+          <Link className="btn btn-secondary mb-4 inline-flex" href="/admin/applications">
+            ← Back to applications
+          </Link>
           <h1 className="text-3xl font-bold">{application.applicationId}</h1>
           <div className="mt-2 flex gap-2">
             <StatusBadge status={stageOneStatus} />
