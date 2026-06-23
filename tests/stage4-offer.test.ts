@@ -24,7 +24,7 @@ describe('Stage 4 offer workflow source checks', () => {
     expect(adminActions).toContain('Admin saved draft offer');
     expect(adminActions).toContain('Admin released offer');
     expect(adminActions).toContain('Admin withdrew offer');
-    expect(adminActions).toContain('Your offer is ready for review');
+    expect(readFileSync('src/lib/email-templates.ts', 'utf8')).toContain('Your offer is ready for review');
   });
 
   it('renders released offers in the candidate portal and blocks unreleased/expired/withdrawn decisions', () => {

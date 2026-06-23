@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { getAdminSession } from '@/lib/admin-auth';
 import { approveStage1, approveStage2, approveStage3, recordAdminStage1Action, recordAdminStage2Action, recordAdminStage3Action, StageActionError } from '@/lib/workflow';
 import { sendAndRecordEmail } from '@/lib/email';
+import { candidateEmailTemplates, type BrandedEmail } from '../../../lib/email-templates';
 import { prisma } from '@/lib/prisma';
 import { deletePrivateUpload } from '@/lib/storage';
 import { parseStage3Metadata, stage3InstructionSchema, offerSchema, parseOfferDate } from '@/lib/hiring';
@@ -11,11 +12,12 @@ import { parseStage3Metadata, stage3InstructionSchema, offerSchema, parseOfferDa
 function logAdminDiagnostics(diagnostics: Record<string, unknown>) { console.info('adminStageActionDiagnostics', diagnostics); }
 function redirectPath(applicationId?: string | null, params = '') { return applicationId ? `/admin/applications/${applicationId}${params}` : `/admin/applications${params}`; }
 
-async function safeSendEmail(input: { applicationId: string; template: string; subject: string; body: string }) {
+async function safeSendEmail(input: { applicationId: string; template: string; message: (app: { applicationId: string; applicant: { fullName: string | null } }) => BrandedEmail }) {
   try {
     const app = await prisma.jobApplication.findUnique({ where: { id: input.applicationId }, include: { applicant: true } });
     if (!app) return { attempted: false, status: 'application_missing' };
-    const record = await sendAndRecordEmail({ applicationId: input.applicationId, to: app.applicant.email, template: input.template, subject: input.subject, body: input.body });
+    const message = input.message(app);
+    const record = await sendAndRecordEmail({ applicationId: input.applicationId, to: app.applicant.email, template: input.template, ...message });
     return { attempted: true, status: record.status };
   } catch (error) {
     return { attempted: true, status: 'failed', errorName: error instanceof Error ? error.name : 'UnknownError' };
@@ -57,14 +59,14 @@ export async function adminStage1Action(formData: FormData) {
       } else if (action === 'approve') {
       const result = await approveStage1(applicationId, adminSession.email, notes);
       diagnostics.stage1Found = result.stage1Found; diagnostics.stage2Found = result.stage2Found; diagnostics.previousStage1Status = result.previousStage1Status; diagnostics.approvalTransactionSucceeded = true;
-      const email = await safeSendEmail({ applicationId, template: 'stage-2-unlocked', subject: `Next stage unlocked: ${app.applicationId}`, body: 'Stage 1 has been approved. Please return to Track Application to continue.' });
+      const email = await safeSendEmail({ applicationId, template: 'stage-2-unlocked', message: (candidate) => candidateEmailTemplates.stage2Unlocked({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) });
       diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
       destination = redirectPath(applicationId, `?success=${result.alreadyApproved ? 'already_approved' : 'approved'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
       } else {
       const workflowAction = action === 'reject' ? 'Rejected' : 'Correction Requested';
       const result = await recordAdminStage1Action(applicationId, workflowAction, adminSession.email, notes);
       diagnostics.stage1Found = result.stage1Found; diagnostics.previousStage1Status = result.previousStage1Status; diagnostics.approvalTransactionSucceeded = true;
-      const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'application-rejected' : 'correction-requested', subject: action === 'reject' ? `Application update: ${app.applicationId}` : `Correction requested: ${app.applicationId}`, body: action === 'reject' ? 'Thank you for your interest in Zentric Analytics. We are unable to move your application forward at this time.' : 'A correction has been requested for your application. Please return to Track Application to review the request.' });
+      const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'application-rejected' : 'correction-requested', message: (candidate) => action === 'reject' ? candidateEmailTemplates.applicationRejected({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) : candidateEmailTemplates.stage1CorrectionRequested({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) });
       diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
       destination = redirectPath(applicationId, `?success=${action === 'reject' ? 'rejected' : 'correction'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
       }
@@ -189,13 +191,13 @@ export async function adminStage2Action(formData: FormData) {
       else if (action === 'approve') {
         const result = await approveStage2(applicationId, adminSession.email, notes);
         diagnostics.transactionSucceeded = true;
-        const email = await safeSendEmail({ applicationId, template: 'stage-3-unlocked', subject: `Next stage unlocked: ${app.applicationId}`, body: 'Stage 2 has been approved. Please return to Track Application to view your next unlocked stage.' });
+        const email = await safeSendEmail({ applicationId, template: 'stage-3-unlocked', message: (candidate) => candidateEmailTemplates.stage3Unlocked({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) });
         diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
         destination = redirectPath(applicationId, `?success=${result.alreadyApproved ? 'stage2_already_approved' : 'stage2_approved'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
       } else {
         const result = await recordAdminStage2Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes);
         diagnostics.transactionSucceeded = true;
-        const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-2-rejected' : 'stage-2-correction-requested', subject: action === 'reject' ? `Application update: ${app.applicationId}` : `Stage 2 correction requested: ${app.applicationId}`, body: action === 'reject' ? 'We are unable to move your application forward after identity review.' : 'A correction has been requested for Stage 2. Please return to Track Application to update your information.' });
+        const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-2-rejected' : 'stage-2-correction-requested', message: (candidate) => action === 'reject' ? candidateEmailTemplates.stage2Rejected({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) : candidateEmailTemplates.stage2CorrectionRequested({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) });
         diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
         destination = redirectPath(applicationId, `?success=${action === 'reject' ? 'stage2_rejected' : 'stage2_correction'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
       }
@@ -236,7 +238,7 @@ export async function adminStage3InstructionAction(formData: FormData) {
             await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin released Stage 3 instructions', metadata: { screeningType: parsed.data.screeningType, requiresCandidateResponse: parsed.data.requiresCandidateResponse, requiresUpload: parsed.data.requiresUpload } } });
           });
           diagnostics.metadataSaved = true;
-          const email = await safeSendEmail({ applicationId, template: 'stage-3-instructions-available', subject: `Stage 3 instructions are available: ${app.applicationId}`, body: 'Stage 3 instructions are available. Please return to Track Application to review and respond.' });
+          const email = await safeSendEmail({ applicationId, template: 'stage-3-instructions-available', message: (candidate) => candidateEmailTemplates.stage3InstructionsAvailable({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) });
           diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
           destination = redirectPath(applicationId, `?success=stage3_released${email.status === 'sent' ? '' : '&warning=email_failed'}`);
         }
@@ -260,11 +262,11 @@ export async function adminStage3Action(formData: FormData) {
   try {
     if (action === 'approve') {
       const result = await approveStage3(applicationId, adminSession.email, notes);
-      const email = await safeSendEmail({ applicationId, template: 'stage-4-unlocked', subject: `Offer stage available: ${app.applicationId}`, body: 'Stage 3 has been approved. The Offer Stage is now available.' });
+      const email = await safeSendEmail({ applicationId, template: 'stage-4-unlocked', message: (candidate) => candidateEmailTemplates.stage4Unlocked({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) });
       destination = redirectPath(applicationId, `?success=${result.alreadyApproved ? 'stage3_already_approved' : 'stage3_approved'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
     } else if (['correction','reject'].includes(action)) {
       await recordAdminStage3Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes);
-      const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-3-rejected' : 'stage-3-correction-requested', subject: action === 'reject' ? `Application update: ${app.applicationId}` : `Stage 3 correction requested: ${app.applicationId}`, body: action === 'reject' ? 'We are unable to move your application forward after Stage 3 review.' : 'A correction has been requested for Stage 3. Please return to Track Application to update your response.' });
+      const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-3-rejected' : 'stage-3-correction-requested', message: (candidate) => action === 'reject' ? candidateEmailTemplates.stage3Rejected({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) : candidateEmailTemplates.stage3CorrectionRequested({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) });
       destination = redirectPath(applicationId, `?success=${action === 'reject' ? 'stage3_rejected' : 'stage3_correction'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
     } else destination = redirectPath(applicationId, '?error=invalid_action');
   } catch { destination = redirectPath(applicationId, '?error=action_failed'); }
@@ -307,7 +309,7 @@ export async function adminOfferAction(formData: FormData) {
           });
           diagnostics.dbWriteSucceeded = true;
           let email = { attempted: false, status: 'not_attempted' };
-          if (releasing) email = await safeSendEmail({ applicationId, template: 'offer-ready', subject: `Your offer is ready for review: ${app.applicationId}`, body: 'Your offer is ready for review. Please return to Track Application to review your offer.' });
+          if (releasing) email = await safeSendEmail({ applicationId, template: 'offer-ready', message: (candidate) => candidateEmailTemplates.offerReady({ applicationId: candidate.applicationId, applicantName: candidate.applicant.fullName ?? undefined }) });
           diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
           destination = redirectPath(applicationId, `?success=${releasing ? 'offer_released' : 'offer_draft'}${releasing && email.status !== 'sent' ? '&warning=email_failed' : ''}`);
         }
