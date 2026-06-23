@@ -28,12 +28,38 @@ describe('Stage 4 offer workflow source checks', () => {
   });
 
   it('renders released offers in the candidate portal and blocks unreleased/expired/withdrawn decisions', () => {
-    expect(portal).not.toContain('Offer details will appear here when released by admin.');
+    expect(portal).toContain('Offer details will appear here when released by admin.');
+    expect(portal).toContain('Offer details');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
     expect(trackActions).toContain("offer.status !== 'Released'");
     expect(trackActions).toContain('offerExpiryDate');
     expect(trackActions).toContain('offer_not_open');
+  });
+
+  it('defaults current/selectable Stage 4 into the visible selected workspace', () => {
+    expect(portal).toContain('const defaultSelectedStage = currentStage && isSelectable(currentStage.status) ? currentStage : portalStages[0]');
+    expect(portal).toContain('selectedStage?.order === 4');
+    expect(portal).toContain('Current workspace');
+    expect(portal).toContain('Stage {selectedStage?.order ?? currentStage?.order}: {selectedStage?.title');
+    expect(portal).toContain('lg:col-start-1 lg:row-start-2');
+  });
+
+  it('keeps selectable Stage 4 cards visibly actionable', () => {
+    expect(portal).toContain("aria-current={selected ? 'step' : undefined}");
+    expect(portal).toContain("{selected ? 'Selected' : selectable ? 'Open stage' : 'Locked'}");
+    expect(portal).toContain('ring-2 ring-brand/20');
+    expect(portal).toContain('encodeURIComponent(session)');
+  });
+
+  it('keeps Application Documents after the workspace without applicant download links or conflict markers', () => {
+    expect(portal).toContain('Application Documents');
+    expect(portal).toContain('Submitted documents are available for admin review. You can track your application status here.');
+    expect(portal).not.toContain('/api/admin/applications/');
+    expect(portal).not.toContain('download');
+    expect(portal).not.toContain('<<<<<<<');
+    expect(portal).not.toContain('=======');
+    expect(portal).not.toContain('>>>>>>>');
   });
 
   it('accepting unlocks Stage 5 and declining does not', () => {
