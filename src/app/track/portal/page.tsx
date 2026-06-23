@@ -105,7 +105,6 @@ export default async function Portal({
   const completedStageCount = portalStages.filter((stage) => isComplete(stage.status)).length;
   const progressPercent = Math.round((completedStageCount / stageDefs.length) * 100);
   const currentStage = portalStages.find((stage) => stage.isCurrent) ?? portalStages[0];
-  const stageFourStatus = portalStages[3]?.status ?? 'Locked';
   const offer = application.offer;
   const offerExpired = Boolean(
     offer?.offerExpiryDate && offer.offerExpiryDate.getTime() < Date.now() && offer.status === 'Released',
@@ -209,7 +208,7 @@ export default async function Portal({
                   <p className="text-sm font-semibold uppercase tracking-widest text-accent">Stage 4</p>
                   <h2 id="stage4-title" className="mt-2 text-2xl font-bold tracking-tight text-ink">Offer Stage</h2>
                 </div>
-                <StatusBadge status={stageFourStatus} />
+                <StatusBadge status={portalStages[3]?.status ?? 'Locked'} />
               </div>
 
               <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
