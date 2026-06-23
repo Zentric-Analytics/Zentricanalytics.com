@@ -1,0 +1,6 @@
+ALTER TABLE "Offer" ADD COLUMN "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "Offer" ADD COLUMN "candidateDecisionAt" TIMESTAMP(3);
+ALTER TABLE "Offer" ADD COLUMN "candidateDecisionNote" TEXT;
+ALTER TABLE "Offer" ADD COLUMN "releasedAt" TIMESTAMP(3);
+ALTER TABLE "Offer" ADD COLUMN "releasedByAdminEmail" TEXT;
+ALTER TABLE "Offer" ADD CONSTRAINT "Offer_applicationId_fkey" FOREIGN KEY ("applicationId") REFERENCES "JobApplication"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

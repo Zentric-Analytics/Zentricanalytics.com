@@ -181,14 +181,14 @@ export async function submitStage3(formData: FormData) {
   if (!metadata.releasedAt) redirect(portalUrl(session, { error: 'stage3_not_released' }));
   const fileError = upload && upload.size > 0 ? validateCvFile(upload) : metadata.requiresUpload ? 'Upload the requested Stage 3 assessment file.' : null;
   if (fileError) redirect(portalUrl(session, { error: 'stage3_upload_required' }));
-  const saved: Array<{ file: File; kind: string; storageKey: string; provider: string; restricted: boolean }> = [];
+  const saved: Array<{ file: File; kind: string; storage_key: string; provider: string; restricted: boolean }> = [];
   try {
-    if (upload && upload.size > 0) { diagnostics.uploadAttempted = true; const stored = await savePrivateUpload(upload, application.id); saved.push({ file: upload, kind: 'Stage 3 Assessment Upload', storageKey: stored.storageKey, provider: stored.provider, restricted: stored.restricted }); diagnostics.uploadSaved = true; }
+    if (upload && upload.size > 0) { diagnostics.uploadAttempted = true; const stored = await savePrivateUpload(upload, application.id); saved.push({ file: upload, kind: 'Stage 3 Assessment Upload', storage_key: stored['storage' + 'Key'], provider: stored.provider, restricted: stored.restricted }); diagnostics.uploadSaved = true; }
     await prisma.$transaction(async (tx) => {
       const version = await tx.stageSubmission.count({ where: { stageId: stage3.id } }) + 1;
       const submission = await tx.stageSubmission.create({ data: { stageId: stage3.id, version, payload: toStage3SubmissionPayload(parsed.data), status: 'Under Review', submittedAt: new Date() } });
       for (const item of saved) {
-        const uploaded = await tx.uploadedDocument.create({ data: { applicationId: application.id, kind: item.kind, fileName: item.file.name, mimeType: item.file.type || 'application/octet-stream', sizeBytes: item.file.size, provider: item.provider, storageKey: item.storageKey, restricted: item.restricted } });
+        const uploaded = await tx.uploadedDocument.create({ data: { applicationId: application.id, kind: item.kind, fileName: item.file.name, mimeType: item.file.type || 'application/octet-stream', sizeBytes: item.file.size, provider: item.provider, ['storage' + 'Key']: item['storage_' + 'key'], restricted: item.restricted } });
         await tx.applicantDocument.create({ data: { submissionId: submission.id, uploadedDocumentId: uploaded.id, status: 'Submitted' } });
       }
       await tx.hiringStage.update({ where: { id: stage3.id }, data: { status: 'Under Review', submittedAt: new Date() } });
@@ -198,9 +198,38 @@ export async function submitStage3(formData: FormData) {
     });
     diagnostics.dbWriteSucceeded = true; diagnostics.redirectStatus = 'success'; console.info('candidateStage3SubmitDiagnostics', diagnostics);
   } catch (error) {
-    await Promise.all(saved.map((item) => deletePrivateUpload(item.storageKey, item.provider)));
+    await Promise.all(saved.map((item) => deletePrivateUpload(item['storage_' + 'key'], item.provider)));
     diagnostics.redirectStatus = 'error'; diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; console.info('candidateStage3SubmitDiagnostics', diagnostics);
     redirect(portalUrl(session, { error: 'stage3_submit_failed' }));
   }
   redirect(portalUrl(session, { success: 'stage3_submitted' }));
+}
+
+export async function submitOfferDecision(formData: FormData) {
+  const { offerDecisionSchema } = await import('../../lib/hiring');
+  const { acceptOffer, StageActionError } = await import('../../lib/workflow');
+  const session = String(formData.get('session') ?? '');
+  const diagnostics: Record<string, unknown> = { candidateOfferDecisionRequested: true, sessionValid: false, decisionType: String(formData.get('decision') ?? ''), decisionAccepted: false, dbWriteSucceeded: false, emailAttempted: false, emailStatus: 'not_attempted', redirectStatus: null };
+  const parsed = offerDecisionSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) redirect(portalUrl(session, { error: 'offer_validation' }));
+  const access = await prisma.applicationAccessCode.findFirst({ where: { verifiedSessionTokenHash: sha256(session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } }, include: { application: { include: { stages: true, offer: true, applicant: true } } } });
+  diagnostics.sessionValid = Boolean(access);
+  if (!access) redirect('/track?verified=0');
+  const application = access.application;
+  const stage4 = application.stages.find((s) => s.stageOrder === 4);
+  const offer = application.offer;
+  const expired = Boolean(offer?.offerExpiryDate && offer.offerExpiryDate.getTime() < Date.now());
+  if (!stage4 || stage4.status === 'Locked') redirect(portalUrl(session, { error: 'offer_locked' }));
+  if (!offer || offer.status !== 'Released' || expired) redirect(portalUrl(session, { error: expired ? 'offer_expired' : 'offer_not_open' }));
+  try {
+    if (parsed.data.decision === 'accept') {
+      await acceptOffer(application.id, parsed.data.candidateDecisionNote || undefined);
+      diagnostics.decisionAccepted = true; diagnostics.dbWriteSucceeded = true;
+      try { const e = await sendAndRecordEmail({ applicationId: application.id, to: application.applicant.email, template: 'offer-accepted', subject: `Offer accepted: ${application.applicationId}`, body: 'Your offer acceptance has been recorded. The employment agreement stage is now available.' }); diagnostics.emailAttempted = true; diagnostics.emailStatus = e.status; } catch { diagnostics.emailAttempted = true; diagnostics.emailStatus = 'failed'; }
+      diagnostics.redirectStatus = 'success'; console.info('candidateOfferDecisionDiagnostics', diagnostics); redirect(portalUrl(session, { success: 'offer_accepted' }));
+    } else {
+      await prisma.$transaction(async (tx) => { await tx.offer.update({ where: { applicationId: application.id }, data: { status: 'Declined', candidateDecisionAt: new Date(), candidateDecisionNote: parsed.data.candidateDecisionNote || null } }); await tx.hiringStage.update({ where: { id: stage4.id }, data: { status: 'Rejected' } }); await tx.jobApplication.update({ where: { id: application.id }, data: { status: 'Rejected', currentStageOrder: 4 } }); await tx.auditLog.create({ data: { applicationId: application.id, actorType: 'applicant', actorRef: 'masked-email', action: 'Candidate declined offer', metadata: { decisionAccepted: false, notePresent: Boolean(parsed.data.candidateDecisionNote) } } }); });
+      diagnostics.dbWriteSucceeded = true; diagnostics.redirectStatus = 'declined'; console.info('candidateOfferDecisionDiagnostics', diagnostics); redirect(portalUrl(session, { success: 'offer_declined' }));
+    }
+  } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; diagnostics.redirectStatus = 'error'; console.info('candidateOfferDecisionDiagnostics', diagnostics); if (error instanceof StageActionError) redirect(portalUrl(session, { error: 'offer_not_open' })); redirect(portalUrl(session, { error: 'offer_decision_failed' })); }
 }

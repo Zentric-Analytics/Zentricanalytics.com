@@ -156,3 +156,25 @@ export function toStage3SubmissionPayload(data: Stage3SubmissionInput) {
   const { session: _session, declarationAccuracy, ...safeData } = data;
   return { ...safeData, declarationAccuracy: declarationAccuracy === 'on' };
 }
+
+export const offerStatuses = ['Draft','Released','Accepted','Declined','Withdrawn','Expired'] as const;
+export const offerWorkModes = ['Remote','Hybrid','On-site','Flexible'] as const;
+export const offerSchema = z.object({
+  roleOffered: z.string().trim().min(2, 'Enter the offered role.').max(160),
+  salary: z.string().trim().min(2, 'Enter compensation details.').max(500),
+  startDate: z.string().trim().min(1, 'Enter start date.'),
+  workMode: z.string().trim().min(2, 'Enter work mode.').max(80),
+  reportingManager: optionalText(160),
+  probationPeriod: optionalText(160),
+  offerExpiryDate: optionalText(40),
+  specialConditions: optionalText(3000),
+});
+export const offerDecisionSchema = z.object({
+  session: z.string().min(16, 'Open the portal with a valid session.'),
+  decision: z.enum(['accept','decline']),
+  candidateDecisionNote: optionalText(1000),
+  confirmation: z.literal('on', { errorMap: () => ({ message: 'Confirm your decision.' }) }),
+});
+export type OfferInput = z.infer<typeof offerSchema>;
+export function parseOfferDate(value: string) { const date = new Date(`${value}T00:00:00.000Z`); if (Number.isNaN(date.getTime())) throw new Error('Invalid offer date'); return date; }
+export function isOfferExpired(input?: { status: string; offerExpiryDate?: Date | null } | null, now = new Date()) { return Boolean(input?.offerExpiryDate && input.status === 'Released' && input.offerExpiryDate.getTime() < now.getTime()); }

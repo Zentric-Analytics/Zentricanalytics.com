@@ -45,6 +45,7 @@ model JobApplication {
   notes              AdminNote[]
   auditLogs          AuditLog[]
   accessCodes        ApplicationAccessCode[]
+  offer              Offer?
   deletedAt          DateTime?
   deletedByAdminEmail String?
   deleteReason       String?
@@ -151,18 +152,24 @@ model EmailNotification {
 }
 
 model Offer {
-  id                String    @id @default(cuid())
-  applicationId     String    @unique
-  roleOffered       String
-  salary            String
-  startDate         DateTime
-  workMode          String
-  reportingManager  String?
-  probationPeriod   String?
-  offerExpiryDate   DateTime?
-  specialConditions String?
-  status            String    @default("Draft")
-  createdAt         DateTime  @default(now())
+  id                     String         @id @default(cuid())
+  applicationId          String         @unique
+  application            JobApplication @relation(fields: [applicationId], references: [id])
+  roleOffered            String
+  salary                 String
+  startDate              DateTime
+  workMode               String
+  reportingManager       String?
+  probationPeriod        String?
+  offerExpiryDate        DateTime?
+  specialConditions      String?
+  status                 String         @default("Draft")
+  candidateDecisionAt    DateTime?
+  candidateDecisionNote  String?
+  releasedAt             DateTime?
+  releasedByAdminEmail   String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
 }
 
 model EmploymentAgreement {

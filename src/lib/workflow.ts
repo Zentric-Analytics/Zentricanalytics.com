@@ -126,3 +126,23 @@ export async function recordAdminStage3Action(applicationId: string, action: 'Re
     return { alreadySameStatus, stage3Found: true, previousStage3Status: stage3.status };
   });
 }
+
+export async function acceptOffer(applicationId: string, note?: string) {
+  return prisma.$transaction(async (tx) => {
+    const app = await tx.jobApplication.findUnique({ where: { id: applicationId } });
+    if (!app || app.deletedAt) throw new StageActionError('missing_application', 'Application not found.');
+    const [stage4, stage5, offer] = await Promise.all([
+      tx.hiringStage.findFirst({ where: { applicationId, stageOrder: 4 } }),
+      tx.hiringStage.findFirst({ where: { applicationId, stageOrder: 5 } }),
+      tx.offer.findUnique({ where: { applicationId } }),
+    ]);
+    if (!stage4 || !stage5) throw new StageActionError('missing_stage', 'Required stage row is missing.');
+    if (!offer || offer.status !== 'Released') throw new StageActionError('action_failed', 'Offer is not open.');
+    if (offer.offerExpiryDate && offer.offerExpiryDate.getTime() < Date.now()) throw new StageActionError('action_failed', 'Offer expired.');
+    await tx.offer.update({ where: { applicationId }, data: { status: 'Accepted', candidateDecisionAt: new Date(), candidateDecisionNote: note || null } });
+    await tx.hiringStage.update({ where: { id: stage4.id }, data: { status: 'Approved', approvedAt: new Date() } });
+    await tx.hiringStage.update({ where: { id: stage5.id }, data: { status: 'Available', unlockedAt: stage5.unlockedAt ?? new Date() } });
+    await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Agreement Pending', currentStageOrder: 5 } });
+    await tx.auditLog.create({ data: { applicationId, actorType: 'applicant', actorRef: 'masked-email', action: 'Candidate accepted offer', metadata: { decisionAccepted: true, notePresent: Boolean(note) } } });
+  });
+}

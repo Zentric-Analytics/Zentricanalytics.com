@@ -15,6 +15,7 @@ import {
   adminStage2Action,
   adminStage3Action,
   adminStage3InstructionAction,
+  adminOfferAction,
 } from "../actions";
 import { AdminDocumentActions } from "./AdminDocumentActions";
 
@@ -38,6 +39,7 @@ type AdminApplication = Prisma.JobApplicationGetPayload<{
     };
     emails: true;
     auditLogs: true;
+    offer: true;
   };
 }>;
 
@@ -78,6 +80,9 @@ function actionBanner(params: Record<string, string | undefined>) {
   if (params.success === "stage3_already_approved") messages.push("Stage 3 is already approved.");
   if (params.success === "stage3_correction") messages.push("Stage 3 correction was requested.");
   if (params.success === "stage3_rejected") messages.push("Stage 3 was rejected.");
+  if (params.success === "offer_draft") messages.push("Draft offer saved.");
+  if (params.success === "offer_released") messages.push("Offer released to candidate.");
+  if (params.success === "offer_withdrawn") messages.push("Offer withdrawn.");
   if (params.warning === "email_failed")
     messages.push(
       "Stage 1 was approved, but the unlock email could not be sent. Please retry email delivery or contact the candidate manually.",
@@ -138,6 +143,7 @@ export default async function AdminApplicationDetail({
       },
       emails: true,
       auditLogs: true,
+      offer: true,
     },
   });
 
@@ -177,6 +183,10 @@ export default async function AdminApplicationDetail({
     })),
   );
   const stageTwoDocumentsWithAvailability = await Promise.all(stageTwoDocuments.map(async (document: ApplicantDocument) => ({ document, privateFileAvailable: document.uploadedDocument ? await privateUploadExists(document.uploadedDocument.storageKey, document.uploadedDocument.provider) : false })));
+  const stageFour = application.stages.find((stage: ApplicationStage) => stage.stageOrder === 4);
+  const stageFive = application.stages.find((stage: ApplicationStage) => stage.stageOrder === 5);
+  const offer = application.offer;
+  const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
   const stageThreeDocumentsWithAvailability = await Promise.all(stageThreeDocuments.map(async (document: ApplicantDocument) => ({ document, privateFileAvailable: document.uploadedDocument ? await privateUploadExists(document.uploadedDocument.storageKey, document.uploadedDocument.provider) : false })));
   const stageOnePdfAvailable = Boolean(
     stageOneSubmission?.submittedAt &&
@@ -381,6 +391,13 @@ export default async function AdminApplicationDetail({
         <div className="mt-5 grid gap-4 lg:grid-cols-2"><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Released instructions</h3><p className="mt-2 text-sm">{stageThreeMetadata.title ?? 'Not released'}</p><p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{stageThreeMetadata.instructions ?? 'No instructions released yet.'}</p><p className="mt-2 text-xs text-slate-500">Released: {stageThreeMetadata.releasedAt ?? '—'} · By: {stageThreeMetadata.releasedByAdminEmail ?? '—'}</p></div><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Candidate response</h3>{stageThreeSubmission ? <div className="mt-2 text-sm"><p><strong>Availability:</strong> {String(stageThreePayload.availability ?? '—')}</p><p className="whitespace-pre-wrap"><strong>Message:</strong> {String(stageThreePayload.responseMessage ?? '—')}</p><p><strong>Declared accurate:</strong> {stageThreePayload.declarationAccuracy ? 'Yes' : 'No'}</p><p>Submitted: {formatDateTime(stageThreeSubmission.submittedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 3 response submitted.</p>}</div></div>
         <div className="mt-5"><h3 className="font-semibold">Uploaded Stage 3 files</h3><div className="mt-3 grid gap-3">{stageThreeDocumentsWithAvailability.length ? stageThreeDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? (<article className="rounded-2xl border border-slate-200 p-4" key={document.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{document.uploadedDocument.kind}</p><p className="text-sm text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType} · {document.uploadedDocument.sizeBytes} bytes</p>{!privateFileAvailable ? <p className="mt-2 text-sm font-semibold text-amber-700">Private file unavailable in storage.</p> : null}</div><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={['application/pdf','image/jpeg','image/png','image/webp'].includes(document.uploadedDocument.mimeType)} /></div></article>) : null) : <p className="text-sm text-slate-600">No Stage 3 uploads.</p>}</div></div>
         {application.deletedAt ? null : <form action={adminStage3Action} className="mt-5 flex flex-wrap gap-2"><input type="hidden" name="applicationDbId" value={application.id} /><input className="input max-w-xs" name="notes" placeholder="Optional notes" /><button className="btn btn-secondary" name="action" value="approve">Approve Stage 3</button><button className="btn btn-secondary" name="action" value="correction">Request correction</button><button className="btn btn-secondary" name="action" value="reject">Reject Stage 3</button></form>}
+      </section>) : null}
+
+      {((stageFour && ['Available','In Progress','Released','Submitted','Under Review','Approved','Completed'].includes(stageFour.status)) || offer) ? (
+      <section className="card mt-6 p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><h2 className="font-bold">Stage 4 Offer Stage</h2><StatusBadge status={offer?.status ?? stageFour?.status ?? "Locked"} /></div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2"><p><strong>Released:</strong> {formatDateTime(offer?.releasedAt)}</p><p><strong>Candidate decision:</strong> {offer?.status === 'Accepted' || offer?.status === 'Declined' ? offer.status : 'Pending'}</p><p><strong>Decision time:</strong> {formatDateTime(offer?.candidateDecisionAt)}</p><p><strong>Stage 5:</strong> {stageFive?.status ?? 'Locked'}</p>{offer?.candidateDecisionNote ? <p className="md:col-span-2 whitespace-pre-wrap"><strong>Candidate note:</strong> {offer.candidateDecisionNote}</p> : null}</div>
+        {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking offer actions.</p> : canEditOffer ? <form action={adminOfferAction} className="mt-5 space-y-4 rounded-2xl border border-slate-200 p-4"><input type="hidden" name="applicationDbId" value={application.id} /><div className="grid gap-4 md:grid-cols-2"><label className="text-sm font-semibold">Role offered<input className="input mt-1" name="roleOffered" defaultValue={offer?.roleOffered ?? application.roleAppliedFor} required /></label><label className="text-sm font-semibold">Salary/compensation<input className="input mt-1" name="salary" defaultValue={offer?.salary ?? ''} required /></label><label className="text-sm font-semibold">Start date<input className="input mt-1" type="date" name="startDate" defaultValue={offer?.startDate?.toISOString().slice(0,10) ?? ''} required /></label><label className="text-sm font-semibold">Work mode<input className="input mt-1" name="workMode" defaultValue={offer?.workMode ?? application.workModePreference ?? ''} required /></label><label className="text-sm font-semibold">Reporting manager<input className="input mt-1" name="reportingManager" defaultValue={offer?.reportingManager ?? ''} /></label><label className="text-sm font-semibold">Probation period<input className="input mt-1" name="probationPeriod" defaultValue={offer?.probationPeriod ?? ''} /></label><label className="text-sm font-semibold">Offer expiry date<input className="input mt-1" type="date" name="offerExpiryDate" defaultValue={offer?.offerExpiryDate?.toISOString().slice(0,10) ?? ''} /></label><label className="text-sm font-semibold md:col-span-2">Special conditions / notes<textarea className="input mt-1 min-h-28" name="specialConditions" defaultValue={offer?.specialConditions ?? ''} /></label></div><div className="flex flex-wrap gap-2"><button className="btn btn-secondary" name="action" value="draft">Save draft</button><button className="btn btn-primary" name="action" value="release">Release offer</button>{offer?.status === 'Released' ? <button className="rounded-full border border-red-300 px-5 py-2 font-semibold text-red-700" name="action" value="withdraw">Withdraw offer</button> : null}</div></form> : <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Accepted/declined offers are read-only.</p>}
       </section>) : null}
 
       <section className="card mt-6 p-5">
