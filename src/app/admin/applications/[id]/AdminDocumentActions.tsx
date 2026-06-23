@@ -41,7 +41,7 @@ export function AdminDocumentActions({
     setError(null);
     const fallback = stageOne
       ? "Stage 1 PDF could not be prepared. Please refresh and try again."
-      : "The file record exists, but the stored file could not be found. Re-upload may be required.";
+      : "Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.";
 
     try {
       const response = await fetch(
@@ -55,7 +55,7 @@ export function AdminDocumentActions({
       );
       if (!response.ok) {
         setError(
-          response.status === 410
+          response.status === 404
             ? fallback
             : await readSafeError(response, fallback),
         );

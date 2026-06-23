@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import {
-  privateUploadConfigurationStatus,
+  privateUploadDiagnostic,
   readPrivateUpload,
   sanitizeDownloadFilename,
 } from "@/lib/storage";
@@ -22,6 +22,7 @@ type Diagnostic = {
   documentIdPresent: boolean;
   uploadedDocumentFound: boolean;
   provider: string;
+  storageKeyPresent: boolean;
   mimeType: string;
   wantsDownload: boolean;
   inlineRequested: boolean;
@@ -58,6 +59,7 @@ export async function GET(
     documentIdPresent: Boolean(documentId),
     uploadedDocumentFound: false,
     provider: "unknown",
+    storageKeyPresent: false,
     mimeType: "unknown",
     wantsDownload,
     inlineRequested: false,
@@ -85,6 +87,15 @@ export async function GET(
   if (!document) return safeResponse("Document not found", 404, diagnostic);
 
   diagnostic.provider = document.provider;
+  diagnostic.storageKeyPresent = Boolean(document.storageKey);
+  if (!document.provider || !document.storageKey) {
+    return safeResponse(
+      "Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.",
+      404,
+      diagnostic,
+      "MissingPrivateStorageReference",
+    );
+  }
   diagnostic.mimeType = document.mimeType || "application/octet-stream";
   const inline =
     !wantsDownload && PREVIEW_SAFE_MIME_TYPES.has(document.mimeType);
@@ -96,24 +107,26 @@ export async function GET(
     diagnostic.privateUploadReadSucceeded = true;
   } catch (error) {
     const errorName = error instanceof Error ? error.name : "Error";
-    const storageStatus = privateUploadConfigurationStatus();
+    const storageStatus = await privateUploadDiagnostic(document.storageKey, document.provider);
     console.warn("adminUploadedDocumentStorageUnavailable", {
       adminAuthenticated: diagnostic.adminAuthenticated,
       applicationIdPresent: diagnostic.applicationIdPresent,
       documentIdPresent: diagnostic.documentIdPresent,
       uploadedDocumentFound: diagnostic.uploadedDocumentFound,
       provider: storageStatus.provider,
-      privateUploadRootConfigured: storageStatus.rootConfigured,
-      localPrivateUsesDefaultEphemeralPath:
-        storageStatus.localPrivateUsesDefaultEphemeralPath,
+      storageKeyPresent: storageStatus.storageKeyPresent,
+      privateUploadRootConfigured: storageStatus.privateUploadRootConfigured,
+      resolvedPrivateUploadRoot: storageStatus.resolvedPrivateUploadRoot,
+      localPrivateStorageAvailable: storageStatus.localPrivateStorageAvailable,
+      fileExists: storageStatus.fileExists,
       privateUploadReadSucceeded: false,
-      responseStatus: errorName === "ENOENT" ? 410 : 500,
+      responseStatus: errorName === "ENOENT" ? 404 : 500,
       errorName,
     });
-    const status = errorName === "ENOENT" ? 410 : 500;
+    const status = errorName === "ENOENT" ? 404 : 500;
     return safeResponse(
-      status === 410
-        ? "The file record exists, but the stored file could not be found. Re-upload may be required."
+      status === 404
+        ? "Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup."
         : "Temporary document download error",
       status,
       diagnostic,

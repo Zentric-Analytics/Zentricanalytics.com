@@ -34,7 +34,7 @@ const GENERIC_UPLOAD_MIME_TYPES = new Set([
   "application/octet-stream",
   "binary/octet-stream",
 ]);
-const LOCAL_PRIVATE_PROVIDER = "local-private";
+export const LOCAL_PRIVATE_PROVIDER = "local-private";
 
 function fileExtension(name: string) {
   return name.split(".").pop()?.toLowerCase() ?? "";
@@ -69,12 +69,33 @@ function sanitizeStorageSegment(value: string) {
   return sanitized || "upload";
 }
 
+function isProductionLikeRuntime() {
+  return (
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview" ||
+    process.env.APP_ENV === "production" ||
+    process.env.APP_ENV === "staging"
+  );
+}
+
 export function privateUploadRoot() {
   return path.resolve(
     process.env.PRIVATE_UPLOAD_ROOT ??
       path.join(process.cwd(), ".private-uploads"),
   );
 }
+
+export function assertPrivateUploadStorageConfigured() {
+  const provider = selectedStorageProvider();
+  assertLocalPrivateProvider(provider, "object storage");
+  if (provider === LOCAL_PRIVATE_PROVIDER && isProductionLikeRuntime() && !process.env.PRIVATE_UPLOAD_ROOT) {
+    throw new Error(
+      "PRIVATE_UPLOAD_ROOT must be configured for local-private uploads in production/staging. Local .private-uploads storage is not safe on ephemeral hosting.",
+    );
+  }
+}
+
 
 export function resolvePrivateUploadPath(storageKey: string) {
   if (!storageKey || path.isAbsolute(storageKey))
@@ -89,13 +110,20 @@ export function resolvePrivateUploadPath(storageKey: string) {
 
 export async function savePrivateUpload(file: File, applicationId: string) {
   const provider = selectedStorageProvider();
-  assertLocalPrivateProvider(provider, "object storage");
+  assertPrivateUploadStorageConfigured();
   const safeApplicationId = sanitizeStorageSegment(applicationId);
   const safeName = sanitizeStorageSegment(file.name);
   const key = path.join(safeApplicationId, `${randomToken(12)}-${safeName}`);
   const fullPath = resolvePrivateUploadPath(key);
   await mkdir(path.dirname(fullPath), { recursive: true });
-  await writeFile(fullPath, Buffer.from(await file.arrayBuffer()), { flag: "wx" });
+  const bytes = Buffer.from(await file.arrayBuffer());
+  await writeFile(fullPath, bytes, { flag: "wx" });
+  const verified = await privateUploadExists(key, provider);
+  const metadata = verified ? await stat(fullPath) : null;
+  if (!verified || metadata?.size !== bytes.length) {
+    await rm(fullPath, { force: true });
+    throw new Error("Private upload write verification failed.");
+  }
   return { storageKey: key, provider: LOCAL_PRIVATE_PROVIDER, restricted: true };
 }
 
@@ -141,11 +169,31 @@ export async function privateUploadExists(
   }
 }
 
+export async function privateUploadDiagnostic(storageKey?: string | null, provider = selectedStorageProvider()) {
+  const rootConfigured = Boolean(process.env.PRIVATE_UPLOAD_ROOT);
+  const storageKeyPresent = Boolean(storageKey);
+  const localPrivateStorageAvailable = provider === LOCAL_PRIVATE_PROVIDER;
+  let fileExists = false;
+  if (storageKeyPresent && localPrivateStorageAvailable) {
+    fileExists = await privateUploadExists(storageKey!, provider);
+  }
+  return {
+    provider,
+    storageKeyPresent,
+    privateUploadRootConfigured: rootConfigured,
+    resolvedPrivateUploadRoot: privateUploadRoot(),
+    localPrivateStorageAvailable,
+    fileExists,
+  };
+}
+
 export function privateUploadConfigurationStatus() {
   const rootConfigured = Boolean(process.env.PRIVATE_UPLOAD_ROOT);
   return {
     rootConfigured,
     provider: selectedStorageProvider(),
+    resolvedPrivateUploadRoot: privateUploadRoot(),
+    localPrivateStorageAvailable: selectedStorageProvider() === LOCAL_PRIVATE_PROVIDER,
     localPrivateUsesDefaultEphemeralPath: !rootConfigured,
   };
 }
