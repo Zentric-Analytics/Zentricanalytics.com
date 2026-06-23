@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useId, useState } from 'react';
+import { useActionState, useEffect, useId, useMemo, useState } from 'react';
 import { countryPhoneOptions } from '@/lib/phone';
 import { roleAppliedForOptions } from '@/lib/recruitment-options';
 import { employmentTypeOptions, stage1WorkModeOptions } from '@/lib/stage1-fields';
@@ -58,61 +58,80 @@ function ConsentBox({ state, name, children }: { state: Stage1FormState; name: S
 
 export function Stage1ApplicationForm() {
   const [state, formAction, pending] = useActionState(submitStage1Application, initialStage1FormState);
+  const [clearedErrors, setClearedErrors] = useState<Partial<Record<Stage1Field, boolean>>>({});
   const [selectedFile, setSelectedFile] = useState('');
+  const [fileNeedsReselection, setFileNeedsReselection] = useState(false);
   const fileInputId = useId();
   const values = state.values;
+  const displayState = useMemo<Stage1FormState>(() => ({
+    ...state,
+    fieldErrors: Object.fromEntries(Object.entries(state.fieldErrors).filter(([field]) => !clearedErrors[field as Stage1Field])) as Stage1FormState['fieldErrors'],
+  }), [state, clearedErrors]);
+
+  useEffect(() => {
+    setClearedErrors({});
+    if (state.message) {
+      setSelectedFile('');
+      setFileNeedsReselection(true);
+    }
+  }, [state]);
+
+  const clearFieldError = (field: Stage1Field) => {
+    setClearedErrors((current) => current[field] ? current : { ...current, [field]: true });
+    if (field === 'cv') setFileNeedsReselection(false);
+  };
   const [selectedRole, setSelectedRole] = useState(values.role || roleAppliedForOptions[0]);
   const otherRoleIsSelected = selectedRole === 'Other';
 
-  return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8">
+  return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8" onChange={(event) => { const name = (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as Stage1Field | undefined; if (name) clearFieldError(name); }}>
     {state.message ? <div className="min-w-0 break-words rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{state.message}</div> : null}
 
     <FormSection eyebrow="Step 01" title="Personal details" helper="Use the same contact information you want our hiring team to use for updates.">
       <div className="md:col-span-6 grid min-w-0 grid-cols-1 gap-4 md:grid-cols-12 md:gap-5">
-        <TextField state={state} name="firstName" label="First name" autoComplete="given-name" required className="md:col-span-5" />
-        <TextField state={state} name="middleInitial" label="Middle name / initial" autoComplete="additional-name" maxLength={50} className="md:col-span-2" />
-        <TextField state={state} name="lastName" label="Last name" autoComplete="family-name" required className="md:col-span-5" />
+        <TextField state={displayState} name="firstName" label="First name" autoComplete="given-name" required className="md:col-span-5" />
+        <TextField state={displayState} name="middleInitial" label="Middle name / initial" autoComplete="additional-name" maxLength={50} className="md:col-span-2" />
+        <TextField state={displayState} name="lastName" label="Last name" autoComplete="family-name" required className="md:col-span-5" />
       </div>
 
       <div className="md:col-span-6 grid min-w-0 grid-cols-1 gap-4 md:grid-cols-12 md:items-start md:gap-5">
-        <TextField state={state} name="preferredName" label="Preferred name" className="md:col-span-3" />
-        <TextField state={state} name="email" label="Email" type="email" autoComplete="email" required className="md:col-span-5" />
-        <div className="field md:col-span-4"><span className="text-sm font-bold text-ink">Phone <Required /></span><div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,9rem)_minmax(0,1fr)]"><select className={inputClass(state,'phoneCountryIso')} name="phoneCountryIso" aria-label="Phone country" required defaultValue={values.phoneCountryIso || 'NG'}>{countryPhoneOptions.map((country)=><option key={country.iso} value={country.iso}>{country.name} {country.dialCode}</option>)}</select><input className={inputClass(state,'phoneNational')} name="phoneNational" inputMode="tel" autoComplete="tel" defaultValue={values.phoneNational} required aria-label="Phone number" /></div><FieldError state={state} field="phoneCountryIso" /><FieldError state={state} field="phoneNational" /></div>
+        <TextField state={displayState} name="preferredName" label="Preferred name" className="md:col-span-3" />
+        <TextField state={displayState} name="email" label="Email" type="email" autoComplete="email" required className="md:col-span-5" />
+        <div className="field md:col-span-4"><span className="text-sm font-bold text-ink">Phone <Required /></span><div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,9rem)_minmax(0,1fr)]"><select className={inputClass(displayState,'phoneCountryIso')} name="phoneCountryIso" aria-label="Phone country" required defaultValue={values.phoneCountryIso || 'NG'}>{countryPhoneOptions.map((country)=><option key={country.iso} value={country.iso}>{country.name} {country.dialCode}</option>)}</select><input className={inputClass(displayState,'phoneNational')} name="phoneNational" inputMode="tel" autoComplete="tel" defaultValue={values.phoneNational} required aria-label="Phone number" /></div><FieldError state={displayState} field="phoneCountryIso" /><FieldError state={displayState} field="phoneNational" /></div>
       </div>
 
       <div className="md:col-span-6 grid min-w-0 grid-cols-1 md:grid-cols-12">
-        <TextField state={state} name="residentialAddress" label="Current city/state or residential location" autoComplete="street-address" placeholder="e.g. Ikeja, Lagos" required className="md:col-span-8" />
+        <TextField state={displayState} name="residentialAddress" label="Current city/state or residential location" autoComplete="street-address" placeholder="e.g. Ikeja, Lagos" required className="md:col-span-8" />
       </div>
     </FormSection>
 
     <FormSection eyebrow="Step 02" title="Role preference" helper="Select the role and work arrangement that best match this application.">
-      <label className={`field ${fieldWidth('wide')}`}><span className="text-sm font-bold text-ink">Role applied for <Required /></span><select className={inputClass(state,'role')} name="role" required value={selectedRole} onChange={(event)=>setSelectedRole(event.currentTarget.value)} aria-invalid={Boolean(errorFor(state, 'role'))}>{roleAppliedForOptions.map((role)=><option key={role} value={role}>{role}</option>)}</select><FieldError state={state} field="role" /></label>
-      {otherRoleIsSelected ? <TextField state={state} name="otherRole" label="Other role" required width="standard" /> : null}
-      <SelectField state={state} name="employmentType" label="Employment type" options={employmentTypeOptions} width="compact" />
-      <SelectField state={state} name="workMode" label="Preferred work mode" options={stage1WorkModeOptions} width="compact" />
+      <label className={`field ${fieldWidth('wide')}`}><span className="text-sm font-bold text-ink">Role applied for <Required /></span><select className={inputClass(displayState,'role')} name="role" required value={selectedRole} onChange={(event)=>{ setSelectedRole(event.currentTarget.value); clearFieldError('role'); }} aria-invalid={Boolean(errorFor(displayState, 'role'))}>{roleAppliedForOptions.map((role)=><option key={role} value={role}>{role}</option>)}</select><FieldError state={displayState} field="role" /></label>
+      {otherRoleIsSelected ? <TextField state={displayState} name="otherRole" label="Other role" required width="standard" /> : null}
+      <SelectField state={displayState} name="employmentType" label="Employment type" options={employmentTypeOptions} width="compact" />
+      <SelectField state={displayState} name="workMode" label="Preferred work mode" options={stage1WorkModeOptions} width="compact" />
     </FormSection>
 
     <FormSection eyebrow="Step 03" title="Experience snapshot" helper="Keep this concise. We will request deeper information in later stages if needed.">
-      <SelectField state={state} name="experienceLevel" label="Experience level" options={experienceLevelOptions} required={false} width="compact" />
-      <TextField state={state} name="portfolioUrl" label="Portfolio or profile link" type="url" placeholder="https://" width="wide" helper="LinkedIn, GitHub, portfolio, or website." />
-      <TextField state={state} name="skills" label="Skills/tools" placeholder="e.g. SQL, Excel, Python, Power BI" required width="wide" />
-      <TextAreaField state={state} name="message" label="Application message" placeholder="Briefly tell us why you are interested and what you would bring to the role." required helper="Aim for 3–6 focused sentences." />
+      <SelectField state={displayState} name="experienceLevel" label="Experience level" options={experienceLevelOptions} required={false} width="compact" />
+      <TextField state={displayState} name="portfolioUrl" label="Portfolio or profile link" type="url" placeholder="https://" width="wide" helper="LinkedIn, GitHub, portfolio, or website." />
+      <TextField state={displayState} name="skills" label="Skills/tools" placeholder="e.g. SQL, Excel, Python, Power BI" required width="wide" />
+      <TextAreaField state={displayState} name="message" label="Application message" placeholder="Briefly tell us why you are interested and what you would bring to the role." required helper="Aim for 3–6 focused sentences." />
     </FormSection>
 
     <FormSection eyebrow="Step 04" title="CV/resume" helper="Upload one current document for recruitment review.">
       <div className="md:col-span-6 min-w-0 rounded-[1.5rem] border border-brand/20 bg-gradient-to-br from-brand/5 via-white to-accent/10 p-4 shadow-inner sm:p-5">
         <div className="grid gap-4 rounded-2xl border border-white/80 bg-white/85 p-4 sm:grid-cols-[1fr_auto] sm:items-center sm:p-5">
-          <div className="min-w-0"><p className="text-base font-bold text-ink">CV/resume <Required /></p><p className="mt-1 text-sm leading-6 text-slate-600">PDF, DOC, DOCX, JPG, PNG, or WEBP. Maximum file size: 20MB.</p>{selectedFile ? <p className="mt-3 max-w-full break-words rounded-xl bg-brand/10 px-3 py-2 text-sm font-semibold text-brand">Selected: {selectedFile}</p> : <p className="mt-3 text-sm font-semibold text-slate-500">No file selected yet.</p>}<FieldError state={state} field="cv" /></div>
-          <div><input id={fileInputId} className="sr-only" name="cv" type="file" accept={uploadAccept} required onChange={(event)=>setSelectedFile(event.currentTarget.files?.[0]?.name ?? '')} /><label htmlFor={fileInputId} className="btn btn-secondary cursor-pointer border-brand/30 px-5 py-3 text-brand shadow-sm hover:bg-brand hover:text-white focus-within:ring-4 focus-within:ring-brand/10">Choose file</label></div>
+          <div className="min-w-0"><p className="text-base font-bold text-ink">CV/resume <Required /></p><p className="mt-1 text-sm leading-6 text-slate-600">PDF, DOC, DOCX, JPG, PNG, or WEBP. Maximum file size: 20MB.</p>{selectedFile ? <p className="mt-3 max-w-full break-words rounded-xl bg-brand/10 px-3 py-2 text-sm font-semibold text-brand">Selected: {selectedFile}</p> : <p className="mt-3 text-sm font-semibold text-slate-500">No file selected yet.</p>}<FieldError state={displayState} field="cv" />{fileNeedsReselection && !selectedFile ? <p className="mt-2 text-sm font-semibold text-red-700" role="alert">Please reselect your CV/resume before submitting again.</p> : null}</div>
+          <div><input id={fileInputId} className="sr-only" name="cv" type="file" accept={uploadAccept} required onInvalid={()=>setFileNeedsReselection(true)} onChange={(event)=>{ setSelectedFile(event.currentTarget.files?.[0]?.name ?? ''); clearFieldError('cv'); }} /><label htmlFor={fileInputId} className="btn btn-secondary cursor-pointer border-brand/30 px-5 py-3 text-brand shadow-sm hover:bg-brand hover:text-white focus-within:ring-4 focus-within:ring-brand/10">Choose file</label></div>
         </div>
       </div>
     </FormSection>
 
     <FormSection eyebrow="Step 05" title="Declaration and signature" helper="Your declaration helps us keep this first-stage record official and trustworthy.">
-      <ConsentBox state={state} name="privacyConsent">I consent to Zentric Analytics processing my application data for recruitment review and records.</ConsentBox>
-      <ConsentBox state={state} name="declarationAccuracy">I declare that the information provided is true and complete.</ConsentBox>
-      <TextField state={state} name="signatureName" label="Electronic signature typed name" required width="wide" helper="Type your full legal name." />
-      <ConsentBox state={state} name="signatureConsent">I confirm this typed name is my electronic signature.</ConsentBox>
+      <ConsentBox state={displayState} name="privacyConsent">I consent to Zentric Analytics processing my application data for recruitment review and records.</ConsentBox>
+      <ConsentBox state={displayState} name="declarationAccuracy">I declare that the information provided is true and complete.</ConsentBox>
+      <TextField state={displayState} name="signatureName" label="Electronic signature typed name" required width="wide" helper="Type your full legal name." />
+      <ConsentBox state={displayState} name="signatureConsent">I confirm this typed name is my electronic signature.</ConsentBox>
     </FormSection>
 
     <div className="flex w-full min-w-0 flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-ink p-5 text-white shadow-xl sm:p-6 md:flex-row md:items-center md:justify-between"><p className="text-sm leading-6 text-slate-200">Review your details before submitting. We will email your application ID after successful submission.</p><button className="btn w-full min-w-0 justify-center bg-accent px-8 py-4 text-base text-ink shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70 md:w-auto" type="submit" disabled={pending}>{pending ? 'Submitting...' : 'Submit stage 1 application'}</button></div>

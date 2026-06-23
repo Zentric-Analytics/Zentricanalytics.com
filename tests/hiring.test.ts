@@ -134,9 +134,29 @@ describe("hiring workflow helpers", () => {
       valid: true,
       e164: "+447911123456",
     });
+    expect(normalizePhoneForCountry("NG", "8012345678")).toMatchObject({
+      valid: true,
+      e164: "+2348012345678",
+    });
+    expect(normalizePhoneForCountry("NG", "0701 234 5678")).toMatchObject({
+      valid: true,
+      e164: "+2347012345678",
+    });
+    expect(normalizePhoneForCountry("NG", "0812 345 6789")).toMatchObject({
+      valid: true,
+      e164: "+2348123456789",
+    });
+    expect(normalizePhoneForCountry("NG", "0903 456 7890")).toMatchObject({
+      valid: true,
+      e164: "+2349034567890",
+    });
     expect(normalizePhoneForCountry("NG", "+234 801-234-5678")).toMatchObject({
       valid: true,
       e164: "+2348012345678",
+    });
+    expect(normalizePhoneForCountry("NG", "+234 916-345-6789")).toMatchObject({
+      valid: true,
+      e164: "+2349163456789",
     });
     expect(normalizePhoneForCountry("GB", "+44 20 7946 0958")).toMatchObject({
       valid: true,
@@ -254,11 +274,22 @@ describe("hiring workflow helpers", () => {
       "referee1Name",
       "referee2Name",
     ].forEach((name) => expect(page).not.toContain(`name="${name}"`));
-    expect(page).toContain("Submit Application");
-    expect(page).not.toContain("Submit Stage 1 Application");
+    expect(page).toContain("disabled={pending}");
+    expect(page).toContain("Submit stage 1 application");
     expect(page.indexOf("Declaration and signature")).toBeLessThan(
-      page.indexOf("Submit Application"),
+      page.indexOf("Submit stage 1 application"),
     );
+  });
+  it("Stage 1 form clears server errors on edit and explains file reselection", () => {
+    const page = readFileSync(
+      "src/app/apply/Stage1ApplicationForm.tsx",
+      "utf8",
+    );
+    expect(page).toContain("clearedErrors");
+    expect(page).toContain("clearFieldError(name)");
+    expect(page).toContain("clearFieldError('cv')");
+    expect(page).toContain("Please reselect your CV/resume before submitting again.");
+    expect(page).toContain("onInvalid={()=>setFileNeedsReselection(true)}");
   });
   it("removed Stage 1 PDF fields are optional while a focused submission passes", () => {
     const focused = {

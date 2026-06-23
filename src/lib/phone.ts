@@ -28,7 +28,7 @@ export function buildFullLegalName(firstName: string, middleInitial: string | nu
 }
 
 const mobilePrefixes: Partial<Record<string, RegExp>> = {
-  NG: /^[789][01]\d{8}$/,
+  NG: /^[789]\d{9}$/,
   US: /^[2-9]\d{2}[2-9]\d{6}$/,
   CA: /^[2-9]\d{2}[2-9]\d{6}$/,
   GB: /^(?:7\d{9}|[123]\d{8,9})$/,
