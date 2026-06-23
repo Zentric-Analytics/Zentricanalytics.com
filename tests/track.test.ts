@@ -52,7 +52,7 @@ vi.mock('@/lib/access-code-config', async () => {
     expect(portal).toContain('showOfferDecision');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
-    expect(portal).not.toContain('Application documents');
+    expect(portal).toContain('Application Documents');
     expect(portal).not.toContain('Application stages');
   });
 
@@ -129,7 +129,7 @@ vi.mock('@/lib/security', async () => {
     expect(portal).toContain('showOfferDecision');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
-    expect(portal).not.toContain('Application documents');
+    expect(portal).toContain('Application Documents');
     expect(portal).not.toContain('Application stages');
   });
 
@@ -292,7 +292,7 @@ describe('track access-code flow', () => {
     expect(portal).toContain('showOfferDecision');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
-    expect(portal).not.toContain('Application documents');
+    expect(portal).toContain('Application Documents');
     expect(portal).not.toContain('Application stages');
   });
 
@@ -480,7 +480,7 @@ describe('admin and track UI source checks', () => {
     expect(portal).toContain('showOfferDecision');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
-    expect(portal).not.toContain('Application documents');
+    expect(portal).toContain('Application Documents');
     expect(portal).not.toContain('Application stages');
   });
 
