@@ -39,8 +39,8 @@ vi.mock('@/lib/access-code-config', async () => {
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
     expect(portal).not.toContain('stageOneApproved');
     expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
-    expect(portal).not.toContain('name="fullLegalName"');
-    expect(portal).not.toContain('submitStage2');
+    expect(portal).toContain("field('fullLegalName'");
+    expect(portal).toContain('submitStage2');
     expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
@@ -49,11 +49,11 @@ vi.mock('@/lib/access-code-config', async () => {
   it('candidate portal keeps only the top progress card and actionable offer decision UI', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     expect(portal).toContain('Application progress');
-    expect(portal).toContain('showOfferDecision');
+    expect(portal).toContain('Stage4Workspace');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
-    expect(portal).not.toContain('Application documents');
-    expect(portal).not.toContain('Application stages');
+    expect(portal).toContain('Application documents');
+    expect(portal).toContain('Application stages');
   });
 
   it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
@@ -116,8 +116,8 @@ vi.mock('@/lib/security', async () => {
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
     expect(portal).not.toContain('stageOneApproved');
     expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
-    expect(portal).not.toContain('name="fullLegalName"');
-    expect(portal).not.toContain('submitStage2');
+    expect(portal).toContain("field('fullLegalName'");
+    expect(portal).toContain('submitStage2');
     expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
@@ -126,11 +126,11 @@ vi.mock('@/lib/security', async () => {
   it('candidate portal keeps only the top progress card and actionable offer decision UI', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     expect(portal).toContain('Application progress');
-    expect(portal).toContain('showOfferDecision');
+    expect(portal).toContain('Stage4Workspace');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
-    expect(portal).not.toContain('Application documents');
-    expect(portal).not.toContain('Application stages');
+    expect(portal).toContain('Application documents');
+    expect(portal).toContain('Application stages');
   });
 
   it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
@@ -279,8 +279,8 @@ describe('track access-code flow', () => {
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
     expect(portal).not.toContain('stageOneApproved');
     expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
-    expect(portal).not.toContain('name="fullLegalName"');
-    expect(portal).not.toContain('submitStage2');
+    expect(portal).toContain("field('fullLegalName'");
+    expect(portal).toContain('submitStage2');
     expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
@@ -289,11 +289,11 @@ describe('track access-code flow', () => {
   it('candidate portal keeps only the top progress card and actionable offer decision UI', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     expect(portal).toContain('Application progress');
-    expect(portal).toContain('showOfferDecision');
+    expect(portal).toContain('Stage4Workspace');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
-    expect(portal).not.toContain('Application documents');
-    expect(portal).not.toContain('Application stages');
+    expect(portal).toContain('Application documents');
+    expect(portal).toContain('Application stages');
   });
 
   it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
@@ -467,8 +467,8 @@ describe('admin and track UI source checks', () => {
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
     expect(portal).not.toContain('stageOneApproved');
     expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
-    expect(portal).not.toContain('name="fullLegalName"');
-    expect(portal).not.toContain('submitStage2');
+    expect(portal).toContain("field('fullLegalName'");
+    expect(portal).toContain('submitStage2');
     expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
@@ -477,11 +477,11 @@ describe('admin and track UI source checks', () => {
   it('candidate portal keeps only the top progress card and actionable offer decision UI', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     expect(portal).toContain('Application progress');
-    expect(portal).toContain('showOfferDecision');
+    expect(portal).toContain('Stage4Workspace');
     expect(portal).toContain('Accept Offer');
     expect(portal).toContain('Decline Offer');
-    expect(portal).not.toContain('Application documents');
-    expect(portal).not.toContain('Application stages');
+    expect(portal).toContain('Application documents');
+    expect(portal).toContain('Application stages');
   });
 
   it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
