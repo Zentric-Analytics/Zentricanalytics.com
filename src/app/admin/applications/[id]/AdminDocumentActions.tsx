@@ -7,6 +7,7 @@ type Props = {
   filename?: string;
   previewable?: boolean;
   stageOne?: boolean;
+  available?: boolean;
 };
 
 function filenameFromDisposition(disposition: string | null, fallback: string) {
@@ -30,6 +31,7 @@ export function AdminDocumentActions({
   filename = "document",
   previewable = false,
   stageOne = false,
+  available = true,
 }: Props) {
   const [busyAction, setBusyAction] = useState<"view" | "download" | null>(
     null,
@@ -37,6 +39,7 @@ export function AdminDocumentActions({
   const [error, setError] = useState<string | null>(null);
 
   async function handleDocument(action: "view" | "download") {
+    if (!available) return;
     setBusyAction(action);
     setError(null);
     const fallback = stageOne
@@ -95,7 +98,7 @@ export function AdminDocumentActions({
             className="btn btn-secondary"
             type="button"
             onClick={() => handleDocument("view")}
-            disabled={busyAction !== null}
+            disabled={busyAction !== null || !available}
           >
             {busyAction === "view" ? "Preparing..." : "View"}
           </button>
@@ -104,7 +107,7 @@ export function AdminDocumentActions({
           className="btn btn-primary"
           type="button"
           onClick={() => handleDocument("download")}
-          disabled={busyAction !== null}
+          disabled={busyAction !== null || !available}
         >
           {busyAction === "download"
             ? "Preparing..."
@@ -113,6 +116,11 @@ export function AdminDocumentActions({
               : "Download"}
         </button>
       </div>
+      {!available && !stageOne ? (
+        <p className="max-w-sm text-sm font-semibold text-amber-800" role="status">
+          Download disabled because the private file is missing on disk.
+        </p>
+      ) : null}
       {error ? (
         <p className="max-w-sm text-sm font-semibold text-red-700" role="alert">
           {error}
