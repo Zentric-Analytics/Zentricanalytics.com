@@ -14,7 +14,13 @@ type RedirectStatus = 'requested' | 'limited' | 'error';
 function trackUrl(status: RedirectStatus, applicationId: string, email: string) {
   const params = new URLSearchParams({ applicationId, email });
   params.set(status === 'requested' ? 'requested' : status, '1');
-  return `/track?${params.toString()}`;
+  const path = status === 'requested' ? '/track/verify' : '/track';
+  return `${path}?${params.toString()}`;
+}
+
+function verifyUrl(applicationId: string, email: string) {
+  const params = new URLSearchParams({ applicationId, email, requested: '1', verified: '0' });
+  return `/track/verify?${params.toString()}`;
 }
 
 function safeDiagnostics(event: string, diagnostics: Record<string, unknown>) {
@@ -92,7 +98,7 @@ export async function verifyAccessCode(formData: FormData) {
   const code = String(formData.get('code') ?? '').trim();
   const h = await headers();
   const ipHash = sha256(h.get('x-forwarded-for') ?? 'unknown');
-  const failedUrl = `/track?verified=0&applicationId=${encodeURIComponent(applicationId)}&email=${encodeURIComponent(email)}`;
+  const failedUrl = verifyUrl(applicationId, email);
   const limit = await checkRateLimit({ scope: 'access-code-verify', key: `${applicationId}:${email}:${ipHash}`, limit: accessCodeRateLimitConfig.verifyLimit(), windowMs: accessCodeRateLimitConfig.windowMs() });
   if (!limit.allowed) redirect(failedUrl);
   const app = await prisma.jobApplication.findFirst({ where: { applicationId, deletedAt: null }, include: { applicant: true } });
