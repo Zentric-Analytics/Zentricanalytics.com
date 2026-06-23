@@ -67,10 +67,10 @@ function StorageDiagnosticsPanel({
   diagnostics: Array<{ id: string; label: string; diagnostic: UploadDiagnostic }>;
 }) {
   return (
-    <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-slate-800">
-      <h3 className="font-bold text-blue-950">Admin storage diagnostics</h3>
+    <details className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-slate-800">
+      <summary className="cursor-pointer font-bold text-blue-950">Storage diagnostics</summary>
       <p className="mt-1 text-xs text-blue-900">
-        Admin-only runtime view of the upload provider, configured root, resolved paths, and on-disk file checks.
+        Admin storage diagnostics: admin-only runtime view of the upload provider, configured root, resolved paths, and on-disk file checks.
       </p>
       <dl className="mt-3 grid gap-2 md:grid-cols-2">
         <div><dt className="font-semibold">Selected provider</dt><dd>{status.provider}</dd></div>
@@ -102,7 +102,7 @@ function StorageDiagnosticsPanel({
           ))}
         </div>
       ) : <p className="mt-3 text-sm text-blue-900">No uploaded document records are attached to this application.</p>}
-    </div>
+    </details>
   );
 }
 
@@ -113,6 +113,45 @@ type PageProps = {
 
 function formatDateTime(value?: Date | null) {
   return value ? value.toISOString() : "Missing";
+}
+
+function formatField(value: unknown) {
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (value === null || value === undefined || value === "") return "—";
+  return String(value);
+}
+
+function InfoGrid({ rows }: { rows: Array<[string, unknown]> }) {
+  return (
+    <dl className="grid gap-3 text-sm md:grid-cols-2">
+      {rows.map(([label, value]) => (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4" key={label}>
+          <dt className="font-semibold text-slate-500">{label}</dt>
+          <dd className="mt-1 whitespace-pre-wrap text-slate-950">{formatField(value)}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function StageActionForm({
+  action,
+  applicationId,
+  stage,
+}: {
+  action: (formData: FormData) => void | Promise<void>;
+  applicationId: string;
+  stage: string;
+}) {
+  return (
+    <form action={action} className="mt-4 flex flex-wrap gap-2">
+      <input type="hidden" name="applicationDbId" value={applicationId} />
+      <input className="input max-w-xs" name="notes" placeholder="Optional notes" />
+      <button className="btn btn-secondary" name="action" value="approve">Approve {stage}</button>
+      <button className="btn btn-secondary" name="action" value="correction">Request correction</button>
+      <button className="rounded-full border border-red-200 px-5 py-2 font-semibold text-red-700 hover:bg-red-50" name="action" value="reject">Reject {stage}</button>
+    </form>
+  );
 }
 
 function actionBanner(params: Record<string, string | undefined>) {
@@ -252,15 +291,26 @@ export default async function AdminApplicationDetail({
     signature?.signedAt,
   );
 
+  const stageOnePayload = (stageOneSubmission?.payload ?? {}) as Record<string, unknown>;
+  const timelineStages = Array.from({ length: 5 }, (_, index) => {
+    const order = index + 1;
+    const stage = application.stages.find((item) => item.stageOrder === order);
+    return { order, stage, submission: stage?.submissions[0], approval: stage?.approvals[0] };
+  });
+
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
-      <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
+    <main className="min-h-screen bg-slate-50">
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div>
           <Link className="btn btn-secondary mb-4 inline-flex" href="/admin/applications">
             ← Back to applications
           </Link>
-          <h1 className="text-3xl font-bold">{application.applicationId}</h1>
-          <div className="mt-2 flex gap-2">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">{application.applicationId}</p>
+          <h1 className="mt-2 text-3xl font-bold text-slate-950">{application.applicant.fullName}</h1>
+          <p className="mt-2 text-slate-600">{application.roleAppliedFor} · Stage {application.currentStageOrder} · {application.status}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <StatusBadge status={application.status} />
             <StatusBadge status={stageOneStatus} />
             {application.deletedAt ? (
               <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
@@ -285,52 +335,53 @@ export default async function AdminApplicationDetail({
       ))}
 
       <section className="card mt-6 p-5">
-        <h2 className="font-bold">Applicant</h2>
-        <p>
-          <strong>Full name:</strong> {application.applicant.fullName}
-        </p>
-        <p>
-          <strong>First:</strong>{" "}
-          {application.applicant.firstName ?? "Legacy record"} ·{" "}
-          <strong>Initial:</strong> {application.applicant.middleInitial ?? "—"}{" "}
-          · <strong>Last:</strong>{" "}
-          {application.applicant.lastName ?? "Legacy record"}
-        </p>
-        <p>
-          <strong>Email:</strong> {application.applicant.email}
-        </p>
-        <p>
-          <strong>Country:</strong>{" "}
-          {application.applicant.phoneCountryName ?? "Not captured"} (
-          {application.applicant.phoneDialCode ?? "—"})
-        </p>
-        <p>
-          <strong>Phone:</strong>{" "}
-          {application.applicant.phoneE164 ??
-            application.applicant.phone ??
-            "No phone provided"}
-        </p>
-        <p>{application.applicant.location ?? "No location provided"}</p>
-        <p>
-          <strong>Role selected:</strong> {application.roleAppliedFor} ·{" "}
-          <strong>Experience:</strong>{" "}
-          {application.experienceLevel ?? "Not provided"}
-        </p>
+        <h2 className="text-xl font-bold">Profile summary</h2>
+        <InfoGrid rows={[
+          ["Name", application.applicant.fullName],
+          ["Email", application.applicant.email],
+          ["Phone", application.applicant.phoneE164 ?? application.applicant.phone ?? "No phone provided"],
+          ["Location", application.applicant.location ?? application.applicant.phoneCountryName ?? "Not captured"],
+          ["Role applied for", application.roleAppliedFor],
+          ["Experience level", application.experienceLevel ?? "Not provided"],
+          ["Application date", formatDateTime(application.createdAt)],
+          ["Current stage/status", `Stage ${application.currentStageOrder} · ${application.status}`],
+        ]} />
       </section>
 
       <section className="card mt-6 p-5">
-        <h2 className="font-bold">Stage 1 answers</h2>
-        {stageOneSubmission ? (
-          <pre className="whitespace-pre-wrap text-sm">
-            {JSON.stringify(stageOneSubmission.payload ?? {}, null, 2)}
-          </pre>
-        ) : (
-          <p>No Stage 1 submission found.</p>
-        )}
+        <h2 className="text-xl font-bold">Stage timeline / progress</h2>
+        <div className="mt-4 grid gap-3 md:grid-cols-5">
+          {timelineStages.map(({ order, stage, submission, approval }) => (
+            <div className={`rounded-2xl border p-4 ${application.currentStageOrder === order ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-slate-50"}`} key={order}>
+              <p className="text-sm font-bold text-slate-950">Stage {order}</p>
+              <p className="mt-1 text-sm text-slate-600">{stage?.title ?? (order === 5 ? "Agreement / onboarding" : "Not built yet")}</p>
+              <p className="mt-3 text-sm font-semibold">{stage?.status ?? "Locked"}</p>
+              <p className="mt-2 text-xs text-slate-500">Submitted: {formatDateTime(submission?.submittedAt)}</p>
+              <p className="text-xs text-slate-500">Approved: {formatDateTime(approval?.createdAt)}</p>
+              {application.currentStageOrder === order ? <span className="mt-3 inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">Current</span> : null}
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="card mt-6 p-5">
-        <h2 className="font-bold">Official documents</h2>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div><h2 className="text-xl font-bold">Stage 1 Application</h2><p className="text-sm text-slate-600">Submitted application answers, official PDF, candidate upload, and Stage 1 decisions.</p></div>
+          <StatusBadge status={stageOneStatus} />
+        </div>
+        <div className="mt-4">
+          {stageOneSubmission ? (
+            <InfoGrid rows={[
+              ["Message", stageOnePayload.message ?? application.message],
+              ["Skills", stageOnePayload.skills ?? application.skills],
+              ["Work mode preference", application.workModePreference],
+              ["Portfolio", application.portfolioUrl],
+              ["Submitted", formatDateTime(stageOneSubmission.submittedAt)],
+              ["Signature", signature ? `${signature.typedName || "Missing typed name"} · ${signature.confirmed ? "Confirmed" : "Missing"} · ${formatDateTime(signature.signedAt)}` : "Missing signature"],
+            ]} />
+          ) : <p className="text-sm text-slate-600">No Stage 1 submission found.</p>}
+        </div>
+        <h3 className="mt-5 font-semibold">Official documents</h3>
         {stageOnePdfAvailable ? (
           <div className="mt-4 w-fit">
             <AdminDocumentActions
@@ -344,10 +395,7 @@ export default async function AdminApplicationDetail({
             Stage 1 PDF is not available yet.
           </p>
         )}
-      </section>
-
-      <section className="card mt-6 p-5">
-        <h2 className="font-bold">Uploaded documents</h2>
+        <h3 className="mt-5 font-semibold">Uploaded documents</h3>
         <StorageDiagnosticsPanel status={storageStatus} diagnostics={uploadDiagnostics} />
         {documentsWithAvailability.length > 0 ? (
           <div className="mt-4 grid gap-3">
@@ -404,18 +452,11 @@ export default async function AdminApplicationDetail({
             No uploaded documents found.
           </p>
         )}
-      </section>
-
-      <section className="card mt-6 p-5">
-        <h2 className="font-bold">Signature</h2>
-        {signature ? (
-          <p>
-            {signature.typedName || "Missing typed name"} ·{" "}
-            {signature.confirmed ? "Confirmed" : "Missing"} ·{" "}
-            {formatDateTime(signature.signedAt)}
-          </p>
+        <h3 className="mt-5 font-semibold">Stage 1 admin actions</h3>
+        {application.deletedAt ? (
+          <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking stage actions.</p>
         ) : (
-          <p>Missing signature.</p>
+          <StageActionForm action={adminStage1Action} applicationId={application.id} stage="Stage 1" />
         )}
       </section>
 
@@ -436,6 +477,10 @@ export default async function AdminApplicationDetail({
             <div><h3 className="font-semibold">Uploaded Stage 2 documents</h3><div className="mt-3 grid gap-3">{stageTwoDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? (<article className="rounded-2xl border border-slate-200 p-4" key={document.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{document.uploadedDocument.kind}</p><p className="text-sm text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType} · {document.uploadedDocument.sizeBytes} bytes</p>{!privateFileAvailable ? <p className="mt-2 text-sm font-semibold text-amber-700">Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.</p> : null}</div><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={privateFileAvailable && ["application/pdf", "image/jpeg", "image/png", "image/webp"].includes(document.uploadedDocument.mimeType)} available={privateFileAvailable} /></div></article>) : null)}</div></div>
           </div>
         ) : <p className="mt-3 text-sm text-slate-600">No Stage 2 submission found.</p>}
+        <h3 className="mt-5 font-semibold">Stage 2 admin actions</h3>
+        {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking stage actions.</p> : (
+          <StageActionForm action={adminStage2Action} applicationId={application.id} stage="Stage 2" />
+        )}
       </section>
 
 
@@ -452,7 +497,8 @@ export default async function AdminApplicationDetail({
         )}
         <div className="mt-5 grid gap-4 lg:grid-cols-2"><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Released instructions</h3><p className="mt-2 text-sm">{stageThreeMetadata.title ?? 'Not released'}</p><p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{stageThreeMetadata.instructions ?? 'No instructions released yet.'}</p><p className="mt-2 text-xs text-slate-500">Released: {stageThreeMetadata.releasedAt ?? '—'} · By: {stageThreeMetadata.releasedByAdminEmail ?? '—'}</p></div><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Candidate response</h3>{stageThreeSubmission ? <div className="mt-2 text-sm"><p><strong>Availability:</strong> {String(stageThreePayload.availability ?? '—')}</p><p className="whitespace-pre-wrap"><strong>Message:</strong> {String(stageThreePayload.responseMessage ?? '—')}</p><p><strong>Declared accurate:</strong> {stageThreePayload.declarationAccuracy ? 'Yes' : 'No'}</p><p>Submitted: {formatDateTime(stageThreeSubmission.submittedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 3 response submitted.</p>}</div></div>
         <div className="mt-5"><h3 className="font-semibold">Uploaded Stage 3 files</h3><div className="mt-3 grid gap-3">{stageThreeDocumentsWithAvailability.length ? stageThreeDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? (<article className="rounded-2xl border border-slate-200 p-4" key={document.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{document.uploadedDocument.kind}</p><p className="text-sm text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType} · {document.uploadedDocument.sizeBytes} bytes</p>{!privateFileAvailable ? <p className="mt-2 text-sm font-semibold text-amber-700">Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.</p> : null}</div><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={privateFileAvailable && ['application/pdf','image/jpeg','image/png','image/webp'].includes(document.uploadedDocument.mimeType)} available={privateFileAvailable} /></div></article>) : null) : <p className="text-sm text-slate-600">No Stage 3 uploads.</p>}</div></div>
-        {application.deletedAt ? null : <form action={adminStage3Action} className="mt-5 flex flex-wrap gap-2"><input type="hidden" name="applicationDbId" value={application.id} /><input className="input max-w-xs" name="notes" placeholder="Optional notes" /><button className="btn btn-secondary" name="action" value="approve">Approve Stage 3</button><button className="btn btn-secondary" name="action" value="correction">Request correction</button><button className="btn btn-secondary" name="action" value="reject">Reject Stage 3</button></form>}
+        <h3 className="mt-5 font-semibold">Stage 3 admin actions</h3>
+        {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking stage actions.</p> : <StageActionForm action={adminStage3Action} applicationId={application.id} stage="Stage 3" />}
       </section>) : null}
 
       {((stageFour && ['Available','In Progress','Released','Submitted','Under Review','Approved','Completed'].includes(stageFour.status)) || offer) ? (
@@ -463,52 +509,12 @@ export default async function AdminApplicationDetail({
       </section>) : null}
 
       <section className="card mt-6 p-5">
-        <h2 className="font-bold">Stage 2 admin actions</h2>
-        {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking stage actions.</p> : (
-          <form action={adminStage2Action} className="mt-4 flex flex-wrap gap-2"><input type="hidden" name="applicationDbId" value={application.id} /><input className="input max-w-xs" name="notes" placeholder="Optional notes" /><button className="btn btn-secondary" name="action" value="approve">Approve Stage 2</button><button className="btn btn-secondary" name="action" value="correction">Request correction</button><button className="btn btn-secondary" name="action" value="reject">Reject Stage 2</button></form>
-        )}
-      </section>
-
-      <section className="card mt-6 p-5">
-        <h2 className="font-bold">Stage 1 admin actions</h2>
-        {application.deletedAt ? (
-          <p className="mt-3 text-sm font-semibold text-red-700">
-            Restore this application before taking stage actions.
-          </p>
-        ) : (
-          <form
-            action={adminStage1Action}
-            className="mt-4 flex flex-wrap gap-2"
-          >
-            <input
-              type="hidden"
-              name="applicationDbId"
-              value={application.id}
-            />
-            <input
-              className="input max-w-xs"
-              name="notes"
-              placeholder="Optional notes"
-            />
-            <button className="btn btn-secondary" name="action" value="approve">
-              Approve Stage 1
-            </button>
-            <button
-              className="btn btn-secondary"
-              name="action"
-              value="correction"
-            >
-              Request correction
-            </button>
-            <button className="btn btn-secondary" name="action" value="reject">
-              Reject
-            </button>
-          </form>
-        )}
+        <h2 className="font-bold">Stage 5 Agreement / onboarding</h2>
+        <p className="mt-2 text-sm text-slate-600">Status: {stageFive?.status ?? "Locked"}. This stage becomes available through the existing hiring workflow after an accepted offer.</p>
       </section>
 
       <section className="card mt-6 border border-red-200 bg-red-50 p-5">
-        <h2 className="font-bold text-red-800">Delete controls</h2>
+        <h2 className="font-bold text-red-800">Danger zone</h2>
         {application.deletedAt ? (
           <div className="mt-4 space-y-4">
             <p className="text-sm">
@@ -577,8 +583,8 @@ export default async function AdminApplicationDetail({
         )}
       </section>
 
-      <section className="card mt-6 p-5">
-        <h2 className="font-bold">Email history</h2>
+      <details className="card mt-6 p-5">
+        <summary className="cursor-pointer font-bold">Email history</summary>
         {application.emails.length > 0 ? (
           application.emails.map((email: EmailNotification) => (
             <p key={email.id}>
@@ -589,10 +595,10 @@ export default async function AdminApplicationDetail({
         ) : (
           <p>No email history found.</p>
         )}
-      </section>
+      </details>
 
-      <section className="card mt-6 p-5">
-        <h2 className="font-bold">Audit logs</h2>
+      <details className="card mt-6 p-5">
+        <summary className="cursor-pointer font-bold">Audit logs</summary>
         {application.auditLogs.length > 0 ? (
           application.auditLogs.map((log: AuditLog) => (
             <p key={log.id}>
@@ -602,7 +608,8 @@ export default async function AdminApplicationDetail({
         ) : (
           <p>No audit logs found.</p>
         )}
-      </section>
+      </details>
+    </div>
     </main>
   );
 }
