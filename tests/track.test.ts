@@ -378,26 +378,35 @@ describe('admin and track UI source checks', () => {
     expect(auth).toContain('maxAge: 0');
   });
 
-  it('track form renders secure access and verification passcode controls', () => {
+  it('track flow separates access and verification passcode controls', () => {
     const page = readFileSync('src/app/track/page.tsx', 'utf8');
     const forms = readFileSync('src/app/track/TrackForms.tsx', 'utf8');
+    const verifyPage = readFileSync('src/app/track/verify/page.tsx', 'utf8');
+    const verifyForm = readFileSync('src/app/track/verify/VerifyCodeForm.tsx', 'utf8');
     expect(page).toContain('applicationId={params.applicationId}');
     expect(page).toContain('email={params.email}');
     expect(forms).toContain('Secure access');
-    expect(forms).toContain('Enter passcode');
-    expect(forms).toContain('One-time passcode');
-    expect(forms).toContain('Open portal');
+    expect(forms).toContain('Send code');
     expect(forms).toContain('Sending...');
-    expect(forms).toContain('Verifying...');
-    expect(forms).toContain('We will send a one-time passcode if the details match our records.');
+    expect(forms).toContain('If the details match Zentric Analytics records');
+    expect(forms).not.toContain('One-time passcode');
+    expect(forms).not.toContain('verifyAccessCode');
+    expect(verifyPage).toContain("requested={params.requested === '1'}");
+    expect(verifyForm).toContain('Enter your passcode');
+    expect(verifyForm).toContain('One-time passcode');
+    expect(verifyForm).toContain('Open portal');
+    expect(verifyForm).toContain('Verifying...');
   });
 
-  it('requested=1 highlights and focuses the passcode form', () => {
-    const forms = readFileSync('src/app/track/TrackForms.tsx', 'utf8');
-    expect(forms).toContain('codeFormActive = requested || verifiedFailed');
-    expect(forms).toContain('scrollIntoView');
-    expect(forms).toContain('focus({ preventScroll: true })');
-    expect(forms).toContain('border-brand bg-white shadow-lg ring-4 ring-blue-50');
+  it('requested and failed verification states stay on the verify page', () => {
+    const actions = readFileSync('src/app/track/actions.ts', 'utf8');
+    const verifyForm = readFileSync('src/app/track/verify/VerifyCodeForm.tsx', 'utf8');
+    expect(actions).toContain("status === 'requested' ? '/track/verify' : '/track'");
+    expect(actions).toContain('function verifyUrl(applicationId: string, email: string)');
+    expect(actions).toContain('const failedUrl = verifyUrl(applicationId, email);');
+    expect(verifyForm).toContain('If the details match Zentric Analytics records, a code was sent.');
+    expect(verifyForm).toContain('The code is invalid or expired.');
+    expect(verifyForm).toContain('href="/track"');
   });
 
   it('admin tracking diagnostics are protected and omit OTP fields', () => {

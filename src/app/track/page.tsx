@@ -13,10 +13,8 @@ export default async function Track({ searchParams }: { searchParams: TrackSearc
         <TrackForms
           applicationId={params.applicationId}
           email={params.email}
-          requested={params.requested === '1'}
           limited={params.limited === '1'}
           error={params.error === '1'}
-          verifiedFailed={params.verified === '0'}
         />
       </Section>
     </PageShell>
