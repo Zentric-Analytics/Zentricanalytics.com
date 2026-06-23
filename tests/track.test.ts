@@ -34,13 +34,13 @@ vi.mock('@/lib/rate-limit', () => ({
 vi.mock('@/lib/access-code-config', async () => {
   const actual = await vi.importActual<typeof import('../src/lib/access-code-config')>('../src/lib/access-code-config');
   return actual;
-  it('candidate portal removes lower Stage 2 presentation while preserving backend action coverage', () => {
+  it('candidate portal renders selectable Stage 2 workspace while preserving backend action coverage', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
     expect(portal).not.toContain('stageOneApproved');
     expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
-    expect(portal).not.toContain('name="fullLegalName"');
-    expect(portal).not.toContain('submitStage2');
+    expect(portal).toContain('name="fullLegalName"');
+    expect(portal).toContain('submitStage2');
     expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
@@ -111,13 +111,13 @@ vi.mock('@/lib/access-code-config', async () => {
 vi.mock('@/lib/security', async () => {
   const actual = await vi.importActual<typeof import('../src/lib/security')>('../src/lib/security');
   return { ...actual, randomDigits: vi.fn(() => '654321') };
-  it('candidate portal removes lower Stage 2 presentation while preserving backend action coverage', () => {
+  it('candidate portal renders selectable Stage 2 workspace while preserving backend action coverage', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
     expect(portal).not.toContain('stageOneApproved');
     expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
-    expect(portal).not.toContain('name="fullLegalName"');
-    expect(portal).not.toContain('submitStage2');
+    expect(portal).toContain('name="fullLegalName"');
+    expect(portal).toContain('submitStage2');
     expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
@@ -274,13 +274,13 @@ describe('track access-code flow', () => {
     expect(accessCodeRateLimitConfig.verifyLimit()).toBe(4);
     expect(accessCodeRateLimitConfig.windowMs()).toBe(600000);
   });
-  it('candidate portal removes lower Stage 2 presentation while preserving backend action coverage', () => {
+  it('candidate portal renders selectable Stage 2 workspace while preserving backend action coverage', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
     expect(portal).not.toContain('stageOneApproved');
     expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
-    expect(portal).not.toContain('name="fullLegalName"');
-    expect(portal).not.toContain('submitStage2');
+    expect(portal).toContain('name="fullLegalName"');
+    expect(portal).toContain('submitStage2');
     expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
@@ -453,13 +453,13 @@ describe('admin and track UI source checks', () => {
     expect(diagnosticBlock).not.toContain('token');
   });
 
-  it('candidate portal removes lower Stage 2 presentation while preserving backend action coverage', () => {
+  it('candidate portal renders selectable Stage 2 workspace while preserving backend action coverage', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
     expect(portal).not.toContain('stageOneApproved');
     expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
-    expect(portal).not.toContain('name="fullLegalName"');
-    expect(portal).not.toContain('submitStage2');
+    expect(portal).toContain('name="fullLegalName"');
+    expect(portal).toContain('submitStage2');
     expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
