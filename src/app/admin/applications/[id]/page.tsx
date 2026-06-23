@@ -5,7 +5,7 @@ import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/admin-auth";
-import { privateUploadExists } from "@/lib/storage";
+import { privateUploadConfigurationStatus, privateUploadDiagnostic } from "@/lib/storage";
 import { parseStage3Metadata, stage3InterviewModes, stage3ScreeningTypes } from "@/lib/hiring";
 import {
   adminStage1Action,
@@ -49,6 +49,61 @@ type ApplicantDocument = NonNullable<
 >["documents"][number];
 type EmailNotification = AdminApplication["emails"][number];
 type AuditLog = AdminApplication["auditLogs"][number];
+
+type UploadDiagnostic = Awaited<ReturnType<typeof privateUploadDiagnostic>> & {
+  databaseMetadataSizeBytes: number | null;
+};
+
+function yesNo(value: boolean) {
+  return value ? "Yes" : "No";
+}
+
+function StorageDiagnosticsPanel({
+  status,
+  diagnostics,
+}: {
+  status: Awaited<ReturnType<typeof privateUploadConfigurationStatus>>;
+  diagnostics: Array<{ id: string; label: string; diagnostic: UploadDiagnostic }>;
+}) {
+  return (
+    <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-slate-800">
+      <h3 className="font-bold text-blue-950">Admin storage diagnostics</h3>
+      <p className="mt-1 text-xs text-blue-900">
+        Admin-only runtime view of the upload provider, configured root, resolved paths, and on-disk file checks.
+      </p>
+      <dl className="mt-3 grid gap-2 md:grid-cols-2">
+        <div><dt className="font-semibold">Selected provider</dt><dd>{status.provider}</dd></div>
+        <div><dt className="font-semibold">APP_ENV</dt><dd>{status.appEnv ?? "Not set"}</dd></div>
+        <div><dt className="font-semibold">NODE_ENV</dt><dd>{status.nodeEnv ?? "Not set"}</dd></div>
+        <div><dt className="font-semibold">PRIVATE_UPLOAD_ROOT configured</dt><dd>{yesNo(status.rootConfigured)}</dd></div>
+        <div className="md:col-span-2"><dt className="font-semibold">Resolved upload root</dt><dd className="break-all font-mono text-xs">{status.resolvedPrivateUploadRoot}</dd></div>
+        <div><dt className="font-semibold">Root directory exists</dt><dd>{yesNo(status.rootExists)}</dd></div>
+        <div><dt className="font-semibold">Root directory writable</dt><dd>{yesNo(status.rootWritable)}</dd></div>
+      </dl>
+      {diagnostics.length ? (
+        <div className="mt-4 grid gap-3">
+          {diagnostics.map(({ id, label, diagnostic }) => (
+            <details className="rounded-xl border border-blue-100 bg-white p-3" key={id}>
+              <summary className="cursor-pointer font-semibold text-blue-950">{label}</summary>
+              <dl className="mt-3 grid gap-2 md:grid-cols-2">
+                <div><dt className="font-semibold">Provider</dt><dd>{diagnostic.provider}</dd></div>
+                <div><dt className="font-semibold">Storage key present</dt><dd>{yesNo(diagnostic.storageKeyPresent)}</dd></div>
+                <div><dt className="font-semibold">PRIVATE_UPLOAD_ROOT configured</dt><dd>{yesNo(diagnostic.privateUploadRootConfigured)}</dd></div>
+                <div><dt className="font-semibold">File exists</dt><dd>{yesNo(diagnostic.fileExists)}</dd></div>
+                <div><dt className="font-semibold">Root exists</dt><dd>{yesNo(diagnostic.rootExists)}</dd></div>
+                <div><dt className="font-semibold">Root writable</dt><dd>{yesNo(diagnostic.rootWritable)}</dd></div>
+                <div><dt className="font-semibold">File size on disk</dt><dd>{diagnostic.fileSizeOnDisk ?? "Missing"}</dd></div>
+                <div><dt className="font-semibold">Metadata size from database</dt><dd>{diagnostic.databaseMetadataSizeBytes ?? "Missing"}</dd></div>
+                <div className="md:col-span-2"><dt className="font-semibold">Resolved private upload root</dt><dd className="break-all font-mono text-xs">{diagnostic.resolvedPrivateUploadRoot}</dd></div>
+                <div className="md:col-span-2"><dt className="font-semibold">Expected resolved file path</dt><dd className="break-all font-mono text-xs">{diagnostic.expectedResolvedFilePath ?? "Unavailable"}</dd></div>
+              </dl>
+            </details>
+          ))}
+        </div>
+      ) : <p className="mt-3 text-sm text-blue-900">No uploaded document records are attached to this application.</p>}
+    </div>
+  );
+}
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -168,26 +223,28 @@ export default async function AdminApplicationDetail({
   const stageThreeDocuments = stageThreeSubmission?.documents ?? [];
   const signature = stageOneSubmission?.signature;
   const documents = stageOneSubmission?.documents ?? [];
-  const documentsWithAvailability: Array<{
-    document: ApplicantDocument;
-    privateFileAvailable: boolean;
-  }> = await Promise.all(
-    documents.map(async (document: ApplicantDocument) => ({
-      document,
-      privateFileAvailable: document.uploadedDocument
-        ? await privateUploadExists(
-            document.uploadedDocument.storageKey,
-            document.uploadedDocument.provider,
-          )
-        : false,
-    })),
+  const documentsWithAvailability = await Promise.all(
+    documents.map(async (document: ApplicantDocument) => {
+      const diagnostic = document.uploadedDocument
+        ? await privateUploadDiagnostic(document.uploadedDocument.storageKey, document.uploadedDocument.provider)
+        : null;
+      return { document, privateFileAvailable: Boolean(diagnostic?.fileExists), diagnostic };
+    }),
   );
-  const stageTwoDocumentsWithAvailability = await Promise.all(stageTwoDocuments.map(async (document: ApplicantDocument) => ({ document, privateFileAvailable: document.uploadedDocument ? await privateUploadExists(document.uploadedDocument.storageKey, document.uploadedDocument.provider) : false })));
+  const stageTwoDocumentsWithAvailability = await Promise.all(stageTwoDocuments.map(async (document: ApplicantDocument) => { const diagnostic = document.uploadedDocument ? await privateUploadDiagnostic(document.uploadedDocument.storageKey, document.uploadedDocument.provider) : null; return { document, privateFileAvailable: Boolean(diagnostic?.fileExists), diagnostic }; }));
   const stageFour = application.stages.find((stage: ApplicationStage) => stage.stageOrder === 4);
   const stageFive = application.stages.find((stage: ApplicationStage) => stage.stageOrder === 5);
   const offer = application.offer;
   const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
-  const stageThreeDocumentsWithAvailability = await Promise.all(stageThreeDocuments.map(async (document: ApplicantDocument) => ({ document, privateFileAvailable: document.uploadedDocument ? await privateUploadExists(document.uploadedDocument.storageKey, document.uploadedDocument.provider) : false })));
+  const stageThreeDocumentsWithAvailability = await Promise.all(stageThreeDocuments.map(async (document: ApplicantDocument) => { const diagnostic = document.uploadedDocument ? await privateUploadDiagnostic(document.uploadedDocument.storageKey, document.uploadedDocument.provider) : null; return { document, privateFileAvailable: Boolean(diagnostic?.fileExists), diagnostic }; }));
+  const storageStatus = await privateUploadConfigurationStatus();
+  const uploadDiagnostics = [...documentsWithAvailability, ...stageTwoDocumentsWithAvailability, ...stageThreeDocumentsWithAvailability]
+    .filter((item) => item.document.uploadedDocument && item.diagnostic)
+    .map((item) => ({
+      id: item.document.uploadedDocument!.id,
+      label: `${item.document.uploadedDocument!.kind}: ${item.document.uploadedDocument!.fileName}`,
+      diagnostic: { ...item.diagnostic!, databaseMetadataSizeBytes: item.document.uploadedDocument!.sizeBytes },
+    }));
   const stageOnePdfAvailable = Boolean(
     stageOneSubmission?.submittedAt &&
     signature?.confirmed &&
@@ -287,6 +344,7 @@ export default async function AdminApplicationDetail({
 
       <section className="card mt-6 p-5">
         <h2 className="font-bold">Uploaded documents</h2>
+        <StorageDiagnosticsPanel status={storageStatus} diagnostics={uploadDiagnostics} />
         {documentsWithAvailability.length > 0 ? (
           <div className="mt-4 grid gap-3">
             {documentsWithAvailability.map(
@@ -326,7 +384,8 @@ export default async function AdminApplicationDetail({
                       <AdminDocumentActions
                         url={`/api/admin/applications/${application.id}/uploads/${uploadedDocument.id}`}
                         filename={uploadedDocument.fileName}
-                        previewable={isPreviewable}
+                        previewable={isPreviewable && privateFileAvailable}
+                        available={privateFileAvailable}
                       />
                     </div>
                   </article>
@@ -370,7 +429,7 @@ export default async function AdminApplicationDetail({
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Emergency contact</h3><p>Name: {String(stageTwoPayload.emergencyContactName ?? "—")}</p><p>Relationship: {String(stageTwoPayload.emergencyContactRelationship ?? "—")}</p><p>Phone: {String(stageTwoPayload.emergencyContactPhone ?? "—")}</p><p>Address: {String(stageTwoPayload.emergencyContactAddress ?? "—")}</p></div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Declaration / signature</h3><p>Accuracy confirmed: {stageTwoPayload.declarationAccuracy ? "Yes" : "No"}</p><p>Processing consent: {stageTwoPayload.identityProcessingConsent ? "Yes" : "No"}</p><p>Signature: {stageTwoSignature?.typedName ?? String(stageTwoPayload.signatureName ?? "—")}</p><p>Signed: {formatDateTime(stageTwoSignature?.signedAt)}</p></div>
             </div>
-            <div><h3 className="font-semibold">Uploaded Stage 2 documents</h3><div className="mt-3 grid gap-3">{stageTwoDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? (<article className="rounded-2xl border border-slate-200 p-4" key={document.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{document.uploadedDocument.kind}</p><p className="text-sm text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType} · {document.uploadedDocument.sizeBytes} bytes</p>{!privateFileAvailable ? <p className="mt-2 text-sm font-semibold text-amber-700">Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.</p> : null}</div><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={["application/pdf", "image/jpeg", "image/png", "image/webp"].includes(document.uploadedDocument.mimeType)} /></div></article>) : null)}</div></div>
+            <div><h3 className="font-semibold">Uploaded Stage 2 documents</h3><div className="mt-3 grid gap-3">{stageTwoDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? (<article className="rounded-2xl border border-slate-200 p-4" key={document.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{document.uploadedDocument.kind}</p><p className="text-sm text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType} · {document.uploadedDocument.sizeBytes} bytes</p>{!privateFileAvailable ? <p className="mt-2 text-sm font-semibold text-amber-700">Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.</p> : null}</div><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={privateFileAvailable && ["application/pdf", "image/jpeg", "image/png", "image/webp"].includes(document.uploadedDocument.mimeType)} available={privateFileAvailable} /></div></article>) : null)}</div></div>
           </div>
         ) : <p className="mt-3 text-sm text-slate-600">No Stage 2 submission found.</p>}
       </section>
@@ -388,7 +447,7 @@ export default async function AdminApplicationDetail({
           </form>
         )}
         <div className="mt-5 grid gap-4 lg:grid-cols-2"><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Released instructions</h3><p className="mt-2 text-sm">{stageThreeMetadata.title ?? 'Not released'}</p><p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{stageThreeMetadata.instructions ?? 'No instructions released yet.'}</p><p className="mt-2 text-xs text-slate-500">Released: {stageThreeMetadata.releasedAt ?? '—'} · By: {stageThreeMetadata.releasedByAdminEmail ?? '—'}</p></div><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Candidate response</h3>{stageThreeSubmission ? <div className="mt-2 text-sm"><p><strong>Availability:</strong> {String(stageThreePayload.availability ?? '—')}</p><p className="whitespace-pre-wrap"><strong>Message:</strong> {String(stageThreePayload.responseMessage ?? '—')}</p><p><strong>Declared accurate:</strong> {stageThreePayload.declarationAccuracy ? 'Yes' : 'No'}</p><p>Submitted: {formatDateTime(stageThreeSubmission.submittedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 3 response submitted.</p>}</div></div>
-        <div className="mt-5"><h3 className="font-semibold">Uploaded Stage 3 files</h3><div className="mt-3 grid gap-3">{stageThreeDocumentsWithAvailability.length ? stageThreeDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? (<article className="rounded-2xl border border-slate-200 p-4" key={document.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{document.uploadedDocument.kind}</p><p className="text-sm text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType} · {document.uploadedDocument.sizeBytes} bytes</p>{!privateFileAvailable ? <p className="mt-2 text-sm font-semibold text-amber-700">Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.</p> : null}</div><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={['application/pdf','image/jpeg','image/png','image/webp'].includes(document.uploadedDocument.mimeType)} /></div></article>) : null) : <p className="text-sm text-slate-600">No Stage 3 uploads.</p>}</div></div>
+        <div className="mt-5"><h3 className="font-semibold">Uploaded Stage 3 files</h3><div className="mt-3 grid gap-3">{stageThreeDocumentsWithAvailability.length ? stageThreeDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? (<article className="rounded-2xl border border-slate-200 p-4" key={document.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{document.uploadedDocument.kind}</p><p className="text-sm text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType} · {document.uploadedDocument.sizeBytes} bytes</p>{!privateFileAvailable ? <p className="mt-2 text-sm font-semibold text-amber-700">Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.</p> : null}</div><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={privateFileAvailable && ['application/pdf','image/jpeg','image/png','image/webp'].includes(document.uploadedDocument.mimeType)} available={privateFileAvailable} /></div></article>) : null) : <p className="text-sm text-slate-600">No Stage 3 uploads.</p>}</div></div>
         {application.deletedAt ? null : <form action={adminStage3Action} className="mt-5 flex flex-wrap gap-2"><input type="hidden" name="applicationDbId" value={application.id} /><input className="input max-w-xs" name="notes" placeholder="Optional notes" /><button className="btn btn-secondary" name="action" value="approve">Approve Stage 3</button><button className="btn btn-secondary" name="action" value="correction">Request correction</button><button className="btn btn-secondary" name="action" value="reject">Reject Stage 3</button></form>}
       </section>) : null}
 

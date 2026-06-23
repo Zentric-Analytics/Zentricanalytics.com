@@ -720,6 +720,10 @@ describe("production hardening helpers", () => {
         resolvedPrivateUploadRoot: root,
         localPrivateStorageAvailable: true,
         fileExists: true,
+        rootExists: true,
+        rootWritable: true,
+        expectedResolvedFilePath: resolvePrivateUploadPath(upload.storageKey),
+        fileSizeOnDisk: 3,
       });
       await unlink(resolvePrivateUploadPath(upload.storageKey));
       await expect(privateUploadDiagnostic(upload.storageKey, upload.provider)).resolves.toMatchObject({ fileExists: false });
@@ -788,12 +792,12 @@ describe("production hardening helpers", () => {
     );
   });
 
-  it("documents that local-private production storage needs a persistent private volume", () => {
+  it("documents that local-private production storage needs a persistent private volume", async () => {
     const envExample = readFileSync(".env.staging.example", "utf8");
     const renderConfig = readFileSync("render.yaml", "utf8");
     const deploymentDocs = readFileSync("HIRING_PHASE2.md", "utf8");
     delete process.env.PRIVATE_UPLOAD_ROOT;
-    const status = privateUploadConfigurationStatus();
+    const status = await privateUploadConfigurationStatus();
     expect(status.localPrivateUsesDefaultEphemeralPath).toBe(true);
     expect(envExample).toContain("persistent private volume");
     expect(envExample).toContain("PRIVATE_UPLOAD_ROOT=/var/data/zentric-private-uploads");
@@ -969,6 +973,9 @@ describe("Stage 1 download and admin safety source checks", () => {
     expect(storage).toContain("readPrivateUpload");
     expect(storage).toContain("privateUploadExists");
     expect(storage).toContain("Private upload write verification failed.");
+    expect(storage).toContain("privateUploadSaveDiagnostic");
+    expect(storage).toContain("fileExistsAfterSave");
+    expect(storage).toContain("databaseMetadataSizeBytes");
   });
   it("admin uploaded document UI renders official PDF plus View and Download controls", () => {
     const detail = readFileSync(
@@ -984,10 +991,15 @@ describe("Stage 1 download and admin safety source checks", () => {
     expect(detail).toContain("Stage 1 PDF is not available yet.");
     expect(detail).toContain("Uploaded documents");
     expect(detail).toContain("No uploaded documents found.");
+    expect(detail).toContain("Admin storage diagnostics");
+    expect(detail).toContain("Expected resolved file path");
+    expect(detail).toContain("databaseMetadataSizeBytes");
     expect(actions).toContain("View");
     expect(actions).toContain("Download");
     expect(actions).toContain("Preparing...");
     expect(actions).toContain("fetch");
+    expect(actions).toContain("Download disabled because the private file is missing on disk.");
+    expect(actions).toContain("available?: boolean");
     expect(actions).toContain("window.open");
     expect(actions).toContain(
       "Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.",

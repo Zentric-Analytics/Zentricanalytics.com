@@ -148,6 +148,15 @@ export async function savePrivateUpload(file: File, applicationId: string) {
   await writeFile(fullPath, bytes, { flag: "wx" });
   const verified = await privateUploadExists(key, provider);
   const metadata = verified ? await stat(fullPath) : null;
+  console.info("privateUploadSaveDiagnostic", {
+    applicationId,
+    provider,
+    storageKey: key,
+    resolvedPrivateUploadRoot: privateUploadRoot(),
+    fileExistsAfterSave: verified,
+    diskSizeBytes: metadata?.size ?? null,
+    databaseMetadataSizeBytes: file.size,
+  });
   if (!verified || metadata?.size !== bytes.length) {
     await rm(fullPath, { force: true });
     throw new Error("Private upload write verification failed.");
@@ -197,30 +206,74 @@ export async function privateUploadExists(
   }
 }
 
-export async function privateUploadDiagnostic(storageKey?: string | null, provider = selectedStorageProvider()) {
+async function pathExists(target: string) {
+  try {
+    await access(target, constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function pathWritable(target: string) {
+  try {
+    await access(target, constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function privateUploadDiagnostic(
+  storageKey?: string | null,
+  provider = selectedStorageProvider(),
+) {
+  const root = privateUploadRoot();
+  const rootExists = await pathExists(root);
+  const rootWritable = rootExists ? await pathWritable(root) : false;
   const rootConfigured = Boolean(process.env.PRIVATE_UPLOAD_ROOT);
   const storageKeyPresent = Boolean(storageKey);
   const localPrivateStorageAvailable = provider === LOCAL_PRIVATE_PROVIDER;
+  let expectedResolvedFilePath: string | null = null;
   let fileExists = false;
+  let fileSizeOnDisk: number | null = null;
   if (storageKeyPresent && localPrivateStorageAvailable) {
-    fileExists = await privateUploadExists(storageKey!, provider);
+    try {
+      expectedResolvedFilePath = resolvePrivateUploadPath(storageKey!);
+      const metadata = await stat(expectedResolvedFilePath);
+      fileExists = metadata.isFile();
+      fileSizeOnDisk = fileExists ? metadata.size : null;
+    } catch {
+      fileExists = false;
+    }
   }
   return {
     provider,
     storageKeyPresent,
     privateUploadRootConfigured: rootConfigured,
-    resolvedPrivateUploadRoot: privateUploadRoot(),
+    resolvedPrivateUploadRoot: root,
     localPrivateStorageAvailable,
     fileExists,
+    rootExists,
+    rootWritable,
+    expectedResolvedFilePath,
+    fileSizeOnDisk,
   };
 }
 
-export function privateUploadConfigurationStatus() {
+export async function privateUploadConfigurationStatus() {
   const rootConfigured = Boolean(process.env.PRIVATE_UPLOAD_ROOT);
+  const root = privateUploadRoot();
+  const rootExists = await pathExists(root);
+  const rootWritable = rootExists ? await pathWritable(root) : false;
   return {
-    rootConfigured,
     provider: selectedStorageProvider(),
-    resolvedPrivateUploadRoot: privateUploadRoot(),
+    appEnv: process.env.APP_ENV ?? null,
+    nodeEnv: process.env.NODE_ENV ?? null,
+    rootConfigured,
+    resolvedPrivateUploadRoot: root,
+    rootExists,
+    rootWritable,
     localPrivateStorageAvailable: selectedStorageProvider() === LOCAL_PRIVATE_PROVIDER,
     localPrivateUsesDefaultEphemeralPath: !rootConfigured,
   };
