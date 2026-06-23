@@ -229,15 +229,17 @@ export async function submitOfferDecision(formData: FormData) {
   const expired = Boolean(offer?.offerExpiryDate && offer.offerExpiryDate.getTime() < Date.now());
   if (!stage4 || stage4.status === 'Locked') redirect(portalUrl(session, { stage: '4', error: 'offer_locked' }));
   if (!offer || offer.status !== 'Released' || expired) redirect(portalUrl(session, { stage: '4', error: expired ? 'offer_expired' : 'offer_not_open' }));
+  let destination = '';
   try {
     if (parsed.data.decision === 'accept') {
       await acceptOffer(application.id, parsed.data.candidateDecisionNote || undefined);
       diagnostics.decisionAccepted = true; diagnostics.dbWriteSucceeded = true;
       try { const offerEmail = offerAcceptedEmail({ applicationId: application.applicationId, candidateName: application.applicant.fullName }); const e = await sendAndRecordEmail({ applicationId: application.id, to: application.applicant.email, template: 'offer-accepted', ...offerEmail }); diagnostics.emailAttempted = true; diagnostics.emailStatus = e.status; } catch { diagnostics.emailAttempted = true; diagnostics.emailStatus = 'failed'; }
-      diagnostics.redirectStatus = 'success'; console.info('candidateOfferDecisionDiagnostics', diagnostics); redirect(portalUrl(session, { stage: '4', success: 'offer_accepted' }));
+      diagnostics.redirectStatus = 'success'; console.info('candidateOfferDecisionDiagnostics', diagnostics); destination = portalUrl(session, { stage: '4', success: 'offer_accepted' });
     } else {
       await prisma.$transaction(async (tx) => { await tx.offer.update({ where: { applicationId: application.id }, data: { status: 'Declined', candidateDecisionAt: new Date(), candidateDecisionNote: parsed.data.candidateDecisionNote || null } }); await tx.hiringStage.update({ where: { id: stage4.id }, data: { status: 'Rejected' } }); await tx.jobApplication.update({ where: { id: application.id }, data: { status: 'Rejected', currentStageOrder: 4 } }); await tx.auditLog.create({ data: { applicationId: application.id, actorType: 'applicant', actorRef: 'masked-email', action: 'Candidate declined offer', metadata: { decisionAccepted: false, notePresent: Boolean(parsed.data.candidateDecisionNote) } } }); });
-      diagnostics.dbWriteSucceeded = true; diagnostics.redirectStatus = 'declined'; console.info('candidateOfferDecisionDiagnostics', diagnostics); redirect(portalUrl(session, { stage: '4', success: 'offer_declined' }));
+      diagnostics.dbWriteSucceeded = true; diagnostics.redirectStatus = 'declined'; console.info('candidateOfferDecisionDiagnostics', diagnostics); destination = portalUrl(session, { stage: '4', success: 'offer_declined' });
     }
   } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; diagnostics.redirectStatus = 'error'; console.info('candidateOfferDecisionDiagnostics', diagnostics); if (error instanceof StageActionError) redirect(portalUrl(session, { stage: '4', error: 'offer_not_open' })); redirect(portalUrl(session, { stage: '4', error: 'offer_decision_failed' })); }
+  redirect(destination || portalUrl(session, { stage: '4', error: 'offer_decision_failed' }));
 }

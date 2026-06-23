@@ -510,6 +510,19 @@ describe('admin and track UI source checks', () => {
     expect(portal).not.toContain('Application stages');
   });
 
+
+  it('offer decision redirects after persistence try/catch to avoid treating successful decisions as failures', () => {
+    const actions = readFileSync('src/app/track/actions.ts', 'utf8');
+    const offerStart = actions.indexOf('export async function submitOfferDecision');
+    const offerBody = actions.slice(offerStart);
+    const catchStart = offerBody.indexOf('} catch (error)');
+    const finalRedirect = offerBody.lastIndexOf('redirect(destination || portalUrl');
+
+    expect(offerStart).toBeGreaterThan(-1);
+    expect(catchStart).toBeGreaterThan(-1);
+    expect(finalRedirect).toBeGreaterThan(catchStart);
+    expect(offerBody.slice(0, catchStart)).not.toContain("redirect(portalUrl(session, { stage: '4', success:");
+  });
   it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
     const actions = readFileSync('src/app/track/actions.ts', 'utf8');
     expect(actions).toContain('export async function submitStage2');
