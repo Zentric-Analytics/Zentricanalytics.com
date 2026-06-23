@@ -761,6 +761,20 @@ describe("production hardening helpers", () => {
     expect(action).toContain("deletePrivateUpload(upload.storageKey, upload.provider)");
   });
 
+  it("redirects after the Stage 1 cleanup try/catch so successful uploads are not deleted", () => {
+    const action = readFileSync("src/app/apply/actions.ts", "utf8");
+    const catchStart = action.indexOf("} catch (error) {");
+    const catchEnd = action.indexOf("\n  }\n\n  redirect(`/apply?submitted=", catchStart);
+    const successRedirect = action.indexOf("redirect(`/apply?submitted=", catchStart);
+
+    expect(catchStart).toBeGreaterThan(-1);
+    expect(catchEnd).toBeGreaterThan(catchStart);
+    expect(successRedirect).toBeGreaterThan(catchEnd);
+    expect(action.slice(catchStart, catchEnd)).toContain("if (!metadataCommitted)");
+    expect(action.slice(catchStart, catchEnd)).toContain("deletePrivateUpload(upload.storageKey, upload.provider)");
+    expect(action.slice(catchStart, catchEnd)).not.toContain("redirect(`/apply?submitted=");
+  });
+
   it("requires an explicit private upload root for local production or staging uploads", () => {
     const previousRoot = process.env.PRIVATE_UPLOAD_ROOT;
     const previousNodeEnv = process.env.NODE_ENV;

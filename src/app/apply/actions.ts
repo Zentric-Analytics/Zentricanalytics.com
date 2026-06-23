@@ -28,6 +28,8 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
 
   const data = toStage1SubmissionPayload(parsed.data);
   const savedUploads: Awaited<ReturnType<typeof savePrivateUpload>>[] = [];
+  let submittedApplicationId = '';
+  let metadataCommitted = false;
   try {
     const app = await createApplicationWithRetry(async (applicationPublicId) => {
       const upload = await savePrivateUpload(file, applicationPublicId);
@@ -46,11 +48,14 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
         return application;
       });
     });
+    metadataCommitted = true;
     const email = applicationReceivedEmail({ applicationId: app.applicationId, candidateName: data.fullName });
     await sendAndRecordEmail({ applicationId: app.id, to: data.email, template: 'application-received', ...email });
-    redirect(`/apply?submitted=${encodeURIComponent(app.applicationId)}`);
+    submittedApplicationId = app.applicationId;
   } catch (error) {
-    await Promise.all(savedUploads.map((upload) => deletePrivateUpload(upload.storageKey, upload.provider)));
+    if (!metadataCommitted) {
+      await Promise.all(savedUploads.map((upload) => deletePrivateUpload(upload.storageKey, upload.provider)));
+    }
     if (error instanceof PrivateUploadStorageConfigurationError) {
       const provider = selectedStorageProvider();
       console.error('applicationUploadStorageRejected', {
@@ -70,4 +75,6 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
     }
     throw error;
   }
+
+  redirect(`/apply?submitted=${encodeURIComponent(submittedApplicationId)}`);
 }
