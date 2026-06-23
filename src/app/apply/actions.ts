@@ -47,7 +47,7 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
       });
     });
     const email = applicationReceivedEmail({ applicationId: app.applicationId, candidateName: data.fullName });
-    await sendAndRecordEmail({ applicationId: app.id, to: data.email, template: 'application-received', portalUrl: `${process.env.APP_BASE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://staging.zentricanalytics.com'}/track`, ...email });
+    await sendAndRecordEmail({ applicationId: app.id, to: data.email, template: 'application-received', ...email });
     redirect(`/apply?submitted=${encodeURIComponent(app.applicationId)}`);
   } catch (error) { await Promise.all(savedUploads.map((upload) => deletePrivateUpload(upload.storageKey, upload.provider))); throw error; }
 }

@@ -73,3 +73,59 @@ describe('email provider abstraction', () => {
   });
 
 });
+
+describe('candidate email CTA links', () => {
+  beforeEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  async function loadTemplates() {
+    vi.resetModules();
+    return import('../src/lib/email-templates');
+  }
+
+  it('renders application received CTA links as absolute URLs when APP_BASE_URL is valid', async () => {
+    vi.stubEnv('APP_BASE_URL', 'https://staging.zentricanalytics.com/');
+    const { applicationReceivedEmail } = await loadTemplates();
+    const email = applicationReceivedEmail({ applicationId: 'ZA-123', candidateName: 'Ada' });
+    expect(email.html).toContain('href="https://staging.zentricanalytics.com/track"');
+    expect(email.body).toContain('Track your application: https://staging.zentricanalytics.com/track');
+    expect(email.html).not.toContain('href="/track"');
+  });
+
+  it('falls back to NEXT_PUBLIC_SITE_URL and trims trailing slashes for stage emails', async () => {
+    vi.stubEnv('APP_BASE_URL', 'not-a-url');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://www.zentricanalytics.com///');
+    const { stage2UnlockedEmail } = await loadTemplates();
+    const email = stage2UnlockedEmail({ applicationId: 'ZA-123' });
+    expect(email.html).toContain('href="https://www.zentricanalytics.com/track"');
+    expect(email.body).toContain('https://www.zentricanalytics.com/track');
+    expect(email.html).not.toContain('href="/track"');
+  });
+
+  it('renders access code verification links with preserved safe query params', async () => {
+    vi.stubEnv('APP_BASE_URL', 'https://staging.zentricanalytics.com');
+    const { accessCodeEmail } = await loadTemplates();
+    const email = accessCodeEmail({ applicationId: 'ZA 123', accessCode: '123456' });
+    expect(email.html).toContain('href="https://staging.zentricanalytics.com/track/verify?applicationId=ZA+123&amp;requested=1&amp;verified=0"');
+    expect(email.body).toContain('Open verification page: https://staging.zentricanalytics.com/track/verify?applicationId=ZA+123&requested=1&verified=0');
+    expect(email.html).not.toContain('href="/track');
+  });
+
+  it('omits CTA buttons and plain text links when no valid absolute base URL exists', async () => {
+    vi.stubEnv('APP_BASE_URL', '/relative');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'ftp://zentricanalytics.com');
+    const { applicationReceivedEmail, accessCodeEmail, stage2UnlockedEmail } = await loadTemplates();
+    for (const email of [
+      applicationReceivedEmail({ applicationId: 'ZA-123' }),
+      accessCodeEmail({ applicationId: 'ZA-123', accessCode: '123456' }),
+      stage2UnlockedEmail({ applicationId: 'ZA-123' }),
+    ]) {
+      expect(email.html).not.toContain('<a href=');
+      expect(email.html).not.toContain('href="/track');
+      expect(email.body).not.toContain('https://');
+      expect(email.body).not.toContain('/track');
+    }
+  });
+});
