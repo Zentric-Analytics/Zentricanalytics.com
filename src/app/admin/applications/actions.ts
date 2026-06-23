@@ -6,7 +6,7 @@ import { approveStage1, approveStage2, approveStage3, recordAdminStage1Action, r
 import { sendAndRecordEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import { deletePrivateUpload } from '@/lib/storage';
-import { parseStage3Metadata, stage3InstructionSchema } from '@/lib/hiring';
+import { parseStage3Metadata, stage3InstructionSchema, offerSchema, parseOfferDate } from '@/lib/hiring';
 
 function logAdminDiagnostics(diagnostics: Record<string, unknown>) { console.info('adminStageActionDiagnostics', diagnostics); }
 function redirectPath(applicationId?: string | null, params = '') { return applicationId ? `/admin/applications/${applicationId}${params}` : `/admin/applications${params}`; }
@@ -269,5 +269,51 @@ export async function adminStage3Action(formData: FormData) {
     } else destination = redirectPath(applicationId, '?error=invalid_action');
   } catch { destination = redirectPath(applicationId, '?error=action_failed'); }
   revalidatePath('/admin/applications'); revalidatePath(`/admin/applications/${applicationId}`);
+  redirect(destination);
+}
+
+export async function adminOfferAction(formData: FormData) {
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  const action = String(formData.get('action') ?? 'draft');
+  const diagnostics: Record<string, unknown> = { offerAdminActionRequested: true, adminAuthenticated: false, applicationFound: false, stage4Found: false, offerFound: false, offerStatus: null, dbWriteSucceeded: false, emailAttempted: false, emailStatus: 'not_attempted' };
+  let destination = redirectPath(applicationId, '?error=action_failed');
+  try {
+    const adminSession = await getAdminSession(); diagnostics.adminAuthenticated = Boolean(adminSession);
+    if (!adminSession) destination = '/admin/login';
+    else {
+      const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, include: { stages: true, offer: true } });
+      diagnostics.applicationFound = Boolean(app); diagnostics.offerFound = Boolean(app?.offer); diagnostics.offerStatus = app?.offer?.status ?? null;
+      const stage4 = app?.stages.find((s) => s.stageOrder === 4); diagnostics.stage4Found = Boolean(stage4);
+      if (!app) destination = redirectPath(null, '?error=action_failed');
+      else if (app.deletedAt) destination = redirectPath(applicationId, '?error=restore_before_stage_action');
+      else if (!stage4 || !['Available','In Progress','Submitted','Under Review','Approved','Completed'].includes(stage4.status)) destination = redirectPath(applicationId, '?error=missing_stage');
+      else if (action === 'withdraw') {
+        if (app.offer && app.offer.status === 'Released') {
+          await prisma.$transaction(async (tx) => { await tx.offer.update({ where: { applicationId }, data: { status: 'Withdrawn' } }); await tx.hiringStage.update({ where: { id: stage4.id }, data: { status: 'Available' } }); await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin withdrew offer' } }); });
+          diagnostics.dbWriteSucceeded = true;
+        }
+        destination = redirectPath(applicationId, '?success=offer_withdrawn');
+      } else {
+        const parsed = offerSchema.safeParse(Object.fromEntries(formData.entries()));
+        if (!parsed.success) destination = redirectPath(applicationId, '?error=offer_validation');
+        else if (app.offer && ['Accepted','Declined','Withdrawn','Expired'].includes(app.offer.status)) destination = redirectPath(applicationId, '?error=invalid_action');
+        else {
+          const releasing = action === 'release';
+          await prisma.$transaction(async (tx) => {
+            await tx.offer.upsert({ where: { applicationId }, create: { applicationId, roleOffered: parsed.data.roleOffered, salary: parsed.data.salary, startDate: parseOfferDate(parsed.data.startDate), workMode: parsed.data.workMode, reportingManager: parsed.data.reportingManager || null, probationPeriod: parsed.data.probationPeriod || null, offerExpiryDate: parsed.data.offerExpiryDate ? parseOfferDate(parsed.data.offerExpiryDate) : null, specialConditions: parsed.data.specialConditions || null, status: releasing ? 'Released' : 'Draft', releasedAt: releasing ? new Date() : null, releasedByAdminEmail: releasing ? adminSession.email : null }, update: { roleOffered: parsed.data.roleOffered, salary: parsed.data.salary, startDate: parseOfferDate(parsed.data.startDate), workMode: parsed.data.workMode, reportingManager: parsed.data.reportingManager || null, probationPeriod: parsed.data.probationPeriod || null, offerExpiryDate: parsed.data.offerExpiryDate ? parseOfferDate(parsed.data.offerExpiryDate) : null, specialConditions: parsed.data.specialConditions || null, status: releasing ? 'Released' : 'Draft', releasedAt: releasing ? new Date() : app.offer?.releasedAt, releasedByAdminEmail: releasing ? adminSession.email : app.offer?.releasedByAdminEmail } });
+            await tx.hiringStage.update({ where: { id: stage4.id }, data: { status: releasing ? 'In Progress' : 'Available', unlockedAt: stage4.unlockedAt ?? new Date() } });
+            await tx.jobApplication.update({ where: { id: applicationId }, data: { status: releasing ? 'Offer Sent' : 'Offer Pending', currentStageOrder: 4 } });
+            await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: releasing ? 'Admin released offer' : 'Admin saved draft offer', metadata: { offerStatus: releasing ? 'Released' : 'Draft' } } });
+          });
+          diagnostics.dbWriteSucceeded = true;
+          let email = { attempted: false, status: 'not_attempted' };
+          if (releasing) email = await safeSendEmail({ applicationId, template: 'offer-ready', subject: `Your offer is ready for review: ${app.applicationId}`, body: 'Your offer is ready for review. Please return to Track Application to review your offer.' });
+          diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
+          destination = redirectPath(applicationId, `?success=${releasing ? 'offer_released' : 'offer_draft'}${releasing && email.status !== 'sent' ? '&warning=email_failed' : ''}`);
+        }
+      }
+    }
+  } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; }
+  finally { revalidatePath('/admin/applications'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`); logAdminDiagnostics(diagnostics); }
   redirect(destination);
 }
