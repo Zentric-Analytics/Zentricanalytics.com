@@ -444,8 +444,10 @@ import {
 } from "../src/lib/pdf";
 import { hashRateLimitKey } from "../src/lib/rate-limit";
 import {
+  assertPrivateUploadStorageConfigured,
   deletePrivateUpload,
   privateUploadConfigurationStatus,
+  privateUploadDiagnostic,
   privateUploadExists,
   readPrivateUpload,
   resolvePrivateUploadPath,
@@ -661,6 +663,29 @@ describe("production hardening helpers", () => {
     }
   });
 
+  it("reports diagnostics for available and missing private upload files", async () => {
+    const previousRoot = process.env.PRIVATE_UPLOAD_ROOT;
+    const root = await mkdtemp(path.join(os.tmpdir(), "zentric-private-"));
+    process.env.PRIVATE_UPLOAD_ROOT = root;
+    try {
+      const upload = await savePrivateUpload(file("cv.pdf", "application/pdf", 3), "app-1");
+      await expect(privateUploadDiagnostic(upload.storageKey, upload.provider)).resolves.toMatchObject({
+        provider: "local-private",
+        storageKeyPresent: true,
+        privateUploadRootConfigured: true,
+        resolvedPrivateUploadRoot: root,
+        localPrivateStorageAvailable: true,
+        fileExists: true,
+      });
+      await unlink(resolvePrivateUploadPath(upload.storageKey));
+      await expect(privateUploadDiagnostic(upload.storageKey, upload.provider)).resolves.toMatchObject({ fileExists: false });
+    } finally {
+      if (previousRoot === undefined) delete process.env.PRIVATE_UPLOAD_ROOT;
+      else process.env.PRIVATE_UPLOAD_ROOT = previousRoot;
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("reports a controlled missing-file condition for orphaned upload metadata", async () => {
     const previousRoot = process.env.PRIVATE_UPLOAD_ROOT;
     const root = await mkdtemp(path.join(os.tmpdir(), "zentric-private-"));
@@ -686,6 +711,24 @@ describe("production hardening helpers", () => {
     );
     expect(action).toContain("savedUploads.push(upload)");
     expect(action).toContain("deletePrivateUpload(upload.storageKey, upload.provider)");
+  });
+
+  it("requires an explicit private upload root for local production or staging uploads", () => {
+    const previousRoot = process.env.PRIVATE_UPLOAD_ROOT;
+    const previousNodeEnv = process.env.NODE_ENV;
+    const previousAppEnv = process.env.APP_ENV;
+    delete process.env.PRIVATE_UPLOAD_ROOT;
+    process.env.APP_ENV = "staging";
+    try {
+      expect(() => assertPrivateUploadStorageConfigured()).toThrow("PRIVATE_UPLOAD_ROOT must be configured");
+    } finally {
+      if (previousRoot === undefined) delete process.env.PRIVATE_UPLOAD_ROOT;
+      else process.env.PRIVATE_UPLOAD_ROOT = previousRoot;
+      if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previousNodeEnv;
+      if (previousAppEnv === undefined) delete process.env.APP_ENV;
+      else process.env.APP_ENV = previousAppEnv;
+    }
   });
 
   it("documents that local-private production storage needs a persistent private volume", () => {
@@ -842,8 +885,10 @@ describe("Stage 1 download and admin safety source checks", () => {
     expect(uploadRoute).toContain("PREVIEW_SAFE_MIME_TYPES");
     expect(uploadRoute).toContain("Unauthorized");
     expect(uploadRoute).toContain("Document not found");
-    expect(uploadRoute).toContain("status === 410");
+    expect(uploadRoute).toContain("status === 404");
     expect(uploadRoute).toContain("Temporary document download error");
+    expect(uploadRoute).toContain("privateUploadDiagnostic");
+    expect(uploadRoute).toContain("Stored file missing from private storage");
     expect(uploadRoute).toContain("inline");
     expect(uploadRoute).toContain("attachment");
     expect(uploadRoute).toContain("Admin viewed uploaded document");
@@ -855,6 +900,7 @@ describe("Stage 1 download and admin safety source checks", () => {
     expect(storage).toContain("path.relative(root, resolved)");
     expect(storage).toContain("readPrivateUpload");
     expect(storage).toContain("privateUploadExists");
+    expect(storage).toContain("Private upload write verification failed.");
   });
   it("admin uploaded document UI renders official PDF plus View and Download controls", () => {
     const detail = readFileSync(
@@ -876,7 +922,7 @@ describe("Stage 1 download and admin safety source checks", () => {
     expect(actions).toContain("fetch");
     expect(actions).toContain("window.open");
     expect(actions).toContain(
-      "The file record exists, but the stored file could not be found. Re-upload may be required.",
+      "Stored file missing from private storage. The upload record exists, but the file is not available on this server. Ask the candidate to re-upload, or restore the file from backup.",
     );
     expect(detail).toContain(
       "/api/admin/applications/${application.id}/uploads/${uploadedDocument.id}",
@@ -911,6 +957,7 @@ describe("Stage 1 download and admin safety source checks", () => {
     );
     expect(diagnosticBlock).toContain("adminAuthenticated");
     expect(diagnosticBlock).toContain("privateUploadReadSucceeded");
+    expect(diagnosticBlock).toContain("storageKeyPresent");
     [
       "storageKey",
       "fullPath",
