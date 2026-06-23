@@ -1,0 +1,1 @@
+ALTER TABLE "HiringStage" ADD COLUMN IF NOT EXISTS "metadata" JSONB;

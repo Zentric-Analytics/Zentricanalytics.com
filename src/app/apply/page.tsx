@@ -1,2 +1,21 @@
-import { PageShell } from '@/components/PageShell';import { Section } from '@/components/Section';import { workModes } from '@/lib/hiring';
-export default function Apply(){return <PageShell><Section eyebrow="Stage 1" title="Initial application"><form className="card grid gap-4 p-6 md:grid-cols-2"><label className="field">Full name<input className="input" name="fullName" required /></label><label className="field">Email<input className="input" name="email" type="email" required /></label><label className="field">Phone number<input className="input" name="phone" required /></label><label className="field">Location<input className="input" name="location" required /></label><label className="field">Role applied for<input className="input" name="role" required /></label><label className="field">Work mode preference<select className="input" name="workMode">{workModes.map(m=><option key={m}>{m}</option>)}</select></label><label className="field">Experience level<input className="input" name="experienceLevel" required /></label><label className="field">Skills<input className="input" name="skills" required /></label><label className="field md:col-span-2">CV/resume upload<input className="input" type="file" accept=".pdf,.doc,.docx" required /><span className="text-xs text-slate-500">PDF/DOC/DOCX, maximum configured upload size: 5MB.</span></label><label className="field md:col-span-2">Portfolio/GitHub/LinkedIn link<input className="input" type="url" /></label><label className="field md:col-span-2">Short application message<textarea className="input" rows={5} required /></label><label className="md:col-span-2 flex gap-2"><input type="checkbox" required /> I consent to Zentric Analytics processing my application data for hiring review.</label><label className="field md:col-span-2">Typed electronic signature<input className="input" required placeholder="Type your full legal name" /></label><label className="md:col-span-2 flex gap-2"><input type="checkbox" required /> I confirm this typed name is my electronic signature and that the submitted information is accurate.</label><button className="btn btn-primary md:col-span-2" type="submit">Submit Stage 1 Application</button></form></Section></PageShell>}
+import { PageShell } from '@/components/PageShell';
+import { Section } from '@/components/Section';
+import { Stage1ApplicationForm } from './Stage1ApplicationForm';
+
+export default async function Apply({ searchParams }: { searchParams: Promise<{ submitted?: string }> }) {
+  const params = await searchParams;
+
+  return (
+    <PageShell>
+      <Section eyebrow="Stage 1" title="Candidate Application">
+        <p className="mb-6 max-w-3xl break-words rounded-2xl bg-gradient-to-r from-brand/10 via-white to-accent/10 px-4 py-3 text-sm leading-6 text-slate-700 ring-1 ring-brand/10 sm:px-5">Complete your details, role preference, and CV upload for review.</p>
+        {params.submitted ? (
+          <div className="card mb-6 p-5 sm:p-6">
+            <h2 className="break-words text-2xl font-bold">Application received</h2>
+            <p className="mt-3 break-words">Your Application ID is <strong className="break-all">{params.submitted}</strong>. Keep it safe; you will need it with your email to track your application.</p>
+          </div>
+        ) : <Stage1ApplicationForm />}
+      </Section>
+    </PageShell>
+  );
+}

@@ -1,2 +1,22 @@
-import { PageShell } from '@/components/PageShell';import { Section } from '@/components/Section';import { stages } from '@/lib/hiring';import { StatusBadge } from '@/components/StatusBadge';import { DocumentCard } from '@/components/DocumentCard';
-export default function Track(){return <PageShell><Section eyebrow="Secure tracking" title="Track your application without creating an account."><div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]"><form className="card space-y-4 p-6"><p>Enter your Application ID and email. A one-time access code is required before private details are shown.</p><label className="field">Application ID<input className="input" placeholder="ZA-APP-2026-00041" required /></label><label className="field">Email<input className="input" type="email" required /></label><button className="btn btn-primary" type="submit">Send one-time access code</button></form><div className="card p-6"><h2 className="text-xl font-bold">Candidate portal preview</h2><p className="mt-2 text-sm text-slate-600">Private application data is hidden until verification succeeds.</p><div className="mt-5 space-y-3">{stages.map((s,i)=><div className="flex items-center justify-between rounded-xl border p-3" key={s.key}><span>{s.order}. {s.title}</span><StatusBadge status={i===0?'Under Review':'Locked'} /></div>)}</div></div></div><div className="mt-8 grid gap-4 md:grid-cols-2"><DocumentCard title="Initial Application PDF" status="Under Review" signed submittedAt="pending"/><DocumentCard title="Candidate Information PDF" status="Locked" signed={false}/></div></Section></PageShell>}
+import { PageShell } from '@/components/PageShell';
+import { Section } from '@/components/Section';
+import { TrackForms } from './TrackForms';
+
+type TrackSearchParams = Promise<Record<string, string | undefined>>;
+
+export default async function Track({ searchParams }: { searchParams: TrackSearchParams }) {
+  const params = await searchParams;
+
+  return (
+    <PageShell>
+      <Section eyebrow="Secure tracking" title="Track your application without creating an account.">
+        <TrackForms
+          applicationId={params.applicationId}
+          email={params.email}
+          limited={params.limited === '1'}
+          error={params.error === '1'}
+        />
+      </Section>
+    </PageShell>
+  );
+}

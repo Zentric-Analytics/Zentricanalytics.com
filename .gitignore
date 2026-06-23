@@ -1,0 +1,6 @@
+node_modules/
+.next/
+.private-uploads/
+.env*.local
+.env
+coverage/
