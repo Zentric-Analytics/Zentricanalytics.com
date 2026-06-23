@@ -10,6 +10,14 @@ type TemplateInput = {
   accessCode?: string;
 };
 
+type BrandedEmailInput = {
+  heading: string;
+  preview: string;
+  paragraphs: string[];
+  ctaLabel?: string;
+  ctaHref?: string | null;
+};
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -23,8 +31,40 @@ function greeting(candidateName?: string) {
   return candidateName ? `Hello ${candidateName},` : 'Hello,';
 }
 
-function renderBrandedEmail({ heading, preview, paragraphs, ctaLabel = 'Track your application', ctaHref = '/track' }: { heading: string; preview: string; paragraphs: string[]; ctaLabel?: string; ctaHref?: string }) {
+function validHttpUrl(value: string | undefined) {
+  if (!value) return null;
+  const trimmed = value.trim().replace(/\/+$/, '');
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+    if (url.protocol === 'http:' && ['production', 'staging', 'preview'].includes(process.env.NODE_ENV ?? process.env.VERCEL_ENV ?? '')) {
+      url.protocol = 'https:';
+    }
+    return url.toString().replace(/\/+$/, '');
+  } catch {
+    return null;
+  }
+}
+
+export function emailBaseUrl() {
+  return validHttpUrl(process.env.APP_BASE_URL) ?? validHttpUrl(process.env.NEXT_PUBLIC_SITE_URL);
+}
+
+export function buildEmailUrl(path: string, params?: Record<string, string>) {
+  const baseUrl = emailBaseUrl();
+  if (!baseUrl) return null;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const url = new URL(normalizedPath, baseUrl);
+  if (params) {
+    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+  }
+  return url.toString();
+}
+
+function renderBrandedEmail({ heading, preview, paragraphs, ctaLabel = 'Track your application', ctaHref }: BrandedEmailInput) {
   const paragraphHtml = paragraphs.map((paragraph) => `<p style="margin:0 0 16px;color:#334155;font-size:16px;line-height:1.6;">${escapeHtml(paragraph)}</p>`).join('');
+  const ctaHtml = ctaHref ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(ctaHref)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:999px;padding:12px 18px;font-weight:700;">${escapeHtml(ctaLabel)}</a></p>` : '';
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -42,7 +82,7 @@ function renderBrandedEmail({ heading, preview, paragraphs, ctaLabel = 'Track yo
             <tr><td style="padding:32px 28px;">
               <h1 style="margin:0 0 18px;color:#0f172a;font-size:24px;line-height:1.25;">${escapeHtml(heading)}</h1>
               ${paragraphHtml}
-              <p style="margin:24px 0 0;"><a href="${escapeHtml(ctaHref)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:999px;padding:12px 18px;font-weight:700;">${escapeHtml(ctaLabel)}</a></p>
+              ${ctaHtml}
             </td></tr>
             <tr><td style="border-top:1px solid #e2e8f0;padding:18px 28px;color:#64748b;font-size:13px;line-height:1.5;">This message was sent by Zentric Analytics Careers. If you were not expecting this email, you can safely ignore it.</td></tr>
           </table>
@@ -53,18 +93,20 @@ function renderBrandedEmail({ heading, preview, paragraphs, ctaLabel = 'Track yo
 </html>`;
 }
 
-function build(subject: string, heading: string, paragraphs: string[], ctaHref = '/track'): CandidateEmailTemplate {
-  return { subject, body: paragraphs.join('\n\n'), html: renderBrandedEmail({ heading, preview: paragraphs[0] ?? heading, paragraphs, ctaHref }) };
+function build(subject: string, heading: string, paragraphs: string[], ctaHref: string | null = buildEmailUrl('/track'), ctaLabel?: string): CandidateEmailTemplate {
+  const body = ctaHref ? `${paragraphs.join('\n\n')}\n\n${ctaLabel ?? 'Track your application'}: ${ctaHref}` : paragraphs.join('\n\n');
+  return { subject, body, html: renderBrandedEmail({ heading, preview: paragraphs[0] ?? heading, paragraphs, ctaHref, ctaLabel }) };
 }
 
 export function accessCodeEmail(input: TemplateInput): CandidateEmailTemplate {
   const code = input.accessCode ?? '';
+  const ctaHref = buildEmailUrl('/track/verify', { applicationId: input.applicationId, requested: '1', verified: '0' });
   const paragraphs = [
     `${greeting(input.candidateName)} Use this one-time access code to open your Zentric Analytics application tracker: ${code}`,
     'This code expires in 10 minutes. For your privacy, do not share it with anyone.',
     'If you did not request this code, you can safely ignore this email.',
   ];
-  return build('Your Zentric Analytics access code', 'Your secure access code', paragraphs);
+  return build('Your Zentric Analytics access code', 'Your secure access code', paragraphs, ctaHref, 'Open verification page');
 }
 
 export function applicationReceivedEmail(input: TemplateInput): CandidateEmailTemplate {
