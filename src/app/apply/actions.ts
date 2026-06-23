@@ -5,7 +5,7 @@ import { initialApplicationSchema, toStage1SubmissionPayload } from '@/lib/hirin
 import { stage1ApplicantFieldNames } from '@/lib/stage1-fields';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { deletePrivateUpload, savePrivateUpload, validateCvFile } from '@/lib/storage';
+import { LOCAL_PRIVATE_PROVIDER, PrivateUploadStorageConfigurationError, deletePrivateUpload, savePrivateUpload, selectedStorageProvider, validateCvFile } from '@/lib/storage';
 import { sha256 } from '@/lib/security';
 import { createApplicationWithRetry, createStageRows } from '@/lib/workflow';
 import { sendAndRecordEmail } from '@/lib/email';
@@ -49,5 +49,25 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
     const email = applicationReceivedEmail({ applicationId: app.applicationId, candidateName: data.fullName });
     await sendAndRecordEmail({ applicationId: app.id, to: data.email, template: 'application-received', ...email });
     redirect(`/apply?submitted=${encodeURIComponent(app.applicationId)}`);
-  } catch (error) { await Promise.all(savedUploads.map((upload) => deletePrivateUpload(upload.storageKey, upload.provider))); throw error; }
+  } catch (error) {
+    await Promise.all(savedUploads.map((upload) => deletePrivateUpload(upload.storageKey, upload.provider)));
+    if (error instanceof PrivateUploadStorageConfigurationError) {
+      const provider = selectedStorageProvider();
+      console.error('applicationUploadStorageRejected', {
+        reason: 'PRIVATE_UPLOAD_ROOT missing',
+        provider,
+        environment: {
+          nodeEnv: process.env.NODE_ENV,
+          vercelEnv: process.env.VERCEL_ENV,
+          appEnv: process.env.APP_ENV,
+        },
+        outcome: 'upload rejected before DB metadata creation',
+      });
+      const message = provider === LOCAL_PRIVATE_PROVIDER
+        ? 'Application upload storage is not configured. Please contact support.'
+        : 'Application upload storage is unavailable. Please contact support.';
+      return { ok: false, message, values: preserveValues(formData), fieldErrors: {} };
+    }
+    throw error;
+  }
 }
