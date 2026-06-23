@@ -4,8 +4,8 @@ import type { Prisma } from '@prisma/client';
 import { PageShell } from '@/components/PageShell';
 import { Section } from '@/components/Section';
 import { StatusBadge } from '@/components/StatusBadge';
-import { stages as stageDefs, toStageStatus, type StageStatus } from '@/lib/hiring';
-import { submitOfferDecision } from '../actions';
+import { parseStage3Metadata, stages as stageDefs, toStageStatus, type StageStatus } from '@/lib/hiring';
+import { submitOfferDecision, submitStage2, submitStage3 } from '../actions';
 import { prisma } from '@/lib/prisma';
 import { sha256 } from '@/lib/security';
 
@@ -32,7 +32,7 @@ function isComplete(status: StageStatus) {
 }
 
 function isSelectable(status: StageStatus) {
-  return status === 'Available' || status === 'In Progress' || isComplete(status);
+  return ['Available', 'In Progress', 'Correction Requested', 'Submitted', 'Under Review', 'Approved', 'Completed', 'Rejected'].includes(status);
 }
 
 function formatDate(value?: Date | null) {
@@ -121,6 +121,7 @@ export default async function Portal({
   const offerExpired = Boolean(
     offer?.offerExpiryDate && offer.offerExpiryDate.getTime() < Date.now() && offer.status === 'Released',
   );
+  const stage3Metadata = parseStage3Metadata(portalStages[2]?.stage?.metadata);
   const showOfferDecision = Boolean(
     offer && offer.status === 'Released' && !offerExpired && selectedStage?.order === 4,
   );
@@ -249,12 +250,68 @@ export default async function Portal({
               <StatusBadge status={selectedStageStatus} />
             </div>
 
-            {selectedStageIsLocked ? (
-              <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
-                This stage is locked until earlier application steps are complete.
-              </p>
+            {selectedStage?.order === 1 ? (
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+                <p className="font-semibold text-ink">Stage 1 submission summary</p>
+                <p>Status: {selectedStageStatus}. Your initial application and consent are recorded for admin review.</p>
+                <p>Last signed: {formatDate(stageOneSignature?.signedAt)}</p>
+              </div>
+            ) : selectedStage?.order === 2 ? (
+              selectedStageIsLocked ? (
+                <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">Stage 2 unlocks after Stage 1 approval.</p>
+              ) : ['Available', 'In Progress', 'Correction Requested'].includes(selectedStageStatus) ? (
+                <form action={submitStage2} className="mt-6 space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
+                  <input type="hidden" name="session" value={session ?? ''} />
+                  <h3 className="text-lg font-bold text-ink">Candidate Information / Identity Verification</h3>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="block text-sm font-semibold">Full legal name<input className="input mt-1" name="fullLegalName" required /></label>
+                    <label className="block text-sm font-semibold">Date of birth<input className="input mt-1" name="dateOfBirth" type="date" required /></label>
+                    <label className="block text-sm font-semibold">Gender<select className="input mt-1" name="gender" required><option value="">Select</option><option>Male</option><option>Female</option><option>Prefer not to say</option></select></label>
+                    <label className="block text-sm font-semibold">Nationality<input className="input mt-1" name="nationality" required /></label>
+                    <label className="block text-sm font-semibold">State of origin<input className="input mt-1" name="stateOfOrigin" required /></label>
+                    <label className="block text-sm font-semibold">State of residence<input className="input mt-1" name="stateOfResidence" required /></label>
+                    <label className="block text-sm font-semibold">LGA<input className="input mt-1" name="lga" required /></label>
+                    <label className="block text-sm font-semibold">Current city/location<input className="input mt-1" name="currentCity" required /></label>
+                    <label className="block text-sm font-semibold md:col-span-2">Residential address<textarea className="input mt-1 min-h-24" name="residentialAddress" required /></label>
+                    <label className="block text-sm font-semibold">Phone number<input className="input mt-1" name="phoneNumber" required /></label>
+                    <label className="block text-sm font-semibold">Email<input className="input mt-1" name="email" type="email" required defaultValue={application.applicant.email} /></label>
+                    <label className="block text-sm font-semibold">ID type<select className="input mt-1" name="idType" required><option value="">Select</option><option>National Identification Number / NIN</option><option>International Passport</option><option>Driver’s Licence</option><option>Voter’s Card</option><option>Other Government-issued ID</option></select></label>
+                    <label className="block text-sm font-semibold">ID number<input className="input mt-1" name="idNumber" required /></label>
+                    <label className="block text-sm font-semibold">Issuing authority<input className="input mt-1" name="idIssuingAuthority" /></label>
+                    <label className="block text-sm font-semibold">Issue date<input className="input mt-1" name="idIssueDate" type="date" /></label>
+                    <label className="block text-sm font-semibold">Expiry date<input className="input mt-1" name="idExpiryDate" type="date" /></label>
+                    <label className="block text-sm font-semibold">NIN if separate<input className="input mt-1" name="nin" /></label>
+                    <label className="block text-sm font-semibold">Tax ID optional<input className="input mt-1" name="taxId" /></label>
+                    <label className="block text-sm font-semibold">Government ID document upload<input className="input mt-1" name="governmentIdDocument" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required /></label>
+                    <label className="block text-sm font-semibold">Passport/profile photo upload<input className="input mt-1" name="passportPhoto" type="file" accept=".jpg,.jpeg,.png,.webp" required /></label>
+                    <label className="block text-sm font-semibold md:col-span-2">Additional support optional<input className="input mt-1" name="additionalIdentityDocument" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" /></label>
+                    <label className="block text-sm font-semibold">Emergency contact name<input className="input mt-1" name="emergencyContactName" required /></label>
+                    <label className="block text-sm font-semibold">Emergency contact relationship<input className="input mt-1" name="emergencyContactRelationship" required /></label>
+                    <label className="block text-sm font-semibold">Emergency contact phone<input className="input mt-1" name="emergencyContactPhone" required /></label>
+                    <label className="block text-sm font-semibold">Emergency contact address<input className="input mt-1" name="emergencyContactAddress" /></label>
+                  </div>
+                  <label className="flex gap-2 text-sm font-semibold"><input name="declarationAccuracy" type="checkbox" required /> I declare the information provided is accurate.</label>
+                  <label className="flex gap-2 text-sm font-semibold"><input name="identityProcessingConsent" type="checkbox" required /> I consent to identity verification processing.</label>
+                  <label className="block text-sm font-semibold">Typed electronic signature<input className="input mt-1" name="signatureName" required /></label>
+                  <label className="flex gap-2 text-sm font-semibold"><input name="signatureConsent" type="checkbox" required /> I confirm this electronic signature.</label>
+                  <button className="btn btn-primary" type="submit">Submit Stage 2</button>
+                </form>
+              ) : <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">Stage 2 is {selectedStageStatus}.</p>
+            ) : selectedStage?.order === 3 ? (
+              selectedStageIsLocked ? <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">Stage 3 unlocks after Stage 2 approval.</p> : !stage3Metadata.releasedAt ? <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Screening details will be shared by the admin.</p> : ['Available', 'In Progress', 'Correction Requested'].includes(selectedStageStatus) ? (
+                <form action={submitStage3} className="mt-6 space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
+                  <input type="hidden" name="session" value={session ?? ''} />
+                  <h3 className="text-lg font-bold text-ink">{stage3Metadata.title ?? 'Screening / Interview / Assessment'}</h3>
+                  <div className="space-y-2 text-sm leading-6 text-slate-700"><p className="whitespace-pre-wrap"><strong>Instructions:</strong> {stage3Metadata.instructions}</p><p><strong>Interview mode:</strong> {stage3Metadata.interviewMode ?? 'Not specified'}</p>{stage3Metadata.meetingLink ? <p><strong>Meeting link:</strong> {stage3Metadata.meetingLink}</p> : null}{stage3Metadata.location ? <p><strong>Location:</strong> {stage3Metadata.location}</p> : null}{stage3Metadata.scheduledAt ? <p><strong>Scheduled date/time:</strong> {stage3Metadata.scheduledAt}</p> : null}{stage3Metadata.deadlineAt ? <p><strong>Deadline:</strong> {stage3Metadata.deadlineAt}</p> : null}</div>
+                  <label className="block text-sm font-semibold">Candidate availability/confirmation input<input className="input mt-1" name="availability" required /></label>
+                  <label className="block text-sm font-semibold">Response message<textarea className="input mt-1 min-h-28" name="responseMessage" /></label>
+                  {stage3Metadata.requiresUpload ? <label className="block text-sm font-semibold">Assessment upload<input className="input mt-1" name="assessmentFile" type="file" required /></label> : null}
+                  <label className="flex gap-2 text-sm font-semibold"><input name="declarationAccuracy" type="checkbox" required /> I declare this response is accurate.</label>
+                  <button className="btn btn-primary" type="submit">Submit Stage 3</button>
+                </form>
+              ) : <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">Stage 3 is {selectedStageStatus}.</p>
             ) : selectedStage?.order === 4 ? (
-              showOfferDecision ? (
+              selectedStageIsLocked ? <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">Offer stage unlocks after screening approval.</p> : offer?.status === 'Accepted' ? <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Offer accepted. Stage 5 is available when the employment agreement is released.</p> : offer?.status === 'Declined' ? <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">Offer declined. Stage 5 does not unlock after a declined offer.</p> : offer?.status === 'Withdrawn' || offer?.status === 'Expired' || offerExpired ? <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">This offer is closed and no decision can be submitted.</p> : showOfferDecision ? (
                 <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
                     <h3 className="text-lg font-bold text-ink">Offer details</h3>
@@ -296,10 +353,10 @@ export default async function Portal({
                   Offer details will appear here when released by admin.
                 </p>
               )
+            ) : selectedStage?.order === 5 ? (
+              selectedStageIsLocked ? <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">Employment agreement stage is locked until the offer is accepted.</p> : <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Employment agreement stage is now available. The agreement form will appear here when released.</p>
             ) : (
-              <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
-                This stage is available in your application tracker. Follow any instructions from the hiring team to continue.
-              </p>
+              <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">This stage is available in your application tracker. Follow any instructions from the hiring team to continue.</p>
             )}
           </section>
 
