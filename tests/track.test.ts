@@ -34,22 +34,26 @@ vi.mock('@/lib/rate-limit', () => ({
 vi.mock('@/lib/access-code-config', async () => {
   const actual = await vi.importActual<typeof import('../src/lib/access-code-config')>('../src/lib/access-code-config');
   return actual;
-  it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
-    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
-    expect(portal).toContain("stageOneApproved");
-    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
-    expect(portal).toContain("Stage 2 submitted and under review.");
-    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
-    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
-    expect(portal).not.toContain('/uploads/${');
-  });
-
-  it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
+  it('candidate portal removes lower Stage 2 presentation while preserving backend action coverage', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
-    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    expect(portal).not.toContain('stageOneApproved');
+    expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
+    expect(portal).not.toContain('name="fullLegalName"');
+    expect(portal).not.toContain('submitStage2');
+    expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
+  });
+
+  it('candidate portal keeps only the top progress card and actionable offer decision UI', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    expect(portal).toContain('Application progress');
+    expect(portal).toContain('showOfferDecision');
+    expect(portal).toContain('Accept Offer');
+    expect(portal).toContain('Decline Offer');
+    expect(portal).not.toContain('Application documents');
+    expect(portal).not.toContain('Application stages');
   });
 
   it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
@@ -67,7 +71,8 @@ vi.mock('@/lib/access-code-config', async () => {
     expect(actions).toContain('electronicSignature.create');
     expect(actions).toContain("status: 'Under Review'");
     expect(actions).toContain('deletePrivateUpload');
-    const failureLog = actions.slice(actions.indexOf("stage2SubmissionFailure"));
+    const failureLogStart = actions.indexOf("stage2SubmissionFailure");
+    const failureLog = actions.slice(failureLogStart, actions.indexOf('export async function submitStage3', failureLogStart));
     expect(failureLog).not.toContain('idNumber');
     expect(failureLog).not.toContain('storageKey');
   });
@@ -106,22 +111,26 @@ vi.mock('@/lib/access-code-config', async () => {
 vi.mock('@/lib/security', async () => {
   const actual = await vi.importActual<typeof import('../src/lib/security')>('../src/lib/security');
   return { ...actual, randomDigits: vi.fn(() => '654321') };
-  it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
-    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
-    expect(portal).toContain("stageOneApproved");
-    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
-    expect(portal).toContain("Stage 2 submitted and under review.");
-    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
-    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
-    expect(portal).not.toContain('/uploads/${');
-  });
-
-  it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
+  it('candidate portal removes lower Stage 2 presentation while preserving backend action coverage', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
-    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    expect(portal).not.toContain('stageOneApproved');
+    expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
+    expect(portal).not.toContain('name="fullLegalName"');
+    expect(portal).not.toContain('submitStage2');
+    expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
+  });
+
+  it('candidate portal keeps only the top progress card and actionable offer decision UI', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    expect(portal).toContain('Application progress');
+    expect(portal).toContain('showOfferDecision');
+    expect(portal).toContain('Accept Offer');
+    expect(portal).toContain('Decline Offer');
+    expect(portal).not.toContain('Application documents');
+    expect(portal).not.toContain('Application stages');
   });
 
   it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
@@ -139,7 +148,8 @@ vi.mock('@/lib/security', async () => {
     expect(actions).toContain('electronicSignature.create');
     expect(actions).toContain("status: 'Under Review'");
     expect(actions).toContain('deletePrivateUpload');
-    const failureLog = actions.slice(actions.indexOf("stage2SubmissionFailure"));
+    const failureLogStart = actions.indexOf("stage2SubmissionFailure");
+    const failureLog = actions.slice(failureLogStart, actions.indexOf('export async function submitStage3', failureLogStart));
     expect(failureLog).not.toContain('idNumber');
     expect(failureLog).not.toContain('storageKey');
   });
@@ -264,22 +274,26 @@ describe('track access-code flow', () => {
     expect(accessCodeRateLimitConfig.verifyLimit()).toBe(4);
     expect(accessCodeRateLimitConfig.windowMs()).toBe(600000);
   });
-  it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
-    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
-    expect(portal).toContain("stageOneApproved");
-    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
-    expect(portal).toContain("Stage 2 submitted and under review.");
-    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
-    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
-    expect(portal).not.toContain('/uploads/${');
-  });
-
-  it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
+  it('candidate portal removes lower Stage 2 presentation while preserving backend action coverage', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
-    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    expect(portal).not.toContain('stageOneApproved');
+    expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
+    expect(portal).not.toContain('name="fullLegalName"');
+    expect(portal).not.toContain('submitStage2');
+    expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
+  });
+
+  it('candidate portal keeps only the top progress card and actionable offer decision UI', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    expect(portal).toContain('Application progress');
+    expect(portal).toContain('showOfferDecision');
+    expect(portal).toContain('Accept Offer');
+    expect(portal).toContain('Decline Offer');
+    expect(portal).not.toContain('Application documents');
+    expect(portal).not.toContain('Application stages');
   });
 
   it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
@@ -297,7 +311,8 @@ describe('track access-code flow', () => {
     expect(actions).toContain('electronicSignature.create');
     expect(actions).toContain("status: 'Under Review'");
     expect(actions).toContain('deletePrivateUpload');
-    const failureLog = actions.slice(actions.indexOf("stage2SubmissionFailure"));
+    const failureLogStart = actions.indexOf("stage2SubmissionFailure");
+    const failureLog = actions.slice(failureLogStart, actions.indexOf('export async function submitStage3', failureLogStart));
     expect(failureLog).not.toContain('idNumber');
     expect(failureLog).not.toContain('storageKey');
   });
@@ -438,22 +453,26 @@ describe('admin and track UI source checks', () => {
     expect(diagnosticBlock).not.toContain('token');
   });
 
-  it('Stage 2 portal gates the form by Stage 1 approval and safe statuses', () => {
-    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
-    expect(portal).toContain("stageOneApproved");
-    expect(portal).toContain("Stage 2 unlocks after Stage 1 approval.");
-    expect(portal).toContain("Stage 2 submitted and under review.");
-    expect(portal).toContain("Stage 2 approved. Continue to the next unlocked stage.");
-    expect(portal).toContain("['Available', 'Correction Requested'].includes(stageTwoStatus)");
-    expect(portal).not.toContain('/uploads/${');
-  });
-
-  it('Stage 2 form renders required identity, upload, consent, and pending controls', () => {
+  it('candidate portal removes lower Stage 2 presentation while preserving backend action coverage', () => {
     const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
     const button = readFileSync('src/app/track/portal/Stage2SubmitButton.tsx', 'utf8');
-    ['fullLegalName','dateOfBirth','gender','nationality','stateOfOrigin','stateOfResidence','lga','residentialAddress','currentCity','phoneNumber','email','idType','idNumber','governmentIdDocument','passportPhoto','additionalIdentityDocument','emergencyContactName','emergencyContactRelationship','emergencyContactPhone','declarationAccuracy','identityProcessingConsent','signatureName','signatureConsent'].forEach((name) => expect(portal).toContain(`name="${name}"`));
+    expect(portal).not.toContain('stageOneApproved');
+    expect(portal).not.toContain('Stage 2 unlocks after Stage 1 approval.');
+    expect(portal).not.toContain('name="fullLegalName"');
+    expect(portal).not.toContain('submitStage2');
+    expect(portal).not.toContain('/uploads/${');
     expect(button).toContain('Submitting...');
     expect(button).toContain('Submit Stage 2');
+  });
+
+  it('candidate portal keeps only the top progress card and actionable offer decision UI', () => {
+    const portal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
+    expect(portal).toContain('Application progress');
+    expect(portal).toContain('showOfferDecision');
+    expect(portal).toContain('Accept Offer');
+    expect(portal).toContain('Decline Offer');
+    expect(portal).not.toContain('Application documents');
+    expect(portal).not.toContain('Application stages');
   });
 
   it('Stage 2 server action creates submission, documents, signature, under-review status, and safe diagnostics', () => {
@@ -471,7 +490,8 @@ describe('admin and track UI source checks', () => {
     expect(actions).toContain('electronicSignature.create');
     expect(actions).toContain("status: 'Under Review'");
     expect(actions).toContain('deletePrivateUpload');
-    const failureLog = actions.slice(actions.indexOf("stage2SubmissionFailure"));
+    const failureLogStart = actions.indexOf("stage2SubmissionFailure");
+    const failureLog = actions.slice(failureLogStart, actions.indexOf('export async function submitStage3', failureLogStart));
     expect(failureLog).not.toContain('idNumber');
     expect(failureLog).not.toContain('storageKey');
   });
