@@ -44,6 +44,17 @@ describe("candidate portal selected-stage workspaces", () => {
     expect(actions).toContain("{ stage: '4', success: 'offer_declined' }");
   });
 
+  it("uses precomputed status helper booleans for review paths", () => {
+    expect(portal).toContain("function isReviewStageStatus(status: StageStatus)");
+    expect(portal).toContain(
+      "const selectedStageIsReview = isReviewStageStatus(selectedStageStatus);",
+    );
+    expect(portal).toContain("selectedStageIsReview ? (");
+    expect(portal).toContain("Stage 3 submitted and under review.");
+    expect(portal).not.toContain('selectedStageStatus === "Submitted"');
+    expect(portal).not.toContain('selectedStageStatus === "Under Review"');
+  });
+
   it("keeps selectable statuses broad and documents admin-review only", () => {
     for (const status of [
       "Correction Requested",

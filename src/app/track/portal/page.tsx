@@ -32,12 +32,32 @@ type PortalApplication = Prisma.JobApplicationGetPayload<{
 
 type PortalStage = PortalApplication["stages"][number];
 
-function isComplete(status: StageStatus) {
+function isActionableStageStatus(status: StageStatus) {
+  return (
+    status === "Available" ||
+    status === "In Progress" ||
+    status === "Correction Requested"
+  );
+}
+
+function isReviewStageStatus(status: StageStatus) {
+  return status === "Submitted" || status === "Under Review";
+}
+
+function isCompletedStageStatus(status: StageStatus) {
   return status === "Approved" || status === "Completed";
 }
 
+function isRejectedStageStatus(status: StageStatus) {
+  return status === "Rejected";
+}
+
+function isComplete(status: StageStatus) {
+  return isCompletedStageStatus(status);
+}
+
 function isCandidateActionable(status: StageStatus) {
-  return ["Available", "In Progress", "Correction Requested"].includes(status);
+  return isActionableStageStatus(status);
 }
 
 function isSelectable(status: StageStatus) {
@@ -57,9 +77,8 @@ function stageCardActionLabel(status: StageStatus, selected: boolean) {
   if (selected) return "Selected";
   if (isCandidateActionable(status))
     return status === "Available" ? "Open form" : "Continue";
-  if (status === "Submitted" || status === "Under Review")
-    return "Under review";
-  if (isComplete(status)) return "Completed";
+  if (isReviewStageStatus(status)) return "Under review";
+  if (isCompletedStageStatus(status)) return "Completed";
   return "Locked";
 }
 
@@ -165,6 +184,11 @@ export default async function Portal({
   const selectedStageStatus = selectedStage?.status ?? "Locked";
   const selectedStageIsLocked =
     !selectedStage || !isSelectable(selectedStage.status);
+  const selectedStageIsActionable =
+    isActionableStageStatus(selectedStageStatus);
+  const selectedStageIsReview = isReviewStageStatus(selectedStageStatus);
+  const selectedStageIsComplete = isCompletedStageStatus(selectedStageStatus);
+  const selectedStageIsRejected = isRejectedStageStatus(selectedStageStatus);
   const offer = application.offer;
   const offerExpired = Boolean(
     offer?.offerExpiryDate &&
@@ -365,14 +389,12 @@ export default async function Portal({
             </div>
 
             {selectedStage?.order === 1 ? (
-              selectedStageStatus === "Under Review" ||
-              selectedStageStatus === "Submitted" ? (
+              selectedStageIsReview ? (
                 <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
                   Your initial application is under review. The next step will
                   appear here after admin approval.
                 </p>
-              ) : selectedStageStatus === "Approved" ||
-                selectedStageStatus === "Completed" ? (
+              ) : selectedStageIsComplete ? (
                 <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">
                   Initial application completed. Select the next available stage
                   to continue.
@@ -391,9 +413,7 @@ export default async function Portal({
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
                   Stage 2 unlocks after Stage 1 approval.
                 </p>
-              ) : ["Available", "In Progress", "Correction Requested"].includes(
-                  selectedStageStatus,
-                ) ? (
+              ) : selectedStageIsActionable ? (
                 <form
                   action={submitStage2}
                   className="mt-6 space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5"
@@ -627,8 +647,7 @@ export default async function Portal({
                     Submit Stage 2
                   </button>
                 </form>
-              ) : selectedStageStatus === "Submitted" ||
-                selectedStageStatus === "Under Review" ? (
+              ) : selectedStageIsReview ? (
                 <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
                   Stage 2 submitted and under review.
                 </p>
@@ -642,18 +661,7 @@ export default async function Portal({
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
                   Stage 3 unlocks after Stage 2 approval.
                 </p>
-              ) : selectedStageStatus === "Submitted" ||
-                selectedStageStatus === "Under Review" ? (
-                <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
-                  Stage 3 submitted and under review.
-                </p>
-              ) : !stage3Metadata.releasedAt ? (
-                <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
-                  Screening details will be shared by the admin.
-                </p>
-              ) : ["Available", "In Progress", "Correction Requested"].includes(
-                  selectedStageStatus,
-                ) ? (
+              ) : selectedStageIsActionable && stage3Metadata.releasedAt ? (
                 <form
                   action={submitStage3}
                   className="mt-6 space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5"
@@ -733,14 +741,25 @@ export default async function Portal({
                     Submit Stage 3
                   </button>
                 </form>
-              ) : selectedStageStatus === "Submitted" ||
-                selectedStageStatus === "Under Review" ? (
+              ) : selectedStageIsActionable ? (
+                <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
+                  Screening details will be shared by the admin.
+                </p>
+              ) : selectedStageIsReview ? (
                 <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
                   Stage 3 submitted and under review.
                 </p>
+              ) : selectedStageIsComplete ? (
+                <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">
+                  Stage 3 is complete and approved.
+                </p>
+              ) : selectedStageIsRejected ? (
+                <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
+                  Stage 3 was rejected.
+                </p>
               ) : (
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
-                  Stage 3 is {selectedStageStatus}.
+                  Stage 3 is locked.
                 </p>
               )
             ) : selectedStage?.order === 4 ? (
