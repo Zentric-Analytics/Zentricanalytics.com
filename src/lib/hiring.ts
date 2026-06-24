@@ -80,6 +80,7 @@ export const stage2GenderOptions = ['Male','Female','Prefer not to say'] as cons
 export const stage2IdTypeOptions = idTypes;
 export const stage2AcceptedMimeTypes = new Set(['application/pdf','image/jpeg','image/pjpeg','image/jpg','image/png','image/x-png','image/webp']);
 export const stage2AcceptedExtensions = new Set(['pdf','jpg','jpeg','png','webp']);
+export const stage2PhoneCountrySchema = z.enum(countryPhoneOptions.map((country) => country.iso) as [string, ...string[]], { errorMap: () => ({ message: 'Select a valid country.' }) });
 export const stage2SubmissionSchema = z.object({
   session: z.string().min(16, 'Open the portal with a valid session.'),
   fullLegalName: z.string().trim().min(2, 'Enter your full legal name.'),
@@ -91,32 +92,57 @@ export const stage2SubmissionSchema = z.object({
   lga: z.string().trim().min(2, 'Enter your LGA.'),
   residentialAddress: z.string().trim().min(5, 'Enter your residential address.'),
   currentCity: z.string().trim().min(2, 'Enter your current city/location.'),
-  phoneNumber: z.string().trim().min(4, 'Enter your phone number.'),
+  applicantPhoneCountryIso: stage2PhoneCountrySchema,
+  applicantPhoneNational: z.string().trim().min(4, 'Enter your phone number.'),
   email: z.string().trim().email('Enter a valid email address.'),
-  idType: z.enum(stage2IdTypeOptions, { errorMap: () => ({ message: 'Select an ID type.' }) }),
-  idNumber: z.string().trim().min(2, 'Enter your ID number.'),
-  idIssuingAuthority: optionalText(160),
-  idIssueDate: optionalText(40),
-  idExpiryDate: optionalText(40),
-  nin: optionalText(80),
-  taxId: optionalText(80),
+  primaryIdType: z.enum(stage2IdTypeOptions, { errorMap: () => ({ message: 'Select a primary ID type.' }) }),
+  primaryIdNumber: z.string().trim().min(2, 'Enter your primary ID number.'),
+  primaryIdIssuingAuthority: z.string().trim().min(2, 'Enter the primary ID issuing authority.'),
+  primaryIdIssueDate: optionalText(40),
+  primaryIdExpiryDate: optionalText(40),
+  secondaryIdType: optionalText(120),
+  secondaryIdNumber: optionalText(80),
+  secondaryIdIssuingAuthority: optionalText(160),
+  secondaryIdIssueDate: optionalText(40),
+  secondaryIdExpiryDate: optionalText(40),
   emergencyContactName: z.string().trim().min(2, 'Enter emergency contact name.'),
   emergencyContactRelationship: z.string().trim().min(2, 'Enter relationship.'),
-  emergencyContactPhone: z.string().trim().min(4, 'Enter emergency contact phone.'),
+  emergencyContactPhoneCountryIso: stage2PhoneCountrySchema,
+  emergencyContactPhoneNational: z.string().trim().min(4, 'Enter emergency contact phone.'),
   emergencyContactAddress: optionalText(500),
   declarationAccuracy: z.literal('on', { errorMap: () => ({ message: 'Confirm the declaration.' }) }),
   identityProcessingConsent: z.literal('on', { errorMap: () => ({ message: 'Consent is required.' }) }),
   signatureName: z.string().trim().min(2, 'Type your name as your electronic signature.'),
   signatureConsent: z.literal('on', { errorMap: () => ({ message: 'Confirm your electronic signature.' }) }),
+}).superRefine((data, ctx) => {
+  const applicantPhone = normalizePhoneForCountry(data.applicantPhoneCountryIso, data.applicantPhoneNational);
+  if (!applicantPhone.valid) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['applicantPhoneNational'], message: applicantPhone.error });
+  const emergencyPhone = normalizePhoneForCountry(data.emergencyContactPhoneCountryIso, data.emergencyContactPhoneNational);
+  if (!emergencyPhone.valid) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['emergencyContactPhoneNational'], message: emergencyPhone.error });
 });
 export type Stage2SubmissionInput = z.infer<typeof stage2SubmissionSchema>;
 export function toStage2SubmissionPayload(data: Stage2SubmissionInput) {
-  const { session: _session, declarationAccuracy, identityProcessingConsent, signatureConsent, signatureName, idNumber, nin, taxId, ...safeData } = data;
+  const applicantPhone = normalizePhoneForCountry(data.applicantPhoneCountryIso, data.applicantPhoneNational);
+  const emergencyPhone = normalizePhoneForCountry(data.emergencyContactPhoneCountryIso, data.emergencyContactPhoneNational);
+  if (!applicantPhone.valid) throw new Error(applicantPhone.error);
+  if (!emergencyPhone.valid) throw new Error(emergencyPhone.error);
+  const { session: _session, declarationAccuracy, identityProcessingConsent, signatureConsent, signatureName, primaryIdNumber, secondaryIdNumber, applicantPhoneNational: _appPhoneRaw, emergencyContactPhoneNational: _emergencyPhoneRaw, ...safeData } = data;
+  const secondaryProvided = Boolean(data.secondaryIdType || data.secondaryIdNumber || data.secondaryIdIssuingAuthority || data.secondaryIdIssueDate || data.secondaryIdExpiryDate);
   return {
     ...safeData,
-    idNumberMasked: maskSensitive(idNumber),
-    ninMasked: nin ? maskSensitive(nin) : '',
-    taxIdMasked: taxId ? maskSensitive(taxId) : '',
+    primaryIdNumberMasked: maskSensitive(primaryIdNumber),
+    secondaryIdNumberMasked: secondaryIdNumber ? maskSensitive(secondaryIdNumber) : '',
+    hasSecondaryId: secondaryProvided,
+    applicantPhoneCountryIso: applicantPhone.iso,
+    applicantPhoneCountryName: applicantPhone.countryName,
+    applicantPhoneDialCode: applicantPhone.dialCode,
+    applicantPhoneNational: applicantPhone.nationalNumber,
+    applicantPhoneE164: applicantPhone.e164,
+    emergencyContactPhoneCountryIso: emergencyPhone.iso,
+    emergencyContactPhoneCountryName: emergencyPhone.countryName,
+    emergencyContactPhoneDialCode: emergencyPhone.dialCode,
+    emergencyContactPhoneNational: emergencyPhone.nationalNumber,
+    emergencyContactPhoneE164: emergencyPhone.e164,
     declarationAccuracy: declarationAccuracy === 'on',
     identityProcessingConsent: identityProcessingConsent === 'on',
     signatureConsent: signatureConsent === 'on',
