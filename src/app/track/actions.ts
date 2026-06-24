@@ -121,13 +121,17 @@ function portalUrl(session: string, params: Record<string, string>) {
 export async function submitStage2(formData: FormData) {
   const session = String(formData.get('session') ?? '');
   const parsed = stage2SubmissionSchema.safeParse(Object.fromEntries(formData.entries()));
-  const governmentIdFile = formData.get('governmentIdDocument') instanceof File ? formData.get('governmentIdDocument') as File : null;
+  const primaryIdFile = formData.get('primaryIdDocument') instanceof File ? formData.get('primaryIdDocument') as File : null;
+  const secondaryIdFile = formData.get('secondaryIdDocument') instanceof File ? formData.get('secondaryIdDocument') as File : null;
   const photoFile = formData.get('passportPhoto') instanceof File ? formData.get('passportPhoto') as File : null;
-  const additionalFile = formData.get('additionalIdentityDocument') instanceof File ? formData.get('additionalIdentityDocument') as File : null;
+  const secondaryUploadProvided = Boolean(secondaryIdFile && secondaryIdFile.size > 0);
+  const secondaryType = String(formData.get('secondaryIdType') ?? '').trim();
+  const secondaryNumber = String(formData.get('secondaryIdNumber') ?? '').trim();
   const fileErrors = [
-    validateIdentityDocumentFile(governmentIdFile, 'Upload your government ID document.'),
-    validateIdentityDocumentFile(photoFile, 'Upload your passport-style photograph.'),
-    additionalFile && additionalFile.size > 0 ? validateIdentityDocumentFile(additionalFile, 'Upload a supporting identity document.') : null,
+    validateIdentityDocumentFile(primaryIdFile, 'Upload your primary ID document.'),
+    secondaryUploadProvided ? validateIdentityDocumentFile(secondaryIdFile, 'Upload a valid secondary ID document.') : null,
+    photoFile && photoFile.size > 0 ? validateIdentityDocumentFile(photoFile, 'Upload a valid passport/profile photo.') : null,
+    secondaryUploadProvided && (!secondaryType || !secondaryNumber) ? 'Enter secondary ID type and number for the uploaded secondary document.' : null,
   ].filter(Boolean);
   if (!parsed.success || fileErrors.length) redirect(portalUrl(session, { stage: '2', error: 'stage2_validation' }));
 
@@ -145,9 +149,9 @@ export async function submitStage2(formData: FormData) {
   const saved: Array<{ file: File; kind: string; storageKey: string; provider: string; restricted: boolean }> = [];
   try {
     for (const item of [
-      { file: governmentIdFile!, kind: 'Stage 2 Government ID' },
-      { file: photoFile!, kind: 'Stage 2 Passport Photo' },
-      ...(additionalFile && additionalFile.size > 0 ? [{ file: additionalFile, kind: 'Stage 2 Additional Identity Document' }] : []),
+      { file: primaryIdFile!, kind: 'Stage 2 Primary ID Document' },
+      ...(secondaryIdFile && secondaryIdFile.size > 0 ? [{ file: secondaryIdFile, kind: 'Stage 2 Secondary ID Document' }] : []),
+      ...(photoFile && photoFile.size > 0 ? [{ file: photoFile, kind: 'Stage 2 Passport/Profile Photo' }] : []),
     ]) {
       const stored = await savePrivateUpload(item.file, application.id);
       saved.push({ ...item, ...stored });

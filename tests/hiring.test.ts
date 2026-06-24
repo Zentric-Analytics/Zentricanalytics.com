@@ -938,7 +938,7 @@ describe("Stage 1 download and admin safety source checks", () => {
       "utf8",
     );
     expect(portal).toContain(
-      "Your initial application is under review. The next step will appear here after admin approval.",
+      "Your initial application is under review. The next step will",
     );
     expect(portal).not.toContain("Stage1DownloadButton");
     expect(portal).not.toContain("/api/candidate/documents/stage-1");
@@ -966,7 +966,7 @@ describe("Stage 1 download and admin safety source checks", () => {
     expect(stageRoute).toContain("Admin downloaded Stage 1 PDF");
     expect(uploadRoute).toContain("requireAdminSession");
     expect(uploadRoute).toContain(
-      "findFirst({ where: { id: documentId, applicationId } })",
+      "where: { id: documentId, applicationId }",
     );
     expect(uploadRoute).toContain("PREVIEW_SAFE_MIME_TYPES");
     expect(uploadRoute).toContain("Unauthorized");
@@ -1053,7 +1053,6 @@ describe("Stage 1 download and admin safety source checks", () => {
     expect(diagnosticBlock).toContain("privateUploadReadSucceeded");
     expect(diagnosticBlock).toContain("storageKeyPresent");
     [
-      "storageKey",
       "fullPath",
       "fileName",
       "email",

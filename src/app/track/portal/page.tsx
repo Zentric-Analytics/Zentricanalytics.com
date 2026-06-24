@@ -9,10 +9,12 @@ import {
   stages as stageDefs,
   toStageStatus,
   type StageStatus,
+  stage2IdTypeOptions,
 } from "@/lib/hiring";
 import { submitOfferDecision, submitStage2, submitStage3 } from "../actions";
 import { prisma } from "@/lib/prisma";
 import { sha256 } from "@/lib/security";
+import { countryPhoneOptions } from "@/lib/phone";
 
 type PortalApplication = Prisma.JobApplicationGetPayload<{
   include: {
@@ -493,14 +495,15 @@ export default async function Portal({
                         required
                       />
                     </label>
-                    <label className="block text-sm font-semibold">
-                      Phone number
-                      <input
-                        className="input mt-1"
-                        name="phoneNumber"
-                        required
-                      />
-                    </label>
+                    <div className="block text-sm font-semibold md:col-span-2">
+                      <span>Applicant phone</span>
+                      <div className="mt-1 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
+                        <select className="input" name="applicantPhoneCountryIso" aria-label="Applicant phone country" required defaultValue="NG">
+                          {countryPhoneOptions.map((country) => <option key={country.iso} value={country.iso}>{country.name} {country.dialCode}</option>)}
+                        </select>
+                        <input className="input" name="applicantPhoneNational" inputMode="tel" autoComplete="tel" aria-label="Applicant national phone number" required />
+                      </div>
+                    </div>
                     <label className="block text-sm font-semibold">
                       Email
                       <input
@@ -511,77 +514,34 @@ export default async function Portal({
                         defaultValue={application.applicant.email}
                       />
                     </label>
-                    <label className="block text-sm font-semibold">
-                      ID type
-                      <select className="input mt-1" name="idType" required>
-                        <option value="">Select</option>
-                        <option>National Identification Number / NIN</option>
-                        <option>International Passport</option>
-                        <option>Driver’s Licence</option>
-                        <option>Voter’s Card</option>
-                        <option>Other Government-issued ID</option>
-                      </select>
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      ID number
-                      <input className="input mt-1" name="idNumber" required />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Issuing authority
-                      <input className="input mt-1" name="idIssuingAuthority" />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Issue date
-                      <input
-                        className="input mt-1"
-                        name="idIssueDate"
-                        type="date"
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Expiry date
-                      <input
-                        className="input mt-1"
-                        name="idExpiryDate"
-                        type="date"
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      NIN if separate
-                      <input className="input mt-1" name="nin" />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Tax ID optional
-                      <input className="input mt-1" name="taxId" />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Government ID document upload
-                      <input
-                        className="input mt-1"
-                        name="governmentIdDocument"
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png,.webp"
-                        required
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Passport/profile photo upload
-                      <input
-                        className="input mt-1"
-                        name="passportPhoto"
-                        type="file"
-                        accept=".jpg,.jpeg,.png,.webp"
-                        required
-                      />
-                    </label>
+                    <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+                      <div className="mb-4">
+                        <h4 className="font-bold text-ink">Primary ID <span className="text-red-600">required</span></h4>
+                        <p className="mt-1 text-sm font-normal text-slate-600">Only your Primary ID is required. Add a Secondary ID only if you choose to provide one.</p>
+                      </div>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <label className="block text-sm font-semibold">Primary ID type<select className="input mt-1" name="primaryIdType" required><option value="">Select</option>{stage2IdTypeOptions.map((type) => <option key={type}>{type}</option>)}</select></label>
+                        <label className="block text-sm font-semibold">Primary ID number<input className="input mt-1" name="primaryIdNumber" required /></label>
+                        <label className="block text-sm font-semibold">Issuing authority<input className="input mt-1" name="primaryIdIssuingAuthority" required /></label>
+                        <label className="block text-sm font-semibold">Issue date <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="primaryIdIssueDate" type="date" /></label>
+                        <label className="block text-sm font-semibold">Expiry date <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="primaryIdExpiryDate" type="date" /></label>
+                        <label className="block text-sm font-semibold">Primary ID document upload<input className="input mt-1" name="primaryIdDocument" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required /></label>
+                      </div>
+                    </section>
+                    <section className="rounded-2xl border border-slate-200 p-4 md:col-span-2">
+                      <h4 className="font-bold text-ink">Secondary ID <span className="font-normal text-slate-500">optional</span></h4>
+                      <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <label className="block text-sm font-semibold">Secondary ID type <span className="font-normal text-slate-500">optional</span><select className="input mt-1" name="secondaryIdType"><option value="">Not provided</option>{stage2IdTypeOptions.map((type) => <option key={type}>{type}</option>)}</select></label>
+                        <label className="block text-sm font-semibold">Secondary ID number <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdNumber" /></label>
+                        <label className="block text-sm font-semibold">Secondary issuing authority <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdIssuingAuthority" /></label>
+                        <label className="block text-sm font-semibold">Secondary issue date <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdIssueDate" type="date" /></label>
+                        <label className="block text-sm font-semibold">Secondary expiry date <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdExpiryDate" type="date" /></label>
+                        <label className="block text-sm font-semibold">Secondary ID document upload <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdDocument" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" /></label>
+                      </div>
+                    </section>
                     <label className="block text-sm font-semibold md:col-span-2">
-                      Additional support optional
-                      <input
-                        className="input mt-1"
-                        name="additionalIdentityDocument"
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png,.webp"
-                      />
+                      Passport/profile photo, optional
+                      <input className="input mt-1" name="passportPhoto" type="file" accept=".jpg,.jpeg,.png,.webp" />
                     </label>
                     <label className="block text-sm font-semibold">
                       Emergency contact name
@@ -599,14 +559,15 @@ export default async function Portal({
                         required
                       />
                     </label>
-                    <label className="block text-sm font-semibold">
-                      Emergency contact phone
-                      <input
-                        className="input mt-1"
-                        name="emergencyContactPhone"
-                        required
-                      />
-                    </label>
+                    <div className="block text-sm font-semibold md:col-span-2">
+                      <span>Emergency contact phone</span>
+                      <div className="mt-1 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
+                        <select className="input" name="emergencyContactPhoneCountryIso" aria-label="Emergency contact phone country" required defaultValue="NG">
+                          {countryPhoneOptions.map((country) => <option key={country.iso} value={country.iso}>{country.name} {country.dialCode}</option>)}
+                        </select>
+                        <input className="input" name="emergencyContactPhoneNational" inputMode="tel" autoComplete="tel" aria-label="Emergency contact national phone number" required />
+                      </div>
+                    </div>
                     <label className="block text-sm font-semibold">
                       Emergency contact address
                       <input

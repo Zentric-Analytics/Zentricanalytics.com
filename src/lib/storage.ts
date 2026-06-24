@@ -71,7 +71,7 @@ function assertLocalPrivateProvider(provider: string, operation: string) {
 }
 
 function sanitizeStorageSegment(value: string) {
-  const sanitized = value.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^\.+$/, "_");
+  const sanitized = value.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/\.{2,}/g, "_").replace(/^\.+$/, "_");
   return sanitized || "upload";
 }
 

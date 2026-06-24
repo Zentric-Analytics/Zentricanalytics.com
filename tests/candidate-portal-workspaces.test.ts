@@ -11,7 +11,7 @@ describe("candidate portal selected-stage workspaces", () => {
     );
     expect(portal).toContain("action={submitStage2}");
     expect(portal).toContain('name="fullLegalName"');
-    expect(portal).toContain('name="governmentIdDocument"');
+    expect(portal).toContain('name="primaryIdDocument"');
     expect(portal).toContain("action={submitStage3}");
     expect(portal).toContain("Candidate availability/confirmation input");
     expect(portal).toContain("action={submitOfferDecision}");

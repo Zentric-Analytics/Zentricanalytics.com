@@ -83,7 +83,7 @@ vi.mock('@/lib/access-code-config', async () => {
     const workflow = readFileSync('src/lib/workflow.ts', 'utf8');
     expect(detail).toContain('Stage 2 identity verification');
     expect(detail).toContain('Uploaded Stage 2 documents');
-    expect(detail).toContain('idNumberMasked');
+    expect(detail).toContain('primaryIdNumberMasked');
     expect(detail).toContain('adminStage2Action');
     expect(actions).toContain('export async function adminStage2Action');
     expect(actions).toContain('getAdminSession');
@@ -160,7 +160,7 @@ vi.mock('@/lib/security', async () => {
     const workflow = readFileSync('src/lib/workflow.ts', 'utf8');
     expect(detail).toContain('Stage 2 identity verification');
     expect(detail).toContain('Uploaded Stage 2 documents');
-    expect(detail).toContain('idNumberMasked');
+    expect(detail).toContain('primaryIdNumberMasked');
     expect(detail).toContain('adminStage2Action');
     expect(actions).toContain('export async function adminStage2Action');
     expect(actions).toContain('getAdminSession');
@@ -323,7 +323,7 @@ describe('track access-code flow', () => {
     const workflow = readFileSync('src/lib/workflow.ts', 'utf8');
     expect(detail).toContain('Stage 2 identity verification');
     expect(detail).toContain('Uploaded Stage 2 documents');
-    expect(detail).toContain('idNumberMasked');
+    expect(detail).toContain('primaryIdNumberMasked');
     expect(detail).toContain('adminStage2Action');
     expect(actions).toContain('export async function adminStage2Action');
     expect(actions).toContain('getAdminSession');
@@ -550,7 +550,7 @@ describe('admin and track UI source checks', () => {
     const workflow = readFileSync('src/lib/workflow.ts', 'utf8');
     expect(detail).toContain('Stage 2 identity verification');
     expect(detail).toContain('Uploaded Stage 2 documents');
-    expect(detail).toContain('idNumberMasked');
+    expect(detail).toContain('primaryIdNumberMasked');
     expect(detail).toContain('adminStage2Action');
     expect(actions).toContain('export async function adminStage2Action');
     expect(actions).toContain('getAdminSession');
