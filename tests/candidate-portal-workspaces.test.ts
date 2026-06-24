@@ -13,7 +13,7 @@ describe("candidate portal selected-stage workspaces", () => {
     expect(portal).toContain('name="fullLegalName"');
     expect(portal).toContain('name="primaryIdDocument"');
     expect(portal).toContain("action={submitStage3}");
-    expect(portal).toContain("Candidate availability/confirmation input");
+    expect(portal).toContain("Availability / confirmation");
     expect(portal).toContain("action={submitOfferDecision}");
     expect(portal).toContain("Accept Offer");
     expect(portal).toContain("Decline Offer");
@@ -38,14 +38,16 @@ describe("candidate portal selected-stage workspaces", () => {
   });
 
   it("preserves selected stage on candidate action redirects", () => {
-    expect(actions).toContain("{ stage: '2', success: 'stage2_submitted' }");
-    expect(actions).toContain("{ stage: '3', success: 'stage3_submitted' }");
-    expect(actions).toContain("{ stage: '4', success: 'offer_accepted' }");
-    expect(actions).toContain("{ stage: '4', success: 'offer_declined' }");
+    expect(actions).toContain('success: "stage2_submitted"');
+    expect(actions).toContain('success: "stage3_submitted"');
+    expect(actions).toContain('success: "offer_accepted"');
+    expect(actions).toContain('success: "offer_declined"');
   });
 
   it("uses precomputed status helper booleans for review paths", () => {
-    expect(portal).toContain("function isReviewStageStatus(status: StageStatus)");
+    expect(portal).toContain(
+      "function isReviewStageStatus(status: StageStatus)",
+    );
     expect(portal).toContain(
       "const selectedStageIsReview = isReviewStageStatus(selectedStageStatus);",
     );

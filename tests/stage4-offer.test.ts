@@ -40,7 +40,7 @@ describe("Stage 4 offer workflow source checks", () => {
     expect(portal).toContain("Offer details");
     expect(portal).toContain("Accept Offer");
     expect(portal).toContain("Decline Offer");
-    expect(trackActions).toContain("offer.status !== 'Released'");
+    expect(trackActions).toContain('offer.status !== "Released"');
     expect(trackActions).toContain("offerExpiryDate");
     expect(trackActions).toContain("offer_not_open");
   });
@@ -83,8 +83,8 @@ describe("Stage 4 offer workflow source checks", () => {
   it("accepting unlocks Stage 5 and declining does not", () => {
     expect(workflow).toContain("status: 'Agreement Pending'");
     expect(workflow).toContain("currentStageOrder: 5");
-    expect(trackActions).toContain("status: 'Declined'");
-    expect(trackActions).toContain("status: 'Rejected', currentStageOrder: 4");
+    expect(trackActions).toContain('status: "Declined"');
+    expect(trackActions).toContain('status: "Rejected", currentStageOrder: 4');
     expect(portal).toContain("Employment agreement stage is now available.");
   });
 
