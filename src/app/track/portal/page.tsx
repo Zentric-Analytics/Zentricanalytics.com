@@ -498,10 +498,27 @@ export default async function Portal({
                     <div className="block text-sm font-semibold md:col-span-2">
                       <span>Applicant phone</span>
                       <div className="mt-1 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
-                        <select className="input" name="applicantPhoneCountryIso" aria-label="Applicant phone country" required defaultValue="NG">
-                          {countryPhoneOptions.map((country) => <option key={country.iso} value={country.iso}>{country.name} {country.dialCode}</option>)}
+                        <select
+                          className="input"
+                          name="applicantPhoneCountryIso"
+                          aria-label="Applicant phone country"
+                          required
+                          defaultValue="NG"
+                        >
+                          {countryPhoneOptions.map((country) => (
+                            <option key={country.iso} value={country.iso}>
+                              {country.name} {country.dialCode}
+                            </option>
+                          ))}
                         </select>
-                        <input className="input" name="applicantPhoneNational" inputMode="tel" autoComplete="tel" aria-label="Applicant national phone number" required />
+                        <input
+                          className="input"
+                          name="applicantPhoneNational"
+                          inputMode="tel"
+                          autoComplete="tel"
+                          aria-label="Applicant national phone number"
+                          required
+                        />
                       </div>
                     </div>
                     <label className="block text-sm font-semibold">
@@ -516,32 +533,163 @@ export default async function Portal({
                     </label>
                     <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
                       <div className="mb-4">
-                        <h4 className="font-bold text-ink">Primary ID <span className="text-red-600">required</span></h4>
-                        <p className="mt-1 text-sm font-normal text-slate-600">Only your Primary ID is required. Add a Secondary ID only if you choose to provide one.</p>
+                        <h4 className="font-bold text-ink">
+                          Primary ID{" "}
+                          <span className="text-red-600">required</span>
+                        </h4>
+                        <p className="mt-1 text-sm font-normal text-slate-600">
+                          Only your Primary ID is required. Add a Secondary ID
+                          only if you choose to provide one.
+                        </p>
                       </div>
                       <div className="grid gap-4 md:grid-cols-2">
-                        <label className="block text-sm font-semibold">Primary ID type<select className="input mt-1" name="primaryIdType" required><option value="">Select</option>{stage2IdTypeOptions.map((type) => <option key={type}>{type}</option>)}</select></label>
-                        <label className="block text-sm font-semibold">Primary ID number<input className="input mt-1" name="primaryIdNumber" required /></label>
-                        <label className="block text-sm font-semibold">Issuing authority<input className="input mt-1" name="primaryIdIssuingAuthority" required /></label>
-                        <label className="block text-sm font-semibold">Issue date <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="primaryIdIssueDate" type="date" /></label>
-                        <label className="block text-sm font-semibold">Expiry date <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="primaryIdExpiryDate" type="date" /></label>
-                        <label className="block text-sm font-semibold">Primary ID document upload<input className="input mt-1" name="primaryIdDocument" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required /></label>
+                        <label className="block text-sm font-semibold">
+                          Primary ID type
+                          <select
+                            className="input mt-1"
+                            name="primaryIdType"
+                            required
+                          >
+                            <option value="">Select</option>
+                            {stage2IdTypeOptions.map((type) => (
+                              <option key={type}>{type}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Primary ID number
+                          <input
+                            className="input mt-1"
+                            name="primaryIdNumber"
+                            required
+                          />
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Issuing authority
+                          <input
+                            className="input mt-1"
+                            name="primaryIdIssuingAuthority"
+                            required
+                          />
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Issue date{" "}
+                          <span className="font-normal text-slate-500">
+                            optional
+                          </span>
+                          <input
+                            className="input mt-1"
+                            name="primaryIdIssueDate"
+                            type="date"
+                          />
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Expiry date{" "}
+                          <span className="font-normal text-slate-500">
+                            optional
+                          </span>
+                          <input
+                            className="input mt-1"
+                            name="primaryIdExpiryDate"
+                            type="date"
+                          />
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Primary ID document upload
+                          <input
+                            className="input mt-1"
+                            name="primaryIdDocument"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,.webp"
+                            required
+                          />
+                        </label>
                       </div>
                     </section>
                     <section className="rounded-2xl border border-slate-200 p-4 md:col-span-2">
-                      <h4 className="font-bold text-ink">Secondary ID <span className="font-normal text-slate-500">optional</span></h4>
+                      <h4 className="font-bold text-ink">
+                        Secondary ID{" "}
+                        <span className="font-normal text-slate-500">
+                          optional
+                        </span>
+                      </h4>
                       <div className="mt-4 grid gap-4 md:grid-cols-2">
-                        <label className="block text-sm font-semibold">Secondary ID type <span className="font-normal text-slate-500">optional</span><select className="input mt-1" name="secondaryIdType"><option value="">Not provided</option>{stage2IdTypeOptions.map((type) => <option key={type}>{type}</option>)}</select></label>
-                        <label className="block text-sm font-semibold">Secondary ID number <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdNumber" /></label>
-                        <label className="block text-sm font-semibold">Secondary issuing authority <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdIssuingAuthority" /></label>
-                        <label className="block text-sm font-semibold">Secondary issue date <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdIssueDate" type="date" /></label>
-                        <label className="block text-sm font-semibold">Secondary expiry date <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdExpiryDate" type="date" /></label>
-                        <label className="block text-sm font-semibold">Secondary ID document upload <span className="font-normal text-slate-500">optional</span><input className="input mt-1" name="secondaryIdDocument" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" /></label>
+                        <label className="block text-sm font-semibold">
+                          Secondary ID type{" "}
+                          <span className="font-normal text-slate-500">
+                            optional
+                          </span>
+                          <select className="input mt-1" name="secondaryIdType">
+                            <option value="">Not provided</option>
+                            {stage2IdTypeOptions.map((type) => (
+                              <option key={type}>{type}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Secondary ID number{" "}
+                          <span className="font-normal text-slate-500">
+                            optional
+                          </span>
+                          <input
+                            className="input mt-1"
+                            name="secondaryIdNumber"
+                          />
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Secondary issuing authority{" "}
+                          <span className="font-normal text-slate-500">
+                            optional
+                          </span>
+                          <input
+                            className="input mt-1"
+                            name="secondaryIdIssuingAuthority"
+                          />
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Secondary issue date{" "}
+                          <span className="font-normal text-slate-500">
+                            optional
+                          </span>
+                          <input
+                            className="input mt-1"
+                            name="secondaryIdIssueDate"
+                            type="date"
+                          />
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Secondary expiry date{" "}
+                          <span className="font-normal text-slate-500">
+                            optional
+                          </span>
+                          <input
+                            className="input mt-1"
+                            name="secondaryIdExpiryDate"
+                            type="date"
+                          />
+                        </label>
+                        <label className="block text-sm font-semibold">
+                          Secondary ID document upload{" "}
+                          <span className="font-normal text-slate-500">
+                            optional
+                          </span>
+                          <input
+                            className="input mt-1"
+                            name="secondaryIdDocument"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,.webp"
+                          />
+                        </label>
                       </div>
                     </section>
                     <label className="block text-sm font-semibold md:col-span-2">
                       Passport/profile photo, optional
-                      <input className="input mt-1" name="passportPhoto" type="file" accept=".jpg,.jpeg,.png,.webp" />
+                      <input
+                        className="input mt-1"
+                        name="passportPhoto"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp"
+                      />
                     </label>
                     <label className="block text-sm font-semibold">
                       Emergency contact name
@@ -562,10 +710,27 @@ export default async function Portal({
                     <div className="block text-sm font-semibold md:col-span-2">
                       <span>Emergency contact phone</span>
                       <div className="mt-1 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
-                        <select className="input" name="emergencyContactPhoneCountryIso" aria-label="Emergency contact phone country" required defaultValue="NG">
-                          {countryPhoneOptions.map((country) => <option key={country.iso} value={country.iso}>{country.name} {country.dialCode}</option>)}
+                        <select
+                          className="input"
+                          name="emergencyContactPhoneCountryIso"
+                          aria-label="Emergency contact phone country"
+                          required
+                          defaultValue="NG"
+                        >
+                          {countryPhoneOptions.map((country) => (
+                            <option key={country.iso} value={country.iso}>
+                              {country.name} {country.dialCode}
+                            </option>
+                          ))}
                         </select>
-                        <input className="input" name="emergencyContactPhoneNational" inputMode="tel" autoComplete="tel" aria-label="Emergency contact national phone number" required />
+                        <input
+                          className="input"
+                          name="emergencyContactPhoneNational"
+                          inputMode="tel"
+                          autoComplete="tel"
+                          aria-label="Emergency contact national phone number"
+                          required
+                        />
                       </div>
                     </div>
                     <label className="block text-sm font-semibold">
@@ -608,6 +773,10 @@ export default async function Portal({
                     Submit Stage 2
                   </button>
                 </form>
+              ) : selectedStageIsActionable ? (
+                <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
+                  Stage 2 details will be shared by the admin.
+                </p>
               ) : selectedStageIsReview ? (
                 <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
                   Stage 2 submitted and under review.
@@ -628,13 +797,22 @@ export default async function Portal({
                   className="mt-6 space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5"
                 >
                   <input type="hidden" name="session" value={session ?? ""} />
-                  <h3 className="text-lg font-bold text-ink">
-                    {stage3Metadata.title ??
-                      "Screening / Interview / Assessment"}
-                  </h3>
-                  <div className="space-y-2 text-sm leading-6 text-slate-700">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">
+                      Stage 3 workspace
+                    </p>
+                    <h3 className="mt-2 text-lg font-bold text-ink">
+                      {stage3Metadata.title ??
+                        "Screening / Interview / Assessment"}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Screening type:{" "}
+                      {stage3Metadata.screeningType ?? "Screening"}
+                    </p>
+                  </div>
+                  <div className="space-y-3 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
                     <p className="whitespace-pre-wrap">
-                      <strong>Instructions:</strong>{" "}
+                      <strong>Candidate instructions:</strong>{" "}
                       {stage3Metadata.instructions}
                     </p>
                     <p>
@@ -644,7 +822,14 @@ export default async function Portal({
                     {stage3Metadata.meetingLink ? (
                       <p>
                         <strong>Meeting link:</strong>{" "}
-                        {stage3Metadata.meetingLink}
+                        <a
+                          className="text-brand underline"
+                          href={stage3Metadata.meetingLink}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {stage3Metadata.meetingLink}
+                        </a>
                       </p>
                     ) : null}
                     {stage3Metadata.location ? (
@@ -663,17 +848,32 @@ export default async function Portal({
                         <strong>Deadline:</strong> {stage3Metadata.deadlineAt}
                       </p>
                     ) : null}
+                    {stage3Metadata.requiresUpload ? (
+                      <p>
+                        <strong>Upload instructions:</strong>{" "}
+                        {stage3Metadata.allowedUploadNote ??
+                          "Upload the requested assessment file before submitting."}
+                      </p>
+                    ) : null}
                   </div>
                   <label className="block text-sm font-semibold">
-                    Candidate availability/confirmation input
+                    Availability / confirmation{" "}
+                    {stage3Metadata.requiresCandidateResponse ? (
+                      <span className="text-red-600">(required)</span>
+                    ) : (
+                      <span className="text-slate-500">(optional)</span>
+                    )}
                     <input
                       className="input mt-1"
                       name="availability"
-                      required
+                      required={Boolean(
+                        stage3Metadata.requiresCandidateResponse,
+                      )}
                     />
                   </label>
                   <label className="block text-sm font-semibold">
-                    Response message
+                    Response message{" "}
+                    <span className="text-slate-500">(optional)</span>
                     <textarea
                       className="input mt-1 min-h-28"
                       name="responseMessage"
@@ -681,7 +881,8 @@ export default async function Portal({
                   </label>
                   {stage3Metadata.requiresUpload ? (
                     <label className="block text-sm font-semibold">
-                      Assessment upload
+                      Assessment upload{" "}
+                      <span className="text-red-600">(required)</span>
                       <input
                         className="input mt-1"
                         name="assessmentFile"
