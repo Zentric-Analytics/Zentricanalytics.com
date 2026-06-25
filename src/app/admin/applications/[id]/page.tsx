@@ -12,6 +12,7 @@ import {
 } from "@/lib/storage";
 import {
   parseStage3Metadata,
+  parseStage5RoleSchedule,
   stage3InterviewModes,
   stage3ScreeningTypes,
 } from "@/lib/hiring";
@@ -24,6 +25,8 @@ import {
   adminStage3Action,
   adminStage3InstructionAction,
   adminOfferAction,
+  adminStage5AgreementAction,
+  adminStage5Action,
 } from "../actions";
 import { AdminDocumentActions } from "./AdminDocumentActions";
 
@@ -48,6 +51,7 @@ type AdminApplication = Prisma.JobApplicationGetPayload<{
     emails: true;
     auditLogs: true;
     offer: true;
+    employmentAgreement: true;
   };
 }>;
 
@@ -352,6 +356,7 @@ export default async function AdminApplicationDetail({
       emails: true,
       auditLogs: true,
       offer: true,
+      employmentAgreement: true,
     },
   });
 
@@ -423,6 +428,10 @@ export default async function AdminApplicationDetail({
     (stage: ApplicationStage) => stage.stageOrder === 5,
   );
   const offer = application.offer;
+  const agreement = application.employmentAgreement;
+  const roleSchedule = parseStage5RoleSchedule(agreement?.roleSchedule);
+  const stageFiveSubmission = stageFive?.submissions[0];
+  const stageFiveSignature = stageFiveSubmission?.signature;
   const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
   const stageThreeDocumentsWithAvailability = await Promise.all(
     stageThreeDocuments.map(async (document: ApplicantDocument) => {
@@ -464,15 +473,9 @@ export default async function AdminApplicationDetail({
     string,
     unknown
   >;
-  const timelineStages = Array.from({ length: 5 }, (_, index) => {
-    const order = index + 1;
-    const stage = application.stages.find((item) => item.stageOrder === order);
-    return {
-      order,
-      stage,
-      submission: stage?.submissions[0],
-      approval: stage?.approvals[0],
-    };
+  const timelineStages = application.stages.map((stage) => {
+    const order = stage.stageOrder;
+    return { order, stage, submission: stage.submissions[0], approval: stage.approvals[0] };
   });
 
   return (
@@ -555,7 +558,7 @@ export default async function AdminApplicationDetail({
 
         <section className="card mt-6 p-5">
           <h2 className="text-xl font-bold">Stage timeline / progress</h2>
-          <div className="mt-4 grid gap-3 md:grid-cols-5">
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
             {timelineStages.map(({ order, stage, submission, approval }) => (
               <div
                 className={`rounded-2xl border p-4 ${application.currentStageOrder === order ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-slate-50"}`}
@@ -1366,14 +1369,33 @@ export default async function AdminApplicationDetail({
           </section>
         ) : null}
 
-        <section className="card mt-6 p-5">
-          <h2 className="font-bold">Stage 5 Agreement / onboarding</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Status: {stageFive?.status ?? "Locked"}. This stage becomes
-            available through the existing hiring workflow after an accepted
-            offer.
-          </p>
-        </section>
+        {(stageFive && stageFive.status !== "Locked") || application.currentStageOrder >= 5 || offer?.status === "Accepted" || agreement ? (
+          <section className="card mt-6 p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><h2 className="font-bold">Stage 5 Agreement / onboarding · Employment Agreement + Role Schedule</h2><StatusBadge status={stageFive?.status ?? agreement?.status ?? "Locked"} /></div>
+            {!offer || offer.status !== "Accepted" ? <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Stage 5 release requires an accepted Stage 4 offer.</p> : null}
+            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 5 actions.</p> : !["Approved","Rejected"].includes(stageFive?.status ?? "") ? (
+              <form action={adminStage5AgreementAction} className="mt-5 space-y-4 rounded-2xl border border-slate-200 p-4">
+                <input type="hidden" name="applicationDbId" value={application.id} />
+                <div className="grid gap-4 md:grid-cols-2">
+                  {[ ["title","Agreement title", agreement?.title ?? "Employment Agreement + Role Schedule"], ["version","Agreement version", agreement?.version ?? 1], ["roleOffered","Role offered", roleSchedule.roleOffered ?? offer?.roleOffered ?? application.roleAppliedFor], ["departmentTeam","Department/team", roleSchedule.departmentTeam ?? ""], ["reportingManager","Reporting manager", roleSchedule.reportingManager ?? offer?.reportingManager ?? ""], ["workMode","Work mode", roleSchedule.workMode ?? offer?.workMode ?? application.workModePreference ?? ""], ["compensationSalary","Compensation/salary", roleSchedule.compensationSalary ?? offer?.salary ?? ""], ["probationPeriod","Probation period", roleSchedule.probationPeriod ?? offer?.probationPeriod ?? ""], ["workingHours","Working hours / schedule", roleSchedule.workingHours ?? ""], ["agreementExpiryDate","Agreement expiry date", roleSchedule.agreementExpiryDate ?? ""] ].map(([name,label,value]) => <label className="text-sm font-semibold" key={String(name)}>{String(label)}<input className="input mt-1" name={String(name)} type={name === "version" ? "number" : name === "agreementExpiryDate" ? "date" : "text"} defaultValue={String(value ?? "")} required={["title","version","roleOffered","workMode","compensationSalary","workingHours"].includes(String(name))} /></label>)}
+                  <label className="text-sm font-semibold">Start date<input className="input mt-1" name="startDate" type="date" defaultValue={String(roleSchedule.startDate ?? offer?.startDate?.toISOString().slice(0,10) ?? "")} required /></label>
+                  <label className="text-sm font-semibold md:col-span-2">Duties and responsibilities<textarea className="input mt-1 min-h-24" name="dutiesAndResponsibilities" defaultValue={roleSchedule.dutiesAndResponsibilities ?? ""} required /></label>
+                  <label className="text-sm font-semibold md:col-span-2">Confidentiality / data protection clause<textarea className="input mt-1 min-h-24" name="confidentialityAndDataProtection" defaultValue={roleSchedule.confidentialityAndDataProtection ?? ""} required /></label>
+                  <label className="text-sm font-semibold md:col-span-2">Equipment / system access note<textarea className="input mt-1 min-h-24" name="equipmentAndSystemAccess" defaultValue={roleSchedule.equipmentAndSystemAccess ?? ""} required /></label>
+                  <label className="text-sm font-semibold md:col-span-2">Special conditions<textarea className="input mt-1 min-h-24" name="specialConditions" defaultValue={roleSchedule.specialConditions ?? offer?.specialConditions ?? ""} /></label>
+                  <label className="text-sm font-semibold md:col-span-2">Employment agreement text<textarea className="input mt-1 min-h-48" name="agreementText" defaultValue={agreement?.agreementText ?? ""} required /></label>
+                </div>
+                <div className="flex flex-wrap gap-2"><button className="btn btn-secondary" name="action" value="draft">Save Stage 5 draft</button><button className="btn btn-primary" name="action" value="release" disabled={offer?.status !== "Accepted"}>Release to candidate</button></div>
+              </form>
+            ) : <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Stage 5 is {stageFive?.status}; agreement editing is closed.</p>}
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Released agreement summary</h3><p className="mt-2 text-sm">{agreement ? `${agreement.title} · v${agreement.version} · ${agreement.status}` : "No agreement draft yet."}</p><p className="mt-1 text-xs text-slate-500">Released: {formatDateTime(agreement?.releasedAt)} · By: {agreement?.releasedByAdminEmail ?? "—"}</p></div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Candidate submission and signature</h3>{stageFiveSubmission ? <div className="mt-2 text-sm"><p>Submitted: {formatDateTime(stageFiveSubmission.submittedAt)}</p><p>Version: {stageFiveSubmission.version}</p><p>Signature: {stageFiveSignature?.confirmed ? "Confirmed" : "Missing"} · Signed: {formatDateTime(stageFiveSignature?.signedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 5 submission found.</p>}</div>
+            </div>
+            <h3 className="mt-5 font-semibold">Stage 5 admin actions</h3>
+            <StageActionForm action={adminStage5Action} applicationId={application.id} stage="Stage 5" />
+          </section>
+        ) : null}
 
         <section className="card mt-6 border border-red-200 bg-red-50 p-5">
           <h2 className="font-bold text-red-800">Danger zone</h2>

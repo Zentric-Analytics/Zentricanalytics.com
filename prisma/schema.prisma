@@ -46,6 +46,7 @@ model JobApplication {
   auditLogs          AuditLog[]
   accessCodes        ApplicationAccessCode[]
   offer              Offer?
+  employmentAgreement EmploymentAgreement?
   deletedAt          DateTime?
   deletedByAdminEmail String?
   deleteReason       String?
@@ -173,13 +174,20 @@ model Offer {
 }
 
 model EmploymentAgreement {
-  id            String   @id @default(cuid())
-  applicationId String   @unique
-  version       Int      @default(1)
-  agreementText String
-  roleSchedule  Json
-  status        String   @default("Draft")
-  createdAt     DateTime @default(now())
+  id                   String         @id @default(cuid())
+  applicationId        String         @unique
+  application          JobApplication @relation(fields: [applicationId], references: [id])
+  version              Int            @default(1)
+  title                String         @default("Employment Agreement + Role Schedule")
+  agreementText        String
+  roleSchedule         Json
+  status               String         @default("Draft")
+  releasedAt           DateTime?
+  releasedByAdminEmail String?
+  candidateSubmittedAt DateTime?
+  approvedAt           DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 }
 
 model AuditLog {

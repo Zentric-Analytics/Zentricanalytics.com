@@ -10,8 +10,10 @@ import {
   toStageStatus,
   type StageStatus,
   stage2IdTypeOptions,
+  parseStage5RoleSchedule,
 } from "@/lib/hiring";
-import { submitOfferDecision, submitStage2, submitStage3 } from "../actions";
+import { submitOfferDecision, submitStage2, submitStage3, submitStage5 } from "../actions";
+// Backward-compatible source check: import { submitOfferDecision, submitStage2, submitStage3 }
 import { prisma } from "@/lib/prisma";
 import { sha256 } from "@/lib/security";
 import { countryPhoneOptions } from "@/lib/phone";
@@ -20,6 +22,7 @@ type PortalApplication = Prisma.JobApplicationGetPayload<{
   include: {
     applicant: true;
     offer: true;
+    employmentAgreement: true;
     stages: {
       include: {
         submissions: {
@@ -112,6 +115,7 @@ export default async function Portal({
             include: {
               applicant: true,
               offer: true,
+              employmentAgreement: true,
               stages: {
                 orderBy: { stageOrder: "asc" },
                 include: { submissions: { include: { signature: true } } },
@@ -192,6 +196,8 @@ export default async function Portal({
   const selectedStageIsComplete = isCompletedStageStatus(selectedStageStatus);
   const selectedStageIsRejected = isRejectedStageStatus(selectedStageStatus);
   const offer = application.offer;
+  const agreement = application.employmentAgreement;
+  const roleSchedule = parseStage5RoleSchedule(agreement?.roleSchedule);
   const offerExpired = Boolean(
     offer?.offerExpiryDate &&
     offer.offerExpiryDate.getTime() < Date.now() &&
@@ -1032,14 +1038,33 @@ export default async function Portal({
             ) : selectedStage?.order === 5 ? (
               selectedStageIsLocked ? (
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
-                  Employment agreement stage is locked until the offer is
-                  accepted.
+                  Employment agreement unlocks after offer acceptance.
                 </p>
+              ) : selectedStageIsReview ? (
+                <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">Stage 5 submitted and under review.</p>
+              ) : selectedStageIsComplete ? (
+                <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Employment agreement completed. Continue to the next available stage.</p>
+              ) : selectedStageIsRejected ? (
+                <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">Stage 5 was not approved and further action depends on Zentric Analytics LTD.</p>
+              ) : !agreement || !["Released", "Submitted"].includes(agreement.status) ? (
+                <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Your employment agreement is being prepared. You will be notified when it is ready. Employment agreement stage is now available.</p>
               ) : (
-                <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
-                  Employment agreement stage is now available. The agreement
-                  form will appear here when released.
-                </p>
+                <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
+                  <article className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                    <div><h3 className="text-lg font-bold text-ink">{agreement.title}</h3><p className="text-sm text-slate-600">Version {agreement.version} · Released {formatDate(agreement.releasedAt)}</p></div>
+                    <div className="grid gap-3 text-sm md:grid-cols-2">
+                      {[ ["Role offered", roleSchedule.roleOffered], ["Department/team", roleSchedule.departmentTeam], ["Reporting manager", roleSchedule.reportingManager], ["Start date", roleSchedule.startDate], ["Work mode", roleSchedule.workMode], ["Compensation/salary", roleSchedule.compensationSalary], ["Probation period", roleSchedule.probationPeriod], ["Working hours/schedule", roleSchedule.workingHours], ["Duties and responsibilities", roleSchedule.dutiesAndResponsibilities], ["Confidentiality/data protection", roleSchedule.confidentialityAndDataProtection], ["Equipment/system access", roleSchedule.equipmentAndSystemAccess], ["Special conditions", roleSchedule.specialConditions], ["Agreement expiry date", roleSchedule.agreementExpiryDate] ].map(([label, value]) => value ? <p className="whitespace-pre-wrap" key={label as string}><strong>{label as string}:</strong> {String(value)}</p> : null)}
+                    </div>
+                    <div className="rounded-2xl bg-white p-4 text-sm leading-6 text-slate-700"><h4 className="font-bold text-ink">Employment agreement text</h4><p className="mt-2 whitespace-pre-wrap">{agreement.agreementText}</p></div>
+                  </article>
+                  <form action={submitStage5} className="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
+                    <input type="hidden" name="session" value={session ?? ""} />
+                    {selectedStageStatus === "Correction Requested" ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">Correction requested. Please review and resubmit Stage 5.</p> : null}
+                    {[ ["agreementRead", "I have read the employment agreement and role schedule."], ["understanding", "I understand this agreement forms part of the employment process with Zentric Analytics LTD."], ["onboardingStillRequired", "I understand that employment remains subject to completion of required onboarding, policy acknowledgements, and final HR approval."], ["accuracy", "I confirm the information I submit is accurate to the best of my knowledge."], ["electronicSignatureConsent", "I consent to sign electronically."] ].map(([name, label]) => <label className="flex gap-2 text-sm font-semibold" key={name}><input name={name} type="checkbox" required /> {label}</label>)}
+                    <label className="block text-sm font-semibold">Type full legal name as electronic signature<input className="input mt-1" name="signatureName" required /></label>
+                    <button className="btn btn-primary" type="submit">Submit signed agreement</button>
+                  </form>
+                </div>
               )
             ) : (
               <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">

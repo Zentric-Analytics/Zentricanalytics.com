@@ -6,8 +6,8 @@ import { approveStage1, approveStage2, approveStage3, recordAdminStage1Action, r
 import { sendAndRecordEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import { deletePrivateUpload } from '@/lib/storage';
-import { parseStage3Metadata, stage3InstructionSchema, offerSchema, parseOfferDate } from '@/lib/hiring';
-import { applicationRejectedEmail, correctionRequestedEmail, offerReadyEmail, stage2CorrectionRequestedEmail, stage2RejectedEmail, stage2UnlockedEmail, stage3CorrectionRequestedEmail, stage3InstructionsAvailableEmail, stage3RejectedEmail, stage3UnlockedEmail, stage4UnlockedEmail } from '../../../lib/email-templates';
+import { parseStage3Metadata, stage3InstructionSchema, offerSchema, parseOfferDate, stage5AgreementSchema, toStage5RoleSchedule } from '@/lib/hiring';
+import { applicationRejectedEmail, correctionRequestedEmail, offerReadyEmail, stage2CorrectionRequestedEmail, stage2RejectedEmail, stage2UnlockedEmail, stage3CorrectionRequestedEmail, stage3InstructionsAvailableEmail, stage3RejectedEmail, stage3UnlockedEmail, stage4UnlockedEmail, stage5AgreementReleasedEmail, stage5CorrectionRequestedEmail, stage5RejectedEmail, stage6UnlockedEmail } from '../../../lib/email-templates';
 
 function logAdminDiagnostics(diagnostics: Record<string, unknown>) { console.info('adminStageActionDiagnostics', diagnostics); }
 function redirectPath(applicationId?: string | null, params = '') { return applicationId ? `/admin/applications/${applicationId}${params}` : `/admin/applications${params}`; }
@@ -317,5 +317,84 @@ export async function adminOfferAction(formData: FormData) {
     }
   } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; }
   finally { revalidatePath('/admin/applications'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`); logAdminDiagnostics(diagnostics); }
+  redirect(destination);
+}
+
+export async function adminStage5AgreementAction(formData: FormData) {
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  const action = String(formData.get('action') ?? 'draft');
+  let destination = redirectPath(applicationId, '?error=action_failed');
+  const adminSession = await getAdminSession();
+  if (!adminSession) redirect('/admin/login');
+  try {
+    const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, include: { applicant: true, stages: true, offer: true, employmentAgreement: true } });
+    const stage5 = app?.stages.find((s) => s.stageOrder === 5);
+    if (!app) redirect(redirectPath(null, '?error=action_failed'));
+    if (app.deletedAt) redirect(redirectPath(applicationId, '?error=restore_before_stage_action'));
+    if (!stage5) redirect(redirectPath(applicationId, '?error=missing_stage'));
+    if (app.offer?.status !== 'Accepted') redirect(redirectPath(applicationId, '?error=stage5_offer_required'));
+    if (app.employmentAgreement && ['Approved','Rejected'].includes(app.employmentAgreement.status)) redirect(redirectPath(applicationId, '?error=invalid_action'));
+    const parsed = stage5AgreementSchema.safeParse(Object.fromEntries(formData.entries()));
+    if (!parsed.success) redirect(redirectPath(applicationId, '?error=stage5_validation'));
+    const releasing = action === 'release';
+    await prisma.$transaction(async (tx) => {
+      await tx.employmentAgreement.upsert({ where: { applicationId }, create: { applicationId, title: parsed.data.title, version: parsed.data.version, agreementText: parsed.data.agreementText, roleSchedule: toStage5RoleSchedule(parsed.data), status: releasing ? 'Released' : 'Draft', releasedAt: releasing ? new Date() : null, releasedByAdminEmail: releasing ? adminSession.email : null }, update: { title: parsed.data.title, version: parsed.data.version, agreementText: parsed.data.agreementText, roleSchedule: toStage5RoleSchedule(parsed.data), status: releasing ? 'Released' : 'Draft', releasedAt: releasing ? new Date() : app.employmentAgreement?.releasedAt, releasedByAdminEmail: releasing ? adminSession.email : app.employmentAgreement?.releasedByAdminEmail } });
+      await tx.hiringStage.update({ where: { id: stage5.id }, data: { status: releasing ? 'In Progress' : 'Available', unlockedAt: stage5.unlockedAt ?? new Date() } });
+      await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Agreement Pending', currentStageOrder: 5 } });
+      await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: releasing ? 'Admin released Stage 5 agreement' : 'Admin saved Stage 5 agreement draft', metadata: { agreementStatus: releasing ? 'Released' : 'Draft', version: parsed.data.version } } });
+    });
+    if (releasing) {
+      const email = await safeSendEmail({ applicationId, template: 'stage-5-agreement-released', ...stage5AgreementReleasedEmail({ applicationId: app.applicationId, candidateName: app.applicant?.fullName }) });
+      destination = redirectPath(applicationId, `?success=stage5_released${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+    } else destination = redirectPath(applicationId, '?success=stage5_draft');
+  } catch (error) { if ((error as Error).message === 'NEXT_REDIRECT') throw error; destination = redirectPath(applicationId, '?error=action_failed'); }
+  revalidatePath('/admin/applications'); revalidatePath(`/admin/applications/${applicationId}`);
+  redirect(destination);
+}
+
+export async function adminStage5Action(formData: FormData) {
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  const action = String(formData.get('action') ?? '');
+  const notes = String(formData.get('notes') ?? '').slice(0, 500);
+  let destination = redirectPath(applicationId, '?error=action_failed');
+  const adminSession = await getAdminSession();
+  if (!adminSession) redirect('/admin/login');
+  try {
+    const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, include: { applicant: true, stages: { include: { submissions: { include: { signature: true }, orderBy: { createdAt: 'desc' } } } }, employmentAgreement: true } });
+    const stage5 = app?.stages.find((s) => s.stageOrder === 5);
+    const stage6 = app?.stages.find((s) => s.stageOrder === 6);
+    if (!app) redirect(redirectPath(null, '?error=action_failed'));
+    if (app.deletedAt) redirect(redirectPath(applicationId, '?error=restore_before_stage_action'));
+    if (!stage5) redirect(redirectPath(applicationId, '?error=missing_stage'));
+    const submission = stage5.submissions[0];
+    const signature = submission?.signature;
+    if (action === 'approve' && (!submission || !signature?.confirmed)) redirect(redirectPath(applicationId, '?error=stage5_missing_submission'));
+    await prisma.$transaction(async (tx) => {
+      if (action === 'approve') {
+        await tx.hiringStage.update({ where: { id: stage5.id }, data: { status: 'Approved', approvedAt: new Date() } });
+        await tx.stageApproval.create({ data: { stageId: stage5.id, action: 'Approved', adminEmail: adminSession.email, notes } });
+        if (app.employmentAgreement) await tx.employmentAgreement.update({ where: { applicationId }, data: { status: 'Approved', approvedAt: new Date() } });
+        if (stage6 && stage6.status === 'Locked') await tx.hiringStage.update({ where: { id: stage6.id }, data: { status: 'Available', unlockedAt: stage6.unlockedAt ?? new Date() } });
+        await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Onboarding Pending', currentStageOrder: 6 } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin approved Stage 5', metadata: { signatureConfirmed: true } } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'system', action: 'Stage 6 unlocked after Stage 5 approval', metadata: { stage6Status: stage6 ? 'Available' : 'missing' } } });
+      } else if (action === 'correction') {
+        await tx.hiringStage.update({ where: { id: stage5.id }, data: { status: 'Correction Requested' } });
+        await tx.stageApproval.create({ data: { stageId: stage5.id, action: 'Correction Requested', adminEmail: adminSession.email, notes } });
+        await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Agreement Pending', currentStageOrder: 5 } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin requested Stage 5 correction', metadata: { notesPresent: Boolean(notes) } } });
+      } else if (action === 'reject') {
+        await tx.hiringStage.update({ where: { id: stage5.id }, data: { status: 'Rejected' } });
+        await tx.stageApproval.create({ data: { stageId: stage5.id, action: 'Rejected', adminEmail: adminSession.email, notes } });
+        if (app.employmentAgreement) await tx.employmentAgreement.update({ where: { applicationId }, data: { status: 'Rejected' } });
+        await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Rejected', currentStageOrder: 5 } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin rejected Stage 5', metadata: { notesPresent: Boolean(notes) } } });
+      } else throw new Error('Invalid action');
+    });
+    const template = action === 'approve' ? ['stage-6-unlocked', stage6UnlockedEmail] as const : action === 'correction' ? ['stage-5-correction-requested', stage5CorrectionRequestedEmail] as const : ['stage-5-rejected', stage5RejectedEmail] as const;
+    const email = await safeSendEmail({ applicationId, template: template[0], ...template[1]({ applicationId: app.applicationId, candidateName: app.applicant.fullName }) });
+    destination = redirectPath(applicationId, `?success=${action === 'approve' ? 'stage5_approved' : action === 'correction' ? 'stage5_correction' : 'stage5_rejected'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+  } catch (error) { if ((error as Error).message === 'NEXT_REDIRECT') throw error; destination = redirectPath(applicationId, '?error=action_failed'); }
+  revalidatePath('/admin/applications'); revalidatePath(`/admin/applications/${applicationId}`);
   redirect(destination);
 }
