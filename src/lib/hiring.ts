@@ -633,3 +633,49 @@ export function isOfferExpired(
     input.offerExpiryDate.getTime() < now.getTime(),
   );
 }
+
+const parseableDateString = (field: string) =>
+  z.string().trim().min(1, `${field} is required.`).refine((value) => !Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime()), `${field} must be a valid date.`);
+
+export const stage5AgreementSchema = z.object({
+  title: z.string().trim().min(2, "Enter the agreement title.").max(160),
+  version: z.coerce.number().int().positive("Version must be a positive whole number."),
+  agreementText: z.string().trim().min(20, "Enter the employment agreement text.").max(50000),
+  roleOffered: z.string().trim().min(2, "Enter the offered role.").max(160),
+  departmentTeam: optionalText(160),
+  reportingManager: optionalText(160),
+  startDate: parseableDateString("Start date"),
+  workMode: z.string().trim().min(2, "Enter the work mode.").max(80),
+  compensationSalary: z.string().trim().min(2, "Enter compensation details.").max(500),
+  probationPeriod: optionalText(160),
+  workingHours: z.string().trim().min(2, "Enter working hours.").max(1000),
+  dutiesAndResponsibilities: z.string().trim().min(5, "Enter duties and responsibilities.").max(5000),
+  confidentialityAndDataProtection: z.string().trim().min(5, "Enter the confidentiality/data protection clause.").max(5000),
+  equipmentAndSystemAccess: z.string().trim().min(5, "Enter the equipment/system access note.").max(3000),
+  specialConditions: optionalText(3000),
+  agreementExpiryDate: z.string().trim().optional().or(z.literal("")).refine((value) => !value || !Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime()), "Agreement expiry date must be valid."),
+});
+export type Stage5AgreementInput = z.infer<typeof stage5AgreementSchema>;
+export type Stage5RoleSchedule = Omit<Stage5AgreementInput, "title" | "version" | "agreementText">;
+export function toStage5RoleSchedule(data: Stage5AgreementInput): Stage5RoleSchedule {
+  const { title: _title, version: _version, agreementText: _agreementText, ...roleSchedule } = data;
+  return roleSchedule;
+}
+export function parseStage5RoleSchedule(value: unknown): Partial<Stage5RoleSchedule> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Partial<Stage5RoleSchedule>) : {};
+}
+export function parseStage5Date(value: string) { return parseOfferDate(value); }
+
+export const stage5CandidateSubmissionSchema = z.object({
+  session: z.string().min(16, "Open the portal with a valid session."),
+  agreementRead: z.literal("on", { errorMap: () => ({ message: "Confirm you have read the agreement." }) }),
+  understanding: z.literal("on", { errorMap: () => ({ message: "Confirm your understanding." }) }),
+  onboardingStillRequired: z.literal("on", { errorMap: () => ({ message: "Confirm onboarding remains required." }) }),
+  accuracy: z.literal("on", { errorMap: () => ({ message: "Confirm accuracy." }) }),
+  electronicSignatureConsent: z.literal("on", { errorMap: () => ({ message: "Consent to electronic signature is required." }) }),
+  signatureName: z.string().trim().min(2, "Type your full legal name as your electronic signature.").max(160),
+});
+export type Stage5CandidateSubmissionInput = z.infer<typeof stage5CandidateSubmissionSchema>;
+export function toStage5SubmissionPayload(data: Stage5CandidateSubmissionInput, agreementId: string, agreementVersion: number) {
+  return { agreementId, agreementVersion, confirmations: { agreementRead: true, understanding: true, onboardingStillRequired: true, accuracy: true, electronicSignatureConsent: true } };
+}
