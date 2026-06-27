@@ -29,6 +29,7 @@ import {
   adminStage5Action,
   adminStage6Action,
   adminStage7Action,
+  adminStage8Action,
 } from "../actions";
 import { AdminDocumentActions } from "./AdminDocumentActions";
 
@@ -263,6 +264,28 @@ function StageActionForm({
   );
 }
 
+
+function Stage8FinalApprovalForm({ applicationId }: { applicationId: string }) {
+  const checklist: Array<[string, string[]]> = [
+    ["Application review complete", ["Stage 1 application reviewed", "Candidate identity and contact information reviewed", "Role applied/offered is consistent"]],
+    ["Screening and offer complete", ["Stage 3 screening/assessment completed or approved", "Stage 4 offer accepted", "Stage 5 employment agreement approved"]],
+    ["Onboarding complete", ["Stage 6 onboarding form approved", "Required onboarding documents reviewed", "Payroll/statutory handling reviewed according to current app limitations", "Emergency/next-of-kin details reviewed"]],
+    ["Policy and access acknowledgements complete", ["Stage 7 policy/privacy/access acknowledgements approved", "Confidentiality acknowledgement completed", "System access/property acknowledgement completed"]],
+    ["Employee file readiness", ["Employee file is ready for HR records", "Start date is confirmed or ready for HR scheduling", "Reporting manager/work mode reviewed", "Any role schedule notes reviewed", "Any outstanding HR conditions have been resolved or documented"]],
+    ["Final HR declaration", ["Admin confirms final HR review is complete", "Admin confirms the workflow can be marked completed/hired"]],
+  ];
+  const names = ["stage1ApplicationReviewed", "candidateIdentityReviewed", "roleConsistencyReviewed", "stage3ScreeningApproved", "stage4OfferAccepted", "stage5AgreementApproved", "stage6OnboardingApproved", "onboardingDocumentsReviewed", "payrollStatutoryHandlingReviewed", "emergencyDetailsReviewed", "stage7AcknowledgementsApproved", "confidentialityAcknowledgementCompleted", "systemAccessAcknowledgementCompleted", "employeeFileReady", "startDateReady", "reportingManagerWorkModeReviewed", "roleScheduleNotesReviewed", "outstandingConditionsResolved", "finalHrReviewComplete", "workflowCanBeMarkedHired"];
+  let index = 0;
+  return <form action={adminStage8Action} className="mt-4 space-y-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+    <input type="hidden" name="applicationDbId" value={applicationId} />
+    <p className="text-sm font-semibold text-blue-950">Finalizing marks the hiring workflow complete. The server will still block final approval unless Stages 1–7 are approved/completed and the offer is accepted.</p>
+    <div className="grid gap-4 lg:grid-cols-2">{checklist.map(([group, items]) => <section className="rounded-2xl border border-blue-100 bg-white p-4" key={group}><h4 className="font-bold text-slate-950">{group}</h4><div className="mt-3 space-y-2">{items.map((label) => { const name = names[index++]; return <label className="flex gap-2 text-sm font-semibold text-slate-700" key={name}><input name={name} type="checkbox" /> {label}</label>; })}</div></section>)}</div>
+    <label className="block text-sm font-semibold">Optional final HR notes (admin-only)<textarea className="input mt-1 min-h-24" name="finalHrNotes" maxLength={1500} /></label>
+    <label className="block text-sm font-semibold">Optional candidate-facing note<textarea className="input mt-1 min-h-20" name="candidateFacingNote" maxLength={1000} /></label>
+    <div className="flex flex-wrap gap-2"><button className="btn btn-primary" name="action" value="finalize">Finalize Stage 8 and mark hired</button><button className="btn btn-secondary" name="action" value="correction">Request Stage 8 correction</button><button className="rounded-full border border-red-200 px-5 py-2 font-semibold text-red-700 hover:bg-red-50" name="action" value="reject">Reject at final review</button></div>
+  </form>;
+}
+
 function actionBanner(params: Record<string, string | undefined>) {
   const messages: string[] = [];
   if (params.success === "approved")
@@ -297,6 +320,12 @@ function actionBanner(params: Record<string, string | undefined>) {
   if (params.success === "offer_released")
     messages.push("Offer released to candidate.");
   if (params.success === "offer_withdrawn") messages.push("Offer withdrawn.");
+  if (params.success === "stage8_finalized") messages.push("Stage 8 finalized and hiring workflow marked hired.");
+  if (params.success === "stage8_correction") messages.push("Stage 8 correction requested without rolling back prior stages.");
+  if (params.success === "stage8_rejected") messages.push("Stage 8 rejected and application marked rejected.");
+  if (params.error === "stage8_validation") messages.push("Complete all required final HR checklist items before finalizing Stage 8.");
+  if (params.error === "stage8_prior_stages_incomplete") messages.push("Stage 8 cannot be finalized until Stages 1–7 are approved/completed and the offer is accepted.");
+  if (params.error === "stage8_reopen_not_supported") messages.push("Rejected Stage 8 records cannot be finalized without a supported reopening workflow.");
   if (params.warning === "email_failed")
     messages.push(
       "Stage 1 was approved, but the unlock email could not be sent. Please retry email delivery or contact the candidate manually.",
@@ -435,6 +464,9 @@ export default async function AdminApplicationDetail({
   const stageSeven = application.stages.find(
     (stage: ApplicationStage) => stage.stageOrder === 7,
   );
+  const stageEight = application.stages.find(
+    (stage: ApplicationStage) => stage.stageOrder === 8,
+  );
   const offer = application.offer;
   const agreement = application.employmentAgreement;
   const roleSchedule = parseStage5RoleSchedule(agreement?.roleSchedule);
@@ -448,6 +480,8 @@ export default async function AdminApplicationDetail({
   const stageSevenPayload = (stageSevenSubmission?.payload ?? {}) as Record<string, any>;
   const stageSevenSections = (stageSevenPayload.sections ?? {}) as Record<string, boolean>;
   const stageSevenSignature = stageSevenSubmission?.signature;
+  const stageEightSubmission = stageEight?.submissions[0];
+  const stageEightPayload = (stageEightSubmission?.payload ?? {}) as Record<string, any>;
   const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
   const stageSixDocumentsWithAvailability = await Promise.all(
     stageSixDocuments.map(async (document: ApplicantDocument) => {
@@ -1448,6 +1482,19 @@ export default async function AdminApplicationDetail({
             {stageSeven?.approvals?.length ? <div className="mt-4 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Review history</h3><div className="mt-3 space-y-2 text-sm">{stageSeven.approvals.map((approval) => <p key={approval.id}><strong>{approval.action}</strong> by {approval.adminEmail} on {formatDateTime(approval.createdAt)}{approval.notes ? " · Notes recorded" : ""}</p>)}</div></div> : null}
             <h3 className="mt-5 font-semibold">Stage 7 admin actions</h3>
             {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 7 actions.</p> : <StageActionForm action={adminStage7Action} applicationId={application.id} stage="Stage 7" />}
+          </section>
+        ) : null}
+
+        {(stageEight && stageEight.status !== "Locked") || application.currentStageOrder >= 8 ? (
+          <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="font-bold">Stage 8 Final HR Approval</h2><p className="mt-1 text-sm text-slate-600">Controlled HR gate for employee-file readiness and final hiring completion.</p></div><StatusBadge status={stageEight?.status ?? "Locked"} /></div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">All-stage completion summary</h3><div className="mt-3 grid gap-2 text-sm">{[stageOne, stageTwo, stageThree, stageFour, stageFive, stageSix, stageSeven, stageEight].map((stage, idx) => <p key={idx}><strong>Stage {idx + 1}:</strong> {stage?.status ?? "Missing"}</p>)}<p><strong>Offer accepted:</strong> {yesNo(offer?.status === "Accepted")}</p><p><strong>Overall application status:</strong> {application.status}</p><p><strong>Current stage:</strong> {application.currentStageOrder}</p></div></div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Employee-file readiness record</h3>{stageEightSubmission ? <div className="mt-3 space-y-2 text-sm"><p><strong>Recorded:</strong> {formatDateTime(stageEightSubmission.submittedAt)}</p><p><strong>Checklist version:</strong> {formatField(stageEightPayload.checklistVersion)}</p><p><strong>Final HR notes:</strong> {stageEightPayload.finalHrNotesPresent ? "Recorded privately" : "Not recorded"}</p><p><strong>Candidate-facing note:</strong> {stageEightPayload.candidateFacingNote ? "Recorded" : "Not recorded"}</p></div> : <p className="mt-2 text-sm text-slate-600">No final HR approval checklist has been recorded.</p>}</div>
+            </div>
+            {stageEight?.approvals?.length ? <div className="mt-4 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Stage 8 decision history</h3><div className="mt-3 space-y-2 text-sm">{stageEight.approvals.map((approval) => <p key={approval.id}><strong>{approval.action}</strong> by {approval.adminEmail} on {formatDateTime(approval.createdAt)}{approval.notes ? " · Private notes recorded" : ""}</p>)}</div></div> : null}
+            <h3 className="mt-5 font-semibold">Stage 8 admin final decision</h3>
+            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 8 actions.</p> : <Stage8FinalApprovalForm applicationId={application.id} />}
           </section>
         ) : null}
 

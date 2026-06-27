@@ -183,8 +183,9 @@ export default async function Portal({
     (currentStage && isSelectable(currentStage.status)
       ? currentStage
       : portalStages[0]);
+  // Backward-compatible selection path: requestedStage && isSelectable(requestedStage.status)
   const selectedStage =
-    requestedStage && isSelectable(requestedStage.status)
+    requestedStage && (isSelectable(requestedStage.status) || requestedStage.order === 8)
       ? requestedStage
       : defaultSelectedStage;
   const selectedStageStatus = selectedStage?.status ?? "Locked";
@@ -1115,6 +1116,18 @@ export default async function Portal({
                   <section className="space-y-3 rounded-2xl border border-slate-200 p-4"><h3 className="font-bold text-ink">Final Declaration and E-Signature</h3>{[["finalDeclaration","I have read and understood these acknowledgements, and my acknowledgements are truthful."],["finalHrApprovalUnderstanding","I understand this stage is not final hiring completion and Stage 8 final HR approval is still required."],["electronicSignatureConsent","I consent to sign electronically."]].map(([name,label]) => <label className="flex gap-2 text-sm font-semibold" key={name}><input name={name} type="checkbox" required /> {label}</label>)}<label className="block text-sm font-semibold">Optional note to HR<textarea className="input mt-1 min-h-20" name="candidateNote" maxLength={1000} /></label><label className="block text-sm font-semibold">Type full legal name as electronic signature<input className="input mt-1" name="signatureName" required /></label></section>
                   <button className="btn btn-primary" type="submit">Submit acknowledgements for HR review</button>
                 </form>
+              )
+            ) : selectedStage?.order === 8 ? (
+              selectedStageIsLocked ? (
+                <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">Final HR approval unlocks after policy and access acknowledgements are approved.</p>
+              ) : selectedStageStatus === "Correction Requested" ? (
+                <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">A final HR review item needs attention. Follow safe instructions from Zentric Analytics LTD; private HR notes are not shown here.</p>
+              ) : selectedStageIsComplete ? (
+                <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Final HR approval completed. Your hiring workflow is complete. HR will contact you with next operational steps.</p>
+              ) : selectedStageIsRejected ? (
+                <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">Final HR approval was not completed. Follow instructions from Zentric Analytics LTD.</p>
+              ) : (
+                <p className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-900">Your application is in final HR review. Zentric Analytics LTD is reviewing your completed employee file.</p>
               )
             ) : (
               <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">

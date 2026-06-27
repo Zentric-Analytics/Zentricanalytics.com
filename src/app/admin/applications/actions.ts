@@ -6,8 +6,8 @@ import { approveStage1, approveStage2, approveStage3, recordAdminStage1Action, r
 import { sendAndRecordEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import { deletePrivateUpload } from '@/lib/storage';
-import { parseStage3Metadata, stage3InstructionSchema, offerSchema, parseOfferDate, stage5AgreementSchema, toStage5RoleSchedule, stage6AdminDecisionSchema, stage7AdminDecisionSchema } from '@/lib/hiring';
-import { applicationRejectedEmail, correctionRequestedEmail, offerReadyEmail, stage2CorrectionRequestedEmail, stage2RejectedEmail, stage2UnlockedEmail, stage3CorrectionRequestedEmail, stage3InstructionsAvailableEmail, stage3RejectedEmail, stage3UnlockedEmail, stage4UnlockedEmail, stage5AgreementReleasedEmail, stage5CorrectionRequestedEmail, stage5RejectedEmail, stage6UnlockedEmail, stage6CorrectionRequestedEmail, stage6RejectedEmail, stage7UnlockedEmail, stage7CorrectionRequestedEmail, stage7RejectedEmail, stage8UnlockedEmail } from '../../../lib/email-templates';
+import { parseStage3Metadata, stage3InstructionSchema, offerSchema, parseOfferDate, stage5AgreementSchema, toStage5RoleSchedule, stage6AdminDecisionSchema, stage7AdminDecisionSchema, stage8AdminFinalDecisionSchema, stage8ChecklistKeys, toStage8ChecklistPayload } from '@/lib/hiring';
+import { applicationRejectedEmail, correctionRequestedEmail, offerReadyEmail, stage2CorrectionRequestedEmail, stage2RejectedEmail, stage2UnlockedEmail, stage3CorrectionRequestedEmail, stage3InstructionsAvailableEmail, stage3RejectedEmail, stage3UnlockedEmail, stage4UnlockedEmail, stage5AgreementReleasedEmail, stage5CorrectionRequestedEmail, stage5RejectedEmail, stage6UnlockedEmail, stage6CorrectionRequestedEmail, stage6RejectedEmail, stage7UnlockedEmail, stage7CorrectionRequestedEmail, stage7RejectedEmail, stage8UnlockedEmail, stage8FinalReviewCorrectionEmail, stage8RejectedEmail, hiringWorkflowCompletedEmail } from '../../../lib/email-templates';
 
 function logAdminDiagnostics(diagnostics: Record<string, unknown>) { console.info('adminStageActionDiagnostics', diagnostics); }
 function redirectPath(applicationId?: string | null, params = '') { return applicationId ? `/admin/applications/${applicationId}${params}` : `/admin/applications${params}`; }
@@ -488,6 +488,58 @@ export async function adminStage7Action(formData: FormData) {
     const template = action === 'approve' ? ['stage-8-unlocked', stage8UnlockedEmail] as const : action === 'correction' ? ['stage-7-correction-requested', stage7CorrectionRequestedEmail] as const : ['stage-7-rejected', stage7RejectedEmail] as const;
     const email = await safeSendEmail({ applicationId, template: template[0], ...template[1]({ applicationId: app.applicationId, candidateName: app.applicant.fullName }) });
     destination = redirectPath(applicationId, `?success=${action === 'approve' ? 'stage7_approved' : action === 'correction' ? 'stage7_correction' : 'stage7_rejected'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+  } catch (error) { if ((error as Error).message === 'NEXT_REDIRECT') throw error; destination = redirectPath(applicationId, '?error=action_failed'); }
+  revalidatePath('/admin/applications'); revalidatePath(`/admin/applications/${applicationId}`);
+  redirect(destination);
+}
+
+
+const approvedOrCompleted = (status?: string | null) => status === 'Approved' || status === 'Completed';
+
+export async function adminStage8Action(formData: FormData) {
+  const parsed = stage8AdminFinalDecisionSchema.safeParse(Object.fromEntries(formData.entries()));
+  const applicationId = String(formData.get('applicationDbId') ?? '');
+  let destination = redirectPath(applicationId, '?error=action_failed');
+  const adminSession = await getAdminSession();
+  if (!adminSession) redirect('/admin/login');
+  if (!parsed.success) redirect(redirectPath(applicationId, '?error=stage8_validation'));
+  const { action, finalHrNotes, candidateFacingNote } = parsed.data;
+  try {
+    const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, include: { applicant: true, offer: true, stages: { include: { submissions: { include: { signature: true, documents: true }, orderBy: { createdAt: 'desc' } } } } } });
+    if (!app) redirect(redirectPath(null, '?error=action_failed'));
+    if (app.deletedAt) redirect(redirectPath(applicationId, '?error=restore_before_stage_action'));
+    const stagesByOrder = new Map(app.stages.map((stage) => [stage.stageOrder, stage]));
+    const stage8 = stagesByOrder.get(8);
+    const stage7 = stagesByOrder.get(7);
+    if (!stage8) redirect(redirectPath(applicationId, '?error=missing_stage'));
+    if (stage8.status === 'Rejected' && action === 'finalize') redirect(redirectPath(applicationId, '?error=stage8_reopen_not_supported'));
+    const priorStagesReady = [1, 2, 3, 5, 6, 7].every((order) => approvedOrCompleted(stagesByOrder.get(order)?.status)) && approvedOrCompleted(stagesByOrder.get(4)?.status) && app.offer?.status === 'Accepted';
+    if (action === 'finalize' && (!priorStagesReady || !approvedOrCompleted(stage7?.status))) redirect(redirectPath(applicationId, '?error=stage8_prior_stages_incomplete'));
+    await prisma.$transaction(async (tx) => {
+      if (action === 'finalize') {
+        const version = (await tx.stageSubmission.count({ where: { stageId: stage8.id } })) + 1;
+        await tx.stageSubmission.create({ data: { stageId: stage8.id, version, payload: toStage8ChecklistPayload(parsed.data), status: 'Approved', submittedAt: new Date() } });
+        await tx.hiringStage.update({ where: { id: stage8.id }, data: { status: 'Approved', approvedAt: new Date(), submittedAt: stage8.submittedAt ?? new Date() } });
+        await tx.stageApproval.create({ data: { stageId: stage8.id, action: 'Approved', adminEmail: adminSession.email, notes: finalHrNotes || null } });
+        await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Hired', currentStageOrder: 8 } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin finalized Stage 8', metadata: { checklistConfirmed: true, checklistItemCount: stage8ChecklistKeys.length, finalHrNotesPresent: Boolean(finalHrNotes), candidateFacingNotePresent: Boolean(candidateFacingNote) } } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Final HR checklist confirmed', metadata: { checklistVersion: 1, confirmedItemCount: stage8ChecklistKeys.length } } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'system', action: 'Hiring workflow completed', metadata: { finalStageOrder: 8, applicationStatus: 'Hired' } } });
+      } else if (action === 'correction') {
+        await tx.hiringStage.update({ where: { id: stage8.id }, data: { status: 'Correction Requested' } });
+        await tx.stageApproval.create({ data: { stageId: stage8.id, action: 'Correction Requested', adminEmail: adminSession.email, notes: finalHrNotes || null } });
+        await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Final Review', currentStageOrder: 8 } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin requested Stage 8 correction', metadata: { notesPresent: Boolean(finalHrNotes), candidateFacingNotePresent: Boolean(candidateFacingNote) } } });
+      } else {
+        await tx.hiringStage.update({ where: { id: stage8.id }, data: { status: 'Rejected' } });
+        await tx.stageApproval.create({ data: { stageId: stage8.id, action: 'Rejected', adminEmail: adminSession.email, notes: finalHrNotes || null } });
+        await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Rejected', currentStageOrder: 8 } });
+        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin rejected Stage 8', metadata: { notesPresent: Boolean(finalHrNotes), candidateFacingNotePresent: Boolean(candidateFacingNote) } } });
+      }
+    });
+    const template = action === 'finalize' ? ['hiring-workflow-completed', hiringWorkflowCompletedEmail] as const : action === 'correction' ? ['stage-8-correction-requested', stage8FinalReviewCorrectionEmail] as const : ['stage-8-rejected', stage8RejectedEmail] as const;
+    const email = await safeSendEmail({ applicationId, template: template[0], ...template[1]({ applicationId: app.applicationId, candidateName: app.applicant.fullName }) });
+    destination = redirectPath(applicationId, `?success=${action === 'finalize' ? 'stage8_finalized' : action === 'correction' ? 'stage8_correction' : 'stage8_rejected'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
   } catch (error) { if ((error as Error).message === 'NEXT_REDIRECT') throw error; destination = redirectPath(applicationId, '?error=action_failed'); }
   revalidatePath('/admin/applications'); revalidatePath(`/admin/applications/${applicationId}`);
   redirect(destination);
