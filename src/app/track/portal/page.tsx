@@ -12,7 +12,7 @@ import {
   stage2IdTypeOptions,
   parseStage5RoleSchedule,
 } from "@/lib/hiring";
-import { submitOfferDecision, submitStage2, submitStage3, submitStage5 } from "../actions";
+import { submitOfferDecision, submitStage2, submitStage3, submitStage5, submitStage6 } from "../actions";
 // Backward-compatible source check: import { submitOfferDecision, submitStage2, submitStage3 }
 import { prisma } from "@/lib/prisma";
 import { sha256 } from "@/lib/security";
@@ -1065,6 +1065,31 @@ export default async function Portal({
                     <button className="btn btn-primary" type="submit">Submit signed agreement</button>
                   </form>
                 </div>
+              )
+            ) : selectedStage?.order === 6 ? (
+              selectedStageIsLocked ? (
+                <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">Onboarding unlocks after employment agreement approval.</p>
+              ) : selectedStageIsReview ? (
+                <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">Onboarding submitted and under HR review.</p>
+              ) : selectedStageIsComplete ? (
+                <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Onboarding completed. Continue to the next available stage.</p>
+              ) : selectedStageIsRejected ? (
+                <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">Onboarding was not approved. Follow instructions from Zentric Analytics LTD.</p>
+              ) : (
+                <form action={submitStage6} className="mt-6 space-y-6 rounded-2xl border border-slate-200 p-4 sm:p-5">
+                  <input type="hidden" name="session" value={session ?? ""} />
+                  {selectedStageStatus === "Correction Requested" ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">Correction requested. Please review HR notes and resubmit onboarding.</p> : null}
+                  <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">Final HR approval and policy acknowledgements are still required. Payroll/statutory details are collected only for employment administration and are not shown in public summaries.</p>
+                  {[
+                    ["Personal confirmation", [["fullLegalName","Full legal name", application.applicant.fullName, "text"],["preferredName","Preferred name", "", "text"],["dateOfBirth","Date of birth", "", "date"],["residentialAddress","Residential address", "", "textarea"],["currentCity","Current city", application.applicant.location ?? "", "text"],["stateOfResidence","State of residence", "", "text"],["nationality","Nationality", "", "text"],["phoneNumber","Phone number", application.applicant.phone ?? "", "tel"],["email","Email", application.applicant.email, "email"]]],
+                    ["Employment readiness", [["confirmedStartDate","Confirmed start date", roleSchedule.startDate ?? "", "date"],["preferredStartDateNotes","Preferred start-date notes (optional)", "", "textarea"],["workModeReadiness","Work mode readiness", "", "textarea"],["equipmentNeeds","Equipment needs", "", "textarea"],["internetPowerReadiness","Internet/power readiness", "", "textarea"],["availabilityForOrientation","Availability for orientation", "", "textarea"],["emergencyStartConstraints","Emergency start constraints (optional)", "", "textarea"]]],
+                    ["Next of kin / emergency contact", [["nextOfKinName","Next of kin name", "", "text"],["nextOfKinRelationship","Next of kin relationship", "", "text"],["nextOfKinPhone","Next of kin phone", "", "tel"],["nextOfKinEmail","Next of kin email (optional)", "", "email"],["nextOfKinAddress","Next of kin address (optional)", "", "textarea"],["emergencyContactName","Emergency contact name", "", "text"],["emergencyContactRelationship","Emergency contact relationship", "", "text"],["emergencyContactPhone","Emergency contact phone", "", "tel"],["emergencyContactAddress","Emergency contact address (optional)", "", "textarea"]]],
+                    ["Payroll / statutory details", [["bankName","Bank name", "", "text"],["accountName","Account name", "", "text"],["accountNumber","Account number", "", "text"],["taxIdentificationNumber","Tax identification number (optional)", "", "text"],["pensionProvider","Pension provider (optional)", "", "text"],["pensionAccountNumber","Pension account number (optional)", "", "text"],["nationalIdentificationNumber","National identification number (optional)", "", "text"],["statutoryContributionNotes","Statutory contribution notes (optional)", "", "textarea"]]],
+                  ].map(([title, fields]) => <section className="rounded-2xl border border-slate-200 p-4" key={title as string}><h3 className="font-bold text-ink">{title as string}</h3><div className="mt-4 grid gap-4 md:grid-cols-2">{(fields as string[][]).map(([name,label,defaultValue,type]) => <label className="block text-sm font-semibold" key={name}>{label}{type === "textarea" ? <textarea className="input mt-1 min-h-24" name={name} defaultValue={defaultValue} required={!label.includes("optional")} /> : <input className="input mt-1" name={name} type={type} defaultValue={defaultValue} required={!label.includes("optional")} />}</label>)}</div></section>)}
+                  <section className="rounded-2xl border border-slate-200 p-4"><h3 className="font-bold text-ink">Uploads</h3><div className="mt-4 grid gap-4 md:grid-cols-3">{[["bankProof","Bank proof (optional)"],["statutoryDocument","Tax/statutory document (optional)"],["additionalDocument","Additional onboarding document (optional)"]].map(([name,label]) => <label className="block text-sm font-semibold" key={name}>{label}<input className="input mt-1" name={name} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" /></label>)}</div></section>
+                  <section className="space-y-3 rounded-2xl border border-slate-200 p-4"><h3 className="font-bold text-ink">Declarations and e-signature</h3>{[["declarationAccuracy","I confirm the information is accurate."],["payrollProcessingConsent","I submit payroll/statutory details for HR onboarding purposes."],["employmentAdministrationConsent","I consent to Zentric Analytics LTD processing this information for employment administration."],["finalApprovalAcknowledgement","I understand onboarding remains subject to policy acknowledgements and final HR approval."],["changeNotificationAgreement","I agree to notify HR if onboarding information changes."],["electronicSignatureConsent","I consent to sign electronically."]].map(([name,label]) => <label className="flex gap-2 text-sm font-semibold" key={name}><input name={name} type="checkbox" required /> {label}</label>)}<label className="block text-sm font-semibold">Type full legal name as electronic signature<input className="input mt-1" name="signatureName" required /></label></section>
+                  <button className="btn btn-primary" type="submit">Submit onboarding for HR review</button>
+                </form>
               )
             ) : (
               <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">

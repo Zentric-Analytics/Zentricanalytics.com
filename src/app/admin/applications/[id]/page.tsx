@@ -27,6 +27,7 @@ import {
   adminOfferAction,
   adminStage5AgreementAction,
   adminStage5Action,
+  adminStage6Action,
 } from "../actions";
 import { AdminDocumentActions } from "./AdminDocumentActions";
 
@@ -427,12 +428,30 @@ export default async function AdminApplicationDetail({
   const stageFive = application.stages.find(
     (stage: ApplicationStage) => stage.stageOrder === 5,
   );
+  const stageSix = application.stages.find(
+    (stage: ApplicationStage) => stage.stageOrder === 6,
+  );
   const offer = application.offer;
   const agreement = application.employmentAgreement;
   const roleSchedule = parseStage5RoleSchedule(agreement?.roleSchedule);
   const stageFiveSubmission = stageFive?.submissions[0];
   const stageFiveSignature = stageFiveSubmission?.signature;
+  const stageSixSubmission = stageSix?.submissions[0];
+  const stageSixPayload = (stageSixSubmission?.payload ?? {}) as Record<string, string | boolean | Record<string, boolean>>;
+  const stageSixSignature = stageSixSubmission?.signature;
+  const stageSixDocuments = stageSixSubmission?.documents ?? [];
   const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
+  const stageSixDocumentsWithAvailability = await Promise.all(
+    stageSixDocuments.map(async (document: ApplicantDocument) => {
+      const diagnostic = document.uploadedDocument
+        ? await privateUploadDiagnostic(
+            document.uploadedDocument.storageKey,
+            document.uploadedDocument.provider,
+          )
+        : null;
+      return { document, privateFileAvailable: Boolean(diagnostic?.fileExists), diagnostic };
+    }),
+  );
   const stageThreeDocumentsWithAvailability = await Promise.all(
     stageThreeDocuments.map(async (document: ApplicantDocument) => {
       const diagnostic = document.uploadedDocument
@@ -1394,6 +1413,19 @@ export default async function AdminApplicationDetail({
             </div>
             <h3 className="mt-5 font-semibold">Stage 5 admin actions</h3>
             <StageActionForm action={adminStage5Action} applicationId={application.id} stage="Stage 5" />
+          </section>
+        ) : null}
+
+        {(stageSix && stageSix.status !== "Locked") || application.currentStageOrder >= 6 ? (
+          <section className="card mt-6 p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><h2 className="font-bold">Stage 6 Onboarding Form</h2><StatusBadge status={stageSix?.status ?? "Locked"} /></div>
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Submission summary</h3>{stageSixSubmission ? <div className="mt-3 grid gap-2 text-sm"><p><strong>Submitted:</strong> {formatDateTime(stageSixSubmission.submittedAt)}</p><p><strong>Version:</strong> {stageSixSubmission.version}</p><p><strong>Candidate:</strong> {formatField(stageSixPayload.fullLegalName)} · {formatField(stageSixPayload.email)}</p><p><strong>Start readiness:</strong> {formatField(stageSixPayload.confirmedStartDate)} · {formatField(stageSixPayload.workModeReadiness)}</p><p><strong>Next of kin:</strong> {formatField(stageSixPayload.nextOfKinName)} / {formatField(stageSixPayload.nextOfKinRelationship)}</p><p><strong>Emergency contact:</strong> {formatField(stageSixPayload.emergencyContactName)} / {formatField(stageSixPayload.emergencyContactPhone)}</p><p><strong>Bank:</strong> {formatField(stageSixPayload.bankName)} · Account {formatField(stageSixPayload.accountNumberMasked)}</p><p><strong>Tax ID:</strong> {formatField(stageSixPayload.taxIdentificationNumberMasked)} · <strong>National ID:</strong> {formatField(stageSixPayload.nationalIdentificationNumberMasked)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 6 onboarding submission found.</p>}</div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Electronic signature</h3>{stageSixSignature ? <p className="mt-2 text-sm">Confirmed: {yesNo(stageSixSignature.confirmed)} · Signed: {formatDateTime(stageSixSignature.signedAt)}</p> : <p className="mt-2 text-sm text-slate-600">No Stage 6 signature found.</p>}<p className="mt-3 text-xs text-slate-500">Typed signature names and full payroll/statutory values are intentionally not shown in summaries.</p></div>
+            </div>
+            <div className="mt-5 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Onboarding documents</h3><div className="mt-3 grid gap-3 md:grid-cols-2">{stageSixDocumentsWithAvailability.length ? stageSixDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? <article className="rounded-xl border border-slate-200 bg-slate-50 p-3" key={document.id}><p className="text-sm font-semibold">{document.uploadedDocument.kind}</p><p className="text-xs text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType}</p><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={privateFileAvailable && ["application/pdf","image/jpeg","image/png","image/webp"].includes(document.uploadedDocument.mimeType)} available={privateFileAvailable} /></article> : null) : <p className="text-sm text-slate-600">No Stage 6 documents uploaded.</p>}</div></div>
+            <h3 className="mt-5 font-semibold">Stage 6 admin actions</h3>
+            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 6 actions.</p> : <StageActionForm action={adminStage6Action} applicationId={application.id} stage="Stage 6" />}
           </section>
         ) : null}
 
