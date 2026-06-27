@@ -13,12 +13,15 @@ import {
   parseStage3Metadata,
   stage5CandidateSubmissionSchema,
   toStage5SubmissionPayload,
+  stage6CandidateSchema,
+  toStage6SubmissionPayload,
 } from "../../lib/hiring";
 import {
   deletePrivateUpload,
   savePrivateUpload,
   validateCvFile,
   validateIdentityDocumentFile,
+  validateOnboardingDocumentFile,
 } from "../../lib/storage";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { accessCodeRateLimitConfig } from "@/lib/access-code-config";
@@ -768,4 +771,55 @@ export async function submitStage5(formData: FormData) {
     redirect(portalUrl(session, { stage: "5", error: "stage5_submit_failed" }));
   }
   redirect(portalUrl(session, { stage: "5", success: "stage5_submitted" }));
+}
+
+
+export async function submitStage6(formData: FormData) {
+  const session = String(formData.get("session") ?? "");
+  const parsed = stage6CandidateSchema.safeParse(Object.fromEntries(formData.entries()));
+  const fileInputs = [
+    ["bankProof", "Stage 6 Bank Proof"],
+    ["statutoryDocument", "Stage 6 Tax/Statutory Document"],
+    ["additionalDocument", "Stage 6 Additional Onboarding Document"],
+  ] as const;
+  const uploads = fileInputs.map(([field, kind]) => ({ field, kind, file: formData.get(field) instanceof File ? (formData.get(field) as File) : null })).filter((item) => item.file && item.file.size > 0);
+  const fileErrors = uploads.map((item) => validateOnboardingDocumentFile(item.file)).filter(Boolean);
+  if (!parsed.success || fileErrors.length) redirect(portalUrl(session, { stage: "6", error: "stage6_validation" }));
+  const h = await headers();
+  const access = await prisma.applicationAccessCode.findFirst({
+    where: { verifiedSessionTokenHash: sha256(session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } },
+    include: { application: { include: { stages: true, applicant: true } } },
+  });
+  if (!access) redirect("/track?verified=0");
+  const application = access.application;
+  const stage5 = application.stages.find((stage) => stage.stageOrder === 5);
+  const stage6 = application.stages.find((stage) => stage.stageOrder === 6);
+  if (stage5?.status !== "Approved") redirect(portalUrl(session, { stage: "6", error: "stage6_stage5_required" }));
+  if (!stage6 || !["Available", "In Progress", "Correction Requested"].includes(stage6.status)) redirect(portalUrl(session, { stage: "6", error: "stage6_not_open" }));
+  const saved: Array<{ file: File; kind: string; storageKey: string; provider: string; restricted: boolean }> = [];
+  try {
+    for (const item of uploads) {
+      const stored = await savePrivateUpload(item.file!, application.id);
+      saved.push({ file: item.file!, kind: item.kind, ...stored });
+    }
+    await prisma.$transaction(async (tx) => {
+      const version = (await tx.stageSubmission.count({ where: { stageId: stage6.id } })) + 1;
+      const submission = await tx.stageSubmission.create({ data: { stageId: stage6.id, version, payload: toStage6SubmissionPayload(parsed.data), status: "Under Review", submittedAt: new Date() } });
+      for (const item of saved) {
+        const uploaded = await tx.uploadedDocument.create({ data: { applicationId: application.id, kind: item.kind, fileName: item.file.name, mimeType: item.file.type || "application/octet-stream", sizeBytes: item.file.size, provider: item.provider, storageKey: item.storageKey, restricted: item.restricted } });
+        await tx.applicantDocument.create({ data: { submissionId: submission.id, uploadedDocumentId: uploaded.id, status: "Submitted" } });
+      }
+      await tx.electronicSignature.create({ data: { submissionId: submission.id, typedName: parsed.data.signatureName, confirmed: true, ipHash: sha256(h.get("x-forwarded-for") ?? "unknown"), userAgent: (h.get("user-agent") ?? "unknown").slice(0, 500) } });
+      await tx.hiringStage.update({ where: { id: stage6.id }, data: { status: "Under Review", submittedAt: new Date() } });
+      await tx.jobApplication.update({ where: { id: application.id }, data: { status: "Onboarding Pending", currentStageOrder: 6 } });
+      await tx.auditLog.create({ data: { applicationId: application.id, actorType: "applicant", actorRef: "masked-email", action: "Applicant submitted Stage 6 onboarding", metadata: { documentsUploaded: saved.length, declarationsAccepted: true } } });
+      await tx.emailNotification.create({ data: { applicationId: application.id, toEmail: "admin", template: "stage-6-submitted-admin", subject: `Stage 6 submitted: ${application.applicationId}`, status: "recorded" } });
+    });
+  } catch (error) {
+    await Promise.all(saved.map((item) => deletePrivateUpload(item.storageKey, item.provider)));
+    await prisma.auditLog.create({ data: { applicationId: application.id, actorType: "system", action: "Stage 6 upload failure cleanup", metadata: { filesCleaned: saved.length, errorName: error instanceof Error ? error.name : "UnknownError" } } }).catch(() => undefined);
+    console.info("candidateStage6SubmitDiagnostics", { sessionValid: true, dbWriteSucceeded: false, filesCleaned: saved.length, errorName: error instanceof Error ? error.name : "UnknownError" });
+    redirect(portalUrl(session, { stage: "6", error: "stage6_submit_failed" }));
+  }
+  redirect(portalUrl(session, { stage: "6", success: "stage6_submitted" }));
 }

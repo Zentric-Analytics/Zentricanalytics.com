@@ -59,6 +59,11 @@ export function validateCvFile(file: File | null | undefined) {
   return "Upload a PDF, DOC, DOCX, JPG, JPEG, PNG, or WEBP file.";
 }
 
+export function validateOnboardingDocumentFile(file: File | null | undefined) {
+  if (!file || file.size === 0) return null;
+  return validateCvFile(file);
+}
+
 export function selectedStorageProvider() {
   return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER || LOCAL_PRIVATE_PROVIDER;
 }
