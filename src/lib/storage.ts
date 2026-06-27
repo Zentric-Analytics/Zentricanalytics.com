@@ -59,6 +59,11 @@ export function validateCvFile(file: File | null | undefined) {
   return "Upload a PDF, DOC, DOCX, JPG, JPEG, PNG, or WEBP file.";
 }
 
+export function validateOnboardingDocumentFile(file: File | null | undefined) {
+  if (!file || file.size === 0) return null;
+  return validateCvFile(file);
+}
+
 export function selectedStorageProvider() {
   return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER || LOCAL_PRIVATE_PROVIDER;
 }
@@ -71,7 +76,10 @@ function assertLocalPrivateProvider(provider: string, operation: string) {
 }
 
 function sanitizeStorageSegment(value: string) {
-  const sanitized = value.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^\.+$/, "_");
+  const sanitized = value
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/\.{2,}/g, "_")
+    .replace(/^\.+$/, "_");
   return sanitized || "upload";
 }
 
@@ -95,7 +103,11 @@ export function privateUploadRoot() {
 export function assertPrivateUploadStorageConfigured() {
   const provider = selectedStorageProvider();
   assertLocalPrivateProvider(provider, "object storage");
-  if (provider === LOCAL_PRIVATE_PROVIDER && isProductionLikeRuntime() && !process.env.PRIVATE_UPLOAD_ROOT) {
+  if (
+    provider === LOCAL_PRIVATE_PROVIDER &&
+    isProductionLikeRuntime() &&
+    !process.env.PRIVATE_UPLOAD_ROOT
+  ) {
     throw new PrivateUploadStorageConfigurationError(
       "PRIVATE_UPLOAD_ROOT must be configured for local-private uploads in production/staging. Local .private-uploads storage is not safe on ephemeral hosting.",
     );
@@ -124,7 +136,6 @@ export async function ensurePrivateUploadStorageWritable() {
   }
 }
 
-
 export function resolvePrivateUploadPath(storageKey: string) {
   if (!storageKey || path.isAbsolute(storageKey))
     throw new Error("Invalid private upload key.");
@@ -151,8 +162,8 @@ export async function savePrivateUpload(file: File, applicationId: string) {
   console.info("privateUploadSaveDiagnostic", {
     applicationId,
     provider,
-    storageKey: key,
-    resolvedPrivateUploadRoot: privateUploadRoot(),
+    storageKeyPresent: Boolean(key),
+    privateUploadRootConfigured: Boolean(process.env.PRIVATE_UPLOAD_ROOT),
     fileExistsAfterSave: verified,
     diskSizeBytes: metadata?.size ?? null,
     databaseMetadataSizeBytes: file.size,
@@ -161,7 +172,11 @@ export async function savePrivateUpload(file: File, applicationId: string) {
     await rm(fullPath, { force: true });
     throw new Error("Private upload write verification failed.");
   }
-  return { storageKey: key, provider: LOCAL_PRIVATE_PROVIDER, restricted: true };
+  return {
+    storageKey: key,
+    provider: LOCAL_PRIVATE_PROVIDER,
+    restricted: true,
+  };
 }
 
 export async function deletePrivateUpload(
@@ -274,7 +289,8 @@ export async function privateUploadConfigurationStatus() {
     resolvedPrivateUploadRoot: root,
     rootExists,
     rootWritable,
-    localPrivateStorageAvailable: selectedStorageProvider() === LOCAL_PRIVATE_PROVIDER,
+    localPrivateStorageAvailable:
+      selectedStorageProvider() === LOCAL_PRIVATE_PROVIDER,
     localPrivateUsesDefaultEphemeralPath: !rootConfigured,
   };
 }
@@ -288,9 +304,18 @@ export const ALLOWED_ID_DOCUMENT_MIME_TYPES = new Set([
   "image/x-png",
   "image/webp",
 ]);
-export const ALLOWED_ID_DOCUMENT_EXTENSIONS = new Set(["pdf", "jpg", "jpeg", "png", "webp"]);
+export const ALLOWED_ID_DOCUMENT_EXTENSIONS = new Set([
+  "pdf",
+  "jpg",
+  "jpeg",
+  "png",
+  "webp",
+]);
 
-export function validateIdentityDocumentFile(file: File | null | undefined, requiredMessage: string) {
+export function validateIdentityDocumentFile(
+  file: File | null | undefined,
+  requiredMessage: string,
+) {
   if (!file || file.size === 0) return requiredMessage;
   if (file.size > MAX_CV_BYTES) return "Upload a file that is 20MB or smaller.";
   const extension = fileExtension(file.name);
