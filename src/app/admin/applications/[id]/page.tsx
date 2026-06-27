@@ -28,6 +28,7 @@ import {
   adminStage5AgreementAction,
   adminStage5Action,
   adminStage6Action,
+  adminStage7Action,
 } from "../actions";
 import { AdminDocumentActions } from "./AdminDocumentActions";
 
@@ -431,6 +432,9 @@ export default async function AdminApplicationDetail({
   const stageSix = application.stages.find(
     (stage: ApplicationStage) => stage.stageOrder === 6,
   );
+  const stageSeven = application.stages.find(
+    (stage: ApplicationStage) => stage.stageOrder === 7,
+  );
   const offer = application.offer;
   const agreement = application.employmentAgreement;
   const roleSchedule = parseStage5RoleSchedule(agreement?.roleSchedule);
@@ -440,6 +444,10 @@ export default async function AdminApplicationDetail({
   const stageSixPayload = (stageSixSubmission?.payload ?? {}) as Record<string, string | boolean | Record<string, boolean>>;
   const stageSixSignature = stageSixSubmission?.signature;
   const stageSixDocuments = stageSixSubmission?.documents ?? [];
+  const stageSevenSubmission = stageSeven?.submissions[0];
+  const stageSevenPayload = (stageSevenSubmission?.payload ?? {}) as Record<string, any>;
+  const stageSevenSections = (stageSevenPayload.sections ?? {}) as Record<string, boolean>;
+  const stageSevenSignature = stageSevenSubmission?.signature;
   const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
   const stageSixDocumentsWithAvailability = await Promise.all(
     stageSixDocuments.map(async (document: ApplicantDocument) => {
@@ -1426,6 +1434,20 @@ export default async function AdminApplicationDetail({
             <div className="mt-5 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Onboarding documents</h3><div className="mt-3 grid gap-3 md:grid-cols-2">{stageSixDocumentsWithAvailability.length ? stageSixDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? <article className="rounded-xl border border-slate-200 bg-slate-50 p-3" key={document.id}><p className="text-sm font-semibold">{document.uploadedDocument.kind}</p><p className="text-xs text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType}</p><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={privateFileAvailable && ["application/pdf","image/jpeg","image/png","image/webp"].includes(document.uploadedDocument.mimeType)} available={privateFileAvailable} /></article> : null) : <p className="text-sm text-slate-600">No Stage 6 documents uploaded.</p>}</div></div>
             <h3 className="mt-5 font-semibold">Stage 6 admin actions</h3>
             {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 6 actions.</p> : <StageActionForm action={adminStage6Action} applicationId={application.id} stage="Stage 6" />}
+          </section>
+        ) : null}
+
+
+        {(stageSeven && stageSeven.status !== "Locked") || application.currentStageOrder >= 7 ? (
+          <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><h2 className="font-bold">Stage 7 Policy, Privacy, and Access Acknowledgements</h2><StatusBadge status={stageSeven?.status ?? "Locked"} /></div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Acknowledgement summary</h3>{stageSevenSubmission ? <div className="mt-3 grid gap-2 text-sm"><p><strong>Submitted:</strong> {formatDateTime(stageSevenSubmission.submittedAt)}</p><p><strong>Version:</strong> {stageSevenSubmission.version}</p><p><strong>Candidate note:</strong> {stageSevenPayload.candidateNotePresent ? "Provided" : "Not provided"}</p>{[["privacyAcknowledgement","Data privacy"],["policyAcknowledgement","Company policy"],["confidentialityAcknowledgement","Confidentiality"],["systemAccessAcknowledgement","System access/property"],["communicationAcknowledgement","Communication/conduct"],["finalDeclaration","Final declaration"],["finalHrApprovalUnderstanding","Stage 8 understanding"],["electronicSignatureConsent","E-signature consent"]].map(([key,label]) => <p key={key}><strong>{label}:</strong> {yesNo(Boolean(stageSevenSections[key]))}</p>)}</div> : <p className="mt-2 text-sm text-slate-600">No Stage 7 acknowledgement submission found.</p>}</div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Electronic signature</h3>{stageSevenSignature ? <p className="mt-2 text-sm">Confirmed: {yesNo(stageSevenSignature.confirmed)} · Signed: {formatDateTime(stageSevenSignature.signedAt)}</p> : <p className="mt-2 text-sm text-slate-600">No Stage 7 signature found.</p>}<p className="mt-3 text-xs text-slate-500">Typed signature names and full acknowledgement payloads are intentionally not shown in summaries.</p></div>
+            </div>
+            {stageSeven?.approvals?.length ? <div className="mt-4 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Review history</h3><div className="mt-3 space-y-2 text-sm">{stageSeven.approvals.map((approval) => <p key={approval.id}><strong>{approval.action}</strong> by {approval.adminEmail} on {formatDateTime(approval.createdAt)}{approval.notes ? " · Notes recorded" : ""}</p>)}</div></div> : null}
+            <h3 className="mt-5 font-semibold">Stage 7 admin actions</h3>
+            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 7 actions.</p> : <StageActionForm action={adminStage7Action} applicationId={application.id} stage="Stage 7" />}
           </section>
         ) : null}
 

@@ -693,6 +693,41 @@ export const stage6CandidateSchema = z.object({
 });
 export type Stage6CandidateInput = z.infer<typeof stage6CandidateSchema>;
 export const stage6AdminDecisionSchema = z.object({ applicationDbId: z.string().min(1), action: z.enum(["approve", "correction", "reject"]), notes: z.string().trim().max(1000).optional().or(z.literal("")) });
+
+export const stage7CandidateSchema = z.object({
+  session: z.string().min(16, "Open the portal with a valid session."),
+  privacyAcknowledgement: z.literal("on", { errorMap: () => ({ message: "Confirm the data privacy acknowledgement." }) }),
+  policyAcknowledgement: z.literal("on", { errorMap: () => ({ message: "Confirm the company policy acknowledgement." }) }),
+  confidentialityAcknowledgement: z.literal("on", { errorMap: () => ({ message: "Confirm the confidentiality acknowledgement." }) }),
+  systemAccessAcknowledgement: z.literal("on", { errorMap: () => ({ message: "Confirm the system access and property acknowledgement." }) }),
+  communicationAcknowledgement: z.literal("on", { errorMap: () => ({ message: "Confirm the communication and conduct acknowledgement." }) }),
+  finalDeclaration: z.literal("on", { errorMap: () => ({ message: "Confirm the final declaration." }) }),
+  finalHrApprovalUnderstanding: z.literal("on", { errorMap: () => ({ message: "Confirm Stage 8 final HR approval is still required." }) }),
+  electronicSignatureConsent: z.literal("on", { errorMap: () => ({ message: "Confirm electronic signature consent." }) }),
+  signatureName: z.string().trim().min(2, "Type your full legal name as your electronic signature.").max(160),
+  candidateNote: optionalLimited(1000),
+});
+export type Stage7CandidateInput = z.infer<typeof stage7CandidateSchema>;
+export const stage7AdminDecisionSchema = z.object({ applicationDbId: z.string().min(1), action: z.enum(["approve", "correction", "reject"]), notes: z.string().trim().max(1000).optional().or(z.literal("")) });
+export function toStage7SubmissionPayload(data: Stage7CandidateInput) {
+  const { session: _session, signatureName: _signatureName, privacyAcknowledgement, policyAcknowledgement, confidentialityAcknowledgement, systemAccessAcknowledgement, communicationAcknowledgement, finalDeclaration, finalHrApprovalUnderstanding, electronicSignatureConsent, candidateNote } = data;
+  return {
+    acknowledgementVersion: 1,
+    sections: {
+      privacyAcknowledgement: privacyAcknowledgement === "on",
+      policyAcknowledgement: policyAcknowledgement === "on",
+      confidentialityAcknowledgement: confidentialityAcknowledgement === "on",
+      systemAccessAcknowledgement: systemAccessAcknowledgement === "on",
+      communicationAcknowledgement: communicationAcknowledgement === "on",
+      finalDeclaration: finalDeclaration === "on",
+      finalHrApprovalUnderstanding: finalHrApprovalUnderstanding === "on",
+      electronicSignatureConsent: electronicSignatureConsent === "on",
+    },
+    candidateNotePresent: Boolean(candidateNote),
+    candidateNote: candidateNote || "",
+  };
+}
+
 export function toStage6SubmissionPayload(data: Stage6CandidateInput) {
   const { session: _session, signatureName: _signatureName, accountNumber, taxIdentificationNumber, pensionAccountNumber, nationalIdentificationNumber, declarationAccuracy, payrollProcessingConsent, employmentAdministrationConsent, finalApprovalAcknowledgement, changeNotificationAgreement, electronicSignatureConsent, ...rest } = data;
   return { ...rest, accountNumberMasked: maskSensitive(accountNumber), taxIdentificationNumberMasked: taxIdentificationNumber ? maskSensitive(taxIdentificationNumber) : "", pensionAccountNumberMasked: pensionAccountNumber ? maskSensitive(pensionAccountNumber) : "", nationalIdentificationNumberMasked: nationalIdentificationNumber ? maskSensitive(nationalIdentificationNumber) : "", hasTaxIdentificationNumber: Boolean(taxIdentificationNumber), hasPensionAccountNumber: Boolean(pensionAccountNumber), hasNationalIdentificationNumber: Boolean(nationalIdentificationNumber), declarations: { declarationAccuracy: declarationAccuracy === "on", payrollProcessingConsent: payrollProcessingConsent === "on", employmentAdministrationConsent: employmentAdministrationConsent === "on", finalApprovalAcknowledgement: finalApprovalAcknowledgement === "on", changeNotificationAgreement: changeNotificationAgreement === "on", electronicSignatureConsent: electronicSignatureConsent === "on" } };
