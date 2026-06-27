@@ -728,6 +728,49 @@ export function toStage7SubmissionPayload(data: Stage7CandidateInput) {
   };
 }
 
+export const stage8ChecklistKeys = [
+  "stage1ApplicationReviewed",
+  "candidateIdentityReviewed",
+  "roleConsistencyReviewed",
+  "stage3ScreeningApproved",
+  "stage4OfferAccepted",
+  "stage5AgreementApproved",
+  "stage6OnboardingApproved",
+  "onboardingDocumentsReviewed",
+  "payrollStatutoryHandlingReviewed",
+  "emergencyDetailsReviewed",
+  "stage7AcknowledgementsApproved",
+  "confidentialityAcknowledgementCompleted",
+  "systemAccessAcknowledgementCompleted",
+  "employeeFileReady",
+  "startDateReady",
+  "reportingManagerWorkModeReviewed",
+  "roleScheduleNotesReviewed",
+  "outstandingConditionsResolved",
+  "finalHrReviewComplete",
+  "workflowCanBeMarkedHired",
+] as const;
+
+const stage8ChecklistShape = Object.fromEntries(
+  stage8ChecklistKeys.map((key) => [key, z.literal("on", { errorMap: () => ({ message: "Confirm every required final HR checklist item before final approval." }) })]),
+) as Record<(typeof stage8ChecklistKeys)[number], z.ZodLiteral<"on">>;
+
+export const stage8AdminFinalDecisionSchema = z.object({
+  applicationDbId: z.string().min(1),
+  action: z.enum(["finalize", "correction", "reject"]),
+  finalHrNotes: z.string().trim().max(1500).optional().or(z.literal("")),
+  candidateFacingNote: z.string().trim().max(1000).optional().or(z.literal("")),
+}).and(z.object(stage8ChecklistShape).partial()).superRefine((data, ctx) => {
+  if (data.action !== "finalize") return;
+  for (const key of stage8ChecklistKeys) {
+    if (data[key] !== "on") ctx.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: "Required for final HR approval." });
+  }
+});
+export type Stage8AdminFinalDecisionInput = z.infer<typeof stage8AdminFinalDecisionSchema>;
+export function toStage8ChecklistPayload(data: Stage8AdminFinalDecisionInput) {
+  return { checklistVersion: 1, confirmed: Object.fromEntries(stage8ChecklistKeys.map((key) => [key, data[key] === "on"])), finalHrNotesPresent: Boolean(data.finalHrNotes), candidateFacingNote: data.candidateFacingNote || "" };
+}
+
 export function toStage6SubmissionPayload(data: Stage6CandidateInput) {
   const { session: _session, signatureName: _signatureName, accountNumber, taxIdentificationNumber, pensionAccountNumber, nationalIdentificationNumber, declarationAccuracy, payrollProcessingConsent, employmentAdministrationConsent, finalApprovalAcknowledgement, changeNotificationAgreement, electronicSignatureConsent, ...rest } = data;
   return { ...rest, accountNumberMasked: maskSensitive(accountNumber), taxIdentificationNumberMasked: taxIdentificationNumber ? maskSensitive(taxIdentificationNumber) : "", pensionAccountNumberMasked: pensionAccountNumber ? maskSensitive(pensionAccountNumber) : "", nationalIdentificationNumberMasked: nationalIdentificationNumber ? maskSensitive(nationalIdentificationNumber) : "", hasTaxIdentificationNumber: Boolean(taxIdentificationNumber), hasPensionAccountNumber: Boolean(pensionAccountNumber), hasNationalIdentificationNumber: Boolean(nationalIdentificationNumber), declarations: { declarationAccuracy: declarationAccuracy === "on", payrollProcessingConsent: payrollProcessingConsent === "on", employmentAdministrationConsent: employmentAdministrationConsent === "on", finalApprovalAcknowledgement: finalApprovalAcknowledgement === "on", changeNotificationAgreement: changeNotificationAgreement === "on", electronicSignatureConsent: electronicSignatureConsent === "on" } };
