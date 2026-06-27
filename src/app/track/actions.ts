@@ -15,6 +15,8 @@ import {
   toStage5SubmissionPayload,
   stage6CandidateSchema,
   toStage6SubmissionPayload,
+  stage7CandidateSchema,
+  toStage7SubmissionPayload,
 } from "../../lib/hiring";
 import {
   deletePrivateUpload,
@@ -822,4 +824,37 @@ export async function submitStage6(formData: FormData) {
     redirect(portalUrl(session, { stage: "6", error: "stage6_submit_failed" }));
   }
   redirect(portalUrl(session, { stage: "6", success: "stage6_submitted" }));
+}
+
+
+export async function submitStage7(formData: FormData) {
+  const session = String(formData.get("session") ?? "");
+  const parsed = stage7CandidateSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) redirect(portalUrl(session, { stage: "7", error: "stage7_validation" }));
+  const h = await headers();
+  const access = await prisma.applicationAccessCode.findFirst({
+    where: { verifiedSessionTokenHash: sha256(session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } },
+    include: { application: { include: { stages: true, applicant: true } } },
+  });
+  if (!access) redirect("/track?verified=0");
+  const application = access.application;
+  const stage6 = application.stages.find((stage) => stage.stageOrder === 6);
+  const stage7 = application.stages.find((stage) => stage.stageOrder === 7);
+  if (stage6?.status !== "Approved") redirect(portalUrl(session, { stage: "7", error: "stage7_stage6_required" }));
+  if (!stage7 || !["Available", "In Progress", "Correction Requested"].includes(stage7.status)) redirect(portalUrl(session, { stage: "7", error: "stage7_not_open" }));
+  try {
+    await prisma.$transaction(async (tx) => {
+      const version = (await tx.stageSubmission.count({ where: { stageId: stage7.id } })) + 1;
+      const submission = await tx.stageSubmission.create({ data: { stageId: stage7.id, version, payload: toStage7SubmissionPayload(parsed.data), status: "Under Review", submittedAt: new Date() } });
+      await tx.electronicSignature.create({ data: { submissionId: submission.id, typedName: parsed.data.signatureName, confirmed: true, ipHash: sha256(h.get("x-forwarded-for") ?? "unknown"), userAgent: (h.get("user-agent") ?? "unknown").slice(0, 500) } });
+      await tx.hiringStage.update({ where: { id: stage7.id }, data: { status: "Under Review", submittedAt: new Date() } });
+      await tx.jobApplication.update({ where: { id: application.id }, data: { status: "Final Review", currentStageOrder: 7 } });
+      await tx.auditLog.create({ data: { applicationId: application.id, actorType: "applicant", actorRef: "masked-email", action: "Applicant submitted Stage 7 acknowledgements", metadata: { acknowledgementVersion: 1, allRequiredAcknowledgements: true, candidateNotePresent: Boolean(parsed.data.candidateNote) } } });
+      await tx.emailNotification.create({ data: { applicationId: application.id, toEmail: "admin", template: "stage-7-submitted-admin", subject: `Stage 7 submitted: ${application.applicationId}`, status: "recorded" } });
+    });
+  } catch (error) {
+    console.info("candidateStage7SubmitDiagnostics", { sessionValid: true, dbWriteSucceeded: false, errorName: error instanceof Error ? error.name : "UnknownError" });
+    redirect(portalUrl(session, { stage: "7", error: "stage7_submit_failed" }));
+  }
+  redirect(portalUrl(session, { stage: "7", success: "stage7_submitted" }));
 }
