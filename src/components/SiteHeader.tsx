@@ -1,14 +1,32 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { primaryNavigationLinks } from './navigation';
 
+const contactLink = ['/contact', "Let's Talk"] as const;
+
 export function SiteHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
   const pathname = usePathname();
   const mobileMenuId = 'site-header-mobile-menu';
+  const isHomepage = pathname === '/';
+
+  const navigationLinks = useMemo(
+    () => (isHomepage ? primaryNavigationLinks.filter(([href]) => href !== '/') : primaryNavigationLinks),
+    [isHomepage],
+  );
+
+  useEffect(() => {
+    const handleScroll = () => setHasScrolled(window.scrollY > 8);
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (!isMobileMenuOpen) return;
@@ -48,24 +66,42 @@ export function SiteHeader() {
   const isActiveLink = (href: string) => (href === '/' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
 
   return (
-    <header className="border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
-      <nav className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-4.5 lg:px-8">
+    <header
+      className={`sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
+        hasScrolled
+          ? 'border-[#0B1F3A]/10 bg-white/92 shadow-[0_10px_30px_rgba(11,31,58,0.07)] backdrop-blur-xl'
+          : 'border-transparent bg-white/80 backdrop-blur-md'
+      }`}
+    >
+      <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-8 px-5 py-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="min-w-0 flex-1 truncate text-lg font-bold tracking-tight text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 md:flex-none md:text-xl"
+          aria-label="Zentric Analytics homepage"
+          className="group inline-flex shrink-0 items-center gap-3 rounded-full focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"
         >
-          Zentric Analytics
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0B1F3A] text-white shadow-[0_10px_22px_rgba(11,31,58,0.16)]" aria-hidden="true">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+              <path d="M5 16.5L10.5 7.5L14.25 13.5L17.5 8.75L20 12.6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M5 16.5H19" stroke="#4FC3F7" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </span>
+          <span className="whitespace-nowrap text-lg font-semibold tracking-[-0.02em] text-[#0B1F3A] md:text-xl">
+            Zentric Analytics
+          </span>
         </Link>
-        <div className="hidden min-w-0 items-center gap-7 md:flex lg:gap-8">
-          {primaryNavigationLinks.map(([href, label]) => {
+
+        <div className="hidden min-w-0 flex-1 items-center justify-center gap-10 md:flex lg:gap-12">
+          {navigationLinks.map(([href, label]) => {
             const isActive = isActiveLink(href);
 
             return (
               <Link
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative whitespace-nowrap py-2 text-[15px] font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-4 lg:text-base ${
-                  isActive ? 'text-brand after:scale-x-100' : 'text-slate-700 hover:text-brand after:scale-x-0'
-                } after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-center after:rounded-full after:bg-brand after:transition-transform after:duration-200 hover:after:scale-x-100`}
+                className={`relative whitespace-nowrap py-2 text-[15px] font-medium tracking-[-0.01em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 ${
+                  isActive ? 'text-[#0B1F3A]' : 'text-[#173B67]/78 hover:text-[#0B1F3A]'
+                } after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-center after:rounded-full after:bg-[#10B981] after:transition-transform after:duration-200 ${
+                  isActive ? 'after:scale-x-100' : 'after:scale-x-0 hover:after:scale-x-100'
+                }`}
                 key={href}
                 href={href}
               >
@@ -74,13 +110,23 @@ export function SiteHeader() {
             );
           })}
         </div>
+
+        <div className="hidden shrink-0 items-center md:flex">
+          <Link
+            href={contactLink[0]}
+            className="rounded-full border border-[#0B1F3A] bg-[#0B1F3A] px-5 py-2.5 text-sm font-semibold tracking-[-0.01em] text-white shadow-[0_12px_26px_rgba(11,31,58,0.16)] transition-colors duration-200 hover:border-[#173B67] hover:bg-[#173B67] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"
+          >
+            {contactLink[1]}
+          </Link>
+        </div>
+
         <div className="flex shrink-0 items-center md:hidden">
           <button
             type="button"
             aria-expanded={isMobileMenuOpen}
             aria-controls={mobileMenuId}
             aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white/80 text-slate-700 shadow-sm transition hover:border-brand hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 md:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#0B1F3A]/10 bg-white/90 text-[#0B1F3A] shadow-sm transition-colors duration-200 hover:border-[#10B981]/60 hover:text-[#173B67] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 md:hidden"
             onClick={() => setIsMobileMenuOpen((open) => !open)}
           >
             <span className="sr-only">{isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}</span>
@@ -100,14 +146,14 @@ export function SiteHeader() {
           aria-labelledby="mobile-menu-title"
           className="fixed inset-0 z-50 flex h-screen min-h-dvh w-full flex-col overflow-hidden bg-white md:hidden"
         >
-          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-slate-200 px-5 py-5 sm:px-8">
-            <h2 id="mobile-menu-title" className="text-3xl font-bold tracking-tight text-slate-950">
+          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-[#0B1F3A]/10 px-5 py-5 sm:px-8">
+            <h2 id="mobile-menu-title" className="text-2xl font-semibold tracking-[-0.03em] text-[#0B1F3A]">
               Menu
             </h2>
             <button
               type="button"
               aria-label="Close navigation menu"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-brand hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#0B1F3A]/10 bg-white text-[#0B1F3A] shadow-sm transition-colors duration-200 hover:border-[#10B981]/60 hover:text-[#173B67] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <span className="sr-only">Close navigation menu</span>
@@ -117,19 +163,22 @@ export function SiteHeader() {
             </button>
           </div>
 
-          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-7 overflow-y-auto overscroll-contain px-5 py-7 sm:px-8">
+          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-8 overflow-y-auto overscroll-contain px-5 py-7 sm:px-8">
             <section aria-label="Primary navigation">
               <div className="flex flex-col gap-1">
-                {primaryNavigationLinks.map(([href, label]) => {
+                {[...navigationLinks, contactLink].map(([href, label]) => {
                   const isActive = isActiveLink(href);
+                  const isContact = href === contactLink[0];
 
                   return (
                     <Link
                       aria-current={isActive ? 'page' : undefined}
-                      className={`-mx-3 rounded-2xl border-l-2 px-3 py-3.5 text-lg font-semibold text-slate-900 transition duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 ${
-                        isActive
-                          ? 'border-brand bg-slate-50 text-brand'
-                          : 'border-transparent hover:bg-slate-50 hover:text-brand'
+                      className={`-mx-3 rounded-2xl border-l-2 px-3 py-3.5 text-lg font-semibold tracking-[-0.02em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 ${
+                        isContact
+                          ? 'mt-4 border-[#0B1F3A] bg-[#0B1F3A] text-white hover:bg-[#173B67]'
+                          : isActive
+                            ? 'border-[#10B981] bg-[#0B1F3A]/[0.03] text-[#0B1F3A]'
+                            : 'border-transparent text-[#173B67] hover:bg-[#0B1F3A]/[0.03] hover:text-[#0B1F3A]'
                       }`}
                       key={href}
                       href={href}

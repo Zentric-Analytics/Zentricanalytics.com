@@ -33,10 +33,13 @@ describe('public layout shell', () => {
     expect(source).not.toContain('Zentric Analytics LTD');
   });
 
-  it('renders the site header in normal document flow', () => {
+  it('renders a premium sticky site header with scroll refinement', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
 
-    expect(header).toContain('border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur');
+    expect(header).toContain('sticky inset-x-0 top-0 z-50 border-b transition-all duration-300');
+    expect(header).toContain('hasScrolled');
+    expect(header).toContain('backdrop-blur-xl');
+    expect(header).toContain('shadow-[0_10px_30px_rgba(11,31,58,0.07)]');
     expect(header).not.toContain('fixed inset-x-0 top-0 z-50');
   });
 
@@ -121,10 +124,12 @@ describe('public layout shell', () => {
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
     expect(header).toContain('primaryNavigationLinks');
+    expect(header).toContain("primaryNavigationLinks.filter(([href]) => href !== '/')");
+    expect(header).toContain("const contactLink = ['/contact', \"Let's Talk\"] as const");
     expect(header).not.toContain('Apply Now');
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
-    expect(header).toContain('text-lg font-semibold text-slate-900');
+    expect(header).toContain('text-lg font-semibold tracking-[-0.02em]');
   });
 
   it('separates company and applicant links in the footer', () => {
