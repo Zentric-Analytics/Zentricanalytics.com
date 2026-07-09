@@ -11,7 +11,8 @@ const publicPages = [
   'src/app/track/portal/page.tsx',
 ];
 
-const headerLinks = ['Home', 'About', 'Services', 'Careers', 'Apply Now', 'Track Application'];
+const primaryNavLinks = ['Home', 'About', 'Services', 'Careers'];
+const applicantNavLinks = ['Apply', 'Track Application'];
 
 const publicFacingBrandSourceFiles = [
   'src/components/SiteHeader.tsx',
@@ -60,7 +61,7 @@ describe('public layout shell', () => {
     expect(header).toContain('setIsMobileMenuOpen((open) => !open)');
   });
 
-  it('includes every header navigation link in the mobile menu and closes on link click', () => {
+  it('keeps the mobile menu synchronized with the primary navigation and closes on link click', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
 
     expect(header).toContain('id={mobileMenuId}');
@@ -75,7 +76,11 @@ describe('public layout shell', () => {
     expect(header).toContain('overflow-y-auto overscroll-contain');
     expect(header).toContain('md:hidden');
     expect(header).toContain('onClick={() => setIsMobileMenuOpen(false)}');
-    headerLinks.forEach((label) => expect(header).toContain(label));
+    const navigation = readFileSync('src/components/navigation.ts', 'utf8');
+
+    primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
+    expect(navigation).not.toContain('Apply Now');
+    expect(header).not.toContain('Track Application');
   });
 
 
@@ -111,15 +116,27 @@ describe('public layout shell', () => {
     expect(header).toContain("window.removeEventListener('keydown', handleKeyDown)");
   });
 
-  it('groups the full-screen mobile drawer into premium navigation sections', () => {
+  it('uses the shared primary navigation without recruitment shortcuts in the header', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
+    const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
-    expect(header).toContain('mobileMenuSections');
-    expect(header).toContain("label: 'MAIN'");
-    expect(header).toContain("label: 'CAREERS'");
-    expect(header).toContain("label: 'COMPANY'");
-    expect(header).toContain('uppercase tracking-[0.24em] text-slate-400');
+    expect(header).toContain('primaryNavigationLinks');
+    expect(header).not.toContain('Apply Now');
+    expect(header).not.toContain('Track Application');
+    primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     expect(header).toContain('text-lg font-semibold text-slate-900');
+  });
+
+  it('separates company and applicant links in the footer', () => {
+    const footer = readFileSync('src/components/SiteFooter.tsx', 'utf8');
+    const navigation = readFileSync('src/components/navigation.ts', 'utf8');
+
+    expect(footer).toContain('<FooterHeading>Company</FooterHeading>');
+    expect(footer).toContain('<FooterHeading>Applicants</FooterHeading>');
+    expect(footer).toContain('primaryNavigationLinks.map');
+    expect(footer).toContain('applicantNavigationLinks.map');
+    primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
+    applicantNavLinks.forEach((label) => expect(navigation).toContain(label));
   });
 
   it('keeps the mobile drawer hidden on desktop breakpoints', () => {

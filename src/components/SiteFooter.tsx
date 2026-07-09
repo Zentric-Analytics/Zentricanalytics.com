@@ -1,17 +1,5 @@
 import Link from 'next/link';
-
-const companyLinks = [
-  ['/', 'Home'],
-  ['/about', 'About'],
-  ['/services', 'Services'],
-  ['/careers', 'Careers'],
-] as const;
-
-const hiringLinks = [
-  ['/apply', 'Apply Now'],
-  ['/track', 'Track Application'],
-  ['/careers', 'Careers Overview'],
-] as const;
+import { applicantNavigationLinks, primaryNavigationLinks } from './navigation';
 
 const focusAreas = [
   'Software development',
@@ -71,16 +59,16 @@ export function SiteFooter() {
           <nav className="min-w-0 border-t border-slate-200 pt-6 sm:border-t-0 sm:pt-0" aria-label="Company links">
             <FooterHeading>Company</FooterHeading>
             <div className="mt-4 flex min-w-0 flex-col gap-3">
-              {companyLinks.map(([href, label]) => (
+              {primaryNavigationLinks.map(([href, label]) => (
                 <FooterLink key={href} href={href} label={label} />
               ))}
             </div>
           </nav>
 
-          <nav className="min-w-0 border-t border-slate-200 pt-6 sm:border-t-0 sm:pt-0" aria-label="Hiring portal links">
-            <FooterHeading>Hiring portal</FooterHeading>
+          <nav className="min-w-0 border-t border-slate-200 pt-6 sm:border-t-0 sm:pt-0" aria-label="Applicant links">
+            <FooterHeading>Applicants</FooterHeading>
             <div className="mt-4 flex min-w-0 flex-col gap-3">
-              {hiringLinks.map(([href, label]) => (
+              {applicantNavigationLinks.map(([href, label]) => (
                 <FooterLink key={href} href={href} label={label} />
               ))}
             </div>

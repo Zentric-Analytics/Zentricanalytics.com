@@ -2,40 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-const links = [
-  ['/', 'Home'],
-  ['/about', 'About'],
-  ['/services', 'Services'],
-  ['/careers', 'Careers'],
-  ['/track', 'Track Application'],
-];
-
-const mobileMenuSections = [
-  {
-    label: 'MAIN',
-    links: [
-      ['/', 'Home'],
-      ['/about', 'About'],
-      ['/services', 'Services'],
-    ],
-  },
-  {
-    label: 'CAREERS',
-    links: [
-      ['/careers', 'Careers'],
-      ['/apply', 'Apply Now'],
-      ['/track', 'Track Application'],
-    ],
-  },
-  {
-    label: 'COMPANY',
-    links: [
-      ['/about', 'About Zentric Analytics'],
-      ['/services', 'Services'],
-    ],
-  },
-];
+import { primaryNavigationLinks } from './navigation';
 
 export function SiteHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -83,16 +50,13 @@ export function SiteHeader() {
           Zentric Analytics
         </Link>
         <div className="hidden min-w-0 items-center gap-5 md:flex">
-          {links.map(([href, label]) => (
+          {primaryNavigationLinks.map(([href, label]) => (
             <Link className="whitespace-nowrap text-sm font-medium text-slate-700 hover:text-brand" key={href} href={href}>
               {label}
             </Link>
           ))}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Link className="btn btn-primary px-3 py-2 text-sm sm:px-4 sm:py-3" href="/apply">
-            Apply Now
-          </Link>
+        <div className="flex shrink-0 items-center md:hidden">
           <button
             type="button"
             aria-expanded={isMobileMenuOpen}
@@ -136,23 +100,20 @@ export function SiteHeader() {
           </div>
 
           <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-7 overflow-y-auto overscroll-contain px-5 py-7 sm:px-8">
-            {mobileMenuSections.map((section) => (
-              <section className="border-b border-slate-200 pb-6 last:border-b-0 last:pb-0" key={section.label}>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{section.label}</p>
-                <div className="flex flex-col">
-                  {section.links.map(([href, label]) => (
-                    <Link
-                      className="-mx-3 rounded-2xl px-3 py-3.5 text-lg font-semibold text-slate-900 transition hover:bg-slate-50 hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
-                      key={`${section.label}-${href}-${label}`}
-                      href={href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            ))}
+            <section aria-label="Primary navigation">
+              <div className="flex flex-col">
+                {primaryNavigationLinks.map(([href, label]) => (
+                  <Link
+                    className="-mx-3 rounded-2xl px-3 py-3.5 text-lg font-semibold text-slate-900 transition hover:bg-slate-50 hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
+                    key={href}
+                    href={href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </section>
           </div>
         </div>
       ) : null}
