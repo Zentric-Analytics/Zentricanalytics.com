@@ -132,16 +132,22 @@ describe('public layout shell', () => {
     expect(header).toContain('text-lg font-semibold tracking-[-0.02em]');
   });
 
-  it('separates company and applicant links in the footer', () => {
+  it('renders the premium corporate footer navigation and contact resources', () => {
     const footer = readFileSync('src/components/SiteFooter.tsx', 'utf8');
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
+    expect(footer).toContain('border-t border-[#E5E7EB] bg-white text-[#111827]');
+    expect(footer).toContain('ZENTRIC ANALYTICS');
     expect(footer).toContain('<FooterHeading>Company</FooterHeading>');
-    expect(footer).toContain('<FooterHeading>Applicants</FooterHeading>');
-    expect(footer).toContain('primaryNavigationLinks.map');
-    expect(footer).toContain('applicantNavigationLinks.map');
+    expect(footer).toContain('<FooterHeading>Capabilities</FooterHeading>');
+    expect(footer).toContain('<FooterHeading>Resources</FooterHeading>');
+    expect(footer).toContain('mailto:hello@example.com');
+    expect(footer).toContain('official company email');
+    expect(footer).toContain('© 2026 Zentric Analytics. All rights reserved.');
+    expect(footer).toContain('Software • Web • AI • Data Analytics • Research');
+    expect(footer).not.toContain('SocialLink');
+    expect(footer).not.toContain('Newsletter');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
-    applicantNavLinks.forEach((label) => expect(navigation).toContain(label));
   });
 
   it('keeps the mobile drawer hidden on desktop breakpoints', () => {
