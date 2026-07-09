@@ -52,7 +52,7 @@ export function SiteHeader() {
       <nav className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-4.5 lg:px-8">
         <Link
           href="/"
-          className="min-w-0 flex-1 truncate text-lg font-bold tracking-tight text-brand transition-colors hover:text-accent focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 md:flex-none md:text-xl"
+          className="min-w-0 flex-1 truncate text-lg font-bold tracking-tight text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 md:flex-none md:text-xl"
         >
           Zentric Analytics
         </Link>
