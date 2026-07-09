@@ -475,6 +475,29 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="bg-white px-4 py-24 sm:px-6 sm:py-28 lg:py-36" aria-labelledby="final-cta-heading">
+        <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
+            READY TO BUILD?
+          </p>
+          <h2
+            id="final-cta-heading"
+            className="mt-6 text-[2.15rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.85rem] md:text-[3.35rem]"
+          >
+            Let&apos;s build technology that lasts.
+          </h2>
+          <p className="mt-7 max-w-2xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
+            Whether you&apos;re planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution.
+          </p>
+          <Link
+            className="btn mt-10 min-h-12 bg-[#0B1F3A] px-8 py-3.5 text-white shadow-[0_16px_38px_rgba(11,31,58,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#173B67] hover:shadow-[0_22px_48px_rgba(11,31,58,0.22)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
+            href="/contact"
+          >
+            Let&apos;s Talk
+          </Link>
+        </div>
+      </section>
+
     </PageShell>
   );
 }
