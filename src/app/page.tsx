@@ -475,22 +475,37 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-24 sm:px-6 sm:py-28 lg:py-36" aria-labelledby="final-cta-heading">
+      <section
+        className="relative isolate overflow-hidden border-b border-white/10 bg-[#0B1F3A] px-4 py-32 sm:px-6 sm:py-36 lg:py-44"
+        aria-labelledby="final-cta-heading"
+      >
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_12%,rgba(16,185,129,0.22),transparent_34%),radial-gradient(circle_at_50%_80%,rgba(255,255,255,0.10),transparent_42%),linear-gradient(180deg,rgba(11,31,58,0.94),#0B1F3A)]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,0.72)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.72)_1px,transparent_1px)] [background-size:44px_44px]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute left-1/2 top-10 -z-10 h-56 w-[38rem] -translate-x-1/2 rounded-full bg-white/10 blur-3xl"
+        />
         <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
           <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
             READY TO BUILD?
           </p>
           <h2
             id="final-cta-heading"
-            className="mt-6 text-[2.15rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.85rem] md:text-[3.35rem]"
+            className="mt-6 text-[2.15rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:text-[2.85rem] md:text-[3.35rem]"
           >
             Let&apos;s build technology that lasts.
           </h2>
-          <p className="mt-7 max-w-2xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
+          <p className="mt-7 max-w-2xl text-base leading-8 text-white/[0.82] sm:text-lg sm:leading-9">
             Whether you&apos;re planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution.
           </p>
           <Link
-            className="btn mt-10 min-h-12 bg-[#0B1F3A] px-8 py-3.5 text-white shadow-[0_16px_38px_rgba(11,31,58,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#173B67] hover:shadow-[0_22px_48px_rgba(11,31,58,0.22)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
+            className="btn mt-10 min-h-12 bg-white px-8 py-3.5 text-[#0B1F3A] shadow-[0_18px_44px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_24px_58px_rgba(0,0,0,0.34)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
             href="/contact"
           >
             Let&apos;s Talk
