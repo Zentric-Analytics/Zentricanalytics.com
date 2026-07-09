@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { primaryNavigationLinks } from './navigation';
 
 export function SiteHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
   const mobileMenuId = 'site-header-mobile-menu';
 
   useEffect(() => {
@@ -43,18 +45,34 @@ export function SiteHeader() {
     };
   }, [isMobileMenuOpen]);
 
+  const isActiveLink = (href: string) => (href === '/' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
+
   return (
     <header className="border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
-      <nav className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-        <Link href="/" className="min-w-0 flex-1 truncate font-bold text-brand md:flex-none">
+      <nav className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-4.5 lg:px-8">
+        <Link
+          href="/"
+          className="min-w-0 flex-1 truncate text-lg font-bold tracking-tight text-brand transition-colors hover:text-accent focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 md:flex-none md:text-xl"
+        >
           Zentric Analytics
         </Link>
-        <div className="hidden min-w-0 items-center gap-5 md:flex">
-          {primaryNavigationLinks.map(([href, label]) => (
-            <Link className="whitespace-nowrap text-sm font-medium text-slate-700 hover:text-brand" key={href} href={href}>
-              {label}
-            </Link>
-          ))}
+        <div className="hidden min-w-0 items-center gap-7 md:flex lg:gap-8">
+          {primaryNavigationLinks.map(([href, label]) => {
+            const isActive = isActiveLink(href);
+
+            return (
+              <Link
+                aria-current={isActive ? 'page' : undefined}
+                className={`relative whitespace-nowrap py-2 text-[15px] font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-4 lg:text-base ${
+                  isActive ? 'text-brand after:scale-x-100' : 'text-slate-700 hover:text-brand after:scale-x-0'
+                } after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-center after:rounded-full after:bg-brand after:transition-transform after:duration-200 hover:after:scale-x-100`}
+                key={href}
+                href={href}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </div>
         <div className="flex shrink-0 items-center md:hidden">
           <button
@@ -101,17 +119,26 @@ export function SiteHeader() {
 
           <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-7 overflow-y-auto overscroll-contain px-5 py-7 sm:px-8">
             <section aria-label="Primary navigation">
-              <div className="flex flex-col">
-                {primaryNavigationLinks.map(([href, label]) => (
-                  <Link
-                    className="-mx-3 rounded-2xl px-3 py-3.5 text-lg font-semibold text-slate-900 transition hover:bg-slate-50 hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
-                    key={href}
-                    href={href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {label}
-                  </Link>
-                ))}
+              <div className="flex flex-col gap-1">
+                {primaryNavigationLinks.map(([href, label]) => {
+                  const isActive = isActiveLink(href);
+
+                  return (
+                    <Link
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`-mx-3 rounded-2xl border-l-2 px-3 py-3.5 text-lg font-semibold text-slate-900 transition duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 ${
+                        isActive
+                          ? 'border-brand bg-slate-50 text-brand'
+                          : 'border-transparent hover:bg-slate-50 hover:text-brand'
+                      }`}
+                      key={href}
+                      href={href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
               </div>
             </section>
           </div>
