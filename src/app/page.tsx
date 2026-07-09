@@ -1,14 +1,45 @@
 import Link from 'next/link';
 import { PageShell } from '@/components/PageShell';
-import { Section } from '@/components/Section';
 
-const focus = [
-  'Software Development',
-  'Web Development',
-  'Artificial Intelligence Solutions',
-  'Data Analytics',
-  'Computer Science R&D',
-  'Emerging Technologies',
+const capabilities = [
+  {
+    number: '01',
+    title: 'Software Engineering',
+    description:
+      'Reliable software systems built for performance, scalability, security, and long-term maintainability.',
+    featured: true,
+  },
+  {
+    number: '02',
+    title: 'Artificial Intelligence',
+    description:
+      'Applied AI solutions that improve decision-making, automate workflows, and create measurable business value.',
+  },
+  {
+    number: '03',
+    title: 'Data & Analytics',
+    description:
+      'Modern analytics platforms that transform data into meaningful insights and informed decisions.',
+  },
+  {
+    number: '04',
+    title: 'Research & Innovation',
+    description:
+      'Research-led exploration of emerging technologies with practical engineering outcomes.',
+  },
+  {
+    number: '05',
+    title: 'Cloud & Infrastructure',
+    description:
+      'Secure, resilient, and scalable cloud platforms designed for enterprise environments.',
+  },
+  {
+    number: '06',
+    title: 'Emerging Technologies',
+    description:
+      'Evaluating, validating, and implementing future-ready technologies responsibly and strategically.',
+    featured: true,
+  },
 ];
 
 export default function Home() {
@@ -86,16 +117,59 @@ export default function Home() {
         </div>
       </section>
 
-      <Section eyebrow="Focus areas" title="Built for technical depth and responsible delivery.">
-        <div className="grid gap-4 md:grid-cols-3">
-          {focus.map((item) => (
-            <div className="card p-6" key={item}>
-              <h2 className="font-bold text-ink">{item}</h2>
-              <p className="mt-2 text-sm">Structured discovery, implementation, validation, documentation, and maintainable handover practices.</p>
-            </div>
-          ))}
+      <section className="bg-white px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="core-capabilities-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-4xl">
+            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
+              CORE CAPABILITIES
+            </p>
+            <h2
+              id="core-capabilities-heading"
+              className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.75rem] md:text-[3.25rem]"
+            >
+              Engineering expertise across software, AI, data, infrastructure, and research.
+            </h2>
+            <p className="mt-7 max-w-3xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
+              Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-16 lg:gap-8">
+            {capabilities.map((capability) => (
+              <article
+                className={`group relative overflow-hidden rounded-[1.5rem] border border-[#D1D5DB]/80 bg-white p-7 shadow-[0_20px_55px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1.5 hover:border-[#10B981]/45 hover:shadow-[0_28px_70px_rgba(15,23,42,0.12)] sm:p-8 ${
+                  capability.featured ? 'md:col-span-2 lg:p-10' : ''
+                }`}
+                key={capability.number}
+              >
+                <div className="absolute inset-x-7 top-0 h-px bg-[#10B981]/30 opacity-60 transition-opacity duration-300 group-hover:opacity-100 sm:inset-x-8 lg:inset-x-10" />
+                <div className={capability.featured ? 'lg:grid lg:grid-cols-[0.7fr_1.3fr] lg:gap-12' : ''}>
+                  <div>
+                    <p className="text-sm font-bold tracking-[0.28em] text-[#10B981]">
+                      {capability.number}
+                    </p>
+                    <h3 className="mt-6 text-2xl font-bold tracking-[-0.035em] text-[#111827] sm:text-3xl">
+                      {capability.title}
+                    </h3>
+                  </div>
+                  <div className={capability.featured ? 'mt-6 lg:mt-0' : 'mt-5'}>
+                    <p className="max-w-2xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
+                      {capability.description}
+                    </p>
+                    <Link
+                      aria-label={`Learn more about ${capability.title}`}
+                      className="mt-8 inline-flex text-sm font-bold tracking-[-0.01em] text-[#0B1F3A] transition duration-300 group-hover:translate-x-1 group-hover:text-[#10B981] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
+                      href="/services"
+                    >
+                      Learn More →
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
-      </Section>
+      </section>
     </PageShell>
   );
 }
