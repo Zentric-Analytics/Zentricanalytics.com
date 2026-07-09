@@ -20,3 +20,22 @@ body{margin:0;background:#f7f9fc;color:#0c1222}
 .btn-secondary{border:1px solid #cbd5e1;background:white}
 
 .card{max-width:100%;min-width:0;overflow-wrap:break-word;background:white;border:1px solid #e2e8f0;border-radius:1.25rem;box-shadow:0 12px 30px rgba(15,23,42,.06)}
+
+@keyframes editorial-fade-up{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.editorial-reveal{animation:editorial-fade-up .7s ease-out both}
+
+@supports (animation-timeline:view()){
+  .editorial-reveal{
+    opacity:0;
+    animation-timeline:view();
+    animation-range:entry 12% cover 32%;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .editorial-reveal{animation:none;opacity:1;transform:none}
+}
