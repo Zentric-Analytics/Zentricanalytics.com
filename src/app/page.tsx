@@ -374,6 +374,44 @@ export default function Home() {
         </div>
       </section>
 
+      <section
+        className="relative isolate overflow-hidden bg-[#0B1F3A] px-4 py-24 text-white sm:px-6 sm:py-28 lg:py-36"
+        aria-labelledby="careers-preview-heading"
+      >
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.18),transparent_34%),radial-gradient(circle_at_18%_82%,rgba(79,195,247,0.12),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0)_42%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:44px_44px]"
+        />
+        <div className="relative mx-auto flex min-h-[30rem] max-w-5xl items-center justify-center">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="editorial-reveal text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
+              CAREERS
+            </p>
+            <h2
+              id="careers-preview-heading"
+              className="editorial-reveal mt-6 text-[2.35rem] font-bold leading-[1.05] tracking-[-0.045em] text-white sm:text-[3.2rem] md:text-[4rem]"
+            >
+              Build technology that matters.
+            </h2>
+            <p className="editorial-reveal mx-auto mt-7 max-w-3xl text-base leading-8 text-slate-200 sm:text-lg sm:leading-9">
+              At Zentric Analytics, we believe exceptional technology is built by curious minds, disciplined engineers, thoughtful researchers, and people who care about solving meaningful problems. If you&apos;re passionate about creating reliable software, intelligent systems, and technology with lasting impact, we&apos;d love to hear from you.
+            </p>
+            <div className="editorial-reveal mt-10 flex justify-center">
+              <Link
+                className="btn btn-primary min-h-12 px-8 py-3.5 shadow-xl shadow-emerald-950/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#10B981]"
+                href="/careers"
+              >
+                Explore Careers
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
 
     </PageShell>
   );
