@@ -38,48 +38,50 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#F8FAFC] px-4 py-24 sm:py-28 lg:py-36" aria-labelledby="how-we-think-heading">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="editorial-reveal text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
-            HOW WE THINK
-          </p>
-          <h2
-            id="how-we-think-heading"
-            className="editorial-reveal mx-auto mt-7 max-w-3xl text-[2.15rem] font-bold leading-[1.08] tracking-[-0.04em] text-ink sm:text-[2.85rem] md:text-[3.35rem]"
-          >
-            Engineering isn&apos;t just what we build.
-            <br className="hidden sm:block" />
-            It&apos;s how we solve problems.
-          </h2>
-          <p className="editorial-reveal mx-auto mt-8 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg sm:leading-9">
-            Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment.
-          </p>
+      <section className="bg-[#F8FAFC] px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="how-we-think-heading">
+        <div className="editorial-reveal mx-auto max-w-6xl rounded-[2rem] border border-slate-200/80 bg-white px-6 py-10 text-left shadow-[0_24px_70px_rgba(15,23,42,0.07)] sm:px-10 sm:py-14 lg:px-16 lg:py-18">
+          <div className="max-w-4xl">
+            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
+              HOW WE THINK
+            </p>
+            <h2
+              id="how-we-think-heading"
+              className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-ink sm:text-[2.8rem] md:text-[3.35rem]"
+            >
+              Engineering isn&apos;t just what we build.
+              <br className="hidden sm:block" />
+              It&apos;s how we solve problems.
+            </h2>
+            <p className="mt-7 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg sm:leading-9">
+              Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment.
+            </p>
+          </div>
 
-          <div className="mx-auto mt-16 max-w-3xl border-t border-slate-200/80 text-left sm:mt-20">
-            <article className="editorial-reveal border-b border-slate-200/80 py-10 sm:grid sm:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] sm:gap-12 sm:py-12">
+          <div className="mt-10 border-t border-slate-200/90 sm:mt-12 lg:mt-14">
+            <div className="editorial-reveal border-b border-slate-200/90 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:py-8 lg:gap-16">
               <h3 className="text-lg font-bold tracking-[-0.02em] text-ink">Engineering First</h3>
-              <p className="mt-4 text-base leading-8 text-slate-600 sm:mt-0">
+              <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Every decision begins with architecture, maintainability, scalability, and long-term reliability.
               </p>
-            </article>
-            <article className="editorial-reveal border-b border-slate-200/80 py-10 sm:grid sm:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] sm:gap-12 sm:py-12">
+            </div>
+            <div className="editorial-reveal border-b border-slate-200/90 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:py-8 lg:gap-16">
               <h3 className="text-lg font-bold tracking-[-0.02em] text-ink">Technology With Purpose</h3>
-              <p className="mt-4 text-base leading-8 text-slate-600 sm:mt-0">
+              <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Artificial intelligence, software, and data are applied where they create measurable value rather than unnecessary complexity.
               </p>
-            </article>
-            <article className="editorial-reveal border-b border-slate-200/80 py-10 sm:grid sm:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] sm:gap-12 sm:py-12">
+            </div>
+            <div className="editorial-reveal border-b border-slate-200/90 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:py-8 lg:gap-16">
               <h3 className="text-lg font-bold tracking-[-0.02em] text-ink">Built For Longevity</h3>
-              <p className="mt-4 text-base leading-8 text-slate-600 sm:mt-0">
+              <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Solutions are designed to evolve with changing business needs instead of becoming short-term implementations.
               </p>
-            </article>
-            <article className="editorial-reveal py-10 sm:grid sm:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] sm:gap-12 sm:py-12">
+            </div>
+            <div className="editorial-reveal py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:py-8 lg:gap-16">
               <h3 className="text-lg font-bold tracking-[-0.02em] text-ink">Continuous Innovation</h3>
-              <p className="mt-4 text-base leading-8 text-slate-600 sm:mt-0">
+              <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Research, experimentation, and emerging technologies are explored with discipline, practicality, and measurable outcomes.
               </p>
-            </article>
+            </div>
           </div>
         </div>
       </section>
