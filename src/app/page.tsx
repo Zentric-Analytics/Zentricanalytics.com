@@ -475,6 +475,29 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="bg-[#0B1F3A] px-4 py-20 text-white sm:px-6 sm:py-24 lg:py-32" aria-labelledby="careers-preview-heading">
+        <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
+            CAREERS
+          </p>
+          <h2
+            id="careers-preview-heading"
+            className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:text-[2.75rem] md:text-[3.25rem]"
+          >
+            Build technology that matters.
+          </h2>
+          <p className="mt-7 max-w-3xl text-base leading-8 text-slate-200 sm:text-lg sm:leading-9">
+            At Zentric Analytics, we believe exceptional technology is built by curious minds, disciplined engineers, thoughtful researchers, and people who care about solving meaningful problems. If you&apos;re passionate about creating reliable software, intelligent systems, and technology with lasting impact, we&apos;d love to hear from you.
+          </p>
+          <Link
+            className="btn mt-10 min-h-12 bg-white px-8 py-3.5 text-brand shadow-xl shadow-cyan-950/20 transition hover:-translate-y-0.5 hover:bg-cyan-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100"
+            href="/careers"
+          >
+            Explore Careers
+          </Link>
+        </div>
+      </section>
+
     </PageShell>
   );
 }
