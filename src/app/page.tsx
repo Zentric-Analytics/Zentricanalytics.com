@@ -42,6 +42,56 @@ const capabilities = [
   },
 ];
 
+const industries = [
+  {
+    title: 'Healthcare',
+    description:
+      'Reliable digital platforms, secure data systems, and intelligent healthcare technology that improve operational efficiency.',
+    icon: (
+      <path d="M12 5v14M5 12h14M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Z" />
+    ),
+  },
+  {
+    title: 'Financial Services',
+    description:
+      'Modern software, analytics, and secure digital solutions built for financial institutions and business operations.',
+    icon: (
+      <path d="M4 10h16M6 10v8M10 10v8M14 10v8M18 10v8M5 18h14M12 4 4 8h16l-8-4Z" />
+    ),
+  },
+  {
+    title: 'Government & Public Sector',
+    description:
+      'Scalable digital platforms and technology solutions that support efficient public service delivery.',
+    icon: (
+      <path d="M4 20h16M6 9h12M7 9v8M11 9v8M15 9v8M17 9v8M12 4 5 8h14l-7-4Z" />
+    ),
+  },
+  {
+    title: 'Education',
+    description:
+      'Modern learning platforms, institutional systems, analytics, and digital transformation for education.',
+    icon: (
+      <path d="m4 8 8-4 8 4-8 4-8-4ZM7 10v5c0 1.7 2.2 3 5 3s5-1.3 5-3v-5M20 8v6" />
+    ),
+  },
+  {
+    title: 'Manufacturing',
+    description:
+      'Engineering software and intelligent systems that improve operational visibility, automation, and productivity.',
+    icon: (
+      <path d="M4 19V9l5 3V9l5 3V7h6v12H4ZM8 16h2M13 16h2M18 16h2" />
+    ),
+  },
+  {
+    title: 'Logistics & Supply Chain',
+    description:
+      'Technology solutions that optimize movement, visibility, planning, and operational decision-making.',
+    icon: (
+      <path d="M3 16h2m14 0h2M7 16a2 2 0 1 0 4 0 2 2 0 0 0-4 0Zm6 0h1m1 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0ZM5 16V7h9v9M14 10h3l3 3v3" />
+    ),
+  },
+];
 
 const engineeringProcess = [
   {
@@ -374,6 +424,56 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="bg-white px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="industries-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-4xl">
+            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
+              INDUSTRIES WE SERVE
+            </p>
+            <h2
+              id="industries-heading"
+              className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.75rem] md:text-[3.25rem]"
+            >
+              Engineering technology for organizations across critical industries.
+            </h2>
+            <p className="mt-7 max-w-3xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
+              Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 sm:gap-6 md:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-7">
+            {industries.map((industry) => (
+              <article
+                className="group rounded-[1.35rem] border border-[#D1D5DB]/80 bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#10B981]/50 hover:shadow-[0_26px_64px_rgba(15,23,42,0.11)] focus-within:-translate-y-1 focus-within:border-[#10B981]/50 sm:p-7"
+                key={industry.title}
+              >
+                <div
+                  aria-hidden="true"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#173B67]/10 bg-[#F8FAFC] text-[#173B67] transition duration-300 group-hover:border-[#10B981]/35 group-hover:bg-[#10B981]/[0.08] group-hover:text-[#10B981]"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.7"
+                    viewBox="0 0 24 24"
+                  >
+                    {industry.icon}
+                  </svg>
+                </div>
+                <h3 className="mt-6 text-xl font-bold tracking-[-0.03em] text-[#111827] sm:text-2xl">
+                  {industry.title}
+                </h3>
+                <p className="mt-4 text-sm leading-7 text-[#475569] sm:text-base sm:leading-8">
+                  {industry.description}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
     </PageShell>
   );
