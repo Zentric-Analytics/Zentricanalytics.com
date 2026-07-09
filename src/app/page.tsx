@@ -51,22 +51,22 @@ export default function Home() {
         <div className="absolute left-1/2 top-0 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-cyan-300/10 blur-3xl" />
         <div className="absolute bottom-0 right-0 -z-10 h-80 w-80 translate-x-1/4 translate-y-1/4 rounded-full bg-teal-300/10 blur-3xl" />
 
-        <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 py-24 sm:py-28 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-16 lg:py-36">
-          <div className="max-w-3xl">
-            <p className="mb-7 inline-flex text-xs font-bold uppercase tracking-[0.32em] text-cyan-100/90">
+        <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 py-24 sm:py-28 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-16 lg:py-32">
+          <div className="max-w-[43rem]">
+            <p className="mb-8 inline-flex text-xs font-bold uppercase tracking-[0.32em] text-cyan-100/90 sm:mb-9">
               ZENTRIC ANALYTICS
             </p>
-            <h1 className="max-w-4xl text-4xl font-bold tracking-[-0.045em] text-white sm:text-5xl md:text-6xl lg:text-7xl lg:leading-[0.98]">
+            <h1 className="max-w-[42rem] text-[2.5rem] font-bold leading-[1.04] tracking-[-0.043em] text-white sm:text-[3.25rem] sm:leading-[1.02] md:text-[3.75rem] lg:text-[3.95rem] xl:text-[4.2rem]">
               Engineering reliable software, data, and AI systems for serious work.
             </h1>
-            <p className="mt-8 max-w-2xl text-base leading-8 text-slate-200 sm:text-lg sm:leading-9">
+            <p className="mt-9 max-w-[36rem] text-base leading-8 text-slate-200 sm:mt-10 sm:text-lg sm:leading-9">
               Zentric Analytics is a technology company focused on disciplined software delivery, web platforms, artificial intelligence solutions, analytics, computer science research, and emerging technology implementation.
             </p>
-            <div className="mt-11 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-              <Link className="btn bg-white px-7 py-3.5 text-brand shadow-xl shadow-cyan-950/20 transition hover:-translate-y-0.5 hover:bg-cyan-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100" href="/services">
+            <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
+              <Link className="btn min-h-12 bg-white px-8 py-3.5 text-brand shadow-xl shadow-cyan-950/20 transition hover:-translate-y-0.5 hover:bg-cyan-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100" href="/services">
                 Explore Services
               </Link>
-              <Link className="btn border border-white/25 bg-transparent px-7 py-3.5 text-white transition hover:-translate-y-0.5 hover:border-cyan-100/45 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100" href="/contact">
+              <Link className="btn min-h-12 border border-white/25 bg-transparent px-8 py-3.5 text-white transition hover:-translate-y-0.5 hover:border-cyan-100/45 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100" href="/contact">
                 Let&apos;s Talk
               </Link>
             </div>
