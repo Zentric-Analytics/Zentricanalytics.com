@@ -475,25 +475,25 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#0B1F3A] px-4 py-20 text-white sm:px-6 sm:py-24 lg:py-32" aria-labelledby="careers-preview-heading">
-        <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+      <section className="bg-white px-4 py-24 sm:px-6 sm:py-28 lg:py-36" aria-labelledby="final-cta-heading">
+        <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
           <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
-            CAREERS
+            READY TO BUILD?
           </p>
           <h2
-            id="careers-preview-heading"
-            className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:text-[2.75rem] md:text-[3.25rem]"
+            id="final-cta-heading"
+            className="mt-6 text-[2.15rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.85rem] md:text-[3.35rem]"
           >
-            Build technology that matters.
+            Let&apos;s build technology that lasts.
           </h2>
-          <p className="mt-7 max-w-3xl text-base leading-8 text-slate-200 sm:text-lg sm:leading-9">
-            At Zentric Analytics, we believe exceptional technology is built by curious minds, disciplined engineers, thoughtful researchers, and people who care about solving meaningful problems. If you&apos;re passionate about creating reliable software, intelligent systems, and technology with lasting impact, we&apos;d love to hear from you.
+          <p className="mt-7 max-w-2xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
+            Whether you&apos;re planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution.
           </p>
           <Link
-            className="btn mt-10 min-h-12 bg-white px-8 py-3.5 text-brand shadow-xl shadow-cyan-950/20 transition hover:-translate-y-0.5 hover:bg-cyan-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100"
-            href="/careers"
+            className="btn mt-10 min-h-12 bg-[#0B1F3A] px-8 py-3.5 text-white shadow-[0_16px_38px_rgba(11,31,58,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#173B67] hover:shadow-[0_22px_48px_rgba(11,31,58,0.22)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
+            href="/contact"
           >
-            Explore Careers
+            Let&apos;s Talk
           </Link>
         </div>
       </section>
