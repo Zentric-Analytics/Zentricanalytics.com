@@ -42,6 +42,45 @@ const capabilities = [
   },
 ];
 
+const trustPrinciples = [
+  {
+    number: '01',
+    title: 'Disciplined Engineering',
+    description:
+      'Every engagement begins with structured planning, thoughtful architecture, and implementation practices designed for reliability.',
+  },
+  {
+    number: '02',
+    title: 'Security by Design',
+    description:
+      'Security, privacy, and operational resilience are considered throughout the development lifecycle, not added at the end.',
+  },
+  {
+    number: '03',
+    title: 'Long-Term Maintainability',
+    description:
+      'Solutions are designed to evolve with changing business requirements instead of becoming short-term technical debt.',
+  },
+  {
+    number: '04',
+    title: 'Transparent Collaboration',
+    description:
+      'Clear communication, measurable milestones, and shared visibility keep teams aligned from discovery through delivery.',
+  },
+  {
+    number: '05',
+    title: 'Research-Driven Innovation',
+    description:
+      'Emerging technologies are evaluated carefully and applied only where they create practical, measurable value.',
+  },
+  {
+    number: '06',
+    title: 'Quality Without Compromise',
+    description:
+      'Testing, review, documentation, and continuous improvement are treated as core parts of engineering delivery.',
+  },
+];
+
 export default function Home() {
   return (
     <PageShell>
@@ -170,6 +209,53 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <section className="bg-[#F8FAFC] px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="why-choose-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-4xl">
+            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
+              WHY CHOOSE ZENTRIC ANALYTICS
+            </p>
+            <h2
+              id="why-choose-heading"
+              className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.75rem] md:text-[3.25rem]"
+            >
+              Built for organizations that need technology they can depend on.
+            </h2>
+            <p className="mt-7 max-w-3xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
+              Zentric Analytics combines disciplined engineering, responsible technology adoption, and long-term architectural thinking to help organizations build systems that remain reliable beyond launch.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-16 lg:gap-8">
+            {trustPrinciples.map((principle) => (
+              <article
+                className="group relative overflow-hidden rounded-[1.75rem] border border-[#D1D5DB]/80 bg-white p-7 shadow-[0_20px_55px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#10B981]/45 hover:shadow-[0_30px_75px_rgba(15,23,42,0.11)] sm:p-8 lg:p-9"
+                key={principle.number}
+              >
+                <div className="absolute inset-x-7 top-0 h-px bg-[#10B981]/25 opacity-60 transition-opacity duration-300 group-hover:opacity-100 sm:inset-x-8 lg:inset-x-9" />
+                <div className="flex items-start gap-5">
+                  <div
+                    aria-hidden="true"
+                    className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#10B981]/20 bg-[#10B981]/[0.07] text-sm font-bold tracking-[0.16em] text-[#10B981] transition duration-300 group-hover:border-[#10B981]/45 group-hover:bg-[#10B981]/10"
+                  >
+                    {principle.number}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold tracking-[-0.03em] text-[#111827] sm:text-2xl">
+                      {principle.title}
+                    </h3>
+                    <p className="mt-4 text-base leading-8 text-[#475569]">
+                      {principle.description}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
     </PageShell>
   );
 }
