@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, FlaskConical, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
+import { SectionHeader } from '@/components/SectionHeader';
 
 const capabilities: Array<{ Icon: LucideIcon; title: string; description: string; featured?: boolean }> = [
   {
@@ -212,22 +213,13 @@ export default function Home() {
         <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.025] [background-image:linear-gradient(rgba(15,23,42,0.95)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.95)_1px,transparent_1px),linear-gradient(45deg,transparent_48%,rgba(16,185,129,0.9)_49%,rgba(16,185,129,0.9)_51%,transparent_52%)] [background-size:56px_56px,56px_56px,168px_168px]" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-white/60 to-transparent" aria-hidden="true" />
         <div className="editorial-reveal editorial-reveal-4 mx-auto max-w-6xl rounded-[1.65rem] border border-[#E5E7EB] bg-white px-7 py-12 text-left shadow-[0_26px_80px_rgba(15,23,42,0.08),0_2px_10px_rgba(15,23,42,0.035)] sm:rounded-[1.75rem] sm:px-11 sm:py-16 lg:px-16 lg:py-20">
-          <div className="max-w-4xl">
-            <p className="editorial-reveal editorial-reveal-1 text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
-              HOW WE THINK
-            </p>
-            <h2
-              id="how-we-think-heading"
-              className="editorial-reveal editorial-reveal-2 mt-7 max-w-4xl text-[2.05rem] font-bold leading-[1.12] tracking-[-0.045em] text-ink sm:text-[2.8rem] sm:leading-[1.08] md:text-[3.35rem]"
-            >
-              Engineering isn&apos;t just what we build.
-              <br className="hidden sm:block" />
-              It&apos;s how we solve problems.
-            </h2>
-            <p className="editorial-reveal editorial-reveal-3 mt-8 max-w-[46rem] text-base leading-8 text-slate-600 sm:text-lg sm:leading-9">
-              Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment.
-            </p>
-          </div>
+          <SectionHeader
+            className="editorial-reveal editorial-reveal-1"
+            eyebrow="HOW WE THINK"
+            heading={<>Engineering isn&apos;t just what we build. It&apos;s how we solve problems.</>}
+            headingId="how-we-think-heading"
+            description="Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment."
+          />
 
           <div className="mt-12 border-t border-slate-200/70 pt-2 sm:mt-14 lg:mt-16">
             <div className="philosophy-row editorial-reveal editorial-reveal-5 border-b border-slate-200/70 px-4 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-8 lg:gap-16">
@@ -260,20 +252,12 @@ export default function Home() {
 
       <section className="bg-white px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="core-capabilities-heading">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
-              CORE CAPABILITIES
-            </p>
-            <h2
-              id="core-capabilities-heading"
-              className="mt-6 max-w-[56rem] text-[2.05rem] font-bold leading-[1.09] tracking-[-0.045em] text-[#111827] sm:text-[2.75rem] sm:leading-[1.07] md:text-[3.25rem]"
-            >
-              Engineering expertise across software, AI, data, infrastructure, and research.
-            </h2>
-            <p className="mt-7 max-w-[48rem] text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
-              Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready.
-            </p>
-          </div>
+          <SectionHeader
+            eyebrow="CORE CAPABILITIES"
+            heading="Engineering expertise across software, AI, data, infrastructure, and research."
+            headingId="core-capabilities-heading"
+            description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
+          />
 
           <div className="mt-12 grid items-stretch gap-5 md:grid-cols-2 md:gap-6 lg:mt-16 lg:gap-7">
             {capabilities.map((capability) => (
@@ -316,20 +300,12 @@ export default function Home() {
 
       <section className="bg-[#F8FAFC] px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="why-choose-heading">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
-              WHY CHOOSE ZENTRIC ANALYTICS
-            </p>
-            <h2
-              id="why-choose-heading"
-              className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.75rem] md:text-[3.25rem]"
-            >
-              Built for organizations that need technology they can depend on.
-            </h2>
-            <p className="mt-7 max-w-3xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
-              Zentric Analytics combines disciplined engineering, responsible technology adoption, and long-term architectural thinking to help organizations build systems that remain reliable beyond launch.
-            </p>
-          </div>
+          <SectionHeader
+            eyebrow="WHY CHOOSE ZENTRIC ANALYTICS"
+            heading="Built for organizations that need technology they can depend on."
+            headingId="why-choose-heading"
+            description="Zentric Analytics combines disciplined engineering, responsible technology adoption, and long-term architectural thinking to help organizations build systems that remain reliable beyond launch."
+          />
 
           <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-16 lg:gap-8">
             {trustPrinciples.map((principle) => (
@@ -362,20 +338,12 @@ export default function Home() {
 
       <section className="bg-[#F8FAFC] px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="engineering-process-heading">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
-              ENGINEERING PROCESS
-            </p>
-            <h2
-              id="engineering-process-heading"
-              className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.75rem] md:text-[3.25rem]"
-            >
-              Every successful solution begins with a disciplined engineering process.
-            </h2>
-            <p className="mt-7 max-w-3xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
-              Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time.
-            </p>
-          </div>
+          <SectionHeader
+            eyebrow="ENGINEERING PROCESS"
+            heading="Every successful solution begins with a disciplined engineering process."
+            headingId="engineering-process-heading"
+            description="Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time."
+          />
 
           <div className="mt-12 rounded-[2rem] border border-[#D1D5DB]/75 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.07)] sm:p-8 lg:mt-16 lg:p-10">
             <div className="relative overflow-hidden rounded-[1.5rem] border border-[#173B67]/10 bg-[#F8FAFC] p-5 sm:p-7 lg:p-10">
@@ -434,20 +402,12 @@ export default function Home() {
 
       <section className="bg-white px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="industries-heading">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
-              INDUSTRIES WE SERVE
-            </p>
-            <h2
-              id="industries-heading"
-              className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.75rem] md:text-[3.25rem]"
-            >
-              Engineering technology for organizations across critical industries.
-            </h2>
-            <p className="mt-7 max-w-3xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
-              Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology.
-            </p>
-          </div>
+          <SectionHeader
+            eyebrow="INDUSTRIES WE SERVE"
+            heading="Engineering technology for organizations across critical industries."
+            headingId="industries-heading"
+            description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
+          />
 
           <div className="mt-12 grid gap-5 sm:gap-6 md:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-7">
             {industries.map((industry) => (
@@ -500,20 +460,16 @@ export default function Home() {
           className="absolute left-1/2 top-10 -z-10 h-56 w-[38rem] -translate-x-1/2 rounded-full bg-white/10 blur-3xl"
         />
         <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
-            READY TO BUILD?
-          </p>
-          <h2
-            id="final-cta-heading"
-            className="mt-6 text-[2.15rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:text-[2.85rem] md:text-[3.35rem]"
-          >
-            Let&apos;s build technology that lasts.
-          </h2>
-          <p className="mt-7 max-w-2xl text-base leading-8 text-white/[0.82] sm:text-lg sm:leading-9">
-            Whether you&apos;re planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution.
-          </p>
+          <SectionHeader
+            align="center"
+            eyebrow="READY TO BUILD?"
+            heading={<>Let&apos;s build technology that lasts.</>}
+            headingId="final-cta-heading"
+            tone="dark"
+            description="Whether you're planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution."
+          />
           <Link
-            className="btn btn-primary mt-10"
+            className="btn btn-primary mt-12"
             href="/contact"
           >
             Let&apos;s Talk
