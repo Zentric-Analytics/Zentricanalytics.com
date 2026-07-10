@@ -172,28 +172,52 @@ const trustPrinciples: Array<{ Icon: LucideIcon; number: string; title: string; 
 export default function Home() {
   return (
     <PageShell>
-      <section className="hero-premium relative isolate flex overflow-hidden bg-[linear-gradient(135deg,#0B1F3A_0%,#173B67_68%,#10B981_100%)] text-white md:min-h-[calc(70svh-80px)] lg:min-h-[calc(72svh-82px)] lg:max-h-[660px]">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_18%,rgba(79,195,247,0.16),transparent_32%),radial-gradient(circle_at_78%_82%,rgba(16,185,129,0.12),transparent_34%),linear-gradient(180deg,rgba(11,31,58,0.06),rgba(11,31,58,0.26))]" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.055] [background-image:radial-gradient(ellipse_at_50%_20%,rgba(255,255,255,0.42),transparent_58%)]" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-b from-transparent to-[#F8FAFC]/18" aria-hidden="true" />
-        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-12 sm:py-14 md:py-16 lg:py-20">
-          <div className="max-w-[47rem]">
-            <p className="hero-reveal hero-reveal-1 mb-3 inline-flex text-xs font-bold uppercase tracking-[0.32em] text-cyan-100/90 sm:mb-4">
-              ZENTRIC ANALYTICS
+      <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white md:min-h-[calc(84svh-80px)] lg:min-h-[calc(88svh-82px)]">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 sm:py-[4.75rem] md:grid-cols-[minmax(0,1.08fr)_minmax(18rem,0.82fr)] md:py-20 lg:gap-16 lg:py-[5.75rem]">
+          <div className="max-w-[48rem]">
+            <p className="hero-reveal hero-reveal-1 mb-5 inline-flex text-xs font-bold uppercase tracking-[0.28em] text-[#10B981] sm:mb-6">
+              Engineering consultancy
             </p>
-            <h1 className="hero-reveal hero-reveal-2 max-w-[46rem] text-[clamp(2.25rem,5.8vw,3.9rem)] font-bold leading-[1.06] tracking-[-0.048em] text-white sm:leading-[1.05]">
+            <h1 className="hero-reveal hero-reveal-2 max-w-[45rem] text-[clamp(2.55rem,6.2vw,4.75rem)] font-extrabold leading-[1.06] tracking-[-0.055em] text-white sm:leading-[1.05]">
               Engineering reliable software, data, and AI systems for serious work.
             </h1>
-            <p className="hero-reveal hero-reveal-3 mt-5 max-w-[39rem] text-base leading-[1.65] text-slate-100/90 sm:mt-6 sm:text-lg sm:leading-[1.65]">
+            <p className="hero-reveal hero-reveal-3 mt-6 max-w-[40rem] text-base leading-8 text-slate-200 sm:mt-7 sm:text-lg sm:leading-9">
               Zentric Analytics is a technology company focused on disciplined software delivery, web platforms, artificial intelligence solutions, analytics, computer science research, and emerging technology implementation.
             </p>
-            <div className="hero-reveal hero-reveal-4 mt-7 flex flex-col gap-3.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+            <div className="hero-reveal hero-reveal-4 mt-8 flex flex-col gap-4 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
               <Link className="btn hero-cta-primary" href="/services">
-                Explore services
+                Explore Services
               </Link>
               <Link className="btn hero-cta-secondary" href="/contact">
                 Let&apos;s Talk
               </Link>
+            </div>
+          </div>
+
+          <div className="hero-reveal hero-reveal-4 w-full max-w-[31rem] justify-self-center md:justify-self-end" aria-hidden="true">
+            <div className="rounded-[1.75rem] border border-white/14 bg-white/[0.045] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.18)] sm:p-6">
+              <div className="rounded-[1.2rem] border border-white/12 bg-[#102B4C] p-5">
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div>
+                    <div className="h-2 w-24 rounded-full bg-white/28" />
+                    <div className="mt-3 h-2 w-16 rounded-full bg-[#10B981]" />
+                  </div>
+                  <div className="flex gap-1.5">
+                    <span className="size-2 rounded-full bg-white/30" />
+                    <span className="size-2 rounded-full bg-white/30" />
+                    <span className="size-2 rounded-full bg-[#10B981]" />
+                  </div>
+                </div>
+                <div className="mt-6 grid gap-3">
+                  {['Architecture', 'Security', 'Delivery'].map((label, index) => (
+                    <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.035] p-4" key={label}>
+                      <span className="flex size-9 items-center justify-center rounded-xl bg-white/10 text-sm font-bold text-[#10B981]">0{index + 1}</span>
+                      <span className="text-sm font-semibold tracking-[-0.01em] text-slate-100">{label}</span>
+                      <span className="ml-auto h-px w-14 bg-white/18" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
