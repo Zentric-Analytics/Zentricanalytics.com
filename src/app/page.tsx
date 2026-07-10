@@ -197,10 +197,10 @@ export default function Home() {
               Zentric Analytics is a technology company focused on disciplined software delivery, web platforms, artificial intelligence solutions, analytics, computer science research, and emerging technology implementation.
             </p>
             <div className="hero-reveal hero-reveal-4 mt-8 flex flex-col gap-3.5 sm:mt-9 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-              <Link className="btn min-h-12 bg-white px-7 py-3.5 text-brand shadow-[0_16px_34px_rgba(5,20,38,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-cyan-50 hover:shadow-[0_18px_38px_rgba(5,20,38,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100" href="/services">
+              <Link className="btn btn-secondary" href="/services">
                 Explore services
               </Link>
-              <Link className="btn min-h-12 border border-white/25 bg-white/[0.03] px-7 py-3.5 text-white shadow-[0_12px_28px_rgba(5,20,38,0.14)] transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-100/45 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100" href="/contact">
+              <Link className="btn btn-primary" href="/contact">
                 Let&apos;s Talk
               </Link>
             </div>
@@ -301,7 +301,7 @@ export default function Home() {
                     </p>
                     <Link
                       aria-label={`Learn more about ${capability.title}`}
-                      className="mt-7 inline-flex min-h-11 w-fit items-center text-sm font-bold tracking-[-0.01em] text-[#0B1F3A] underline decoration-[#10B981]/0 underline-offset-4 transition-[color,decoration-color] duration-300 group-hover:text-[#047857] group-hover:decoration-[#10B981]/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
+                      className="btn btn-text w-fit"
                       href="/services"
                     >
                       Learn More →
@@ -513,7 +513,7 @@ export default function Home() {
             Whether you&apos;re planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution.
           </p>
           <Link
-            className="btn mt-10 min-h-12 bg-white px-8 py-3.5 text-[#0B1F3A] shadow-[0_18px_44px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_24px_58px_rgba(0,0,0,0.34)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
+            className="btn btn-primary mt-10"
             href="/contact"
           >
             Let&apos;s Talk

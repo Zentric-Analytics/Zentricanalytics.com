@@ -254,7 +254,7 @@ function StageActionForm({
         Request correction
       </button>
       <button
-        className="rounded-full border border-red-200 px-5 py-2 font-semibold text-red-700 hover:bg-red-50"
+        className="btn btn-secondary"
         name="action"
         value="reject"
       >
@@ -282,7 +282,7 @@ function Stage8FinalApprovalForm({ applicationId }: { applicationId: string }) {
     <div className="grid gap-4 lg:grid-cols-2">{checklist.map(([group, items]) => <section className="rounded-2xl border border-blue-100 bg-white p-4" key={group}><h4 className="font-bold text-slate-950">{group}</h4><div className="mt-3 space-y-2">{items.map((label) => { const name = names[index++]; return <label className="flex gap-2 text-sm font-semibold text-slate-700" key={name}><input name={name} type="checkbox" /> {label}</label>; })}</div></section>)}</div>
     <label className="block text-sm font-semibold">Optional final HR notes (admin-only)<textarea className="input mt-1 min-h-24" name="finalHrNotes" maxLength={1500} /></label>
     <label className="block text-sm font-semibold">Optional candidate-facing note<textarea className="input mt-1 min-h-20" name="candidateFacingNote" maxLength={1000} /></label>
-    <div className="flex flex-wrap gap-2"><button className="btn btn-primary" name="action" value="finalize">Finalize Stage 8 and mark hired</button><button className="btn btn-secondary" name="action" value="correction">Request Stage 8 correction</button><button className="rounded-full border border-red-200 px-5 py-2 font-semibold text-red-700 hover:bg-red-50" name="action" value="reject">Reject at final review</button></div>
+    <div className="flex flex-wrap gap-2"><button className="btn btn-primary" name="action" value="finalize">Finalize Stage 8 and mark hired</button><button className="btn btn-secondary" name="action" value="correction">Request Stage 8 correction</button><button className="btn btn-secondary" name="action" value="reject">Reject at final review</button></div>
   </form>;
 }
 
@@ -1413,7 +1413,7 @@ export default async function AdminApplicationDetail({
                   </button>
                   {offer?.status === "Released" ? (
                     <button
-                      className="rounded-full border border-red-300 px-5 py-2 font-semibold text-red-700"
+                      className="btn btn-secondary"
                       name="action"
                       value="withdraw"
                     >
@@ -1538,7 +1538,7 @@ export default async function AdminApplicationDetail({
                   placeholder={application.applicationId}
                   required
                 />
-                <button className="btn bg-red-700 text-white hover:bg-red-800">
+                <button className="btn btn-secondary">
                   Permanently delete
                 </button>
               </form>
@@ -1566,7 +1566,7 @@ export default async function AdminApplicationDetail({
                 />{" "}
                 Confirm moving this application to deleted records
               </label>
-              <button className="btn bg-red-700 text-white hover:bg-red-800">
+              <button className="btn btn-secondary">
                 Move to deleted records
               </button>
             </form>
