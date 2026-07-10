@@ -1,5 +1,19 @@
 import Link from 'next/link';
-import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, FlaskConical, type LucideIcon } from 'lucide-react';
+import {
+  Braces,
+  BrainCircuit,
+  ChartColumn,
+  CloudCog,
+  CodeXml,
+  Cpu,
+  FlaskConical,
+  LifeBuoy,
+  Network,
+  Rocket,
+  SearchCheck,
+  ShieldCheck,
+  type LucideIcon,
+} from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 
@@ -98,45 +112,45 @@ const industries = [
 const engineeringProcess = [
   {
     number: '01',
+    Icon: SearchCheck,
     title: 'Discovery',
     description:
       'Understanding objectives, stakeholders, technical constraints, and project requirements.',
-    className: 'lg:col-start-1 lg:row-start-1',
   },
   {
     number: '02',
+    Icon: Network,
     title: 'Architecture',
     description:
       'Designing secure, scalable, and maintainable technical foundations before implementation begins.',
-    className: 'lg:col-start-2 lg:row-start-2',
   },
   {
     number: '03',
+    Icon: Braces,
     title: 'Engineering',
     description:
       'Building reliable software using disciplined engineering practices and modern development standards.',
-    className: 'lg:col-start-3 lg:row-start-1',
   },
   {
     number: '04',
+    Icon: ShieldCheck,
     title: 'Testing & Quality',
     description:
       'Verifying functionality, security, performance, and reliability before release.',
-    className: 'lg:col-start-1 lg:row-start-3',
   },
   {
     number: '05',
+    Icon: Rocket,
     title: 'Deployment',
     description:
       'Delivering production-ready solutions through structured release and deployment practices.',
-    className: 'lg:col-start-3 lg:row-start-3',
   },
   {
     number: '06',
+    Icon: LifeBuoy,
     title: 'Continuous Support',
     description:
       'Monitoring, improving, maintaining, and evolving solutions as business needs grow.',
-    className: 'lg:col-start-2 lg:row-start-4',
   },
 ];
 
@@ -345,56 +359,31 @@ export default function Home() {
             description="Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time."
           />
 
-          <div className="mt-12 rounded-[2rem] border border-[#D1D5DB]/75 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.07)] sm:p-8 lg:mt-16 lg:p-10">
-            <div className="relative overflow-hidden rounded-[1.5rem] border border-[#173B67]/10 bg-[#F8FAFC] p-5 sm:p-7 lg:p-10">
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 opacity-[0.42] [background-image:linear-gradient(rgba(23,59,103,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(23,59,103,0.08)_1px,transparent_1px)] [background-size:32px_32px]"
-              />
-              <div aria-hidden="true" className="absolute inset-x-8 top-8 hidden h-px bg-[#10B981]/25 lg:block" />
-              <div aria-hidden="true" className="absolute inset-y-8 left-8 hidden w-px bg-[#4FC3F7]/25 lg:block" />
-
-              <div className="engineering-blueprint relative mx-auto max-w-5xl lg:min-h-[46rem]">
-                <svg
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible lg:block"
-                  fill="none"
-                  preserveAspectRatio="none"
-                  viewBox="0 0 1000 736"
+          <div className="mt-12 lg:mt-16">
+            <div className="grid gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-7">
+              {engineeringProcess.map((step) => (
+                <article
+                  className="engineering-process-card group relative rounded-[24px] border border-[#E5E7EB] bg-white p-7 shadow-[0_18px_48px_rgba(15,23,42,0.055),0_2px_8px_rgba(15,23,42,0.035)] transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-[#10B981]/45 hover:shadow-[0_22px_56px_rgba(15,23,42,0.09),0_4px_12px_rgba(15,23,42,0.04)] sm:p-8 lg:p-9"
+                  key={step.number}
                 >
-                  <path className="blueprint-path" d="M175 112 C240 160 290 205 365 265" />
-                  <path className="blueprint-path" d="M480 255 C575 188 660 144 820 112" />
-                  <path className="blueprint-path" d="M438 350 C350 424 260 486 176 527" />
-                  <path className="blueprint-path" d="M490 350 C585 432 688 488 822 527" />
-                  <path className="blueprint-path" d="M741 590 C650 642 570 670 500 672" />
-                  <path className="blueprint-path blueprint-path-secondary" d="M175 590 C255 654 352 682 500 672" />
-                  {[ [175,112], [365,265], [820,112], [176,527], [822,527], [500,672] ].map(([cx, cy]) => (
-                    <circle className="blueprint-joint" cx={cx} cy={cy} key={`${cx}-${cy}`} r="6" />
-                  ))}
-                </svg>
-
-                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 lg:grid-rows-[auto_auto_auto_auto] lg:gap-x-10 lg:gap-y-12">
-                  {engineeringProcess.map((step) => (
-                    <article
-                      className={`group relative z-10 rounded-[1.35rem] border border-[#173B67]/15 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-[#10B981]/55 hover:shadow-[0_26px_60px_rgba(15,23,42,0.11)] focus-within:-translate-y-1 focus-within:border-[#10B981]/55 sm:p-7 ${step.className}`}
-                      key={step.number}
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <span className="text-sm font-bold tracking-[0.28em] text-[#10B981] transition duration-300 group-hover:text-[#0B1F3A]">
-                          {step.number}
-                        </span>
-                        <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border border-[#10B981]/55 bg-[#10B981]/20 shadow-[0_0_0_5px_rgba(16,185,129,0.08)]" />
-                      </div>
-                      <h3 className="mt-5 text-xl font-bold tracking-[-0.03em] text-[#0B1F3A] sm:text-2xl">
-                        {step.title}
-                      </h3>
-                      <p className="mt-4 text-sm leading-7 text-[#475569] sm:text-base sm:leading-8">
-                        {step.description}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-              </div>
+                  <div className="flex items-start justify-between gap-6">
+                    <step.Icon
+                      aria-hidden="true"
+                      className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 group-hover:text-[#10B981] sm:size-7"
+                      strokeWidth={1.75}
+                    />
+                    <span className="text-xs font-bold tracking-[0.28em] text-[#64748B]" aria-label={`Stage ${step.number}`}>
+                      {step.number}
+                    </span>
+                  </div>
+                  <h3 className="mt-7 text-xl font-bold tracking-[-0.03em] text-[#0B1F3A] sm:text-2xl">
+                    {step.title}
+                  </h3>
+                  <p className="mt-4 max-w-[32rem] text-sm leading-7 text-[#475569] sm:text-base sm:leading-8">
+                    {step.description}
+                  </p>
+                </article>
+              ))}
             </div>
           </div>
         </div>
