@@ -108,7 +108,7 @@ export function SiteHeader() {
         <div className="hidden shrink-0 items-center md:flex">
           <Link
             href={contactLink[0]}
-            className="rounded-full border border-[#0B1F3A] bg-[#0B1F3A] px-4 py-2.5 text-sm font-semibold tracking-[-0.01em] text-white shadow-[0_8px_18px_rgba(11,31,58,0.14)] transition-all duration-200 hover:-translate-y-px hover:border-[#173B67] hover:bg-[#173B67] hover:shadow-[0_10px_22px_rgba(11,31,58,0.16)] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"
+            className="btn btn-primary btn-compact"
           >
             {contactLink[1]}
           </Link>
@@ -120,7 +120,7 @@ export function SiteHeader() {
             aria-expanded={isMobileMenuOpen}
             aria-controls={mobileMenuId}
             aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#0B1F3A]/10 bg-white/90 text-[#0B1F3A] shadow-sm transition-colors duration-200 hover:border-[#10B981]/60 hover:text-[#173B67] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 md:hidden"
+            className="btn btn-secondary btn-compact h-11 w-11 p-0 md:hidden"
             onClick={() => setIsMobileMenuOpen((open) => !open)}
           >
             <span className="sr-only">{isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}</span>
@@ -147,7 +147,7 @@ export function SiteHeader() {
             <button
               type="button"
               aria-label="Close navigation menu"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#0B1F3A]/10 bg-white text-[#0B1F3A] shadow-sm transition-colors duration-200 hover:border-[#10B981]/60 hover:text-[#173B67] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2"
+              className="btn btn-secondary btn-compact h-11 w-11 p-0"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <span className="sr-only">Close navigation menu</span>
@@ -169,7 +169,7 @@ export function SiteHeader() {
                       aria-current={isActive ? 'page' : undefined}
                       className={`-mx-3 rounded-2xl border-l-2 px-3 py-3.5 text-lg font-semibold tracking-[-0.02em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 ${
                         isContact
-                          ? 'mt-4 border-[#0B1F3A] bg-[#0B1F3A] text-white hover:bg-[#173B67]'
+                          ? 'btn btn-primary btn-compact mt-4 w-full border-0'
                           : isActive
                             ? 'border-[#10B981] bg-[#0B1F3A]/[0.03] text-[#0B1F3A]'
                             : 'border-transparent text-[#173B67] hover:bg-[#0B1F3A]/[0.03] hover:text-[#0B1F3A]'

@@ -1020,7 +1020,7 @@ export default async function Portal({
                         Accept Offer
                       </button>
                       <button
-                        className="rounded-full border border-red-300 px-5 py-2 font-semibold text-red-700"
+                        className="btn btn-secondary"
                         name="decision"
                         value="decline"
                         type="submit"

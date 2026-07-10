@@ -59,7 +59,7 @@ export default async function DeletedApplications({ searchParams }: { searchPara
               <form action={permanentlyDeleteApplicationAction} className="flex flex-wrap items-end gap-2 rounded-2xl border border-red-200 bg-red-50 p-4">
                 <input type="hidden" name="applicationDbId" value={application.id} />
                 <label className="text-sm font-semibold text-red-800">Permanent delete confirmation<span className="block text-xs font-normal text-red-700">Type {application.applicationId} to permanently delete this application.</span><input className="input mt-1 max-w-xs" name="confirmationApplicationId" placeholder={application.applicationId} required /></label>
-                <button className="rounded-full bg-red-700 px-5 py-2 font-semibold text-white hover:bg-red-800">Permanently delete</button>
+                <button className="btn btn-secondary">Permanently delete</button>
               </form>
             </div>
           </article>;

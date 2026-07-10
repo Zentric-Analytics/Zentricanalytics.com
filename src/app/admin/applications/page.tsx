@@ -154,7 +154,7 @@ export default async function AdminApplications({ searchParams }: { searchParams
                   <input className="input max-w-xs" name="notes" placeholder="Optional notes" />
                   <button className="btn btn-secondary" name="action" value="approve">Approve Stage 1</button>
                   <button className="btn btn-secondary" name="action" value="correction">Request correction</button>
-                  <button className="rounded-full border border-red-200 px-5 py-2 font-semibold text-red-700 hover:bg-red-50" name="action" value="reject">Reject Stage 1</button>
+                  <button className="btn btn-secondary" name="action" value="reject">Reject Stage 1</button>
                 </form>
                 {!stageOne ? <p className="mt-2 text-sm text-amber-700">Stage 1 data is missing; open the profile for full diagnostics.</p> : null}
               </div>

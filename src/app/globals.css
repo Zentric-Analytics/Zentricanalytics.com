@@ -15,9 +15,24 @@ body{margin:0;background:#f7f9fc;color:#0c1222}
 
 .input{width:100%;max-width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:.8rem;padding:.8rem;background:white}
 
-.btn{display:inline-flex;max-width:100%;min-width:0;align-items:center;justify-content:center;border-radius:.9rem;padding:.8rem 1rem;font-weight:700;text-align:center;overflow-wrap:anywhere}
-.btn-primary{background:#123c69;color:white}
-.btn-secondary{border:1px solid #cbd5e1;background:white}
+.btn{display:inline-flex;max-width:100%;min-width:0;height:50px;min-height:50px;align-items:center;justify-content:center;gap:.45rem;border:0;border-radius:12px;padding:0 26px;background:transparent;color:#0B1F3A;font-size:16px;font-weight:600;line-height:1;text-align:center;letter-spacing:normal;text-decoration:none;overflow-wrap:anywhere;box-shadow:none;cursor:pointer;transition:background-color .2s ease-out,color .2s ease-out,border-color .2s ease-out,box-shadow .2s ease-out,transform .2s ease-out}
+.btn-primary{background:#0B1F3A;color:#fff;box-shadow:0 8px 18px rgba(11,31,58,.10)}
+.btn-primary:hover{background:#173B67;color:#fff;box-shadow:0 10px 22px rgba(11,31,58,.14);transform:translateY(-1px)}
+.btn-secondary{border:1px solid #0B1F3A;background:transparent;color:#0B1F3A}
+.btn-secondary:hover{background:#0B1F3A;color:#fff}
+.btn-text{height:auto;min-height:44px;border:0;background:transparent;padding:0;color:#0B1F3A;box-shadow:none}
+.btn-text:hover{color:#10B981}
+.btn-text svg,.btn-text .btn-arrow{transition:transform .2s ease-out}
+.btn-text:hover svg,.btn-text:hover .btn-arrow{transform:translateX(3px)}
+.btn-compact{height:44px;min-height:44px;padding:0 24px;font-size:15px}
+.btn.h-11{height:44px;min-height:44px}
+.btn.w-11{width:44px;min-width:44px}
+.btn.p-0{padding:0}
+.btn:focus-visible{outline:2px solid #10B981;outline-offset:3px}
+.btn:disabled,.btn[aria-disabled="true"]{opacity:.62;cursor:not-allowed;transform:none;box-shadow:none}
+.btn:disabled:hover,.btn[aria-disabled="true"]:hover{transform:none;box-shadow:none}
+.btn-primary:disabled:hover,.btn-primary[aria-disabled="true"]:hover{background:#0B1F3A;color:#fff}
+.btn-secondary:disabled:hover,.btn-secondary[aria-disabled="true"]:hover{background:transparent;color:#0B1F3A}
 
 .card{max-width:100%;min-width:0;overflow-wrap:break-word;background:white;border:1px solid #e2e8f0;border-radius:1.25rem;box-shadow:0 12px 30px rgba(15,23,42,.06)}
 
