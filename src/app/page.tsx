@@ -211,46 +211,48 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#F8FAFC] px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="how-we-think-heading">
-        <div className="editorial-reveal mx-auto max-w-6xl rounded-[2rem] border border-slate-200/80 bg-white px-6 py-10 text-left shadow-[0_24px_70px_rgba(15,23,42,0.07)] sm:px-10 sm:py-14 lg:px-16 lg:py-18">
+      <section className="philosophy-section relative isolate overflow-hidden bg-[#F8FAFC] px-4 py-20 sm:px-6 sm:py-24 lg:py-32" aria-labelledby="how-we-think-heading">
+        <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.025] [background-image:linear-gradient(rgba(15,23,42,0.95)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.95)_1px,transparent_1px),linear-gradient(45deg,transparent_48%,rgba(16,185,129,0.9)_49%,rgba(16,185,129,0.9)_51%,transparent_52%)] [background-size:56px_56px,56px_56px,168px_168px]" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-white/60 to-transparent" aria-hidden="true" />
+        <div className="editorial-reveal editorial-reveal-4 mx-auto max-w-6xl rounded-[1.65rem] border border-[#E5E7EB] bg-white px-7 py-12 text-left shadow-[0_26px_80px_rgba(15,23,42,0.08),0_2px_10px_rgba(15,23,42,0.035)] sm:rounded-[1.75rem] sm:px-11 sm:py-16 lg:px-16 lg:py-20">
           <div className="max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
+            <p className="editorial-reveal editorial-reveal-1 text-xs font-bold uppercase tracking-[0.34em] text-[#10B981]">
               HOW WE THINK
             </p>
             <h2
               id="how-we-think-heading"
-              className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-ink sm:text-[2.8rem] md:text-[3.35rem]"
+              className="editorial-reveal editorial-reveal-2 mt-7 max-w-4xl text-[2.05rem] font-bold leading-[1.12] tracking-[-0.045em] text-ink sm:text-[2.8rem] sm:leading-[1.08] md:text-[3.35rem]"
             >
               Engineering isn&apos;t just what we build.
               <br className="hidden sm:block" />
               It&apos;s how we solve problems.
             </h2>
-            <p className="mt-7 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg sm:leading-9">
+            <p className="editorial-reveal editorial-reveal-3 mt-8 max-w-[46rem] text-base leading-8 text-slate-600 sm:text-lg sm:leading-9">
               Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment.
             </p>
           </div>
 
-          <div className="mt-10 border-t border-slate-200/90 sm:mt-12 lg:mt-14">
-            <div className="editorial-reveal border-b border-slate-200/90 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:py-8 lg:gap-16">
-              <h3 className="text-lg font-bold tracking-[-0.02em] text-ink">Engineering First</h3>
+          <div className="mt-12 border-t border-slate-200/70 pt-2 sm:mt-14 lg:mt-16">
+            <div className="philosophy-row editorial-reveal editorial-reveal-5 border-b border-slate-200/70 px-4 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-8 lg:gap-16">
+              <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Engineering First</h3>
               <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Every decision begins with architecture, maintainability, scalability, and long-term reliability.
               </p>
             </div>
-            <div className="editorial-reveal border-b border-slate-200/90 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:py-8 lg:gap-16">
-              <h3 className="text-lg font-bold tracking-[-0.02em] text-ink">Technology With Purpose</h3>
+            <div className="philosophy-row editorial-reveal editorial-reveal-6 border-b border-slate-200/70 px-4 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-8 lg:gap-16">
+              <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Technology With Purpose</h3>
               <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Artificial intelligence, software, and data are applied where they create measurable value rather than unnecessary complexity.
               </p>
             </div>
-            <div className="editorial-reveal border-b border-slate-200/90 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:py-8 lg:gap-16">
-              <h3 className="text-lg font-bold tracking-[-0.02em] text-ink">Built For Longevity</h3>
+            <div className="philosophy-row editorial-reveal editorial-reveal-7 border-b border-slate-200/70 px-4 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-8 lg:gap-16">
+              <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Built For Longevity</h3>
               <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Solutions are designed to evolve with changing business needs instead of becoming short-term implementations.
               </p>
             </div>
-            <div className="editorial-reveal py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:py-8 lg:gap-16">
-              <h3 className="text-lg font-bold tracking-[-0.02em] text-ink">Continuous Innovation</h3>
+            <div className="philosophy-row editorial-reveal editorial-reveal-8 px-4 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-8 lg:gap-16">
+              <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Continuous Innovation</h3>
               <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Research, experimentation, and emerging technologies are explored with discipline, practicality, and measurable outcomes.
               </p>
