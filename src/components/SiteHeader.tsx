@@ -77,7 +77,7 @@ export function SiteHeader() {
         <Link
           href="/"
           aria-label="Zentric Analytics homepage"
-          className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"
+          className="inline-flex shrink-0 -translate-y-0.5 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 md:-translate-y-[3px]"
         >
           <span className="whitespace-nowrap text-[22px] font-bold leading-none tracking-[-0.026em] text-[#0B1F3A] sm:text-[25px] md:text-[28px] lg:text-[29px]">
             Zentric Analytics
