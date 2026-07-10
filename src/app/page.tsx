@@ -180,22 +180,22 @@ const trustPrinciples = [
 export default function Home() {
   return (
     <PageShell>
-      <section className="hero-premium relative isolate flex min-h-[calc(100svh-76px)] overflow-hidden bg-[linear-gradient(135deg,#0B1F3A_0%,#173B67_62%,#0f766e_100%)] text-white sm:min-h-[calc(88svh-80px)] lg:min-h-[calc(90svh-82px)] lg:max-h-[820px]">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_22%_22%,rgba(79,195,247,0.18),transparent_34%),radial-gradient(circle_at_76%_78%,rgba(16,185,129,0.14),transparent_36%)]" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,0.75)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.75)_1px,transparent_1px)] [background-size:72px_72px]" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-28 bg-gradient-to-b from-transparent to-[#F8FAFC]/10" aria-hidden="true" />
-        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-20 sm:py-24 lg:py-28">
-          <div className="max-w-[48rem] pb-8 sm:pb-10">
-            <p className="hero-reveal hero-reveal-1 mb-7 inline-flex text-xs font-bold uppercase tracking-[0.32em] text-cyan-100/90 sm:mb-8">
+      <section className="hero-premium relative isolate flex overflow-hidden bg-[linear-gradient(135deg,#0B1F3A_0%,#173B67_68%,#10B981_100%)] text-white md:min-h-[calc(76svh-80px)] lg:min-h-[calc(78svh-82px)] lg:max-h-[720px]">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_18%,rgba(79,195,247,0.16),transparent_32%),radial-gradient(circle_at_78%_82%,rgba(16,185,129,0.12),transparent_34%),linear-gradient(180deg,rgba(11,31,58,0.06),rgba(11,31,58,0.26))]" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.055] [background-image:radial-gradient(ellipse_at_50%_20%,rgba(255,255,255,0.42),transparent_58%)]" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-b from-transparent to-[#F8FAFC]/18" aria-hidden="true" />
+        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-16 sm:py-[4.5rem] md:py-20 lg:py-[5.5rem]">
+          <div className="max-w-[47rem]">
+            <p className="hero-reveal hero-reveal-1 mb-5 inline-flex text-xs font-bold uppercase tracking-[0.32em] text-cyan-100/90 sm:mb-6">
               ZENTRIC ANALYTICS
             </p>
-            <h1 className="hero-reveal hero-reveal-2 max-w-[46rem] text-[clamp(2.55rem,7.6vw,4.65rem)] font-bold leading-[1.06] tracking-[-0.048em] text-white sm:leading-[1.05]">
+            <h1 className="hero-reveal hero-reveal-2 max-w-[46rem] text-[clamp(2.45rem,6.7vw,4.25rem)] font-bold leading-[1.06] tracking-[-0.048em] text-white sm:leading-[1.05]">
               Engineering reliable software, data, and AI systems for serious work.
             </h1>
-            <p className="hero-reveal hero-reveal-3 mt-8 max-w-[39rem] text-base leading-8 text-slate-100/90 sm:mt-9 sm:text-lg sm:leading-9">
+            <p className="hero-reveal hero-reveal-3 mt-6 max-w-[39rem] text-base leading-8 text-slate-100/90 sm:mt-7 sm:text-lg sm:leading-9">
               Zentric Analytics is a technology company focused on disciplined software delivery, web platforms, artificial intelligence solutions, analytics, computer science research, and emerging technology implementation.
             </p>
-            <div className="hero-reveal hero-reveal-4 mt-10 flex flex-col gap-4 sm:mt-11 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+            <div className="hero-reveal hero-reveal-4 mt-8 flex flex-col gap-3.5 sm:mt-9 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
               <Link className="btn min-h-12 bg-white px-7 py-3.5 text-brand shadow-[0_16px_34px_rgba(5,20,38,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-cyan-50 hover:shadow-[0_18px_38px_rgba(5,20,38,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100" href="/services">
                 Explore services
               </Link>
@@ -204,10 +204,6 @@ export default function Home() {
               </Link>
             </div>
           </div>
-        </div>
-        <div className="scroll-cue pointer-events-none absolute bottom-7 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-cyan-100/70 md:flex" aria-hidden="true">
-          <span>Scroll</span>
-          <span className="h-8 w-px origin-top bg-gradient-to-b from-cyan-100/70 to-transparent" />
         </div>
       </section>
 
