@@ -86,42 +86,36 @@ const industries: Array<{ Icon: LucideIcon; title: string; description: string }
 
 const engineeringProcess = [
   {
-    number: '01',
     Icon: Search,
     title: 'Discovery',
     description:
       'Understanding objectives, stakeholders, technical constraints, and project requirements.',
   },
   {
-    number: '02',
     Icon: Network,
     title: 'Architecture',
     description:
       'Designing secure, scalable, and maintainable technical foundations before implementation begins.',
   },
   {
-    number: '03',
     Icon: Braces,
     title: 'Engineering',
     description:
       'Building reliable software using disciplined engineering practices and modern development standards.',
   },
   {
-    number: '04',
     Icon: ShieldCheck,
     title: 'Testing & Quality',
     description:
       'Verifying functionality, security, performance, and reliability before release.',
   },
   {
-    number: '05',
     Icon: Rocket,
     title: 'Deployment',
     description:
       'Delivering production-ready solutions through structured release and deployment practices.',
   },
   {
-    number: '06',
     Icon: LifeBuoy,
     title: 'Continuous Support',
     description:
@@ -330,27 +324,24 @@ export default function Home() {
             description="Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time."
           />
 
-          <div className="mt-12 lg:mt-16">
+          <div className="mt-20 lg:mt-24">
             <div className="grid gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-7">
               {engineeringProcess.map((step) => (
                 <article
-                  className="engineering-process-card group relative rounded-[24px] border border-[#E5E7EB] bg-white p-7 shadow-[0_18px_48px_rgba(15,23,42,0.055),0_2px_8px_rgba(15,23,42,0.035)] transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-[#10B981]/45 hover:shadow-[0_22px_56px_rgba(15,23,42,0.09),0_4px_12px_rgba(15,23,42,0.04)] sm:p-8 lg:p-9"
-                  key={step.number}
+                  className="engineering-process-card group relative rounded-[24px] border border-[#E5E7EB] bg-white p-6 shadow-[0_8px_24px_rgba(11,31,58,0.06)] transition-[border-color,box-shadow,transform] duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:shadow-[0_16px_36px_rgba(11,31,58,0.10)] sm:p-7 lg:p-8"
+                  key={step.title}
                 >
-                  <div className="flex items-start justify-between gap-6">
+                  <div className="flex size-11 items-center justify-center rounded-[11px] bg-[#F8FAFC]">
                     <step.Icon
                       aria-hidden="true"
-                      className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 group-hover:text-[#10B981] sm:size-7"
+                      className="size-7 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-8 lg:size-9"
                       strokeWidth={1.75}
                     />
-                    <span className="text-xs font-bold tracking-[0.28em] text-[#64748B]" aria-label={`Stage ${step.number}`}>
-                      {step.number}
-                    </span>
                   </div>
-                  <h3 className="mt-7 text-xl font-bold tracking-[-0.03em] text-[#0B1F3A] sm:text-2xl">
+                  <h3 className="mt-6 text-xl font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-2xl">
                     {step.title}
                   </h3>
-                  <p className="mt-4 max-w-[32rem] text-sm leading-7 text-[#475569] sm:text-base sm:leading-8">
+                  <p className="mt-3 max-w-[32rem] text-sm leading-7 text-[#475569] sm:text-base sm:leading-[1.75]">
                     {step.description}
                   </p>
                 </article>
