@@ -777,7 +777,6 @@ describe("production hardening helpers", () => {
 
   it("requires an explicit private upload root for local production or staging uploads", () => {
     const previousRoot = process.env.PRIVATE_UPLOAD_ROOT;
-    const previousNodeEnv = process.env.NODE_ENV;
     const previousAppEnv = process.env.APP_ENV;
     delete process.env.PRIVATE_UPLOAD_ROOT;
     process.env.APP_ENV = "staging";
@@ -787,8 +786,6 @@ describe("production hardening helpers", () => {
     } finally {
       if (previousRoot === undefined) delete process.env.PRIVATE_UPLOAD_ROOT;
       else process.env.PRIVATE_UPLOAD_ROOT = previousRoot;
-      if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
-      else process.env.NODE_ENV = previousNodeEnv;
       if (previousAppEnv === undefined) delete process.env.APP_ENV;
       else process.env.APP_ENV = previousAppEnv;
     }
