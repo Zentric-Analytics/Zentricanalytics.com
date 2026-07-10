@@ -371,16 +371,16 @@ export default function Home() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-8">
             {industries.map((industry) => (
-              <DesignSystemCard interactive key={industry.title} variant="standard">
+              <DesignSystemCard className="industry-card" interactive key={industry.title} variant="standard">
                 <industry.Icon
                   aria-hidden="true"
-                  className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
+                  className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
                   strokeWidth={1.75}
                 />
-                <h3 className="mt-6 text-[1.25rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-[1.375rem]">
+                <h3 className="mt-6 text-[1.25rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-[1.4375rem]">
                   {industry.title}
                 </h3>
-                <p className="mt-4 text-base leading-7 text-[#475569] sm:leading-8">
+                <p className="mt-4 max-w-[34rem] text-base leading-[1.7] text-[#475569] sm:text-[1.0625rem] sm:leading-8">
                   {industry.description}
                 </p>
               </DesignSystemCard>
