@@ -413,20 +413,12 @@ export default function Home() {
       </section>
 
       <section
-        className="relative isolate overflow-hidden border-b border-white/10 bg-[#0B1F3A] px-4 py-32 sm:px-6 sm:py-36 lg:py-44"
+        className="relative isolate overflow-hidden bg-[#0B1F3A] px-4 pt-28 pb-24 sm:px-6 sm:pt-32 sm:pb-28 lg:pt-40 lg:pb-32"
         aria-labelledby="final-cta-heading"
       >
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_12%,rgba(16,185,129,0.22),transparent_34%),radial-gradient(circle_at_50%_80%,rgba(255,255,255,0.10),transparent_42%),linear-gradient(180deg,rgba(11,31,58,0.94),#0B1F3A)]"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,0.72)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.72)_1px,transparent_1px)] [background-size:44px_44px]"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute left-1/2 top-10 -z-10 h-56 w-[38rem] -translate-x-1/2 rounded-full bg-white/10 blur-3xl"
+          className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(23,59,103,0.24)_0%,rgba(11,31,58,0)_30%,rgba(7,20,38,0.20)_72%,rgba(255,255,255,0.08)_100%)]"
         />
         <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
           <SectionHeader
@@ -437,12 +429,14 @@ export default function Home() {
             tone="dark"
             description="Whether you're planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution."
           />
-          <Link
-            className="btn btn-primary mt-12"
-            href="/contact"
-          >
-            Let&apos;s Talk
-          </Link>
+          <div className="mt-12 flex w-full flex-col items-center gap-4 sm:mt-14 sm:w-auto sm:flex-row sm:justify-center">
+            <Link
+              className="btn btn-primary w-full bg-white text-[#0B1F3A] shadow-[0_10px_24px_rgba(0,0,0,0.16)] hover:bg-[#F8FAFC] hover:text-[#0B1F3A] hover:shadow-[0_12px_28px_rgba(0,0,0,0.20)] focus-visible:outline-white sm:w-auto"
+              href="/contact"
+            >
+              Let&apos;s Talk
+            </Link>
+          </div>
         </div>
       </section>
 
