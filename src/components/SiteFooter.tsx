@@ -40,8 +40,8 @@ function FooterHeading({ children }: { children: React.ReactNode }) {
 export function SiteFooter() {
   return (
     <footer className="bg-[#0B1F3A] text-white" aria-label="Site footer">
-      <div className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
-        <div className="grid gap-9 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.72fr)_minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-x-12">
+      <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-12">
+        <div className="grid gap-7 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-9 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.72fr)_minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-x-12">
           <section aria-labelledby="footer-company-overview" className="min-w-0">
             <h2
               id="footer-company-overview"
@@ -49,14 +49,14 @@ export function SiteFooter() {
             >
               ZENTRIC ANALYTICS
             </h2>
-            <p className="mt-4 max-w-sm text-sm leading-7 text-[#CBD5E1]">
+            <p className="mt-3 max-w-sm text-sm leading-6 text-[#CBD5E1]">
               Engineering reliable software, artificial intelligence, data platforms, and research-driven technology solutions for organizations building the future.
             </p>
           </section>
 
           <nav aria-label="Company" className="min-w-0">
             <FooterHeading>Company</FooterHeading>
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-3 flex flex-col gap-1.5">
               {companyLinks.map(([href, label]) => (
                 <FooterLink key={href} href={href} label={label} />
               ))}
@@ -65,7 +65,7 @@ export function SiteFooter() {
 
           <nav aria-label="Capabilities" className="min-w-0">
             <FooterHeading>Capabilities</FooterHeading>
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-3 flex flex-col gap-1.5">
               {capabilityLinks.map((label) => (
                 <FooterLink key={label} href="/services" label={label} />
               ))}
@@ -74,7 +74,7 @@ export function SiteFooter() {
 
           <nav aria-label="Resources" className="min-w-0">
             <FooterHeading>Resources</FooterHeading>
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-3 flex flex-col gap-1.5">
               {resourceLinks.map(([href, label]) => (
                 <FooterLink key={href} href={href} label={label} />
               ))}
@@ -86,7 +86,7 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-[#1E3A5F] pt-6 text-sm leading-6 text-[#94A3B8] sm:mt-12 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-8 flex flex-col gap-3 border-t border-[#1E3A5F] pt-5 text-sm leading-6 text-[#94A3B8] sm:mt-9 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 Zentric Analytics. All rights reserved.</p>
           <p>Software • Web • AI • Data Analytics • Research</p>
         </div>

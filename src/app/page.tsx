@@ -172,22 +172,22 @@ const trustPrinciples: Array<{ Icon: LucideIcon; number: string; title: string; 
 export default function Home() {
   return (
     <PageShell>
-      <section className="hero-premium relative isolate flex overflow-hidden bg-[linear-gradient(135deg,#0B1F3A_0%,#173B67_68%,#10B981_100%)] text-white md:min-h-[calc(76svh-80px)] lg:min-h-[calc(78svh-82px)] lg:max-h-[720px]">
+      <section className="hero-premium relative isolate flex overflow-hidden bg-[linear-gradient(135deg,#0B1F3A_0%,#173B67_68%,#10B981_100%)] text-white md:min-h-[calc(70svh-80px)] lg:min-h-[calc(72svh-82px)] lg:max-h-[660px]">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_18%,rgba(79,195,247,0.16),transparent_32%),radial-gradient(circle_at_78%_82%,rgba(16,185,129,0.12),transparent_34%),linear-gradient(180deg,rgba(11,31,58,0.06),rgba(11,31,58,0.26))]" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.055] [background-image:radial-gradient(ellipse_at_50%_20%,rgba(255,255,255,0.42),transparent_58%)]" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-b from-transparent to-[#F8FAFC]/18" aria-hidden="true" />
-        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-16 sm:py-[4.5rem] md:py-20 lg:py-[5.5rem]">
+        <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-12 sm:py-14 md:py-16 lg:py-20">
           <div className="max-w-[47rem]">
-            <p className="hero-reveal hero-reveal-1 mb-5 inline-flex text-xs font-bold uppercase tracking-[0.32em] text-cyan-100/90 sm:mb-6">
+            <p className="hero-reveal hero-reveal-1 mb-3 inline-flex text-xs font-bold uppercase tracking-[0.32em] text-cyan-100/90 sm:mb-4">
               ZENTRIC ANALYTICS
             </p>
-            <h1 className="hero-reveal hero-reveal-2 max-w-[46rem] text-[clamp(2.45rem,6.7vw,4.25rem)] font-bold leading-[1.06] tracking-[-0.048em] text-white sm:leading-[1.05]">
+            <h1 className="hero-reveal hero-reveal-2 max-w-[46rem] text-[clamp(2.25rem,5.8vw,3.9rem)] font-bold leading-[1.06] tracking-[-0.048em] text-white sm:leading-[1.05]">
               Engineering reliable software, data, and AI systems for serious work.
             </h1>
-            <p className="hero-reveal hero-reveal-3 mt-6 max-w-[39rem] text-base leading-8 text-slate-100/90 sm:mt-7 sm:text-lg sm:leading-9">
+            <p className="hero-reveal hero-reveal-3 mt-5 max-w-[39rem] text-base leading-[1.65] text-slate-100/90 sm:mt-6 sm:text-lg sm:leading-[1.65]">
               Zentric Analytics is a technology company focused on disciplined software delivery, web platforms, artificial intelligence solutions, analytics, computer science research, and emerging technology implementation.
             </p>
-            <div className="hero-reveal hero-reveal-4 mt-8 flex flex-col gap-3.5 sm:mt-9 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+            <div className="hero-reveal hero-reveal-4 mt-7 flex flex-col gap-3.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
               <Link className="btn hero-cta-primary" href="/services">
                 Explore services
               </Link>
@@ -199,10 +199,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="philosophy-section relative isolate overflow-hidden bg-white px-4 py-16 sm:px-6 sm:py-20 lg:py-28" aria-labelledby="how-we-think-heading">
+      <section className="philosophy-section relative isolate overflow-hidden bg-white px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="how-we-think-heading">
         <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.025] [background-image:linear-gradient(rgba(15,23,42,0.95)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.95)_1px,transparent_1px),linear-gradient(45deg,transparent_48%,rgba(16,185,129,0.9)_49%,rgba(16,185,129,0.9)_51%,transparent_52%)] [background-size:56px_56px,56px_56px,168px_168px]" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-white/60 to-transparent" aria-hidden="true" />
-        <div className="editorial-reveal editorial-reveal-4 mx-auto max-w-6xl rounded-[1.65rem] border border-[#E5E7EB] bg-white px-7 py-12 text-left shadow-[0_26px_80px_rgba(15,23,42,0.08),0_2px_10px_rgba(15,23,42,0.035)] sm:rounded-[1.75rem] sm:px-11 sm:py-16 lg:px-16 lg:py-20">
+        <div className="editorial-reveal editorial-reveal-4 mx-auto max-w-6xl rounded-[1.65rem] border border-[#E5E7EB] bg-white px-6 py-8 text-left shadow-[0_26px_80px_rgba(15,23,42,0.08),0_2px_10px_rgba(15,23,42,0.035)] sm:rounded-[1.75rem] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
           <SectionHeader
             className="editorial-reveal editorial-reveal-1"
             eyebrow="HOW WE THINK"
@@ -211,26 +211,26 @@ export default function Home() {
             description="Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment."
           />
 
-          <div className="mt-12 border-t border-slate-200/70 pt-2 sm:mt-14 lg:mt-16">
-            <div className="philosophy-row editorial-reveal editorial-reveal-5 border-b border-slate-200/70 px-4 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-8 lg:gap-16">
+          <div className="mt-7 border-t border-slate-200/70 pt-1 sm:mt-8 lg:mt-9">
+            <div className="philosophy-row editorial-reveal editorial-reveal-5 border-b border-slate-200/70 px-4 py-4 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-5 lg:gap-10">
               <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Engineering First</h3>
               <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Every decision begins with architecture, maintainability, scalability, and long-term reliability.
               </p>
             </div>
-            <div className="philosophy-row editorial-reveal editorial-reveal-6 border-b border-slate-200/70 px-4 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-8 lg:gap-16">
+            <div className="philosophy-row editorial-reveal editorial-reveal-6 border-b border-slate-200/70 px-4 py-4 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-5 lg:gap-10">
               <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Technology With Purpose</h3>
               <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Artificial intelligence, software, and data are applied where they create measurable value rather than unnecessary complexity.
               </p>
             </div>
-            <div className="philosophy-row editorial-reveal editorial-reveal-7 border-b border-slate-200/70 px-4 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-8 lg:gap-16">
+            <div className="philosophy-row editorial-reveal editorial-reveal-7 border-b border-slate-200/70 px-4 py-4 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-5 lg:gap-10">
               <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Built For Longevity</h3>
               <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Solutions are designed to evolve with changing business needs instead of becoming short-term implementations.
               </p>
             </div>
-            <div className="philosophy-row editorial-reveal editorial-reveal-8 px-4 py-7 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-8 lg:gap-16">
+            <div className="philosophy-row editorial-reveal editorial-reveal-8 px-4 py-4 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-5 lg:gap-10">
               <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Continuous Innovation</h3>
               <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
                 Research, experimentation, and emerging technologies are explored with discipline, practicality, and measurable outcomes.
@@ -240,7 +240,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#F8FAFC] px-4 py-16 sm:px-6 sm:py-20 lg:py-28" aria-labelledby="core-capabilities-heading">
+      <section className="bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="core-capabilities-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="CORE CAPABILITIES"
@@ -249,7 +249,7 @@ export default function Home() {
             description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
           />
 
-          <div className="mt-12 grid items-stretch gap-6 md:grid-cols-2 lg:mt-14 lg:gap-7">
+          <div className="mt-8 grid items-stretch gap-4 md:grid-cols-2 sm:gap-5 lg:mt-9 lg:gap-6">
             {capabilities.map((capability) => (
               <DesignSystemCard
                 as={Link}
@@ -266,12 +266,12 @@ export default function Home() {
                       className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] group-focus-visible:text-[#10B981] sm:size-7"
                       strokeWidth={1.75}
                     />
-                    <h3 className="mt-6 text-[1.375rem] font-bold leading-[1.18] tracking-[-0.03em] text-[#111827] sm:text-[1.55rem]">
+                    <h3 className="mt-4 text-[1.375rem] font-bold leading-[1.18] tracking-[-0.03em] text-[#111827] sm:text-[1.55rem]">
                       {capability.title}
                     </h3>
                   </div>
-                  <div className={`flex flex-1 flex-col ${capability.featured ? 'mt-6 lg:mt-0' : 'mt-6'}`}>
-                    <p className="max-w-2xl text-base leading-8 text-[#475569] sm:text-[1.0625rem] sm:leading-8">
+                  <div className={`flex flex-1 flex-col ${capability.featured ? 'mt-4 lg:mt-0' : 'mt-4'}`}>
+                    <p className="max-w-2xl text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem] sm:leading-[1.6]">
                       {capability.description}
                     </p>
                   </div>
@@ -282,7 +282,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20 lg:py-28" aria-labelledby="why-choose-heading">
+      <section className="bg-white px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="why-choose-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="WHY CHOOSE ZENTRIC ANALYTICS"
@@ -291,7 +291,7 @@ export default function Home() {
             description="Zentric Analytics combines disciplined engineering, responsible technology adoption, and long-term architectural thinking to help organizations build systems that remain reliable beyond launch."
           />
 
-          <div className="mt-12 grid items-stretch gap-6 md:grid-cols-2 lg:mt-14 lg:gap-7">
+          <div className="mt-8 grid items-stretch gap-4 md:grid-cols-2 sm:gap-5 lg:mt-9 lg:gap-6">
             {trustPrinciples.map((principle) => (
               <DesignSystemCard className="trust-principle-card" interactive key={principle.number} variant="standard">
                 <principle.Icon
@@ -299,10 +299,10 @@ export default function Home() {
                   className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
                   strokeWidth={1.75}
                 />
-                <h3 className="mt-6 max-w-[34rem] text-[1.375rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-2xl">
+                <h3 className="mt-4 max-w-[34rem] text-[1.375rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-2xl">
                   {principle.title}
                 </h3>
-                <p className="mt-4 max-w-[36rem] text-base leading-[1.7] text-[#475569] sm:text-[1.0625rem]">
+                <p className="mt-3 max-w-[36rem] text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
                   {principle.description}
                 </p>
               </DesignSystemCard>
@@ -311,7 +311,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#F8FAFC] px-4 py-16 sm:px-6 sm:py-20 lg:py-28" aria-labelledby="engineering-process-heading">
+      <section className="bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="engineering-process-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="ENGINEERING PROCESS"
@@ -320,11 +320,11 @@ export default function Home() {
             description="Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time."
           />
 
-          <div className="mt-12 lg:mt-14">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-7">
+          <div className="mt-8 lg:mt-9">
+            <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
               {engineeringProcess.map((step) => (
                 <article
-                  className="engineering-process-card group relative rounded-[20px] border border-[#E5E7EB] bg-white p-6 shadow-[0_8px_24px_rgba(11,31,58,0.06)] transition-[border-color,box-shadow,transform] duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#10B981]/55 hover:shadow-[0_16px_36px_rgba(11,31,58,0.10)] sm:p-7"
+                  className="engineering-process-card group relative rounded-[20px] border border-[#E5E7EB] bg-white p-5 shadow-[0_8px_24px_rgba(11,31,58,0.06)] transition-[border-color,box-shadow,transform] duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#10B981]/55 hover:shadow-[0_16px_36px_rgba(11,31,58,0.10)] sm:p-6"
                   key={step.title}
                 >
                   <div className="flex size-11 items-center justify-center rounded-[11px] bg-[#F8FAFC]">
@@ -334,10 +334,10 @@ export default function Home() {
                       strokeWidth={1.75}
                     />
                   </div>
-                  <h3 className="mt-6 text-xl font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-2xl">
+                  <h3 className="mt-4 text-xl font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-2xl">
                     {step.title}
                   </h3>
-                  <p className="mt-3 max-w-[32rem] text-sm leading-7 text-[#475569] sm:text-base sm:leading-[1.75]">
+                  <p className="mt-3 max-w-[32rem] text-sm leading-[1.6] text-[#475569] sm:text-base sm:leading-[1.6]">
                     {step.description}
                   </p>
                 </article>
@@ -347,7 +347,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20 lg:py-28" aria-labelledby="industries-heading">
+      <section className="bg-white px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="industries-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="INDUSTRIES WE SERVE"
@@ -356,7 +356,7 @@ export default function Home() {
             description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
           />
 
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-14 lg:grid-cols-3 lg:gap-7">
+          <div className="mt-8 grid gap-4 sm:gap-5 md:grid-cols-2 lg:mt-9 lg:grid-cols-3 lg:gap-6">
             {industries.map((industry) => (
               <DesignSystemCard className="industry-card" interactive key={industry.title} variant="standard">
                 <industry.Icon
@@ -364,10 +364,10 @@ export default function Home() {
                   className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
                   strokeWidth={1.75}
                 />
-                <h3 className="mt-6 text-[1.25rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-[1.4375rem]">
+                <h3 className="mt-4 text-[1.25rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-[1.4375rem]">
                   {industry.title}
                 </h3>
-                <p className="mt-4 max-w-[34rem] text-base leading-[1.7] text-[#475569] sm:text-[1.0625rem] sm:leading-8">
+                <p className="mt-3 max-w-[34rem] text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem] sm:leading-[1.6]">
                   {industry.description}
                 </p>
               </DesignSystemCard>
@@ -377,10 +377,10 @@ export default function Home() {
       </section>
 
       <section
-        className="relative isolate overflow-hidden bg-[#F8FAFC] px-4 py-16 sm:px-6 sm:py-20 lg:py-24"
+        className="relative isolate overflow-hidden bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-14 lg:py-16"
         aria-labelledby="careers-preview-heading"
       >
-        <div className="editorial-reveal mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)] lg:gap-14">
+        <div className="editorial-reveal mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)] lg:gap-10">
           <div className="flex flex-col items-start">
             <SectionHeader
               align="left"
@@ -389,11 +389,11 @@ export default function Home() {
               headingId="careers-preview-heading"
               description="Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, and continuous learning. If a specific role is not listed, candidates may submit a general application."
             />
-            <Link className="btn btn-primary mt-8 sm:mt-10" href="/careers">
+            <Link className="btn btn-primary mt-6 sm:mt-7" href="/careers">
               View Careers
             </Link>
           </div>
-          <div className="relative aspect-[3/2] w-full overflow-hidden rounded-[22px] border border-[#E5E7EB] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[22px] border border-[#E5E7EB] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
             <Image
               src="/images/careers/careers-team-collaboration.png"
               alt="Software engineers collaborating on system architecture and application development"
@@ -407,7 +407,7 @@ export default function Home() {
       </section>
 
       <section
-        className="relative isolate overflow-hidden bg-white px-4 py-20 sm:px-6 sm:py-24 lg:py-28"
+        className="relative isolate overflow-hidden bg-white px-4 py-10 sm:px-6 sm:py-14 lg:py-16"
         aria-labelledby="final-cta-heading"
       >
         <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
@@ -418,7 +418,7 @@ export default function Home() {
             headingId="final-cta-heading"
             description="Whether you're planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution."
           />
-          <div className="mt-10 flex w-full flex-col items-center gap-4 sm:mt-12 sm:w-auto sm:flex-row sm:justify-center">
+          <div className="mt-6 flex w-full flex-col items-center gap-4 sm:mt-7 sm:w-auto sm:flex-row sm:justify-center">
             <Link
               className="btn btn-primary w-full sm:w-auto"
               href="/contact"
