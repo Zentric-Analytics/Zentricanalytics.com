@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BadgeCheck, Braces, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LifeBuoy, LockKeyhole, MessagesSquare, Microscope, Network, Rocket, SearchCheck, ShieldCheck, Truck, Wrench, type LucideIcon } from 'lucide-react';
+import { BadgeCheck, Braces, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LifeBuoy, LockKeyhole, MessagesSquare, Microscope, Network, Rocket, Search, ShieldCheck, Truck, Wrench, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { DesignSystemCard } from '@/components/DesignSystemCard';
@@ -87,7 +87,7 @@ const industries: Array<{ Icon: LucideIcon; title: string; description: string }
 const engineeringProcess = [
   {
     number: '01',
-    Icon: SearchCheck,
+    Icon: Search,
     title: 'Discovery',
     description:
       'Understanding objectives, stakeholders, technical constraints, and project requirements.',
