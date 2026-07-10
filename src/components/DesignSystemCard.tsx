@@ -12,11 +12,11 @@ type DesignSystemCardProps<T extends ElementType> = {
 
 const variantClasses: Record<CardVariant, string> = {
   standard:
-    'rounded-[16px] p-6 shadow-[0_8px_24px_rgba(11,31,58,0.06)] sm:p-8',
+    'rounded-[20px] p-6 shadow-[0_8px_24px_rgba(11,31,58,0.06)] sm:p-7',
   capability:
-    'rounded-[24px] p-6 shadow-[0_8px_24px_rgba(11,31,58,0.06)] sm:p-8 lg:p-10',
+    'rounded-[20px] p-6 shadow-[0_8px_24px_rgba(11,31,58,0.06)] sm:p-7 lg:p-8',
   featured:
-    'rounded-[24px] p-6 shadow-[0_16px_36px_rgba(11,31,58,0.10)] sm:p-7 lg:p-12',
+    'rounded-[20px] p-6 shadow-[0_12px_30px_rgba(11,31,58,0.08)] sm:p-7 lg:p-10',
 };
 
 export function DesignSystemCard<T extends ElementType = 'article'>({
