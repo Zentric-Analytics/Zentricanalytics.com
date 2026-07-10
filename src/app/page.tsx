@@ -187,10 +187,10 @@ export default function Home() {
               Zentric Analytics is a technology company focused on disciplined software delivery, web platforms, artificial intelligence solutions, analytics, computer science research, and emerging technology implementation.
             </p>
             <div className="hero-reveal hero-reveal-4 mt-8 flex flex-col gap-3.5 sm:mt-9 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-              <Link className="btn btn-secondary" href="/services">
+              <Link className="btn hero-cta-primary" href="/services">
                 Explore services
               </Link>
-              <Link className="btn btn-primary" href="/contact">
+              <Link className="btn hero-cta-secondary" href="/contact">
                 Let&apos;s Talk
               </Link>
             </div>

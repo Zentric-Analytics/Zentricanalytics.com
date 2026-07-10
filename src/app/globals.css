@@ -33,6 +33,12 @@ body{margin:0;background:#f7f9fc;color:#0c1222}
 .btn:disabled:hover,.btn[aria-disabled="true"]:hover{transform:none;box-shadow:none}
 .btn-primary:disabled:hover,.btn-primary[aria-disabled="true"]:hover{background:#0B1F3A;color:#fff}
 .btn-secondary:disabled:hover,.btn-secondary[aria-disabled="true"]:hover{background:transparent;color:#0B1F3A}
+.hero-cta-primary{border:1px solid transparent;background:#FFFFFF;color:#0B1F3A;box-shadow:0 10px 24px rgba(11,31,58,.18),0 2px 8px rgba(15,23,42,.10)}
+.hero-cta-primary:hover{background:#F8FAFC;color:#0B1F3A;box-shadow:0 14px 28px rgba(11,31,58,.20),0 4px 10px rgba(15,23,42,.12);transform:translateY(-2px)}
+.hero-cta-secondary{border:1px solid rgba(255,255,255,.35);background:transparent;color:#FFFFFF;box-shadow:none}
+.hero-cta-secondary:hover{border-color:rgba(255,255,255,.72);background:rgba(255,255,255,.07);color:#FFFFFF;transform:none}
+.hero-cta-primary:disabled:hover,.hero-cta-primary[aria-disabled="true"]:hover{background:#FFFFFF;color:#0B1F3A;transform:none}
+.hero-cta-secondary:disabled:hover,.hero-cta-secondary[aria-disabled="true"]:hover{border-color:rgba(255,255,255,.35);background:transparent;color:#FFFFFF;transform:none}
 
 .card{max-width:100%;min-width:0;overflow-wrap:break-word;background:white;border:1px solid #e2e8f0;border-radius:1.25rem;box-shadow:0 12px 30px rgba(15,23,42,.06)}
 
