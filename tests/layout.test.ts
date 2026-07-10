@@ -11,7 +11,7 @@ const publicPages = [
   'src/app/track/portal/page.tsx',
 ];
 
-const primaryNavLinks = ['Home', 'About', 'Services', 'Careers'];
+const primaryNavLinks = ['Services', 'Careers'];
 const applicantNavLinks = ['Apply', 'Track Application'];
 
 const publicFacingBrandSourceFiles = [
@@ -38,8 +38,8 @@ describe('public layout shell', () => {
 
     expect(header).toContain('sticky inset-x-0 top-0 z-50 border-b transition-all duration-300');
     expect(header).toContain('hasScrolled');
-    expect(header).toContain('backdrop-blur-xl');
-    expect(header).toContain('shadow-[0_8px_24px_rgba(11,31,58,0.055)]');
+    expect(header).toContain('bg-white');
+    expect(header).toContain('shadow-[0_10px_26px_rgba(11,31,58,0.07)]');
     expect(header).not.toContain('fixed inset-x-0 top-0 z-50');
   });
 
@@ -82,6 +82,7 @@ describe('public layout shell', () => {
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
+    ['Home', 'About', 'Industries', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
     expect(navigation).not.toContain('Apply Now');
     expect(header).not.toContain('Track Application');
   });
@@ -124,19 +125,19 @@ describe('public layout shell', () => {
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
     expect(header).toContain('primaryNavigationLinks');
-    expect(header).toContain("primaryNavigationLinks.filter(([href]) => href !== '/')");
     expect(header).toContain("const contactLink = ['/contact', \"Let's Talk\"] as const");
     expect(header).not.toContain('Apply Now');
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
-    expect(header).toContain('text-[22px] font-bold leading-none tracking-[-0.026em] text-[#0B1F3A] sm:text-[25px] md:text-[28px] lg:text-[29px]');
+    ['Home', 'About', 'Industries', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
+    expect(header).toContain('text-[23px] font-extrabold leading-none tracking-[-0.035em] text-[#0B1F3A] sm:text-[26px] md:text-[29px] lg:text-[30px]');
   });
 
   it('renders the premium corporate footer navigation and contact resources', () => {
     const footer = readFileSync('src/components/SiteFooter.tsx', 'utf8');
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
-    expect(footer).toContain('border-t border-[#E5E7EB] bg-white text-[#111827]');
+    expect(footer).toContain('bg-[#0B1F3A] text-white');
     expect(footer).toContain('ZENTRIC ANALYTICS');
     expect(footer).toContain('<FooterHeading>Company</FooterHeading>');
     expect(footer).toContain('<FooterHeading>Capabilities</FooterHeading>');
