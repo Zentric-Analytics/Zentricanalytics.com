@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { primaryNavigationLinks } from './navigation';
@@ -12,12 +12,6 @@ export function SiteHeader() {
   const [hasScrolled, setHasScrolled] = useState(false);
   const pathname = usePathname();
   const mobileMenuId = 'site-header-mobile-menu';
-  const isHomepage = pathname === '/';
-
-  const navigationLinks = useMemo(
-    () => (isHomepage ? primaryNavigationLinks.filter(([href]) => href !== '/') : primaryNavigationLinks),
-    [isHomepage],
-  );
 
   useEffect(() => {
     const handleScroll = () => setHasScrolled(window.scrollY > 8);
@@ -69,30 +63,30 @@ export function SiteHeader() {
     <header
       className={`sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
         hasScrolled
-          ? 'border-[#0B1F3A]/10 bg-white/90 shadow-[0_8px_24px_rgba(11,31,58,0.055)] backdrop-blur-xl'
+          ? 'border-[#0B1F3A]/10 bg-white shadow-[0_10px_26px_rgba(11,31,58,0.07)]'
           : 'border-transparent bg-white'
       }`}
     >
-      <nav className="mx-auto flex h-[76px] w-full max-w-7xl items-center justify-between gap-6 px-5 sm:h-20 sm:px-6 lg:h-[82px] lg:gap-8 lg:px-8">
+      <nav className={`mx-auto flex w-full max-w-7xl items-center justify-between gap-5 px-5 transition-[height] duration-300 sm:px-6 lg:gap-7 lg:px-8 ${hasScrolled ? 'h-[64px] sm:h-[68px]' : 'h-[76px] sm:h-20 lg:h-[82px]'}`}>
         <Link
           href="/"
           aria-label="Zentric Analytics homepage"
           className="inline-flex shrink-0 -translate-y-0.5 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 md:-translate-y-[3px]"
         >
-          <span className="whitespace-nowrap text-[22px] font-bold leading-none tracking-[-0.026em] text-[#0B1F3A] sm:text-[25px] md:text-[28px] lg:text-[29px]">
+          <span className="whitespace-nowrap text-[23px] font-extrabold leading-none tracking-[-0.035em] text-[#0B1F3A] sm:text-[26px] md:text-[29px] lg:text-[30px]">
             Zentric Analytics
           </span>
         </Link>
 
-        <div className="hidden min-w-0 flex-1 translate-y-px items-center justify-center gap-12 md:flex lg:gap-14">
-          {navigationLinks.map(([href, label]) => {
+        <div className="hidden min-w-0 flex-1 translate-y-px items-center justify-center gap-7 md:flex lg:gap-9">
+          {primaryNavigationLinks.map(([href, label]) => {
             const isActive = isActiveLink(href);
 
             return (
               <Link
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative whitespace-nowrap py-2 text-[16px] font-medium tracking-[-0.01em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 ${
-                  isActive ? 'text-[#0B1F3A]' : 'text-[#173B67]/80 hover:text-[#0B1F3A]'
+                className={`relative whitespace-nowrap py-2 text-[15px] font-medium tracking-[-0.005em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 ${
+                  isActive ? 'text-[#0B1F3A]' : 'text-[#173B67]/72 hover:text-[#10B981]'
                 } after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-center after:rounded-full after:bg-[#10B981] after:transition-transform after:duration-200 ${
                   isActive ? 'after:scale-x-100' : 'after:scale-x-0 hover:after:scale-x-100'
                 }`}
@@ -160,9 +154,9 @@ export function SiteHeader() {
           <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-8 overflow-y-auto overscroll-contain px-5 py-7 sm:px-8">
             <section aria-label="Primary navigation">
               <div className="flex flex-col gap-1">
-                {[...navigationLinks, contactLink].map(([href, label]) => {
+                {[...primaryNavigationLinks, contactLink].map(([href, label]) => {
                   const isActive = isActiveLink(href);
-                  const isContact = href === contactLink[0];
+                  const isContact = href === contactLink[0] && label === contactLink[1];
 
                   return (
                     <Link
@@ -174,7 +168,7 @@ export function SiteHeader() {
                             ? 'border-[#10B981] bg-[#0B1F3A]/[0.03] text-[#0B1F3A]'
                             : 'border-transparent text-[#173B67] hover:bg-[#0B1F3A]/[0.03] hover:text-[#0B1F3A]'
                       }`}
-                      key={href}
+                      key={`${href}-${label}`}
                       href={href}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
