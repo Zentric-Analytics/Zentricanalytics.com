@@ -1,40 +1,41 @@
 import Link from 'next/link';
+import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, FlaskConical, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 
-const capabilities = [
+const capabilities: Array<{ Icon: LucideIcon; title: string; description: string; featured?: boolean }> = [
   {
-    number: '01',
+    Icon: CodeXml,
     title: 'Software Engineering',
     description:
       'Reliable software systems built for performance, scalability, security, and long-term maintainability.',
     featured: true,
   },
   {
-    number: '02',
+    Icon: BrainCircuit,
     title: 'Artificial Intelligence',
     description:
       'Applied AI solutions that improve decision-making, automate workflows, and create measurable business value.',
   },
   {
-    number: '03',
+    Icon: ChartColumn,
     title: 'Data & Analytics',
     description:
       'Modern analytics platforms that transform data into meaningful insights and informed decisions.',
   },
   {
-    number: '04',
+    Icon: FlaskConical,
     title: 'Research & Innovation',
     description:
       'Research-led exploration of emerging technologies with practical engineering outcomes.',
   },
   {
-    number: '05',
+    Icon: CloudCog,
     title: 'Cloud & Infrastructure',
     description:
       'Secure, resilient, and scalable cloud platforms designed for enterprise environments.',
   },
   {
-    number: '06',
+    Icon: Cpu,
     title: 'Emerging Technologies',
     description:
       'Evaluating, validating, and implementing future-ready technologies responsibly and strategically.',
@@ -280,14 +281,16 @@ export default function Home() {
                 className={`core-capability-card group relative flex min-h-full overflow-hidden rounded-[1.375rem] border border-[#E5E7EB] bg-white p-7 shadow-[0_18px_48px_rgba(15,23,42,0.055),0_2px_8px_rgba(15,23,42,0.035)] transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-1 hover:border-[#10B981]/55 hover:shadow-[0_24px_60px_rgba(15,23,42,0.095),0_4px_14px_rgba(15,23,42,0.045)] sm:rounded-[1.5rem] sm:p-8 ${
                   capability.featured ? 'md:col-span-2 lg:p-9' : ''
                 }`}
-                key={capability.number}
+                key={capability.title}
               >
                 <div className="absolute inset-x-7 top-0 h-[2px] bg-[#10B981]/0 transition-colors duration-300 group-hover:bg-[#10B981]/80 sm:inset-x-8 lg:inset-x-9" />
                 <div className={`flex w-full flex-col ${capability.featured ? 'lg:grid lg:grid-cols-[0.72fr_1.28fr] lg:gap-10' : ''}`}>
                   <div>
-                    <p className="text-[0.78rem] font-bold tracking-[0.28em] text-[#10B981]">
-                      {capability.number}
-                    </p>
+                    <capability.Icon
+                      aria-hidden="true"
+                      className="size-6 text-[#0B1F3A] transition-colors duration-200 group-hover:text-[#10B981] sm:size-7"
+                      strokeWidth={1.75}
+                    />
                     <h3 className="mt-5 text-[1.45rem] font-bold leading-[1.16] tracking-[-0.035em] text-[#111827] sm:text-[1.7rem]">
                       {capability.title}
                     </h3>
