@@ -97,12 +97,6 @@ html{scroll-padding-top:82px}
 .hero-reveal-3{animation-delay:.21s}
 .hero-reveal-4{animation-delay:.29s}
 
-.scroll-cue span:last-child{animation:scroll-line 1.8s ease-in-out infinite}
-
-@keyframes scroll-line{
-  0%,100%{opacity:.45;transform:scaleY(.72)}
-  50%{opacity:.9;transform:scaleY(1)}
-}
 
 @media (max-width:767px){
   html{scroll-padding-top:76px}
@@ -110,5 +104,5 @@ html{scroll-padding-top:82px}
 }
 
 @media (prefers-reduced-motion:reduce){
-  .hero-reveal,.scroll-cue span:last-child{animation:none;opacity:1;transform:none}
+  .hero-reveal{animation:none;opacity:1;transform:none}
 }
