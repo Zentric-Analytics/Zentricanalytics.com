@@ -39,7 +39,7 @@ function FooterHeading({ children }: { children: React.ReactNode }) {
 
 export function SiteFooter() {
   return (
-    <footer className="bg-[#071426] text-white" aria-label="Site footer">
+    <footer className="bg-[#0B1F3A] text-white" aria-label="Site footer">
       <div className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
         <div className="grid gap-9 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.72fr)_minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-x-12">
           <section aria-labelledby="footer-company-overview" className="min-w-0">
