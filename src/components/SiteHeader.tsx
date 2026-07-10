@@ -69,30 +69,30 @@ export function SiteHeader() {
     <header
       className={`sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
         hasScrolled
-          ? 'border-[#0B1F3A]/10 bg-white/92 shadow-[0_10px_30px_rgba(11,31,58,0.07)] backdrop-blur-xl'
-          : 'border-transparent bg-white/80 backdrop-blur-md'
+          ? 'border-[#0B1F3A]/10 bg-white/90 shadow-[0_8px_24px_rgba(11,31,58,0.055)] backdrop-blur-xl'
+          : 'border-transparent bg-white'
       }`}
     >
-      <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-8 px-5 py-4 sm:px-6 lg:px-8">
+      <nav className="mx-auto flex h-[76px] w-full max-w-7xl items-center justify-between gap-6 px-5 sm:h-20 sm:px-6 lg:h-[82px] lg:gap-8 lg:px-8">
         <Link
           href="/"
           aria-label="Zentric Analytics homepage"
-          className="group inline-flex shrink-0 items-center rounded-full focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"
+          className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"
         >
-          <span className="whitespace-nowrap text-[23px] font-extrabold leading-none tracking-[-0.025em] text-[#0B1F3A] sm:text-[26px] md:text-[30px]">
+          <span className="whitespace-nowrap text-[22px] font-bold leading-none tracking-[-0.026em] text-[#0B1F3A] sm:text-[25px] md:text-[28px] lg:text-[29px]">
             Zentric Analytics
           </span>
         </Link>
 
-        <div className="hidden min-w-0 flex-1 items-center justify-center gap-10 md:flex lg:gap-12">
+        <div className="hidden min-w-0 flex-1 translate-y-px items-center justify-center gap-12 md:flex lg:gap-14">
           {navigationLinks.map(([href, label]) => {
             const isActive = isActiveLink(href);
 
             return (
               <Link
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative whitespace-nowrap py-2 text-[15px] font-medium tracking-[-0.01em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 ${
-                  isActive ? 'text-[#0B1F3A]' : 'text-[#173B67]/78 hover:text-[#0B1F3A]'
+                className={`relative whitespace-nowrap py-2 text-[16px] font-medium tracking-[-0.01em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 ${
+                  isActive ? 'text-[#0B1F3A]' : 'text-[#173B67]/80 hover:text-[#0B1F3A]'
                 } after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-center after:rounded-full after:bg-[#10B981] after:transition-transform after:duration-200 ${
                   isActive ? 'after:scale-x-100' : 'after:scale-x-0 hover:after:scale-x-100'
                 }`}
@@ -108,7 +108,7 @@ export function SiteHeader() {
         <div className="hidden shrink-0 items-center md:flex">
           <Link
             href={contactLink[0]}
-            className="rounded-full border border-[#0B1F3A] bg-[#0B1F3A] px-5 py-2.5 text-sm font-semibold tracking-[-0.01em] text-white shadow-[0_12px_26px_rgba(11,31,58,0.16)] transition-colors duration-200 hover:border-[#173B67] hover:bg-[#173B67] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"
+            className="rounded-full border border-[#0B1F3A] bg-[#0B1F3A] px-4 py-2.5 text-sm font-semibold tracking-[-0.01em] text-white shadow-[0_8px_18px_rgba(11,31,58,0.14)] transition-all duration-200 hover:-translate-y-px hover:border-[#173B67] hover:bg-[#173B67] hover:shadow-[0_10px_22px_rgba(11,31,58,0.16)] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"
           >
             {contactLink[1]}
           </Link>
@@ -140,7 +140,7 @@ export function SiteHeader() {
           aria-labelledby="mobile-menu-title"
           className="fixed inset-0 z-50 flex h-screen min-h-dvh w-full flex-col overflow-hidden bg-white md:hidden"
         >
-          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-[#0B1F3A]/10 px-5 py-5 sm:px-8">
+          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-[#0B1F3A]/10 px-5 py-4 sm:px-8">
             <h2 id="mobile-menu-title" className="text-2xl font-semibold tracking-[-0.03em] text-[#0B1F3A]">
               Menu
             </h2>
