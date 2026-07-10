@@ -29,7 +29,7 @@ export function DesignSystemCard<T extends ElementType = 'article'>({
 }: DesignSystemCardProps<T>) {
   const Component = as ?? 'article';
   const interactiveClasses = interactive
-    ? 'transition-[border-color,box-shadow,transform] duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#10B981]/55 hover:shadow-[0_16px_36px_rgba(11,31,58,0.10)] focus-within:border-[#10B981]/55 focus-within:shadow-[0_16px_36px_rgba(11,31,58,0.10)]'
+    ? 'cursor-pointer transition-[border-color,box-shadow,transform] duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#10B981]/55 hover:shadow-[0_16px_36px_rgba(11,31,58,0.10)] focus-visible:border-[#10B981]/70 focus-visible:shadow-[0_16px_36px_rgba(11,31,58,0.10)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]'
     : '';
 
   return (
