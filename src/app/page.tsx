@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { BadgeCheck, Braces, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LifeBuoy, LockKeyhole, MessagesSquare, Microscope, Network, Rocket, Search, ShieldCheck, Truck, Wrench, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
@@ -376,20 +377,32 @@ export default function Home() {
       </section>
 
       <section
-        className="relative isolate overflow-hidden bg-[#F8FAFC] px-4 py-20 sm:px-6 sm:py-24 lg:py-28"
+        className="relative isolate overflow-hidden bg-[#F8FAFC] px-4 py-16 sm:px-6 sm:py-20 lg:py-24"
         aria-labelledby="careers-preview-heading"
       >
-        <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
-          <SectionHeader
-            align="center"
-            eyebrow="CAREERS"
-            heading="Work on practical technology problems with care and accountability."
-            headingId="careers-preview-heading"
-            description="Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, and continuous learning. If a specific role is not listed, candidates may submit a general application."
-          />
-          <Link className="btn btn-primary mt-10" href="/careers">
-            View Careers
-          </Link>
+        <div className="editorial-reveal mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)] lg:gap-14">
+          <div className="flex flex-col items-start">
+            <SectionHeader
+              align="left"
+              eyebrow="CAREERS"
+              heading="Work on practical technology problems with care and accountability."
+              headingId="careers-preview-heading"
+              description="Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, and continuous learning. If a specific role is not listed, candidates may submit a general application."
+            />
+            <Link className="btn btn-primary mt-8 sm:mt-10" href="/careers">
+              View Careers
+            </Link>
+          </div>
+          <div className="relative aspect-[3/2] w-full overflow-hidden rounded-[22px] border border-[#E5E7EB] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+            <Image
+              src="/images/careers/careers-team-collaboration.png"
+              alt="Software engineers collaborating on system architecture and application development"
+              fill
+              sizes="(min-width: 1024px) 475px, (min-width: 768px) 42vw, calc(100vw - 32px)"
+              className="object-cover object-[50%_45%]"
+              priority={false}
+            />
+          </div>
         </div>
       </section>
 
