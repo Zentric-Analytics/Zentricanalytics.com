@@ -27,16 +27,16 @@ export function SectionHeader({
     <div
       className={`section-header ${isCentered ? 'mx-auto flex max-w-3xl flex-col items-center text-center' : 'max-w-4xl text-left'} ${className}`}
     >
-      <p className="mb-4 text-[0.8125rem] font-bold uppercase leading-none tracking-[0.15em] text-[#10B981] sm:text-sm">
+      <p className="mb-3 text-[0.8125rem] font-bold uppercase leading-none tracking-[0.15em] text-[#10B981] sm:text-sm">
         {eyebrow}
       </p>
       <h2
         id={headingId}
-        className={`max-w-[56rem] text-[clamp(1.875rem,5.8vw,3rem)] font-bold leading-[1.1] tracking-[-0.04em] ${headingColor}`}
+        className={`max-w-[56rem] text-[clamp(1.75rem,4.8vw,2.625rem)] font-bold leading-[1.1] tracking-[-0.04em] ${headingColor}`}
       >
         {heading}
       </h2>
-      <p className={`mt-6 max-w-[46rem] text-base leading-[1.7] sm:text-[1.0625rem] lg:text-lg ${descriptionColor}`}>
+      <p className={`mt-4 max-w-[46rem] text-base leading-[1.6] sm:text-[1.0625rem] lg:text-[1.0625rem] ${descriptionColor}`}>
         {description}
       </p>
     </div>
