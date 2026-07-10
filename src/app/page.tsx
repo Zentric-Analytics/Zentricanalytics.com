@@ -265,40 +265,40 @@ export default function Home() {
             </p>
             <h2
               id="core-capabilities-heading"
-              className="mt-6 max-w-4xl text-[2.05rem] font-bold leading-[1.08] tracking-[-0.045em] text-[#111827] sm:text-[2.75rem] md:text-[3.25rem]"
+              className="mt-6 max-w-[56rem] text-[2.05rem] font-bold leading-[1.09] tracking-[-0.045em] text-[#111827] sm:text-[2.75rem] sm:leading-[1.07] md:text-[3.25rem]"
             >
               Engineering expertise across software, AI, data, infrastructure, and research.
             </h2>
-            <p className="mt-7 max-w-3xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
+            <p className="mt-7 max-w-[48rem] text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
               Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready.
             </p>
           </div>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-16 lg:gap-8">
+          <div className="mt-12 grid items-stretch gap-5 md:grid-cols-2 md:gap-6 lg:mt-16 lg:gap-7">
             {capabilities.map((capability) => (
               <article
-                className={`group relative overflow-hidden rounded-[1.5rem] border border-[#D1D5DB]/80 bg-white p-7 shadow-[0_20px_55px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1.5 hover:border-[#10B981]/45 hover:shadow-[0_28px_70px_rgba(15,23,42,0.12)] sm:p-8 ${
-                  capability.featured ? 'md:col-span-2 lg:p-10' : ''
+                className={`core-capability-card group relative flex min-h-full overflow-hidden rounded-[1.375rem] border border-[#E5E7EB] bg-white p-7 shadow-[0_18px_48px_rgba(15,23,42,0.055),0_2px_8px_rgba(15,23,42,0.035)] transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-1 hover:border-[#10B981]/55 hover:shadow-[0_24px_60px_rgba(15,23,42,0.095),0_4px_14px_rgba(15,23,42,0.045)] sm:rounded-[1.5rem] sm:p-8 ${
+                  capability.featured ? 'md:col-span-2 lg:p-9' : ''
                 }`}
                 key={capability.number}
               >
-                <div className="absolute inset-x-7 top-0 h-px bg-[#10B981]/30 opacity-60 transition-opacity duration-300 group-hover:opacity-100 sm:inset-x-8 lg:inset-x-10" />
-                <div className={capability.featured ? 'lg:grid lg:grid-cols-[0.7fr_1.3fr] lg:gap-12' : ''}>
+                <div className="absolute inset-x-7 top-0 h-[2px] bg-[#10B981]/0 transition-colors duration-300 group-hover:bg-[#10B981]/80 sm:inset-x-8 lg:inset-x-9" />
+                <div className={`flex w-full flex-col ${capability.featured ? 'lg:grid lg:grid-cols-[0.72fr_1.28fr] lg:gap-10' : ''}`}>
                   <div>
-                    <p className="text-sm font-bold tracking-[0.28em] text-[#10B981]">
+                    <p className="text-[0.78rem] font-bold tracking-[0.28em] text-[#10B981]">
                       {capability.number}
                     </p>
-                    <h3 className="mt-6 text-2xl font-bold tracking-[-0.035em] text-[#111827] sm:text-3xl">
+                    <h3 className="mt-5 text-[1.45rem] font-bold leading-[1.16] tracking-[-0.035em] text-[#111827] sm:text-[1.7rem]">
                       {capability.title}
                     </h3>
                   </div>
-                  <div className={capability.featured ? 'mt-6 lg:mt-0' : 'mt-5'}>
-                    <p className="max-w-2xl text-base leading-8 text-[#475569] sm:text-lg sm:leading-9">
+                  <div className={`flex flex-1 flex-col ${capability.featured ? 'mt-6 lg:mt-0' : 'mt-5'}`}>
+                    <p className="max-w-2xl text-[0.98rem] leading-8 text-[#475569] sm:text-base">
                       {capability.description}
                     </p>
                     <Link
                       aria-label={`Learn more about ${capability.title}`}
-                      className="mt-8 inline-flex text-sm font-bold tracking-[-0.01em] text-[#0B1F3A] transition duration-300 group-hover:translate-x-1 group-hover:text-[#10B981] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
+                      className="mt-7 inline-flex min-h-11 w-fit items-center text-sm font-bold tracking-[-0.01em] text-[#0B1F3A] underline decoration-[#10B981]/0 underline-offset-4 transition-[color,decoration-color] duration-300 group-hover:text-[#047857] group-hover:decoration-[#10B981]/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
                       href="/services"
                     >
                       Learn More →
