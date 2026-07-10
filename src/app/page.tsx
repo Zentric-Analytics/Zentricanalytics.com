@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BadgeCheck, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LockKeyhole, MessagesSquare, Microscope, ShieldCheck, Truck, Wrench, type LucideIcon } from 'lucide-react';
+import { BadgeCheck, Braces, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LifeBuoy, LockKeyhole, MessagesSquare, Microscope, Network, Rocket, SearchCheck, ShieldCheck, Truck, Wrench, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { DesignSystemCard } from '@/components/DesignSystemCard';
