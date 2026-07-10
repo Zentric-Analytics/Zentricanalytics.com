@@ -390,6 +390,29 @@ export default function Home() {
       </section>
 
       <section
+        className="relative isolate overflow-hidden bg-[#0B1F3A] px-4 py-24 sm:px-6 sm:py-28 lg:py-36"
+        aria-labelledby="careers-preview-heading"
+      >
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.14),transparent_34%),linear-gradient(180deg,rgba(23,59,103,0.28),rgba(11,31,58,0)_42%,rgba(7,20,38,0.34))]"
+        />
+        <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
+          <SectionHeader
+            align="center"
+            eyebrow="CAREERS"
+            heading="Work on practical technology problems with care and accountability."
+            headingId="careers-preview-heading"
+            tone="dark"
+            description="Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, and continuous learning. If a specific role is not listed, candidates may submit a general application."
+          />
+          <Link className="btn btn-primary mt-12 bg-[#10B981] text-[#0B1F3A] shadow-[0_12px_28px_rgba(16,185,129,0.18)] hover:bg-[#34D399] hover:text-[#0B1F3A] hover:shadow-[0_14px_32px_rgba(16,185,129,0.24)] focus-visible:outline-white" href="/careers">
+            View Careers
+          </Link>
+        </div>
+      </section>
+
+      <section
         className="relative isolate overflow-hidden border-b border-white/10 bg-[#0B1F3A] px-4 py-32 sm:px-6 sm:py-36 lg:py-44"
         aria-labelledby="final-cta-heading"
       >
