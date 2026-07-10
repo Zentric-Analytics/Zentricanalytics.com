@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, FlaskConical, type LucideIcon } from 'lucide-react';
+import { BadgeCheck, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LockKeyhole, MessagesSquare, Microscope, ShieldCheck, Truck, Wrench, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
+import { DesignSystemCard } from '@/components/DesignSystemCard';
 
 const capabilities: Array<{ Icon: LucideIcon; title: string; description: string; featured?: boolean }> = [
   {
@@ -44,54 +45,42 @@ const capabilities: Array<{ Icon: LucideIcon; title: string; description: string
   },
 ];
 
-const industries = [
+const industries: Array<{ Icon: LucideIcon; title: string; description: string }> = [
   {
     title: 'Healthcare',
     description:
       'Reliable digital platforms, secure data systems, and intelligent healthcare technology that improve operational efficiency.',
-    icon: (
-      <path d="M12 5v14M5 12h14M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Z" />
-    ),
+    Icon: HeartPulse,
   },
   {
     title: 'Financial Services',
     description:
       'Modern software, analytics, and secure digital solutions built for financial institutions and business operations.',
-    icon: (
-      <path d="M4 10h16M6 10v8M10 10v8M14 10v8M18 10v8M5 18h14M12 4 4 8h16l-8-4Z" />
-    ),
+    Icon: Landmark,
   },
   {
     title: 'Government & Public Sector',
     description:
       'Scalable digital platforms and technology solutions that support efficient public service delivery.',
-    icon: (
-      <path d="M4 20h16M6 9h12M7 9v8M11 9v8M15 9v8M17 9v8M12 4 5 8h14l-7-4Z" />
-    ),
+    Icon: Building2,
   },
   {
     title: 'Education',
     description:
       'Modern learning platforms, institutional systems, analytics, and digital transformation for education.',
-    icon: (
-      <path d="m4 8 8-4 8 4-8 4-8-4ZM7 10v5c0 1.7 2.2 3 5 3s5-1.3 5-3v-5M20 8v6" />
-    ),
+    Icon: GraduationCap,
   },
   {
     title: 'Manufacturing',
     description:
       'Engineering software and intelligent systems that improve operational visibility, automation, and productivity.',
-    icon: (
-      <path d="M4 19V9l5 3V9l5 3V7h6v12H4ZM8 16h2M13 16h2M18 16h2" />
-    ),
+    Icon: Factory,
   },
   {
     title: 'Logistics & Supply Chain',
     description:
       'Technology solutions that optimize movement, visibility, planning, and operational decision-making.',
-    icon: (
-      <path d="M3 16h2m14 0h2M7 16a2 2 0 1 0 4 0 2 2 0 0 0-4 0Zm6 0h1m1 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0ZM5 16V7h9v9M14 10h3l3 3v3" />
-    ),
+    Icon: Truck,
   },
 ];
 
@@ -140,38 +129,44 @@ const engineeringProcess = [
   },
 ];
 
-const trustPrinciples = [
+const trustPrinciples: Array<{ Icon: LucideIcon; number: string; title: string; description: string }> = [
   {
+    Icon: Wrench,
     number: '01',
     title: 'Disciplined Engineering',
     description:
       'Every engagement begins with structured planning, thoughtful architecture, and implementation practices designed for reliability.',
   },
   {
+    Icon: ShieldCheck,
     number: '02',
     title: 'Security by Design',
     description:
       'Security, privacy, and operational resilience are considered throughout the development lifecycle, not added at the end.',
   },
   {
+    Icon: LockKeyhole,
     number: '03',
     title: 'Long-Term Maintainability',
     description:
       'Solutions are designed to evolve with changing business requirements instead of becoming short-term technical debt.',
   },
   {
+    Icon: MessagesSquare,
     number: '04',
     title: 'Transparent Collaboration',
     description:
       'Clear communication, measurable milestones, and shared visibility keep teams aligned from discovery through delivery.',
   },
   {
+    Icon: Microscope,
     number: '05',
     title: 'Research-Driven Innovation',
     description:
       'Emerging technologies are evaluated carefully and applied only where they create practical, measurable value.',
   },
   {
+    Icon: BadgeCheck,
     number: '06',
     title: 'Quality Without Compromise',
     description:
@@ -259,40 +254,39 @@ export default function Home() {
             description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
           />
 
-          <div className="mt-12 grid items-stretch gap-5 md:grid-cols-2 md:gap-6 lg:mt-16 lg:gap-7">
+          <div className="mt-12 grid items-stretch gap-6 md:grid-cols-2 lg:mt-16 lg:gap-8">
             {capabilities.map((capability) => (
-              <article
-                className={`core-capability-card group relative flex min-h-full overflow-hidden rounded-[1.375rem] border border-[#E5E7EB] bg-white p-7 shadow-[0_18px_48px_rgba(15,23,42,0.055),0_2px_8px_rgba(15,23,42,0.035)] transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-1 hover:border-[#10B981]/55 hover:shadow-[0_24px_60px_rgba(15,23,42,0.095),0_4px_14px_rgba(15,23,42,0.045)] sm:rounded-[1.5rem] sm:p-8 ${
-                  capability.featured ? 'md:col-span-2 lg:p-9' : ''
-                }`}
+              <DesignSystemCard
+                className={`core-capability-card ${capability.featured ? 'md:col-span-2' : ''}`}
+                interactive
                 key={capability.title}
+                variant={capability.featured ? 'featured' : 'capability'}
               >
-                <div className="absolute inset-x-7 top-0 h-[2px] bg-[#10B981]/0 transition-colors duration-300 group-hover:bg-[#10B981]/80 sm:inset-x-8 lg:inset-x-9" />
-                <div className={`flex w-full flex-col ${capability.featured ? 'lg:grid lg:grid-cols-[0.72fr_1.28fr] lg:gap-10' : ''}`}>
+                <div className={`flex h-full w-full flex-col ${capability.featured ? 'lg:grid lg:grid-cols-[0.72fr_1.28fr] lg:gap-10' : ''}`}>
                   <div>
                     <capability.Icon
                       aria-hidden="true"
-                      className="size-6 text-[#0B1F3A] transition-colors duration-200 group-hover:text-[#10B981] sm:size-7"
+                      className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
                       strokeWidth={1.75}
                     />
-                    <h3 className="mt-5 text-[1.45rem] font-bold leading-[1.16] tracking-[-0.035em] text-[#111827] sm:text-[1.7rem]">
+                    <h3 className="mt-6 text-[1.375rem] font-bold leading-[1.18] tracking-[-0.03em] text-[#111827] sm:text-[1.55rem]">
                       {capability.title}
                     </h3>
                   </div>
-                  <div className={`flex flex-1 flex-col ${capability.featured ? 'mt-6 lg:mt-0' : 'mt-5'}`}>
-                    <p className="max-w-2xl text-[0.98rem] leading-8 text-[#475569] sm:text-base">
+                  <div className={`flex flex-1 flex-col ${capability.featured ? 'mt-6 lg:mt-0' : 'mt-6'}`}>
+                    <p className="max-w-2xl text-base leading-8 text-[#475569] sm:text-[1.0625rem] sm:leading-8">
                       {capability.description}
                     </p>
                     <Link
                       aria-label={`Learn more about ${capability.title}`}
-                      className="btn btn-text w-fit"
+                      className="btn btn-text mt-auto w-fit pt-6"
                       href="/services"
                     >
                       Learn More →
                     </Link>
                   </div>
                 </div>
-              </article>
+              </DesignSystemCard>
             ))}
           </div>
         </div>
@@ -309,28 +303,19 @@ export default function Home() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-16 lg:gap-8">
             {trustPrinciples.map((principle) => (
-              <article
-                className="group relative overflow-hidden rounded-[1.75rem] border border-[#D1D5DB]/80 bg-white p-7 shadow-[0_20px_55px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#10B981]/45 hover:shadow-[0_30px_75px_rgba(15,23,42,0.11)] sm:p-8 lg:p-9"
-                key={principle.number}
-              >
-                <div className="absolute inset-x-7 top-0 h-px bg-[#10B981]/25 opacity-60 transition-opacity duration-300 group-hover:opacity-100 sm:inset-x-8 lg:inset-x-9" />
-                <div className="flex items-start gap-5">
-                  <div
-                    aria-hidden="true"
-                    className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#10B981]/20 bg-[#10B981]/[0.07] text-sm font-bold tracking-[0.16em] text-[#10B981] transition duration-300 group-hover:border-[#10B981]/45 group-hover:bg-[#10B981]/10"
-                  >
-                    {principle.number}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold tracking-[-0.03em] text-[#111827] sm:text-2xl">
-                      {principle.title}
-                    </h3>
-                    <p className="mt-4 text-base leading-8 text-[#475569]">
-                      {principle.description}
-                    </p>
-                  </div>
-                </div>
-              </article>
+              <DesignSystemCard interactive key={principle.number} variant="standard">
+                <principle.Icon
+                  aria-hidden="true"
+                  className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
+                  strokeWidth={1.75}
+                />
+                <h3 className="mt-6 text-[1.375rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-2xl">
+                  {principle.title}
+                </h3>
+                <p className="mt-4 text-base leading-8 text-[#475569]">
+                  {principle.description}
+                </p>
+              </DesignSystemCard>
             ))}
           </div>
         </div>
@@ -409,35 +394,21 @@ export default function Home() {
             description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
           />
 
-          <div className="mt-12 grid gap-5 sm:gap-6 md:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-7">
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-8">
             {industries.map((industry) => (
-              <article
-                className="group rounded-[1.35rem] border border-[#D1D5DB]/80 bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#10B981]/50 hover:shadow-[0_26px_64px_rgba(15,23,42,0.11)] focus-within:-translate-y-1 focus-within:border-[#10B981]/50 sm:p-7"
-                key={industry.title}
-              >
-                <div
+              <DesignSystemCard interactive key={industry.title} variant="standard">
+                <industry.Icon
                   aria-hidden="true"
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#173B67]/10 bg-[#F8FAFC] text-[#173B67] transition duration-300 group-hover:border-[#10B981]/35 group-hover:bg-[#10B981]/[0.08] group-hover:text-[#10B981]"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.7"
-                    viewBox="0 0 24 24"
-                  >
-                    {industry.icon}
-                  </svg>
-                </div>
-                <h3 className="mt-6 text-xl font-bold tracking-[-0.03em] text-[#111827] sm:text-2xl">
+                  className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
+                  strokeWidth={1.75}
+                />
+                <h3 className="mt-6 text-[1.25rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-[1.375rem]">
                   {industry.title}
                 </h3>
-                <p className="mt-4 text-sm leading-7 text-[#475569] sm:text-base sm:leading-8">
+                <p className="mt-4 text-base leading-7 text-[#475569] sm:leading-8">
                   {industry.description}
                 </p>
-              </article>
+              </DesignSystemCard>
             ))}
           </div>
         </div>
