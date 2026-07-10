@@ -301,18 +301,18 @@ export default function Home() {
             description="Zentric Analytics combines disciplined engineering, responsible technology adoption, and long-term architectural thinking to help organizations build systems that remain reliable beyond launch."
           />
 
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-16 lg:gap-8">
+          <div className="mt-12 grid items-stretch gap-6 md:grid-cols-2 lg:mt-16 lg:gap-8">
             {trustPrinciples.map((principle) => (
-              <DesignSystemCard interactive key={principle.number} variant="standard">
+              <DesignSystemCard className="trust-principle-card" interactive key={principle.number} variant="standard">
                 <principle.Icon
                   aria-hidden="true"
-                  className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
+                  className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
                   strokeWidth={1.75}
                 />
-                <h3 className="mt-6 text-[1.375rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-2xl">
+                <h3 className="mt-6 max-w-[34rem] text-[1.375rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-2xl">
                   {principle.title}
                 </h3>
-                <p className="mt-4 text-base leading-8 text-[#475569]">
+                <p className="mt-4 max-w-[36rem] text-base leading-[1.7] text-[#475569] sm:text-[1.0625rem]">
                   {principle.description}
                 </p>
               </DesignSystemCard>
