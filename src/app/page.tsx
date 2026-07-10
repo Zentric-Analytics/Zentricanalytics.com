@@ -251,7 +251,9 @@ export default function Home() {
           <div className="mt-12 grid items-stretch gap-6 md:grid-cols-2 lg:mt-14 lg:gap-7">
             {capabilities.map((capability) => (
               <DesignSystemCard
+                as={Link}
                 className={`core-capability-card ${capability.featured ? 'md:col-span-2' : ''}`}
+                href="/services"
                 interactive
                 key={capability.title}
                 variant={capability.featured ? 'featured' : 'capability'}
@@ -260,7 +262,7 @@ export default function Home() {
                   <div>
                     <capability.Icon
                       aria-hidden="true"
-                      className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
+                      className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] group-focus-visible:text-[#10B981] sm:size-7"
                       strokeWidth={1.75}
                     />
                     <h3 className="mt-6 text-[1.375rem] font-bold leading-[1.18] tracking-[-0.03em] text-[#111827] sm:text-[1.55rem]">
@@ -271,13 +273,6 @@ export default function Home() {
                     <p className="max-w-2xl text-base leading-8 text-[#475569] sm:text-[1.0625rem] sm:leading-8">
                       {capability.description}
                     </p>
-                    <Link
-                      aria-label={`Learn more about ${capability.title}`}
-                      className="btn btn-text mt-auto w-fit pt-6"
-                      href="/services"
-                    >
-                      Learn More →
-                    </Link>
                   </div>
                 </div>
               </DesignSystemCard>
