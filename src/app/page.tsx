@@ -277,7 +277,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-t border-[#E5E7EB] bg-[#F8FAFC] px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-14 lg:pb-16 lg:pt-[72px]" aria-labelledby="core-capabilities-heading">
+      <section className="border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-12 lg:pb-16 lg:pt-14" aria-labelledby="core-capabilities-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="CORE CAPABILITIES"
