@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { BadgeCheck, Braces, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LifeBuoy, LockKeyhole, MessagesSquare, Microscope, Network, Rocket, Search, ShieldCheck, Truck, Wrench, type LucideIcon } from 'lucide-react';
+import { BadgeCheck, Braces, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LifeBuoy, LockKeyhole, MessagesSquare, Microscope, Network, Rocket, Search, ShieldCheck, Target, Truck, Wrench, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { DesignSystemCard } from '@/components/DesignSystemCard';
@@ -124,6 +124,33 @@ const engineeringProcess = [
   },
 ];
 
+const philosophyPrinciples: Array<{ Icon: LucideIcon; title: string; description: string }> = [
+  {
+    Icon: DraftingCompass,
+    title: 'Engineering First',
+    description:
+      'Every decision begins with architecture, maintainability, scalability, and long-term reliability.',
+  },
+  {
+    Icon: Target,
+    title: 'Technology With Purpose',
+    description:
+      'Artificial intelligence, software, and data are applied where they create measurable value rather than unnecessary complexity.',
+  },
+  {
+    Icon: ShieldCheck,
+    title: 'Built For Longevity',
+    description:
+      'Solutions are designed to evolve with changing business needs instead of becoming short-term implementations.',
+  },
+  {
+    Icon: FlaskConical,
+    title: 'Continuous Innovation',
+    description:
+      'Research, experimentation, and emerging technologies are explored with discipline, practicality, and measurable outcomes.',
+  },
+];
+
 const trustPrinciples: Array<{ Icon: LucideIcon; number: string; title: string; description: string }> = [
   {
     Icon: Wrench,
@@ -210,43 +237,35 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="philosophy-section relative isolate overflow-hidden bg-white px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="how-we-think-heading">
-        <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.025] [background-image:linear-gradient(rgba(15,23,42,0.95)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.95)_1px,transparent_1px),linear-gradient(45deg,transparent_48%,rgba(16,185,129,0.9)_49%,rgba(16,185,129,0.9)_51%,transparent_52%)] [background-size:56px_56px,56px_56px,168px_168px]" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-white/60 to-transparent" aria-hidden="true" />
-        <div className="editorial-reveal editorial-reveal-4 mx-auto max-w-6xl rounded-[1.65rem] border border-[#E5E7EB] bg-white px-6 py-8 text-left shadow-[0_26px_80px_rgba(15,23,42,0.08),0_2px_10px_rgba(15,23,42,0.035)] sm:rounded-[1.75rem] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+      <section className="philosophy-section bg-white px-4 py-11 sm:px-6 sm:py-12 lg:py-[68px]" aria-labelledby="how-we-think-heading">
+        <div className="editorial-reveal editorial-reveal-4 mx-auto grid max-w-6xl gap-8 text-left md:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:items-start md:gap-12 lg:gap-16">
           <SectionHeader
-            className="editorial-reveal editorial-reveal-1"
+            className="editorial-reveal editorial-reveal-1 md:sticky md:top-24 [&_h2]:max-w-[31rem] [&_h2]:text-[clamp(1.85rem,4.25vw,2.75rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-5 [&_p:last-child]:max-w-[30rem] [&_p:last-child]:text-base [&_p:last-child]:leading-[1.6] sm:[&_p:last-child]:text-[1.0625rem] lg:[&_p:last-child]:text-lg"
             eyebrow="HOW WE THINK"
             heading={<>Engineering isn&apos;t just what we build. It&apos;s how we solve problems.</>}
             headingId="how-we-think-heading"
             description="Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment."
           />
 
-          <div className="mt-7 border-t border-slate-200/70 pt-1 sm:mt-8 lg:mt-9">
-            <div className="philosophy-row editorial-reveal editorial-reveal-5 border-b border-slate-200/70 px-4 py-4 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-5 lg:gap-10">
-              <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Engineering First</h3>
-              <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
-                Every decision begins with architecture, maintainability, scalability, and long-term reliability.
-              </p>
-            </div>
-            <div className="philosophy-row editorial-reveal editorial-reveal-6 border-b border-slate-200/70 px-4 py-4 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-5 lg:gap-10">
-              <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Technology With Purpose</h3>
-              <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
-                Artificial intelligence, software, and data are applied where they create measurable value rather than unnecessary complexity.
-              </p>
-            </div>
-            <div className="philosophy-row editorial-reveal editorial-reveal-7 border-b border-slate-200/70 px-4 py-4 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-5 lg:gap-10">
-              <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Built For Longevity</h3>
-              <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
-                Solutions are designed to evolve with changing business needs instead of becoming short-term implementations.
-              </p>
-            </div>
-            <div className="philosophy-row editorial-reveal editorial-reveal-8 px-4 py-4 sm:grid sm:grid-cols-[minmax(11rem,0.76fr)_minmax(0,1.24fr)] sm:gap-10 sm:px-5 sm:py-5 lg:gap-10">
-              <h3 className="text-[1.08rem] font-bold tracking-[-0.025em] text-ink sm:text-xl">Continuous Innovation</h3>
-              <p className="mt-3 text-base leading-8 text-slate-600 sm:mt-0">
-                Research, experimentation, and emerging technologies are explored with discipline, practicality, and measurable outcomes.
-              </p>
-            </div>
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
+            {philosophyPrinciples.map((principle, index) => (
+              <article
+                className={`philosophy-row editorial-reveal editorial-reveal-${index + 5} group rounded-2xl border border-[#E5E7EB] bg-white p-5 transition-[background-color,border-color] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] sm:p-6`}
+                key={principle.title}
+              >
+                <principle.Icon
+                  aria-hidden="true"
+                  className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
+                  strokeWidth={1.75}
+                />
+                <h3 className="mt-4 text-xl font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A] sm:text-[1.375rem]">
+                  {principle.title}
+                </h3>
+                <p className="mt-3 text-[0.9375rem] leading-[1.62] text-[#475569] sm:text-base">
+                  {principle.description}
+                </p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
