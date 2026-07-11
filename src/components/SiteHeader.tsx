@@ -102,9 +102,12 @@ export function SiteHeader() {
         <div className="hidden shrink-0 items-center md:flex">
           <Link
             href={contactLink[0]}
-            className="btn btn-primary btn-compact"
+            className="btn zentric-primary-cta"
           >
-            {contactLink[1]}
+            <span>{contactLink[1]}</span>
+            <span className="zentric-primary-cta__arrow" aria-hidden="true">
+              →
+            </span>
           </Link>
         </div>
 
@@ -163,7 +166,7 @@ export function SiteHeader() {
                       aria-current={isActive ? 'page' : undefined}
                       className={`-mx-3 rounded-2xl border-l-2 px-3 py-3.5 text-lg font-semibold tracking-[-0.02em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 ${
                         isContact
-                          ? 'btn btn-primary btn-compact mt-4 w-full border-0'
+                          ? 'btn zentric-primary-cta mt-4 w-full border-0'
                           : isActive
                             ? 'border-[#10B981] bg-[#0B1F3A]/[0.03] text-[#0B1F3A]'
                             : 'border-transparent text-[#173B67] hover:bg-[#0B1F3A]/[0.03] hover:text-[#0B1F3A]'
@@ -172,7 +175,16 @@ export function SiteHeader() {
                       href={href}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      {label}
+                      {isContact ? (
+                        <>
+                          <span>{label}</span>
+                          <span className="zentric-primary-cta__arrow" aria-hidden="true">
+                            →
+                          </span>
+                        </>
+                      ) : (
+                        label
+                      )}
                     </Link>
                   );
                 })}
