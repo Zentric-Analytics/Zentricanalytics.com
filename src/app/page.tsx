@@ -172,19 +172,16 @@ const trustPrinciples: Array<{ Icon: LucideIcon; number: string; title: string; 
 export default function Home() {
   return (
     <PageShell>
-      <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white md:min-h-[calc(84svh-80px)] lg:min-h-[calc(88svh-82px)]">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 sm:py-[4.75rem] md:grid-cols-[minmax(0,1.08fr)_minmax(18rem,0.82fr)] md:py-20 lg:gap-16 lg:py-[5.75rem]">
-          <div className="max-w-[48rem]">
-            <p className="hero-reveal hero-reveal-1 mb-5 inline-flex text-xs font-bold uppercase tracking-[0.28em] text-[#10B981] sm:mb-6">
-              Engineering consultancy
-            </p>
-            <h1 className="hero-reveal hero-reveal-2 max-w-[45rem] text-[clamp(2.55rem,6.2vw,4.75rem)] font-extrabold leading-[1.06] tracking-[-0.055em] text-white sm:leading-[1.05]">
+      <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-14 sm:py-16 md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.92fr)] md:py-20 lg:gap-14 lg:py-[5.5rem]">
+          <div className="max-w-[43rem]">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[42rem] text-balance text-[clamp(2.125rem,4.8vw,4rem)] font-extrabold leading-[1.08] tracking-[-0.045em] text-white sm:leading-[1.06]">
               Engineering reliable software, data, and AI systems for serious work.
             </h1>
-            <p className="hero-reveal hero-reveal-3 mt-6 max-w-[40rem] text-base leading-8 text-slate-200 sm:mt-7 sm:text-lg sm:leading-9">
+            <p className="hero-reveal hero-reveal-2 mt-6 max-w-[39rem] text-base leading-[1.62] text-slate-200 sm:mt-7 sm:text-lg lg:text-[1.18rem]">
               Zentric Analytics is a technology company focused on disciplined software delivery, web platforms, artificial intelligence solutions, analytics, computer science research, and emerging technology implementation.
             </p>
-            <div className="hero-reveal hero-reveal-4 mt-8 flex flex-col gap-4 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
+            <div className="hero-reveal hero-reveal-3 mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
               <Link className="btn hero-cta-primary" href="/services">
                 Explore Services
               </Link>
@@ -197,30 +194,16 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-reveal hero-reveal-4 w-full max-w-[31rem] justify-self-center md:justify-self-end" aria-hidden="true">
-            <div className="rounded-[1.75rem] border border-white/14 bg-white/[0.045] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.18)] sm:p-6">
-              <div className="rounded-[1.2rem] border border-white/12 bg-[#102B4C] p-5">
-                <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                  <div>
-                    <div className="h-2 w-24 rounded-full bg-white/28" />
-                    <div className="mt-3 h-2 w-16 rounded-full bg-[#10B981]" />
-                  </div>
-                  <div className="flex gap-1.5">
-                    <span className="size-2 rounded-full bg-white/30" />
-                    <span className="size-2 rounded-full bg-white/30" />
-                    <span className="size-2 rounded-full bg-[#10B981]" />
-                  </div>
-                </div>
-                <div className="mt-6 grid gap-3">
-                  {['Architecture', 'Security', 'Delivery'].map((label, index) => (
-                    <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.035] p-4" key={label}>
-                      <span className="flex size-9 items-center justify-center rounded-xl bg-white/10 text-sm font-bold text-[#10B981]">0{index + 1}</span>
-                      <span className="text-sm font-semibold tracking-[-0.01em] text-slate-100">{label}</span>
-                      <span className="ml-auto h-px w-14 bg-white/18" />
-                    </div>
-                  ))}
-                </div>
-              </div>
+          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:justify-self-end">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.125rem] border border-white/12 shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
+              <Image
+                src="/images/careers/careers-team-collaboration.png"
+                alt="Software engineers collaborating on application architecture and code"
+                fill
+                priority
+                sizes="(min-width: 1024px) 34rem, (min-width: 768px) 44vw, calc(100vw - 2rem)"
+                className="object-cover object-[52%_48%]"
+              />
             </div>
           </div>
         </div>
