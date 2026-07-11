@@ -244,31 +244,31 @@ export default function Home() {
         </svg>
       </section>
 
-      <section className="philosophy-section bg-white px-4 pb-10 pt-11 sm:px-6 sm:pb-12 sm:pt-12 lg:pb-[72px] lg:pt-[68px]" aria-labelledby="how-we-think-heading">
-        <div className="editorial-reveal editorial-reveal-4 mx-auto grid max-w-6xl gap-8 text-left md:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:items-start md:gap-12 lg:gap-16">
+      <section className="philosophy-section bg-white px-4 pb-9 pt-8 sm:px-6 sm:pb-11 sm:pt-10 lg:pb-14 lg:pt-13" aria-labelledby="how-we-think-heading">
+        <div className="editorial-reveal editorial-reveal-4 mx-auto grid max-w-6xl gap-7 text-left md:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:items-start md:gap-9 lg:gap-11">
           <SectionHeader
-            className="editorial-reveal editorial-reveal-1 md:sticky md:top-24 [&_h2]:max-w-[31rem] [&_h2]:text-[clamp(1.85rem,4.25vw,2.75rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-5 [&_p:last-child]:max-w-[30rem] [&_p:last-child]:text-base [&_p:last-child]:leading-[1.6] sm:[&_p:last-child]:text-[1.0625rem] lg:[&_p:last-child]:text-lg"
+            className="editorial-reveal editorial-reveal-1 md:sticky md:top-24 [&_h2]:max-w-[29rem] [&_h2]:text-[clamp(1.75rem,3.6vw,2.625rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-4 [&_p:last-child]:max-w-[28rem] [&_p:last-child]:text-[0.9375rem] [&_p:last-child]:leading-[1.58] sm:[&_p:last-child]:text-base lg:[&_p:last-child]:text-[1.0625rem]"
             eyebrow="HOW WE THINK"
             heading={<>Engineering isn&apos;t just what we build. It&apos;s how we solve problems.</>}
             headingId="how-we-think-heading"
             description="Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment."
           />
 
-          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
+          <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:gap-5">
             {philosophyPrinciples.map((principle, index) => (
               <article
-                className={`philosophy-row editorial-reveal editorial-reveal-${index + 5} group rounded-2xl border border-[#E5E7EB] bg-white p-5 transition-[background-color,border-color] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] sm:p-6`}
+                className={`philosophy-row editorial-reveal editorial-reveal-${index + 5} group rounded-2xl border border-[#E5E7EB] bg-white p-[18px] transition-[background-color,border-color] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] sm:p-5 lg:p-6`}
                 key={principle.title}
               >
                 <principle.Icon
                   aria-hidden="true"
-                  className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
+                  className="size-[1.375rem] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] lg:size-6"
                   strokeWidth={1.75}
                 />
-                <h3 className="mt-4 text-xl font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A] sm:text-[1.375rem]">
+                <h3 className="mt-3 text-[1.1875rem] font-bold leading-[1.18] tracking-[-0.025em] text-[#0B1F3A] sm:text-xl">
                   {principle.title}
                 </h3>
-                <p className="mt-3 text-[0.9375rem] leading-[1.62] text-[#475569] sm:text-base">
+                <p className="mt-2 text-[0.90625rem] leading-[1.55] text-[#475569] sm:text-[0.96875rem]">
                   {principle.description}
                 </p>
               </article>
