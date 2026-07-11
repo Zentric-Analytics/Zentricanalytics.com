@@ -369,25 +369,25 @@ export default function Home() {
           <div className="relative mt-8 lg:mt-9">
             <div
               aria-hidden="true"
-              className="absolute left-[26px] top-[26px] h-[calc(100%-52px)] w-0.5 bg-[#DCE3EA] md:left-[12.5%] md:right-[12.5%] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc(8.333333%-0px)] lg:right-[calc(8.333333%-0px)]"
+              className="absolute left-[26px] top-[26px] h-[calc(100%-52px)] w-0.5 bg-[#DCE3EA] md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-8.75rem)/12)] lg:right-[calc((100%-8.75rem)/12)]"
             />
-            <div className="relative grid gap-y-8 pl-[70px] md:grid-cols-3 md:gap-x-8 md:gap-y-10 md:pl-0 lg:grid-cols-6 lg:gap-x-7">
+            <div className="relative grid items-stretch gap-y-8 pl-[70px] md:grid-cols-3 md:gap-x-8 md:gap-y-10 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
               {engineeringProcess.map((step) => (
                 <article
-                  className="group relative flex min-h-[52px] flex-col items-start text-left md:items-center md:text-center"
+                  className="engineering-process-card group relative flex min-h-[52px] w-full flex-col items-center text-center lg:flex-1"
                   key={step.title}
                 >
-                  <div className="absolute -left-[70px] top-0 flex size-[52px] items-center justify-center rounded-full border border-[#DCE3EA] bg-white shadow-[0_8px_22px_rgba(11,31,58,0.08)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#94A3B8] group-hover:shadow-[0_12px_26px_rgba(11,31,58,0.10)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto">
+                  <div className="absolute -left-[70px] top-0 flex size-[52px] shrink-0 items-center justify-center rounded-full border border-[#DCE3EA] bg-white shadow-[0_8px_22px_rgba(11,31,58,0.08)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#94A3B8] group-hover:shadow-[0_12px_26px_rgba(11,31,58,0.10)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto">
                     <step.Icon
                       aria-hidden="true"
                       className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
                       strokeWidth={1.75}
                     />
                   </div>
-                  <h3 className="text-lg font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A] md:mt-5 md:text-[1.1875rem]">
+                  <h3 className="mt-0 flex min-h-[72px] w-full items-start justify-center text-center text-lg font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A] md:mt-5 md:text-[1.1875rem] lg:min-h-[76px]">
                     {step.title}
                   </h3>
-                  <p className="mt-2 max-w-[24rem] text-sm leading-[1.5] text-[#475569] sm:text-[0.9375rem] md:max-w-[13rem]">
+                  <p className="mt-2 min-h-[120px] w-full max-w-[24rem] text-sm leading-[1.5] text-[#475569] sm:text-[0.9375rem] md:max-w-[13rem] md:text-center lg:min-h-[132px]">
                     {step.description}
                   </p>
                 </article>
