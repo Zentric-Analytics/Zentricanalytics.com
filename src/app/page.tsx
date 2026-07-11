@@ -244,7 +244,7 @@ export default function Home() {
         </svg>
       </section>
 
-      <section className="philosophy-section bg-white px-4 py-11 sm:px-6 sm:py-12 lg:py-[68px]" aria-labelledby="how-we-think-heading">
+      <section className="philosophy-section bg-white px-4 pb-10 pt-11 sm:px-6 sm:pb-12 sm:pt-12 lg:pb-[72px] lg:pt-[68px]" aria-labelledby="how-we-think-heading">
         <div className="editorial-reveal editorial-reveal-4 mx-auto grid max-w-6xl gap-8 text-left md:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:items-start md:gap-12 lg:gap-16">
           <SectionHeader
             className="editorial-reveal editorial-reveal-1 md:sticky md:top-24 [&_h2]:max-w-[31rem] [&_h2]:text-[clamp(1.85rem,4.25vw,2.75rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-5 [&_p:last-child]:max-w-[30rem] [&_p:last-child]:text-base [&_p:last-child]:leading-[1.6] sm:[&_p:last-child]:text-[1.0625rem] lg:[&_p:last-child]:text-lg"
@@ -277,7 +277,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="core-capabilities-heading">
+      <section className="border-t border-[#E5E7EB] bg-[#F8FAFC] px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-14 lg:pb-16 lg:pt-[72px]" aria-labelledby="core-capabilities-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="CORE CAPABILITIES"
