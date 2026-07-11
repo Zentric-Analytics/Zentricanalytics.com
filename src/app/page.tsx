@@ -173,15 +173,15 @@ export default function Home() {
   return (
     <PageShell>
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-9 px-4 py-10 sm:py-11 md:grid-cols-[minmax(0,1.06fr)_minmax(18rem,0.94fr)] md:gap-10 md:py-12 lg:gap-12 lg:py-16">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-8 sm:py-9 md:grid-cols-[minmax(0,1.08fr)_minmax(18rem,0.92fr)] md:gap-9 md:py-10 lg:gap-10 lg:py-14">
           <div className="max-w-[42rem]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[36rem] text-balance text-[clamp(2.125rem,4.35vw,3.75rem)] font-bold leading-[1.12] tracking-[-0.025em] text-white">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[34.5rem] text-balance text-[clamp(2rem,4.05vw,3.5rem)] font-bold leading-[1.12] tracking-[-0.025em] text-white">
               Engineering reliable software, data, and AI systems for serious work.
             </h1>
-            <p className="hero-reveal hero-reveal-2 mt-6 max-w-[38rem] text-base font-normal leading-[1.6] text-slate-200 sm:text-lg">
+            <p className="hero-reveal hero-reveal-2 mt-5 max-w-[33.5rem] text-base font-normal leading-[1.6] text-slate-200 sm:text-lg">
               Zentric Analytics is a technology company focused on disciplined software delivery, web platforms, artificial intelligence solutions, analytics, computer science research, and emerging technology implementation.
             </p>
-            <div className="hero-reveal hero-reveal-3 mt-7 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="hero-reveal hero-reveal-3 mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
               <Link className="btn hero-cta-primary" href="/services">
                 Explore Services
               </Link>
@@ -194,15 +194,15 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:max-w-none md:justify-self-end lg:-mr-6">
-            <div className="relative aspect-[16/11] overflow-hidden rounded-2xl shadow-none md:min-h-[21rem] lg:min-h-[23rem]">
+          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:max-w-none md:justify-self-end md:-mr-3 lg:-mr-10">
+            <div className="relative aspect-[16/10.5] overflow-hidden rounded-2xl md:min-h-[19.5rem] lg:min-h-[21.5rem]">
               <Image
                 src="/images/hero/hero-engineering-team.png"
                 alt="Software engineers collaborating on code and system architecture in a modern office"
                 fill
                 priority
                 sizes="(min-width: 1180px) 560px, (min-width: 768px) 46vw, calc(100vw - 2rem)"
-                className="object-cover object-[58%_46%]"
+                className="object-cover object-[60%_38%]"
               />
             </div>
           </div>
