@@ -235,12 +235,12 @@ export default function Home() {
           </div>
         </div>
         <svg
-          className="absolute inset-x-0 bottom-[-1px] h-12 w-full text-white md:h-16"
+          className="absolute inset-x-0 bottom-[-1px] h-12 w-full text-white md:h-16 lg:h-20"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           aria-hidden="true"
         >
-          <path fill="currentColor" d="M0 80V48C240 32 480 28 720 38C960 48 1200 46 1440 30V80H0Z" />
+          <path fill="currentColor" d="M0 80V20C360 74 1080 74 1440 20V80H0Z" />
         </svg>
       </section>
 
