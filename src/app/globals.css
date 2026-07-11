@@ -146,6 +146,20 @@ body{margin:0;background:#f7f9fc;color:#0c1222}
 .engineering-process-card:nth-child(5){animation-delay:.2s}
 .engineering-process-card:nth-child(6){animation-delay:.25s}
 
+.engineering-process-header>p:first-child{margin-bottom:10px}
+.engineering-process-header>h2{font-size:clamp(1.75rem,3.2vw,2.75rem);line-height:1.12}
+.engineering-process-header>h2+p{margin-top:14px;max-width:43rem;font-size:.9375rem;line-height:1.58}
+
+@media (min-width:640px){
+  .engineering-process-header>p:first-child{margin-bottom:12px}
+  .engineering-process-header>h2+p{margin-top:16px;font-size:1rem}
+}
+
+@media (min-width:1024px){
+  .engineering-process-header>h2{font-size:clamp(2.375rem,3vw,2.875rem)}
+  .engineering-process-header>h2+p{font-size:1rem}
+}
+
 @supports (animation-timeline:view()){
   .engineering-process-card{
     opacity:0;

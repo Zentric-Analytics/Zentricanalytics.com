@@ -343,33 +343,34 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="engineering-process-heading">
+      <section className="bg-[#F8FAFC] px-4 py-9 sm:px-6 sm:py-12 lg:py-14" aria-labelledby="engineering-process-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="ENGINEERING PROCESS"
             heading="Every successful solution begins with a disciplined engineering process."
             headingId="engineering-process-heading"
             description="Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time."
+            className="engineering-process-header"
           />
 
-          <div className="mt-8 lg:mt-9">
-            <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+          <div className="mt-7 lg:mt-8">
+            <div className="grid gap-4 md:grid-cols-2 md:gap-[18px] lg:grid-cols-3 lg:gap-5">
               {engineeringProcess.map((step) => (
                 <article
-                  className="engineering-process-card group relative rounded-[20px] border border-[#E5E7EB] bg-white p-5 shadow-[0_8px_24px_rgba(11,31,58,0.06)] transition-[border-color,box-shadow,transform] duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#10B981]/55 hover:shadow-[0_16px_36px_rgba(11,31,58,0.10)] sm:p-6"
+                  className="engineering-process-card group relative rounded-[20px] border border-[#E5E7EB] bg-white p-[18px] shadow-[0_8px_24px_rgba(11,31,58,0.06)] transition-[border-color,box-shadow,transform] duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#10B981]/55 hover:shadow-[0_16px_36px_rgba(11,31,58,0.10)] sm:p-5 lg:p-6"
                   key={step.title}
                 >
-                  <div className="flex size-11 items-center justify-center rounded-[11px] bg-[#F8FAFC]">
+                  <div className="flex size-[38px] items-center justify-center rounded-[11px] bg-[#F8FAFC] sm:size-[42px]">
                     <step.Icon
                       aria-hidden="true"
-                      className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
+                      className="size-5 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-[22px] lg:size-6"
                       strokeWidth={1.75}
                     />
                   </div>
-                  <h3 className="mt-4 text-xl font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-2xl">
+                  <h3 className="mt-3.5 text-lg font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:mt-4 sm:text-xl">
                     {step.title}
                   </h3>
-                  <p className="mt-3 max-w-[32rem] text-sm leading-[1.6] text-[#475569] sm:text-base sm:leading-[1.6]">
+                  <p className="mt-2 max-w-[32rem] text-sm leading-[1.55] text-[#475569] sm:text-[0.9375rem] sm:leading-[1.55]">
                     {step.description}
                   </p>
                 </article>
