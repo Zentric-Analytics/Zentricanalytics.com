@@ -277,43 +277,37 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-12 lg:pb-16 lg:pt-14" aria-labelledby="core-capabilities-heading">
+      <section className="border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 py-10 sm:px-6 sm:py-12 lg:py-16" aria-labelledby="core-capabilities-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
+            className="[&_h2]:text-[clamp(1.75rem,3.5vw,2.625rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-4 [&_p:last-child]:max-w-[46rem]"
             eyebrow="CORE CAPABILITIES"
             heading="Engineering expertise across software, AI, data, infrastructure, and research."
             headingId="core-capabilities-heading"
             description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
           />
 
-          <div className="mt-8 grid items-stretch gap-4 md:grid-cols-2 sm:gap-5 lg:mt-9 lg:gap-6">
+          <div className="mt-8 overflow-hidden rounded-[1.125rem] border border-[#E5E7EB] bg-white sm:mt-9">
             {capabilities.map((capability) => (
-              <DesignSystemCard
-                as={Link}
-                className={`core-capability-card ${capability.featured ? 'md:col-span-2' : ''}`}
+              <Link
+                className="group grid gap-3 border-b border-[#DCE3EA] px-5 py-4 outline-none transition-[background-color,border-color] duration-200 ease-out last:border-b-0 hover:bg-[#F8FAFC] focus-visible:bg-[#F8FAFC] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#10B981] sm:px-6 sm:py-5 md:grid-cols-[0.36fr_0.64fr] md:items-center md:gap-8 lg:px-7 lg:py-6"
                 href="/services"
-                interactive
                 key={capability.title}
-                variant={capability.featured ? 'featured' : 'capability'}
               >
-                <div className={`flex h-full w-full flex-col ${capability.featured ? 'lg:grid lg:grid-cols-[0.72fr_1.28fr] lg:gap-10' : ''}`}>
-                  <div>
-                    <capability.Icon
-                      aria-hidden="true"
-                      className="size-6 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] group-focus-visible:text-[#10B981] sm:size-7"
-                      strokeWidth={1.75}
-                    />
-                    <h3 className="mt-4 text-[1.375rem] font-bold leading-[1.18] tracking-[-0.03em] text-[#111827] sm:text-[1.55rem]">
-                      {capability.title}
-                    </h3>
-                  </div>
-                  <div className={`flex flex-1 flex-col ${capability.featured ? 'mt-4 lg:mt-0' : 'mt-4'}`}>
-                    <p className="max-w-2xl text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem] sm:leading-[1.6]">
-                      {capability.description}
-                    </p>
-                  </div>
+                <div className="flex min-w-0 items-center gap-3.5">
+                  <capability.Icon
+                    aria-hidden="true"
+                    className="size-5 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] group-focus-visible:text-[#10B981] sm:size-6"
+                    strokeWidth={1.75}
+                  />
+                  <h3 className="text-[1.0625rem] font-bold leading-[1.2] tracking-[-0.02em] text-[#0B1F3A] sm:text-[1.1875rem]">
+                    {capability.title}
+                  </h3>
                 </div>
-              </DesignSystemCard>
+                <p className="text-[0.9375rem] leading-[1.6] text-[#475569] sm:text-base">
+                  {capability.description}
+                </p>
+              </Link>
             ))}
           </div>
         </div>
