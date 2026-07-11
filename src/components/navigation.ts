@@ -1,5 +1,7 @@
 export const primaryNavigationLinks = [
+  ['/', 'Home'],
   ['/services', 'Services'],
+  ['/industries', 'Industries'],
   ['/careers', 'Careers'],
 ] as const;
 

@@ -12,6 +12,10 @@ export function SiteHeader() {
   const [hasScrolled, setHasScrolled] = useState(false);
   const pathname = usePathname();
   const mobileMenuId = 'site-header-mobile-menu';
+  const isHomepage = pathname === '/';
+  const visibleNavigationLinks = isHomepage
+    ? primaryNavigationLinks.filter(([href]) => href !== '/')
+    : primaryNavigationLinks;
 
   useEffect(() => {
     const handleScroll = () => setHasScrolled(window.scrollY > 8);
@@ -79,7 +83,7 @@ export function SiteHeader() {
         </Link>
 
         <div className="hidden min-w-0 flex-1 translate-y-px items-center justify-center gap-7 md:flex lg:gap-9">
-          {primaryNavigationLinks.map(([href, label]) => {
+          {visibleNavigationLinks.map(([href, label]) => {
             const isActive = isActiveLink(href);
 
             return (
@@ -157,7 +161,7 @@ export function SiteHeader() {
           <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-8 overflow-y-auto overscroll-contain px-5 py-7 sm:px-8">
             <section aria-label="Primary navigation">
               <div className="flex flex-col gap-1">
-                {[...primaryNavigationLinks, contactLink].map(([href, label]) => {
+                {[...visibleNavigationLinks, contactLink].map(([href, label]) => {
                   const isActive = isActiveLink(href);
                   const isContact = href === contactLink[0] && label === contactLink[1];
 

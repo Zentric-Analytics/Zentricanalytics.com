@@ -11,7 +11,7 @@ const publicPages = [
   'src/app/track/portal/page.tsx',
 ];
 
-const primaryNavLinks = ['Services', 'Careers'];
+const primaryNavLinks = ['Home', 'Services', 'Industries', 'Careers'];
 const applicantNavLinks = ['Apply', 'Track Application'];
 
 const publicFacingBrandSourceFiles = [
@@ -82,11 +82,23 @@ describe('public layout shell', () => {
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
-    ['Home', 'About', 'Industries', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
+    ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
     expect(navigation).not.toContain('Apply Now');
     expect(header).not.toContain('Track Application');
   });
 
+
+  it('shows Home only on internal routes for desktop and mobile navigation', () => {
+    const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
+    const navigation = readFileSync('src/components/navigation.ts', 'utf8');
+
+    expect(navigation).toContain("['/', 'Home']");
+    expect(navigation).toContain("['/industries', 'Industries']");
+    expect(header).toContain("const isHomepage = pathname === '/'");
+    expect(header).toContain("primaryNavigationLinks.filter(([href]) => href !== '/')");
+    expect(header).toContain('{visibleNavigationLinks.map(([href, label]) => {');
+    expect(header).toContain('{[...visibleNavigationLinks, contactLink].map(([href, label]) => {');
+  });
 
   it('locks body and html scrolling while preserving the page scroll position', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
@@ -129,7 +141,7 @@ describe('public layout shell', () => {
     expect(header).not.toContain('Apply Now');
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
-    ['Home', 'About', 'Industries', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
+    ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
     expect(header).toContain('text-[23px] font-extrabold leading-none tracking-[-0.035em] text-[#0B1F3A] sm:text-[26px] md:text-[29px] lg:text-[30px]');
   });
 
