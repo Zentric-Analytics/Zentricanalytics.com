@@ -410,31 +410,37 @@ export default function Home() {
       </section>
 
       <section
-        className="relative isolate overflow-hidden bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-14 lg:py-16"
+        className="relative isolate min-h-[420px] overflow-hidden bg-[#0B1F3A] px-4 py-[72px] sm:min-h-[460px] sm:px-6 sm:py-20 lg:min-h-[520px] lg:py-[88px]"
         aria-labelledby="careers-preview-heading"
       >
-        <div className="editorial-reveal mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)] lg:gap-10">
-          <div className="flex flex-col items-start">
+        <Image
+          src="/images/careers/careers-team-collaboration.png"
+          alt=""
+          fill
+          sizes="100vw"
+          className="-z-20 object-cover object-[62%_center] sm:object-[68%_center] lg:object-[center_right]"
+          priority={false}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-[#0B1F3A]/72 md:bg-[linear-gradient(90deg,rgba(11,31,58,0.88)_0%,rgba(11,31,58,0.76)_42%,rgba(11,31,58,0.42)_68%,rgba(11,31,58,0.24)_100%)]"
+        />
+        <div className="editorial-reveal mx-auto flex max-w-6xl items-center md:min-h-[300px] lg:min-h-[344px]">
+          <div className="flex max-w-[38rem] flex-col items-start md:w-[48%] lg:w-[46%]">
             <SectionHeader
               align="left"
               eyebrow="CAREERS"
               heading="Work on practical technology problems with care and accountability."
               headingId="careers-preview-heading"
               description="Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, and continuous learning. If a specific role is not listed, candidates may submit a general application."
+              tone="dark"
             />
-            <Link className="btn btn-primary mt-6 sm:mt-7" href="/careers">
+            <Link
+              className="btn mt-6 bg-white text-[#0B1F3A] shadow-[0_12px_28px_rgba(0,0,0,0.16)] transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[#F8FAFC] hover:shadow-[0_16px_34px_rgba(0,0,0,0.20)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:mt-7"
+              href="/careers"
+            >
               View Careers
             </Link>
-          </div>
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[22px] border border-[#E5E7EB] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-            <Image
-              src="/images/careers/careers-team-collaboration.png"
-              alt="Software engineers collaborating on system architecture and application development"
-              fill
-              sizes="(min-width: 1024px) 475px, (min-width: 768px) 42vw, calc(100vw - 32px)"
-              className="object-cover object-[50%_45%]"
-              priority={false}
-            />
           </div>
         </div>
       </section>
