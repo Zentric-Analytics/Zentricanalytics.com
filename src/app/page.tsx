@@ -188,8 +188,11 @@ export default function Home() {
               <Link className="btn hero-cta-primary" href="/services">
                 Explore Services
               </Link>
-              <Link className="btn hero-cta-secondary" href="/contact">
-                Let&apos;s Talk
+              <Link className="btn zentric-primary-cta" href="/contact">
+                <span>Let&apos;s Talk</span>
+                <span className="zentric-primary-cta__arrow" aria-hidden="true">
+                  →
+                </span>
               </Link>
             </div>
           </div>
