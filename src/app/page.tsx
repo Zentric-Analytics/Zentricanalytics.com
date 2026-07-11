@@ -197,7 +197,7 @@ export default function Home() {
           <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:justify-self-end">
             <div className="relative aspect-[4/3] overflow-hidden rounded-[1.125rem] border border-white/12 shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
               <Image
-                src="/images/careers/careers-team-collaboration.png"
+                src="/images/hero/hero-engineering-team.png"
                 alt="Software engineers collaborating on application architecture and code"
                 fill
                 priority
