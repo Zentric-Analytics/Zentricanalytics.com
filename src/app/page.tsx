@@ -173,7 +173,7 @@ export default function Home() {
   return (
     <PageShell>
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-8 sm:py-9 md:grid-cols-[minmax(0,1.08fr)_minmax(18rem,0.92fr)] md:gap-9 md:py-10 lg:gap-10 lg:py-14">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-8 sm:py-9 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:py-10 lg:gap-8 lg:py-14">
           <div className="max-w-[42rem]">
             <h1 className="hero-reveal hero-reveal-1 max-w-[34.5rem] text-balance text-[clamp(2rem,4.05vw,3.5rem)] font-bold leading-[1.12] tracking-[-0.025em] text-white">
               Engineering reliable software, data, and AI systems for serious work.
@@ -194,16 +194,17 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:max-w-none md:justify-self-end md:-mr-3 lg:-mr-10">
-            <div className="relative aspect-[16/10.5] overflow-hidden rounded-2xl md:min-h-[19.5rem] lg:min-h-[21.5rem]">
+          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:w-[49vw] md:max-w-[35rem] md:justify-self-end md:-mr-6 lg:-mr-14">
+            <div className="relative aspect-[16/10.5] overflow-hidden rounded-xl md:min-h-[20.5rem] lg:min-h-[22.5rem]">
               <Image
                 src="/images/hero/hero-engineering-team.png"
                 alt="Software engineers collaborating on code and system architecture in a modern office"
                 fill
                 priority
-                sizes="(min-width: 1180px) 560px, (min-width: 768px) 46vw, calc(100vw - 2rem)"
-                className="object-cover object-[60%_38%]"
+                sizes="(min-width: 1180px) 580px, (min-width: 768px) 49vw, calc(100vw - 2rem)"
+                className="object-cover object-[64%_34%]"
               />
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-[38%] bg-gradient-to-r from-[#0B1F3A] via-[#0B1F3A]/70 to-transparent md:w-[44%]" aria-hidden="true" />
             </div>
           </div>
         </div>
