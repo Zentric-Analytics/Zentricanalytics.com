@@ -199,8 +199,8 @@ const trustPrinciples: Array<{ Icon: LucideIcon; number: string; title: string; 
 export default function Home() {
   return (
     <PageShell>
-      <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-8 sm:py-9 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:py-10 lg:gap-8 lg:py-14">
+      <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] pb-8 text-white md:pb-12">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 pb-10 pt-8 sm:pt-9 md:min-h-[34rem] md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:py-10 lg:min-h-[38rem] lg:gap-8 lg:py-14">
           <div className="max-w-[42rem]">
             <h1 className="hero-reveal hero-reveal-1 max-w-[34.5rem] text-balance text-[clamp(2rem,4.05vw,3.5rem)] font-bold leading-[1.12] tracking-[-0.025em] text-white">
               Engineering reliable software, data, and AI systems for serious work.
@@ -221,20 +221,27 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:w-[49vw] md:max-w-[35rem] md:justify-self-end md:-mr-6 lg:-mr-14">
-            <div className="relative aspect-[16/10.5] overflow-hidden rounded-xl md:min-h-[20.5rem] lg:min-h-[22.5rem]">
+          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:-mr-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] md:w-[50vw] md:max-w-none md:justify-self-end lg:w-[49vw]">
+            <div className="relative aspect-[16/10.5] overflow-hidden rounded-r-xl rounded-l-none md:min-h-[29rem] lg:min-h-[31.5rem]">
               <Image
                 src="/images/hero/hero-engineering-team.png"
                 alt="Software engineers collaborating on code and system architecture in a modern office"
                 fill
                 priority
-                sizes="(min-width: 1180px) 580px, (min-width: 768px) 49vw, calc(100vw - 2rem)"
-                className="object-cover object-[64%_34%]"
+                sizes="(min-width: 1180px) 50vw, (min-width: 768px) 50vw, calc(100vw - 2rem)"
+                className="object-cover object-[67%_30%] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.18)_12%,rgba(0,0,0,0.82)_32%,#000_43%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-[38%] bg-gradient-to-r from-[#0B1F3A] via-[#0B1F3A]/70 to-transparent md:w-[44%]" aria-hidden="true" />
             </div>
           </div>
         </div>
+        <svg
+          className="absolute inset-x-0 bottom-[-1px] h-12 w-full text-white md:h-16"
+          viewBox="0 0 1440 80"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path fill="currentColor" d="M0 80V48C240 32 480 28 720 38C960 48 1200 46 1440 30V80H0Z" />
+        </svg>
       </section>
 
       <section className="philosophy-section bg-white px-4 py-11 sm:px-6 sm:py-12 lg:py-[68px]" aria-labelledby="how-we-think-heading">
