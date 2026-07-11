@@ -77,7 +77,7 @@ export function SiteHeader() {
           aria-label="Zentric Analytics homepage"
           className="inline-flex shrink-0 -translate-y-0.5 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 md:-translate-y-[3px]"
         >
-          <span className="whitespace-nowrap text-[23px] font-extrabold leading-none tracking-[-0.035em] text-[#0B1F3A] sm:text-[26px] md:text-[29px] lg:text-[30px]">
+          <span className="whitespace-nowrap text-[23px] font-bold leading-none tracking-[-0.02em] text-[#0B1F3A] sm:text-[26px] md:text-[42px] lg:text-[44px]">
             Zentric Analytics
           </span>
         </Link>
