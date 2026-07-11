@@ -224,7 +224,7 @@ export default function Home() {
           <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:-mr-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] md:w-[50vw] md:max-w-none md:justify-self-end lg:w-[49vw]">
             <div className="relative aspect-[16/10.5] overflow-hidden rounded-r-xl rounded-l-none md:min-h-[29rem] lg:min-h-[31.5rem]">
               <Image
-                src="/images/hero/hero-engineering-team.png"
+                src="/images/hero/hero-engineering-team-v2.png"
                 alt="Software engineers collaborating on code and system architecture in a modern office"
                 fill
                 priority
