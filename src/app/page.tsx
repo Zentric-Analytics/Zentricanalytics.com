@@ -173,19 +173,19 @@ export default function Home() {
   return (
     <PageShell>
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-14 sm:py-16 md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.92fr)] md:py-20 lg:gap-14 lg:py-[5.5rem]">
-          <div className="max-w-[43rem]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[42rem] text-balance text-[clamp(2.125rem,4.8vw,4rem)] font-extrabold leading-[1.08] tracking-[-0.045em] text-white sm:leading-[1.06]">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-9 px-4 py-10 sm:py-11 md:grid-cols-[minmax(0,1.06fr)_minmax(18rem,0.94fr)] md:gap-10 md:py-12 lg:gap-12 lg:py-16">
+          <div className="max-w-[42rem]">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[36rem] text-balance text-[clamp(2.125rem,4.35vw,3.75rem)] font-bold leading-[1.12] tracking-[-0.025em] text-white">
               Engineering reliable software, data, and AI systems for serious work.
             </h1>
-            <p className="hero-reveal hero-reveal-2 mt-6 max-w-[39rem] text-base leading-[1.62] text-slate-200 sm:mt-7 sm:text-lg lg:text-[1.18rem]">
+            <p className="hero-reveal hero-reveal-2 mt-6 max-w-[38rem] text-base font-normal leading-[1.6] text-slate-200 sm:text-lg">
               Zentric Analytics is a technology company focused on disciplined software delivery, web platforms, artificial intelligence solutions, analytics, computer science research, and emerging technology implementation.
             </p>
-            <div className="hero-reveal hero-reveal-3 mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="hero-reveal hero-reveal-3 mt-7 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
               <Link className="btn hero-cta-primary" href="/services">
                 Explore Services
               </Link>
-              <Link className="btn zentric-primary-cta" href="/contact">
+              <Link className="btn hero-cta-secondary" href="/contact">
                 <span>Let&apos;s Talk</span>
                 <span className="zentric-primary-cta__arrow" aria-hidden="true">
                   →
@@ -194,15 +194,15 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:justify-self-end">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.125rem] border border-white/12 shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
+          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:max-w-none md:justify-self-end lg:-mr-6">
+            <div className="relative aspect-[16/11] overflow-hidden rounded-2xl shadow-none md:min-h-[21rem] lg:min-h-[23rem]">
               <Image
                 src="/images/hero/hero-engineering-team.png"
-                alt="Software engineers collaborating on application architecture and code"
+                alt="Software engineers collaborating on code and system architecture in a modern office"
                 fill
                 priority
-                sizes="(min-width: 1024px) 34rem, (min-width: 768px) 44vw, calc(100vw - 2rem)"
-                className="object-cover object-[52%_48%]"
+                sizes="(min-width: 1180px) 560px, (min-width: 768px) 46vw, calc(100vw - 2rem)"
+                className="object-cover object-[58%_46%]"
               />
             </div>
           </div>
