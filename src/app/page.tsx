@@ -313,27 +313,28 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="why-choose-heading">
+      <section className="why-choose-section bg-white px-4 py-10 sm:px-6 sm:py-[52px] lg:py-16" aria-labelledby="why-choose-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="WHY CHOOSE ZENTRIC ANALYTICS"
             heading="Built for organizations that need technology they can depend on."
             headingId="why-choose-heading"
             description="Zentric Analytics combines disciplined engineering, responsible technology adoption, and long-term architectural thinking to help organizations build systems that remain reliable beyond launch."
+            className="why-choose-header"
           />
 
-          <div className="mt-8 grid items-stretch gap-4 md:grid-cols-2 sm:gap-5 lg:mt-9 lg:gap-6">
+          <div className="mt-7 grid items-stretch gap-5 md:grid-cols-2">
             {trustPrinciples.map((principle) => (
               <DesignSystemCard className="trust-principle-card" interactive key={principle.number} variant="standard">
                 <principle.Icon
                   aria-hidden="true"
-                  className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
+                  className="size-5 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-[22px]"
                   strokeWidth={1.75}
                 />
-                <h3 className="mt-4 max-w-[34rem] text-[1.375rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-2xl">
+                <h3 className="mt-3 max-w-[34rem] text-[1.25rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-[1.375rem]">
                   {principle.title}
                 </h3>
-                <p className="mt-3 max-w-[36rem] text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
+                <p className="mt-3 max-w-[36rem] text-base leading-[1.6] text-[#475569]">
                   {principle.description}
                 </p>
               </DesignSystemCard>
