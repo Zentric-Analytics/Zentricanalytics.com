@@ -356,34 +356,38 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#F8FAFC] px-4 py-9 sm:px-6 sm:py-12 lg:py-14" aria-labelledby="engineering-process-heading">
+      <section className="bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-12 lg:py-14" aria-labelledby="engineering-process-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="ENGINEERING PROCESS"
             heading="Every successful solution begins with a disciplined engineering process."
             headingId="engineering-process-heading"
             description="Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time."
-            className="engineering-process-header"
+            className="engineering-process-header [&_h2]:text-[clamp(2.375rem,3.4vw,2.625rem)] [&_h2]:leading-[1.12]"
           />
 
-          <div className="mt-7 lg:mt-8">
-            <div className="grid gap-4 md:grid-cols-2 md:gap-[18px] lg:grid-cols-3 lg:gap-5">
+          <div className="relative mt-8 lg:mt-9">
+            <div
+              aria-hidden="true"
+              className="absolute left-[26px] top-[26px] h-[calc(100%-52px)] w-0.5 bg-[#DCE3EA] md:left-[12.5%] md:right-[12.5%] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc(8.333333%-0px)] lg:right-[calc(8.333333%-0px)]"
+            />
+            <div className="relative grid gap-y-8 pl-[70px] md:grid-cols-3 md:gap-x-8 md:gap-y-10 md:pl-0 lg:grid-cols-6 lg:gap-x-7">
               {engineeringProcess.map((step) => (
                 <article
-                  className="engineering-process-card group relative rounded-[20px] border border-[#E5E7EB] bg-white p-[18px] shadow-[0_8px_24px_rgba(11,31,58,0.06)] transition-[border-color,box-shadow,transform] duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#10B981]/55 hover:shadow-[0_16px_36px_rgba(11,31,58,0.10)] sm:p-5 lg:p-6"
+                  className="group relative flex min-h-[52px] flex-col items-start text-left md:items-center md:text-center"
                   key={step.title}
                 >
-                  <div className="flex size-[38px] items-center justify-center rounded-[11px] bg-[#F8FAFC] sm:size-[42px]">
+                  <div className="absolute -left-[70px] top-0 flex size-[52px] items-center justify-center rounded-full border border-[#DCE3EA] bg-white shadow-[0_8px_22px_rgba(11,31,58,0.08)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#94A3B8] group-hover:shadow-[0_12px_26px_rgba(11,31,58,0.10)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto">
                     <step.Icon
                       aria-hidden="true"
-                      className="size-5 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-[22px] lg:size-6"
+                      className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
                       strokeWidth={1.75}
                     />
                   </div>
-                  <h3 className="mt-3.5 text-lg font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:mt-4 sm:text-xl">
+                  <h3 className="text-lg font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A] md:mt-5 md:text-[1.1875rem]">
                     {step.title}
                   </h3>
-                  <p className="mt-2 max-w-[32rem] text-sm leading-[1.55] text-[#475569] sm:text-[0.9375rem] sm:leading-[1.55]">
+                  <p className="mt-2 max-w-[24rem] text-sm leading-[1.5] text-[#475569] sm:text-[0.9375rem] md:max-w-[13rem]">
                     {step.description}
                   </p>
                 </article>
