@@ -143,6 +143,9 @@ describe('public layout shell', () => {
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
     expect(header).toContain('className="whitespace-nowrap text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#0B1F3A] md:text-[28px] lg:text-[30px]"');
+    expect(header).toContain('focus:outline-none focus-visible:ring-2 focus-visible:ring-[#10B981] focus-visible:ring-offset-4');
+    expect(header).not.toContain(`aria-label="Zentric Analytics homepage"
+          className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"`);
     expect(header).toContain("style={{ fontFamily: 'Manrope, sans-serif' }}");
     expect(header).not.toContain('zentric-wordmark text-[#0B1F3A]');
     const globals = readFileSync('src/app/globals.css', 'utf8');
