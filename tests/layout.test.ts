@@ -142,7 +142,12 @@ describe('public layout shell', () => {
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
-    expect(header).toContain('text-[22px] font-semibold leading-none tracking-[-0.03em] text-[#0B1F3A] sm:text-[25px] md:text-[30px] lg:text-[32px]');
+    expect(header).toContain('zentric-wordmark text-[#0B1F3A]');
+    const globals = readFileSync('src/app/globals.css', 'utf8');
+    expect(globals).toContain('family=Manrope:wght@700');
+    expect(globals).toContain('.zentric-wordmark{font-family:Manrope;font-size:1.75rem;font-weight:700;letter-spacing:-0.04em;line-height:1;white-space:nowrap}');
+    expect(globals).toContain('@media (min-width:768px){\n  .zentric-wordmark{font-size:2rem}');
+    expect(globals).toContain('@media (min-width:1024px){\n  .zentric-wordmark{font-size:2.25rem}');
   });
 
   it('renders the premium corporate footer navigation and contact resources', () => {
@@ -150,7 +155,8 @@ describe('public layout shell', () => {
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
     expect(footer).toContain('bg-[#0B1F3A] text-white');
-    expect(footer).toContain('ZENTRIC ANALYTICS');
+    expect(footer).toContain('className="zentric-wordmark text-white"');
+    expect(footer).toContain('Zentric Analytics');
     expect(footer).toContain('<FooterHeading>Company</FooterHeading>');
     expect(footer).toContain('<FooterHeading>Capabilities</FooterHeading>');
     expect(footer).toContain('<FooterHeading>Resources</FooterHeading>');
