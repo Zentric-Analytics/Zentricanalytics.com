@@ -5,6 +5,15 @@ import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { DesignSystemCard } from '@/components/DesignSystemCard';
 
+const finalCtaMarqueeKeywords = [
+  'Software Engineering',
+  'Artificial Intelligence',
+  'Data & Analytics',
+  'Cloud & Infrastructure',
+  'Research & Innovation',
+  'Emerging Technologies',
+] as const;
+
 const capabilities: Array<{ Icon: LucideIcon; title: string; description: string; featured?: boolean }> = [
   {
     Icon: CodeXml,
@@ -474,7 +483,31 @@ export default function Home() {
             headingId="final-cta-heading"
             description="Whether you're planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution."
           />
-          <div className="mt-6 flex w-full flex-col items-center gap-4 sm:mt-7 sm:w-auto sm:flex-row sm:justify-center">
+          <div
+            className="final-cta-marquee mt-6 w-full max-w-3xl overflow-hidden sm:mt-7"
+            aria-label={finalCtaMarqueeKeywords.join(' • ')}
+          >
+            <p className="sr-only">{finalCtaMarqueeKeywords.join(' • ')}</p>
+            <div className="final-cta-marquee__track" aria-hidden="true">
+              {[0, 1].map((group) => (
+                <div className="final-cta-marquee__group" key={group}>
+                  {[0, 1].map((set) => (
+                    <span className="final-cta-marquee__sequence" key={set}>
+                      {finalCtaMarqueeKeywords.map((keyword, index) => (
+                        <span className="final-cta-marquee__item" key={keyword}>
+                          <span>{keyword}</span>
+                          {index < finalCtaMarqueeKeywords.length - 1 ? (
+                            <span className="final-cta-marquee__separator">•</span>
+                          ) : null}
+                        </span>
+                      ))}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-7 flex w-full flex-col items-center gap-4 sm:mt-8 sm:w-auto sm:flex-row sm:justify-center">
             <Link
               className="btn btn-primary w-full sm:w-auto"
               href="/contact"

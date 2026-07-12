@@ -233,3 +233,87 @@ html{scroll-padding-top:82px}
 .why-choose-section .why-choose-header>h2+p{margin-top:16px;max-width:44rem;font-size:1rem;line-height:1.6;font-weight:400}
 .why-choose-section .trust-principle-card{min-height:0;border-radius:18px;padding:24px;box-shadow:0 6px 18px rgba(11,31,58,.045)}
 .why-choose-section .trust-principle-card:hover,.why-choose-section .trust-principle-card:focus-visible{box-shadow:0 12px 28px rgba(11,31,58,.08)}
+
+@keyframes final-cta-marquee-scroll{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+
+.final-cta-marquee{
+  position:relative;
+  max-width:44rem;
+  padding:.35rem 0;
+  color:#475569;
+  font-size:.875rem;
+  font-weight:600;
+  letter-spacing:.02em;
+  line-height:1.6;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%);
+}
+
+.final-cta-marquee__track{
+  display:flex;
+  width:max-content;
+  max-width:none;
+  animation:final-cta-marquee-scroll 34s linear infinite;
+  will-change:transform;
+}
+
+.final-cta-marquee__group,
+.final-cta-marquee__sequence,
+.final-cta-marquee__item{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+}
+
+.final-cta-marquee__group{flex-shrink:0}
+.final-cta-marquee__sequence{padding-right:1.25rem}
+.final-cta-marquee__item{gap:1.25rem}
+.final-cta-marquee__separator{color:#10B981}
+
+@media (min-width:640px){
+  .final-cta-marquee{font-size:.9375rem}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .final-cta-marquee{
+    overflow:visible;
+    -webkit-mask-image:none;
+    mask-image:none;
+  }
+
+  .final-cta-marquee__track{
+    width:100%;
+    animation:none;
+    transform:none;
+  }
+
+  .final-cta-marquee__group{
+    display:none;
+  }
+
+  .final-cta-marquee__group:first-child{
+    display:inline-flex;
+    width:100%;
+    flex-wrap:wrap;
+    justify-content:center;
+    row-gap:.25rem;
+  }
+
+  .final-cta-marquee__group:first-child .final-cta-marquee__sequence:nth-child(2){
+    display:none;
+  }
+
+  .final-cta-marquee__group:first-child .final-cta-marquee__sequence{
+    flex-wrap:wrap;
+    justify-content:center;
+    padding-right:0;
+    white-space:normal;
+  }
+
+  .final-cta-marquee__item{
+    white-space:normal;
+  }
+}
