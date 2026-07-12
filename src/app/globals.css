@@ -61,6 +61,10 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:Inter,system-ui,-appl
 .hero-cta-primary:disabled:hover,.hero-cta-primary[aria-disabled="true"]:hover{background:#FFFFFF;color:#0B1F3A;transform:none}
 .hero-cta-secondary:disabled:hover,.hero-cta-secondary[aria-disabled="true"]:hover{border-color:rgba(255,255,255,.35);background:transparent;color:#FFFFFF;transform:none}
 
+.site-header a:focus,.site-header button:focus{outline:none;box-shadow:none}
+.site-header a:focus-visible,.site-header button:focus-visible{outline:2px solid #0B1F3A;outline-offset:4px;box-shadow:none}
+.site-header .btn:focus-visible{outline-color:#0B1F3A;box-shadow:none}
+
 .card{max-width:100%;min-width:0;overflow-wrap:break-word;background:white;border:1px solid #e2e8f0;border-radius:1.25rem;box-shadow:0 12px 30px rgba(15,23,42,.06)}
 
 @keyframes editorial-fade-up{
