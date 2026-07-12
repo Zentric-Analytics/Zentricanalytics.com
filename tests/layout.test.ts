@@ -142,12 +142,11 @@ describe('public layout shell', () => {
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
-    expect(header).toContain('zentric-wordmark text-[#0B1F3A]');
+    expect(header).toContain('className="whitespace-nowrap text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#0B1F3A] md:text-[28px] lg:text-[30px]"');
+    expect(header).toContain("style={{ fontFamily: 'Manrope, sans-serif' }}");
+    expect(header).not.toContain('zentric-wordmark text-[#0B1F3A]');
     const globals = readFileSync('src/app/globals.css', 'utf8');
-    expect(globals).toContain('family=Manrope:wght@700');
-    expect(globals).toContain('.zentric-wordmark{font-family:Manrope;font-size:1.75rem;font-weight:700;letter-spacing:-0.04em;line-height:1;white-space:nowrap}');
-    expect(globals).toContain('@media (min-width:768px){\n  .zentric-wordmark{font-size:2rem}');
-    expect(globals).toContain('@media (min-width:1024px){\n  .zentric-wordmark{font-size:2.25rem}');
+    expect(globals).toContain('family=Manrope:wght@600;700');
   });
 
   it('renders the premium corporate footer navigation and contact resources', () => {

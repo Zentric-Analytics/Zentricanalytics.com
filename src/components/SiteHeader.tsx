@@ -100,7 +100,8 @@ export function SiteHeader() {
           aria-label="Zentric Analytics homepage"
           className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"
         >
-          <span className="zentric-wordmark text-[#0B1F3A]">
+          <span className="whitespace-nowrap text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#0B1F3A] md:text-[28px] lg:text-[30px]"
+            style={{ fontFamily: 'Manrope, sans-serif' }}>
             Zentric Analytics
           </span>
         </Link>
