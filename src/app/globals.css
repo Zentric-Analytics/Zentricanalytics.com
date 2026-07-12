@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Manrope:wght@600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Manrope:wght@700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -13,14 +13,14 @@ html,body{width:100%;min-width:0;overflow-x:hidden}
 body{margin:0;background:#f7f9fc;color:#0c1222;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 
 
-.zentric-wordmark{font-family:Manrope,Inter,system-ui,sans-serif;font-size:1.6rem;font-weight:600;letter-spacing:-0.04em;line-height:1;white-space:nowrap}
+.zentric-wordmark{font-family:Manrope;font-size:1.75rem;font-weight:700;letter-spacing:-0.04em;line-height:1;white-space:nowrap}
 
 @media (min-width:768px){
-  .zentric-wordmark{font-size:1.9rem}
+  .zentric-wordmark{font-size:2rem}
 }
 
 @media (min-width:1024px){
-  .zentric-wordmark{font-size:2.15rem}
+  .zentric-wordmark{font-size:2.25rem}
 }
 
 .field{display:flex;min-width:0;flex-direction:column;gap:.4rem}
