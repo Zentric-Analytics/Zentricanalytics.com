@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { primaryNavigationLinks } from './navigation';
@@ -10,6 +10,8 @@ const contactLink = ['/contact', "Let's Talk"] as const;
 export function SiteHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
+  const lastScrollYRef = useRef(0);
   const pathname = usePathname();
   const mobileMenuId = 'site-header-mobile-menu';
   const isHomepage = pathname === '/';
@@ -18,7 +20,25 @@ export function SiteHeader() {
     : primaryNavigationLinks;
 
   useEffect(() => {
-    const handleScroll = () => setHasScrolled(window.scrollY > 8);
+    const topThreshold = 40;
+    const hideThreshold = 100;
+    const scrollDelta = 4;
+
+    const handleScroll = () => {
+      const currentScrollY = Math.max(window.scrollY, 0);
+      const previousScrollY = lastScrollYRef.current;
+      const scrollDifference = currentScrollY - previousScrollY;
+
+      setHasScrolled(currentScrollY > 8);
+
+      if (currentScrollY <= topThreshold) {
+        setIsHeaderHidden(false);
+      } else if (Math.abs(scrollDifference) >= scrollDelta) {
+        setIsHeaderHidden(scrollDifference > 0 && currentScrollY > hideThreshold);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
 
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -62,13 +82,16 @@ export function SiteHeader() {
   }, [isMobileMenuOpen]);
 
   const isActiveLink = (href: string) => (href === '/' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
+  const shouldHideHeader = isHeaderHidden && !isMobileMenuOpen;
 
   return (
     <header
-      className={`sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
-        hasScrolled
-          ? 'border-[#0B1F3A]/10 bg-white shadow-[0_10px_26px_rgba(11,31,58,0.07)]'
-          : 'border-transparent bg-white'
+      className={`sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 bg-white ease-out will-change-transform ${
+        shouldHideHeader ? 'pointer-events-none -translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+      } ${
+        hasScrolled && !shouldHideHeader
+          ? 'border-[#0B1F3A]/10 shadow-[0_10px_26px_rgba(11,31,58,0.07)]'
+          : 'border-transparent'
       }`}
     >
       <nav className={`mx-auto flex w-full max-w-7xl items-center justify-between gap-5 px-5 transition-[height] duration-300 sm:px-6 lg:gap-7 lg:px-8 ${hasScrolled ? 'h-[56px] sm:h-[60px]' : 'h-[66px] sm:h-[70px] lg:h-[72px]'}`}>
