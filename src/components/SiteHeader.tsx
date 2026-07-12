@@ -71,13 +71,13 @@ export function SiteHeader() {
           : 'border-transparent bg-white'
       }`}
     >
-      <nav className={`mx-auto flex w-full max-w-7xl items-center justify-between gap-5 px-5 transition-[height] duration-300 sm:px-6 lg:gap-7 lg:px-8 ${hasScrolled ? 'h-[64px] sm:h-[68px]' : 'h-[76px] sm:h-20 lg:h-[82px]'}`}>
+      <nav className={`mx-auto flex w-full max-w-7xl items-center justify-between gap-5 px-5 transition-[height] duration-300 sm:px-6 lg:gap-7 lg:px-8 ${hasScrolled ? 'h-[56px] sm:h-[60px]' : 'h-[66px] sm:h-[70px] lg:h-[72px]'}`}>
         <Link
           href="/"
           aria-label="Zentric Analytics homepage"
           className="inline-flex shrink-0 -translate-y-0.5 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 md:-translate-y-[3px]"
         >
-          <span className="whitespace-nowrap text-[23px] font-semibold leading-none tracking-[-0.02em] text-[#0B1F3A] sm:text-[26px] md:text-[34px] lg:text-[34px]">
+          <span className="whitespace-nowrap text-[22px] font-semibold leading-none tracking-[-0.03em] text-[#0B1F3A] sm:text-[25px] md:text-[30px] lg:text-[32px]">
             Zentric Analytics
           </span>
         </Link>
