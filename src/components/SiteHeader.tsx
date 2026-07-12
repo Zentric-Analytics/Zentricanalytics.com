@@ -86,7 +86,7 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 bg-white ease-out will-change-transform ${
+      className={`site-header sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 bg-white ease-out will-change-transform ${
         shouldHideHeader ? 'pointer-events-none -translate-y-full opacity-0' : 'translate-y-0 opacity-100'
       } ${
         hasScrolled && !shouldHideHeader
@@ -98,7 +98,7 @@ export function SiteHeader() {
         <Link
           href="/"
           aria-label="Zentric Analytics homepage"
-          className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#10B981] focus-visible:ring-offset-4"
+          className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B1F3A]"
         >
           <span className="whitespace-nowrap text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#0B1F3A] md:text-[28px] lg:text-[30px]"
             style={{ fontFamily: 'Manrope, sans-serif' }}>
@@ -113,7 +113,7 @@ export function SiteHeader() {
             return (
               <Link
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative whitespace-nowrap py-2 text-[15px] font-medium tracking-[-0.005em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4 ${
+                className={`relative whitespace-nowrap py-2 text-[15px] font-medium tracking-[-0.005em] transition-colors duration-200 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B1F3A] ${
                   isActive ? 'text-[#0B1F3A]' : 'text-[#173B67]/72 hover:text-[#10B981]'
                 } after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-center after:rounded-full after:bg-[#10B981] after:transition-transform after:duration-200 ${
                   isActive ? 'after:scale-x-100' : 'after:scale-x-0 hover:after:scale-x-100'
@@ -192,7 +192,7 @@ export function SiteHeader() {
                   return (
                     <Link
                       aria-current={isActive ? 'page' : undefined}
-                      className={`-mx-3 rounded-2xl border-l-2 px-3 py-3.5 text-lg font-semibold tracking-[-0.02em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 ${
+                      className={`-mx-3 rounded-2xl border-l-2 px-3 py-3.5 text-lg font-semibold tracking-[-0.02em] transition-colors duration-200 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1F3A] ${
                         isContact
                           ? 'btn zentric-primary-cta mt-4 w-full border-0'
                           : isActive
