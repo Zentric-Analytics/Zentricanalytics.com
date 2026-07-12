@@ -142,7 +142,7 @@ describe('public layout shell', () => {
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
-    expect(header).toContain('text-[23px] font-semibold leading-none tracking-[-0.02em] text-[#0B1F3A] sm:text-[26px] md:text-[34px] lg:text-[34px]');
+    expect(header).toContain('text-[22px] font-semibold leading-none tracking-[-0.03em] text-[#0B1F3A] sm:text-[25px] md:text-[30px] lg:text-[32px]');
   });
 
   it('renders the premium corporate footer navigation and contact resources', () => {
