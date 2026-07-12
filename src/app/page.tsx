@@ -287,24 +287,24 @@ export default function Home() {
             description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
           />
 
-          <div className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:grid-rows-[auto_auto_auto] lg:gap-[18px]">
+          <div className="mt-7 grid gap-3.5 sm:mt-8 sm:grid-cols-2 sm:gap-4 md:[&>a:first-child]:col-span-2 lg:grid-cols-12 lg:grid-rows-[auto_auto_auto] lg:gap-[18px] lg:[&>a:first-child]:col-span-7">
             {capabilities.map((capability) => {
               const tileClassName =
                 capability.title === 'Software Engineering'
-                  ? 'lg:col-span-2 lg:row-span-2 lg:min-h-[238px]'
-                  : capability.title === 'Data & Analytics'
-                    ? 'lg:col-span-2 lg:col-start-1 lg:row-start-3'
-                    : capability.title === 'Research & Innovation'
-                      ? 'lg:col-start-3 lg:row-start-3'
-                      : capability.title === 'Cloud & Infrastructure'
-                        ? 'lg:col-span-2 lg:col-start-3 lg:row-start-2'
-                        : capability.title === 'Emerging Technologies'
-                          ? 'lg:col-start-4 lg:row-start-3'
-                          : 'lg:col-span-2 lg:col-start-3 lg:row-start-1';
+                  ? 'lg:col-start-1 lg:row-start-1 lg:p-7'
+                  : capability.title === 'Artificial Intelligence'
+                    ? 'lg:col-span-5 lg:col-start-8 lg:row-start-1'
+                    : capability.title === 'Data & Analytics'
+                      ? 'lg:col-span-5 lg:col-start-1 lg:row-start-2'
+                      : capability.title === 'Research & Innovation'
+                        ? 'lg:col-span-5 lg:col-start-1 lg:row-start-3'
+                        : capability.title === 'Cloud & Infrastructure'
+                          ? 'lg:col-span-7 lg:col-start-6 lg:row-start-2'
+                          : 'lg:col-span-5 lg:col-start-8 lg:row-start-3';
 
               return (
                 <Link
-                  className={`${tileClassName} group flex flex-col rounded-2xl border border-[#E5E7EB] bg-white p-4 outline-none shadow-[0_8px_22px_rgba(11,31,58,0.035)] transition-[background-color,border-color,transform] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] focus-visible:border-[#10B981]/70 focus-visible:bg-[#F8FAFC] focus-visible:ring-2 focus-visible:ring-[#10B981] motion-safe:hover:-translate-y-0.5 sm:p-5 lg:p-6`}
+                  className={`${tileClassName} group flex cursor-pointer flex-col rounded-[17px] border border-[#E2E8F0] bg-white p-4 outline-none shadow-[0_8px_18px_rgba(11,31,58,0.025)] transition-[background-color,border-color,transform] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] focus-visible:border-[#10B981]/70 focus-visible:bg-[#F8FAFC] focus-visible:ring-2 focus-visible:ring-[#10B981] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F3F6F9] motion-safe:hover:-translate-y-0.5 sm:p-5 lg:p-6`}
                   href="/services"
                   key={capability.title}
                 >
