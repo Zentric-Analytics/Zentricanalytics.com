@@ -202,7 +202,7 @@ export default function Home() {
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] pb-8 text-white md:pb-12">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 pb-10 pt-8 sm:pt-9 md:min-h-[34rem] md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:py-10 lg:min-h-[38rem] lg:gap-8 lg:py-14">
           <div className="max-w-[42rem]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[34.5rem] text-balance text-[clamp(2rem,4.05vw,3.5rem)] font-bold leading-[1.12] tracking-[-0.025em] text-white">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[25rem] text-balance text-[clamp(2rem,4.05vw,3.5rem)] sm:max-w-[28rem] md:max-w-[11.35em] font-bold leading-[1.12] tracking-[-0.025em] text-white">
               Engineering reliable software, data, and AI systems for serious work.
             </h1>
             <p className="hero-reveal hero-reveal-2 mt-5 max-w-[33.5rem] text-base font-normal leading-[1.6] text-slate-200 sm:text-lg">
