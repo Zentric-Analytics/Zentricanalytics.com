@@ -45,9 +45,9 @@ export function SiteFooter() {
           <section aria-labelledby="footer-company-overview" className="min-w-0">
             <h2
               id="footer-company-overview"
-              className="text-sm font-bold uppercase tracking-[0.18em] text-white"
+              className="zentric-wordmark text-white"
             >
-              ZENTRIC ANALYTICS
+              Zentric Analytics
             </h2>
             <p className="mt-3 max-w-xs text-sm leading-[1.55] text-[#CBD5E1]">
               Engineering reliable software, artificial intelligence, data platforms, and research-driven technology solutions for organizations building the future.
