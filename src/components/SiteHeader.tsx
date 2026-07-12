@@ -130,7 +130,7 @@ export function SiteHeader() {
         <div className="hidden shrink-0 items-center md:flex">
           <Link
             href={contactLink[0]}
-            className="btn zentric-primary-cta"
+            className="btn zentric-primary-cta site-header__desktop-cta"
           >
             <span>{contactLink[1]}</span>
             <span className="zentric-primary-cta__arrow" aria-hidden="true">
