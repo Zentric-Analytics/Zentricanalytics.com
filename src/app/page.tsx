@@ -281,43 +281,49 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 py-8 sm:px-6 sm:py-11 lg:py-14" aria-labelledby="core-capabilities-heading">
+      <section className="border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 py-8 sm:px-6 sm:py-10 lg:py-12" aria-labelledby="core-capabilities-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
-            className="[&_h2]:mt-3 [&_h2]:text-[clamp(1.6875rem,3.35vw,2.625rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-4 [&_p:last-child]:max-w-[46rem]"
+            className="[&_h2]:mt-3 [&_h2]:text-[clamp(1.6875rem,3.2vw,2.5rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-4 [&_p:last-child]:max-w-[46rem]"
             eyebrow="CORE CAPABILITIES"
             heading="Engineering expertise across software, AI, data, infrastructure, and research."
             headingId="core-capabilities-heading"
             description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
           />
 
-          <div className="mt-7 grid gap-3.5 sm:mt-8 sm:grid-cols-2 sm:gap-4 md:[&>a:first-child]:col-span-2 lg:grid-cols-12 lg:grid-rows-[auto_auto_auto] lg:gap-[18px] lg:[&>a:first-child]:col-span-7">
+          <div className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-2 sm:gap-3.5 md:[&>a:first-child]:col-span-2 lg:grid-cols-12 lg:grid-rows-[auto_auto_auto] lg:gap-4 lg:[&>a:first-child]:col-span-7">
             {capabilities.map((capability) => {
               const tileClassName =
                 capability.title === 'Software Engineering'
-                  ? 'lg:col-start-1 lg:row-start-1 lg:p-7'
+                  ? 'lg:col-start-1 lg:row-start-1 lg:p-6'
                   : capability.title === 'Artificial Intelligence'
                     ? 'lg:col-span-5 lg:col-start-8 lg:row-start-1'
                     : capability.title === 'Data & Analytics'
                       ? 'lg:col-span-5 lg:col-start-1 lg:row-start-2'
                       : capability.title === 'Research & Innovation'
-                        ? 'lg:col-span-5 lg:col-start-1 lg:row-start-3'
+                        ? 'lg:col-span-6 lg:col-start-1 lg:row-start-3'
                         : capability.title === 'Cloud & Infrastructure'
                           ? 'lg:col-span-7 lg:col-start-6 lg:row-start-2'
-                          : 'lg:col-span-5 lg:col-start-8 lg:row-start-3';
+                          : 'lg:col-span-6 lg:col-start-7 lg:row-start-3';
 
               return (
                 <Link
-                  className={`${tileClassName} group flex cursor-pointer flex-col rounded-[17px] border border-[#E2E8F0] bg-white p-4 outline-none shadow-[0_8px_18px_rgba(11,31,58,0.025)] transition-[background-color,border-color,transform] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] focus-visible:border-[#10B981]/70 focus-visible:bg-[#F8FAFC] focus-visible:ring-2 focus-visible:ring-[#10B981] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F3F6F9] motion-safe:hover:-translate-y-0.5 sm:p-5 lg:p-6`}
+                  className={`${tileClassName} group flex cursor-pointer flex-col rounded-[17px] border border-[#E2E8F0] bg-white p-[18px] outline-none shadow-[0_8px_18px_rgba(11,31,58,0.025)] transition-[background-color,border-color,transform] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] focus-visible:border-[#10B981]/70 focus-visible:bg-[#F8FAFC] focus-visible:ring-2 focus-visible:ring-[#10B981] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F3F6F9] motion-safe:hover:-translate-y-0.5 sm:p-5 lg:p-[22px]`}
                   href="/services"
                   key={capability.title}
                 >
                   <capability.Icon
                     aria-hidden="true"
-                    className="size-[21px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] group-focus-visible:text-[#10B981] sm:size-[22px] lg:size-6"
+                    className="size-[21px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] group-focus-visible:text-[#10B981] sm:size-[22px] lg:size-[23px]"
                     strokeWidth={1.75}
                   />
-                  <h3 className="mt-3 text-lg font-bold leading-[1.2] tracking-[-0.02em] text-[#0B1F3A] sm:text-[1.1875rem]">
+                  <h3
+                    className={`mt-3 font-bold leading-[1.18] tracking-[-0.02em] text-[#0B1F3A] ${
+                      capability.title === 'Software Engineering'
+                        ? 'text-[1.1875rem] sm:text-xl'
+                        : 'text-lg sm:text-[1.1875rem]'
+                    }`}
+                  >
                     {capability.title}
                   </h3>
                   <p className="mt-2 max-w-[36rem] text-[0.9375rem] leading-[1.55] text-[#475569] sm:text-base sm:leading-[1.55]">
