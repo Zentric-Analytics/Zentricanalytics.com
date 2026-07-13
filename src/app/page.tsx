@@ -330,7 +330,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="why-choose-section bg-white px-4 py-9 sm:px-6 sm:py-11 lg:py-14" aria-labelledby="why-choose-heading">
+      <section className="why-choose-section bg-white px-4 py-8 sm:px-6 sm:py-10 lg:py-12" aria-labelledby="why-choose-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="WHY CHOOSE ZENTRIC ANALYTICS"

@@ -233,10 +233,12 @@ html{scroll-padding-top:82px}
   .industry-card{animation:none;opacity:1;transform:none;transition:none}
 }
 
-.why-choose-section .why-choose-header{max-width:52rem}
-.why-choose-section .why-choose-header>p:first-child{margin-bottom:10px}
-.why-choose-section .why-choose-header>h2{max-width:48rem;font-size:clamp(1.75rem,3.15vw,2.625rem);line-height:1.12;font-weight:700}
-.why-choose-section .why-choose-header>h2+p{margin-top:14px;max-width:43rem;font-size:1rem;line-height:1.58;font-weight:400}
+.why-choose-section .why-choose-header{max-width:52rem;margin-top:0;margin-bottom:0}
+.why-choose-section .why-choose-header>p:first-child{margin-bottom:8px}
+.why-choose-section .why-choose-header>h2{max-width:48rem;font-size:clamp(1.875rem,3vw,2.5rem);line-height:1.1;font-weight:700}
+.why-choose-section .why-choose-header>h2+p{margin-top:16px;margin-bottom:0;max-width:650px;font-size:1rem;line-height:1.6;font-weight:400}
+.why-choose-section .why-choose-accordion{margin-top:28px}
+@media (min-width:640px){.why-choose-section .why-choose-header>h2+p{font-size:1.0625rem}}
 
 @keyframes final-cta-marquee-scroll{
   from{transform:translateX(0)}

@@ -59,7 +59,7 @@ export function EnterpriseAccordion({ items }: EnterpriseAccordionProps) {
   };
 
   return (
-    <div className="why-choose-accordion mx-auto mt-6 w-full max-w-[1040px] sm:mt-7" role="presentation">
+    <div className="why-choose-accordion mx-auto mt-7 w-full max-w-[1000px]" role="presentation">
       {items.map((item, index) => {
         const isOpen = openIndex === index;
         const Icon = accordionIcons[item.icon];
@@ -74,7 +74,7 @@ export function EnterpriseAccordion({ items }: EnterpriseAccordionProps) {
             <button
               aria-controls={panelId}
               aria-expanded={isOpen}
-              className="group flex min-h-16 w-full items-center gap-3 px-4 py-4 text-left outline-none transition-colors duration-[275ms] ease-out focus-visible:bg-[#FAFAFA] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#10B981] sm:min-h-[68px] sm:gap-3.5 sm:px-6 sm:py-[18px] lg:px-7"
+              className="group flex min-h-16 w-full items-center gap-2.5 px-4 py-3.5 text-left outline-none transition-colors duration-[275ms] ease-out focus-visible:bg-[#FAFAFA] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#10B981] sm:min-h-[68px] sm:gap-3 sm:px-5 sm:py-[18px] lg:px-6"
               id={buttonId}
               onClick={() => setOpenIndex(index)}
               onKeyDown={(event) => handleKeyDown(event, index)}
@@ -98,12 +98,12 @@ export function EnterpriseAccordion({ items }: EnterpriseAccordionProps) {
             </button>
             <div
               aria-labelledby={buttonId}
-              className={`grid overflow-hidden px-4 transition-[grid-template-rows,opacity] duration-[275ms] ease-out sm:px-6 lg:px-7 ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+              className={`grid overflow-hidden px-4 transition-[grid-template-rows,opacity] duration-[275ms] ease-out sm:px-5 lg:px-6 ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
               id={panelId}
               role="region"
             >
               <div className="min-h-0 overflow-hidden">
-                <p className="ml-[33px] mt-1 max-w-[48rem] pb-5 text-[0.9375rem] leading-[1.58] text-[#475569] sm:ml-[36px] sm:mt-0 sm:pb-5 sm:text-base lg:pb-6">
+                <p className="ml-[31px] max-w-[48rem] pb-[18px] pt-3 text-[0.9375rem] leading-[1.6] text-[#475569] sm:ml-[34px] sm:text-base">
                   {item.description}
                 </p>
               </div>
