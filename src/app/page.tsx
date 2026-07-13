@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { BadgeCheck, Braces, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LifeBuoy, LockKeyhole, MessagesSquare, Microscope, Network, Rocket, Search, ShieldCheck, Target, Truck, Wrench, type LucideIcon } from 'lucide-react';
+import { Braces, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LifeBuoy, Network, Rocket, Search, ShieldCheck, Target, Truck, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { DesignSystemCard } from '@/components/DesignSystemCard';
+import { EnterpriseAccordion } from '@/components/EnterpriseAccordion';
 
 const finalCtaMarqueeKeywords = [
   'Software Engineering',
@@ -160,44 +161,38 @@ const philosophyPrinciples: Array<{ Icon: LucideIcon; title: string; description
   },
 ];
 
-const trustPrinciples: Array<{ Icon: LucideIcon; number: string; title: string; description: string }> = [
+const trustPrinciples: Array<{ number: string; title: string; description: string }> = [
   {
-    Icon: Wrench,
     number: '01',
     title: 'Disciplined Engineering',
     description:
       'Every engagement begins with structured planning, thoughtful architecture, and implementation practices designed for reliability.',
   },
   {
-    Icon: ShieldCheck,
     number: '02',
     title: 'Security by Design',
     description:
       'Security, privacy, and operational resilience are considered throughout the development lifecycle, not added at the end.',
   },
   {
-    Icon: LockKeyhole,
     number: '03',
     title: 'Long-Term Maintainability',
     description:
       'Solutions are designed to evolve with changing business requirements instead of becoming short-term technical debt.',
   },
   {
-    Icon: MessagesSquare,
     number: '04',
-    title: 'Transparent Collaboration',
-    description:
-      'Clear communication, measurable milestones, and shared visibility keep teams aligned from discovery through delivery.',
-  },
-  {
-    Icon: Microscope,
-    number: '05',
     title: 'Research-Driven Innovation',
     description:
       'Emerging technologies are evaluated carefully and applied only where they create practical, measurable value.',
   },
   {
-    Icon: BadgeCheck,
+    number: '05',
+    title: 'Transparent Collaboration',
+    description:
+      'Clear communication, measurable milestones, and shared visibility keep teams aligned from discovery through delivery.',
+  },
+  {
     number: '06',
     title: 'Quality Without Compromise',
     description:
@@ -345,23 +340,7 @@ export default function Home() {
             className="why-choose-header"
           />
 
-          <div className="mt-7 grid items-stretch gap-5 md:grid-cols-2">
-            {trustPrinciples.map((principle) => (
-              <DesignSystemCard className="trust-principle-card" interactive key={principle.number} variant="standard">
-                <principle.Icon
-                  aria-hidden="true"
-                  className="size-5 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-[22px]"
-                  strokeWidth={1.75}
-                />
-                <h3 className="mt-3 max-w-[34rem] text-[1.25rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#111827] sm:text-[1.375rem]">
-                  {principle.title}
-                </h3>
-                <p className="mt-3 max-w-[36rem] text-base leading-[1.6] text-[#475569]">
-                  {principle.description}
-                </p>
-              </DesignSystemCard>
-            ))}
-          </div>
+          <EnterpriseAccordion items={trustPrinciples} />
         </div>
       </section>
 
