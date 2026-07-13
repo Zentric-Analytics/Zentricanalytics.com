@@ -325,13 +325,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-8 sm:px-6 sm:py-10 lg:py-12" aria-labelledby="industries-heading">
+      <section className="bg-white px-4 pb-12 pt-14 sm:px-6 sm:pb-14 sm:pt-14" aria-labelledby="industries-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="INDUSTRIES WE SERVE"
             heading="Engineering technology for organizations across critical industries."
             headingId="industries-heading"
             description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
+            className="[&>p:last-child]:mt-3"
           />
 
           <IndustriesSlider />
