@@ -235,10 +235,8 @@ html{scroll-padding-top:82px}
 
 .why-choose-section .why-choose-header{max-width:52rem}
 .why-choose-section .why-choose-header>p:first-child{margin-bottom:10px}
-.why-choose-section .why-choose-header>h2{max-width:50rem;font-size:clamp(2rem,4vw,2.75rem);line-height:1.1;font-weight:700}
-.why-choose-section .why-choose-header>h2+p{margin-top:16px;max-width:44rem;font-size:1rem;line-height:1.6;font-weight:400}
-.why-choose-section .trust-principle-card{min-height:0;border-radius:18px;padding:24px;box-shadow:0 6px 18px rgba(11,31,58,.045)}
-.why-choose-section .trust-principle-card:hover,.why-choose-section .trust-principle-card:focus-visible{box-shadow:0 12px 28px rgba(11,31,58,.08)}
+.why-choose-section .why-choose-header>h2{max-width:48rem;font-size:clamp(1.75rem,3.15vw,2.625rem);line-height:1.12;font-weight:700}
+.why-choose-section .why-choose-header>h2+p{margin-top:14px;max-width:43rem;font-size:1rem;line-height:1.58;font-weight:400}
 
 @keyframes final-cta-marquee-scroll{
   from{transform:translateX(0)}
