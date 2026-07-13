@@ -203,18 +203,18 @@ const trustPrinciples: Array<{ icon: 'wrench' | 'shield-check' | 'lock-keyhole' 
 export default function Home() {
   return (
     <PageShell>
-      <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] pb-8 text-white md:pb-12">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 pb-10 pt-8 sm:pt-9 md:min-h-[34rem] md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:py-10 lg:min-h-[38rem] lg:gap-8 lg:py-14">
-          <div className="max-w-[42rem]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[25rem] text-balance text-[clamp(2rem,4.05vw,3.5rem)] font-bold leading-[1.08] tracking-[-0.025em] text-white sm:max-w-[28rem] md:max-w-[37.5rem] md:text-[60px] lg:text-[64px]">
-              <span className="md:block">Engineering reliable software,</span>{' '}
-              <span className="md:block">data, and AI systems</span>{' '}
-              <span className="md:block">for serious work.</span>
+      <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-16 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:py-[88px] lg:gap-8">
+          <div className="max-w-[700px]">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[25rem] text-[clamp(2rem,4.05vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white sm:max-w-[28rem] md:max-w-[700px] md:text-[60px]">
+              <span className="md:block md:whitespace-nowrap">Engineering reliable software,</span>{' '}
+              <span className="md:block md:whitespace-nowrap">data, and AI systems</span>{' '}
+              <span className="md:block md:whitespace-nowrap">for serious work.</span>
             </h1>
-            <p className="hero-reveal hero-reveal-2 mt-5 max-w-[35rem] text-base font-normal leading-[1.6] text-slate-200 sm:text-lg md:mt-5 md:text-[18px]">
+            <p className="hero-reveal hero-reveal-2 mt-5 max-w-[560px] text-base font-normal leading-[1.7] text-slate-200 sm:text-lg md:text-[22px]">
               Zentric Analytics engineers reliable software, AI, and data platforms that help organizations build secure, scalable, and future-ready technology.
             </p>
-            <div className="hero-reveal hero-reveal-3 mt-7 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="hero-reveal hero-reveal-3 mt-9 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
               <Link className="btn hero-cta-primary" href="/services">
                 Explore Services
               </Link>
