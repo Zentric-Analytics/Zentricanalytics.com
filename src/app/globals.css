@@ -65,8 +65,7 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:Inter,system-ui,-appl
 .site-header a:focus-visible,.site-header button:focus-visible{outline:2px solid #0B1F3A;outline-offset:4px;box-shadow:none}
 .site-header .btn:focus-visible{outline-color:#0B1F3A;box-shadow:none}
 
-@media (min-width:768px){.site-header__desktop-cta{height:52px;min-height:52px;min-width:170px;gap:12px;padding:14px 28px}}
-@media (min-width:1024px){.site-header__desktop-cta{height:56px;min-height:56px;min-width:180px;border-radius:16px;font-size:17px;font-weight:600}}
+@media (min-width:768px){.site-header__desktop-cta{height:48px;min-height:48px;min-width:155px;gap:10px;border-radius:14px;padding:12px 22px;font-size:16px;font-weight:600}.site-header__desktop-cta .zentric-primary-cta__arrow{font-size:16px}}
 
 .card{max-width:100%;min-width:0;overflow-wrap:break-word;background:white;border:1px solid #e2e8f0;border-radius:1.25rem;box-shadow:0 12px 30px rgba(15,23,42,.06)}
 
