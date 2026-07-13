@@ -206,10 +206,11 @@ export default function Home() {
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-16 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:py-[88px] lg:gap-8">
           <div className="max-w-[700px]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[25rem] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white sm:max-w-[28rem] md:max-w-[700px] md:text-[56px]">
-              <span className="md:block md:whitespace-nowrap">Engineering reliable software,</span>{' '}
-              <span className="md:block md:whitespace-nowrap">data, and AI systems</span>{' '}
-              <span className="md:block md:whitespace-nowrap">for serious work.</span>
+            <h1 className="hero-reveal hero-reveal-1 max-w-[600px] text-[56px] font-bold leading-[1.05] tracking-[-0.03em] text-white">
+              <span className="md:block">Engineering reliable software,</span>{' '}
+              <span className="md:block">data, and AI systems</span>{' '}
+              <span className="md:block">for serious</span>{' '}
+              <span className="md:block">work.</span>
             </h1>
             <p className="hero-reveal hero-reveal-2 mt-5 max-w-[520px] text-base font-normal leading-[1.7] text-slate-200 sm:text-lg md:text-[22px]">
               Zentric Analytics engineers reliable software, AI, and data platforms that help organizations build secure, scalable, and future-ready technology.
