@@ -161,39 +161,39 @@ const philosophyPrinciples: Array<{ Icon: LucideIcon; title: string; description
   },
 ];
 
-const trustPrinciples: Array<{ number: string; title: string; description: string }> = [
+const trustPrinciples: Array<{ icon: 'wrench' | 'shield-check' | 'lock-keyhole' | 'microscope' | 'messages-square' | 'badge-check'; title: string; description: string }> = [
   {
-    number: '01',
+    icon: 'wrench',
     title: 'Disciplined Engineering',
     description:
       'Every engagement begins with structured planning, thoughtful architecture, and implementation practices designed for reliability.',
   },
   {
-    number: '02',
+    icon: 'shield-check',
     title: 'Security by Design',
     description:
       'Security, privacy, and operational resilience are considered throughout the development lifecycle, not added at the end.',
   },
   {
-    number: '03',
+    icon: 'lock-keyhole',
     title: 'Long-Term Maintainability',
     description:
       'Solutions are designed to evolve with changing business requirements instead of becoming short-term technical debt.',
   },
   {
-    number: '04',
+    icon: 'microscope',
     title: 'Research-Driven Innovation',
     description:
       'Emerging technologies are evaluated carefully and applied only where they create practical, measurable value.',
   },
   {
-    number: '05',
+    icon: 'messages-square',
     title: 'Transparent Collaboration',
     description:
       'Clear communication, measurable milestones, and shared visibility keep teams aligned from discovery through delivery.',
   },
   {
-    number: '06',
+    icon: 'badge-check',
     title: 'Quality Without Compromise',
     description:
       'Testing, review, documentation, and continuous improvement are treated as core parts of engineering delivery.',
@@ -330,7 +330,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="why-choose-section bg-white px-4 py-10 sm:px-6 sm:py-[52px] lg:py-16" aria-labelledby="why-choose-heading">
+      <section className="why-choose-section bg-white px-4 py-9 sm:px-6 sm:py-11 lg:py-14" aria-labelledby="why-choose-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="WHY CHOOSE ZENTRIC ANALYTICS"
