@@ -124,8 +124,8 @@ export function IndustriesSlider() {
   }, [updateScrollState]);
 
   return (
-    <div className="mt-6 overflow-hidden sm:mt-7">
-      <div className="mb-3 flex justify-end gap-2">
+    <div className="relative mt-6 overflow-hidden">
+      <div className="absolute right-0 top-0 z-10 flex justify-end gap-2">
         <button
           aria-label="Previous industries"
           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0B1F3A] transition-colors duration-200 ease-out hover:border-[#94A3B8] hover:bg-[#F8FAFC] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#10B981] disabled:cursor-not-allowed disabled:border-[#E5E7EB] disabled:text-[#94A3B8] disabled:hover:bg-white"
@@ -164,19 +164,19 @@ export function IndustriesSlider() {
       >
         {industries.map((industry) => (
           <article
-            className="group flex min-w-[84vw] snap-start flex-col rounded-2xl border border-[#E5E7EB] bg-white p-5 text-left transition-[border-color] duration-200 ease-out hover:border-[#10B981]/55 focus-within:border-[#10B981]/70 sm:min-w-[calc((100%-18px)/2)] md:min-w-[calc((100%-36px)/3)] lg:min-w-[340px] lg:max-w-[340px] lg:p-6"
+            className="group flex min-w-[84vw] snap-start flex-col rounded-2xl border border-[#E5E7EB] bg-white p-5 text-left transition-[border-color] duration-200 ease-out hover:border-[#10B981]/55 focus-within:border-[#10B981]/70 sm:min-w-[calc((100%-18px)/2)] md:min-w-[calc((100%-36px)/3)] lg:min-w-[320px] lg:max-w-[320px]"
             data-industry-card=""
             key={industry.title}
           >
             <industry.Icon
               aria-hidden="true"
-              className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
+              className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
               strokeWidth={1.75}
             />
-            <h3 className="mt-4 text-[1.125rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-[1.25rem]">
+            <h3 className="mt-3.5 text-[1.125rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-[1.25rem]">
               {industry.title}
             </h3>
-            <p className="mt-2.5 max-w-[34rem] text-[0.9375rem] leading-[1.58] text-[#475569] sm:text-base">
+            <p className="mt-2 max-w-[34rem] text-[0.9375rem] leading-[1.55] text-[#475569] sm:text-base">
               {industry.description}
             </p>
           </article>
