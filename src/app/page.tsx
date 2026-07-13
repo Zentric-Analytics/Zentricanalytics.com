@@ -15,44 +15,30 @@ const finalCtaMarqueeKeywords = [
   'Emerging Technologies',
 ] as const;
 
-const capabilities: Array<{ Icon: LucideIcon; title: string; description: string; featured?: boolean }> = [
+const capabilities: Array<{ Icon: LucideIcon; title: string }> = [
   {
     Icon: CodeXml,
     title: 'Software Engineering',
-    description:
-      'Reliable software systems built for performance, scalability, security, and long-term maintainability.',
-    featured: true,
   },
   {
     Icon: BrainCircuit,
     title: 'Artificial Intelligence',
-    description:
-      'Applied AI solutions that improve decision-making, automate workflows, and create measurable business value.',
   },
   {
     Icon: ChartColumn,
     title: 'Data & Analytics',
-    description:
-      'Modern analytics platforms that transform data into meaningful insights and informed decisions.',
-  },
-  {
-    Icon: FlaskConical,
-    title: 'Research & Innovation',
-    description:
-      'Research-led exploration of emerging technologies with practical engineering outcomes.',
   },
   {
     Icon: CloudCog,
     title: 'Cloud & Infrastructure',
-    description:
-      'Secure, resilient, and scalable cloud platforms designed for enterprise environments.',
+  },
+  {
+    Icon: FlaskConical,
+    title: 'Research & Innovation',
   },
   {
     Icon: Cpu,
     title: 'Emerging Technologies',
-    description:
-      'Evaluating, validating, and implementing future-ready technologies responsibly and strategically.',
-    featured: true,
   },
 ];
 
@@ -284,53 +270,35 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 py-9 sm:px-6 sm:py-11 lg:py-[52px]" aria-labelledby="core-capabilities-heading">
+      <section className="border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 py-[34px] sm:px-6 sm:py-10 lg:py-12" aria-labelledby="core-capabilities-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
-            className="[&_h2]:mt-3 [&_h2]:text-[clamp(1.75rem,3.15vw,2.5rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-4 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:text-[0.9375rem] [&_p:last-child]:leading-[1.58] sm:[&_p:last-child]:text-base"
+            className="[&_h2]:mt-2.5 [&_h2]:text-[clamp(1.75rem,3.15vw,2.5rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-3.5 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:text-[0.9375rem] [&_p:last-child]:leading-[1.58] sm:[&_p:last-child]:text-base"
             eyebrow="CORE CAPABILITIES"
             heading="Engineering expertise across software, AI, data, infrastructure, and research."
             headingId="core-capabilities-heading"
             description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
           />
 
-          <div className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-2 sm:gap-3.5 md:[&>article:first-child]:col-span-2 lg:grid-cols-12 lg:grid-rows-[auto_auto_auto] lg:gap-4 lg:[&>article:first-child]:col-span-7">
-            {capabilities.map((capability) => {
-              const tileClassName =
-                capability.title === 'Software Engineering'
-                  ? 'lg:col-start-1 lg:row-start-1 lg:p-6'
-                  : capability.title === 'Artificial Intelligence'
-                    ? 'lg:col-span-5 lg:col-start-8 lg:row-start-1'
-                    : capability.title === 'Data & Analytics'
-                      ? 'lg:col-span-5 lg:col-start-1 lg:row-start-2'
-                      : capability.title === 'Research & Innovation'
-                        ? 'lg:col-span-6 lg:col-start-1 lg:row-start-3'
-                        : capability.title === 'Cloud & Infrastructure'
-                          ? 'lg:col-span-7 lg:col-start-6 lg:row-start-2'
-                          : 'lg:col-span-6 lg:col-start-7 lg:row-start-3';
-
-              return (
-                <article
-                  className={`${tileClassName} group flex flex-col rounded-[17px] border border-[#E2E8F0] bg-white p-[17px] shadow-[0_6px_14px_rgba(11,31,58,0.018)] transition-[background-color,border-color,transform] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] motion-safe:hover:-translate-y-0.5 sm:p-5 lg:p-[22px]`}
-                  key={capability.title}
-                >
-                  <capability.Icon
-                    aria-hidden="true"
-                    className="size-[21px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] group-focus-visible:text-[#10B981] sm:size-[22px] lg:size-[23px]"
-                    strokeWidth={1.75}
-                  />
-                  <h3 className="mt-3 text-lg font-bold leading-[1.2] tracking-[-0.02em] text-[#0B1F3A] sm:text-[1.1875rem]">
-                    {capability.title}
-                  </h3>
-                  <p className="mt-2 max-w-[36rem] text-[0.90625rem] leading-[1.58] text-[#475569] sm:text-[0.9375rem] sm:leading-[1.56]">
-                    {capability.description}
-                  </p>
-                </article>
-              );
-            })}
+          <div className="mt-6 grid gap-x-12 sm:mt-7 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-3 lg:gap-x-16">
+            {capabilities.map((capability) => (
+              <div
+                className="group flex items-center gap-3.5 border-b border-[#DCE3EA] py-4 text-left transition-colors duration-200 ease-out last:border-b-0 sm:[&:nth-child(3)]:border-b-0 sm:[&:nth-last-child(-n+1)]:border-b-0"
+                key={capability.title}
+              >
+                <capability.Icon
+                  aria-hidden="true"
+                  className="size-[21px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-[22px]"
+                  strokeWidth={1.75}
+                />
+                <h3 className="text-[1.0625rem] font-bold leading-[1.2] tracking-[-0.018em] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:text-lg">
+                  {capability.title}
+                </h3>
+              </div>
+            ))}
           </div>
 
-          <div className="mt-6 flex justify-center sm:mt-7 lg:mt-8">
+          <div className="mt-6 flex justify-center sm:mt-7">
             <Link className="btn zentric-primary-cta" href="/services">
               <span>Explore All Capabilities</span>
               <span className="zentric-primary-cta__arrow" aria-hidden="true">
