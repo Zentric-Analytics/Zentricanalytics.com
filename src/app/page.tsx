@@ -294,7 +294,7 @@ export default function Home() {
             description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
           />
 
-          <div className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-2 sm:gap-3.5 md:[&>a:first-child]:col-span-2 lg:grid-cols-12 lg:grid-rows-[auto_auto_auto] lg:gap-4 lg:[&>a:first-child]:col-span-7">
+          <div className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-2 sm:gap-3.5 md:[&>article:first-child]:col-span-2 lg:grid-cols-12 lg:grid-rows-[auto_auto_auto] lg:gap-4 lg:[&>article:first-child]:col-span-7">
             {capabilities.map((capability) => {
               const tileClassName =
                 capability.title === 'Software Engineering'
@@ -310,9 +310,8 @@ export default function Home() {
                           : 'lg:col-span-6 lg:col-start-7 lg:row-start-3';
 
               return (
-                <Link
-                  className={`${tileClassName} group flex cursor-pointer flex-col rounded-[17px] border border-[#E2E8F0] bg-white p-[17px] outline-none shadow-[0_6px_14px_rgba(11,31,58,0.018)] transition-[background-color,border-color,transform] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] focus-visible:border-[#10B981]/70 focus-visible:bg-[#F8FAFC] focus-visible:ring-2 focus-visible:ring-[#10B981] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F3F6F9] motion-safe:hover:-translate-y-0.5 sm:p-5 lg:p-[22px]`}
-                  href="/services"
+                <article
+                  className={`${tileClassName} group flex flex-col rounded-[17px] border border-[#E2E8F0] bg-white p-[17px] shadow-[0_6px_14px_rgba(11,31,58,0.018)] transition-[background-color,border-color,transform] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] motion-safe:hover:-translate-y-0.5 sm:p-5 lg:p-[22px]`}
                   key={capability.title}
                 >
                   <capability.Icon
@@ -326,9 +325,18 @@ export default function Home() {
                   <p className="mt-2 max-w-[36rem] text-[0.90625rem] leading-[1.58] text-[#475569] sm:text-[0.9375rem] sm:leading-[1.56]">
                     {capability.description}
                   </p>
-                </Link>
+                </article>
               );
             })}
+          </div>
+
+          <div className="mt-6 flex justify-center sm:mt-7 lg:mt-8">
+            <Link className="btn zentric-primary-cta" href="/services">
+              <span>Explore All Capabilities</span>
+              <span className="zentric-primary-cta__arrow" aria-hidden="true">
+                →
+              </span>
+            </Link>
           </div>
         </div>
       </section>
