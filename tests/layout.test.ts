@@ -142,7 +142,7 @@ describe('public layout shell', () => {
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
-    expect(header).toContain('className="whitespace-nowrap text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#0B1F3A] md:text-[28px] lg:text-[30px]"');
+    expect(header).toContain('className="whitespace-nowrap text-[30px] font-extrabold leading-[1] tracking-[-0.04em] text-[#0B1F3A]"');
     expect(header).toContain('focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B1F3A]');
     expect(header).not.toContain('focus-visible:ring-[#10B981]');
     expect(header).not.toContain('focus:ring-[#10B981]');
@@ -151,7 +151,7 @@ describe('public layout shell', () => {
     expect(header).toContain("style={{ fontFamily: 'Manrope, sans-serif' }}");
     expect(header).not.toContain('zentric-wordmark text-[#0B1F3A]');
     const globals = readFileSync('src/app/globals.css', 'utf8');
-    expect(globals).toContain('family=Manrope:wght@600;700');
+    expect(globals).toContain('family=Manrope:wght@600;700;800');
     expect(globals).toContain('.site-header a:focus,.site-header button:focus{outline:none;box-shadow:none}');
     expect(globals).toContain('.site-header a:focus-visible,.site-header button:focus-visible{outline:2px solid #0B1F3A;outline-offset:4px;box-shadow:none}');
   });
