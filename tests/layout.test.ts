@@ -129,7 +129,7 @@ describe('public layout shell', () => {
     expect(header).not.toContain('Apply Now');
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
-    expect(header).toContain('text-lg font-semibold tracking-[-0.02em]');
+    expect(header).toContain('text-[22px] font-extrabold tracking-[-0.025em]');
   });
 
   it('renders the premium corporate footer navigation and contact resources', () => {
