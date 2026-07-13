@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Braces, BrainCircuit, Building2, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, Factory, FlaskConical, GraduationCap, HeartPulse, Landmark, LifeBuoy, Network, Rocket, Search, ShieldCheck, Target, Truck, type LucideIcon } from 'lucide-react';
+import { Braces, BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, FlaskConical, LifeBuoy, Network, Rocket, Search, ShieldCheck, Target, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
-import { DesignSystemCard } from '@/components/DesignSystemCard';
+import { IndustriesSlider } from '@/components/IndustriesSlider';
 import { EnterpriseAccordion } from '@/components/EnterpriseAccordion';
 
 const finalCtaMarqueeKeywords = [
@@ -39,45 +39,6 @@ const capabilities: Array<{ Icon: LucideIcon; title: string }> = [
   {
     Icon: Cpu,
     title: 'Emerging Technologies',
-  },
-];
-
-const industries: Array<{ Icon: LucideIcon; title: string; description: string }> = [
-  {
-    title: 'Healthcare',
-    description:
-      'Reliable digital platforms, secure data systems, and intelligent healthcare technology that improve operational efficiency.',
-    Icon: HeartPulse,
-  },
-  {
-    title: 'Financial Services',
-    description:
-      'Modern software, analytics, and secure digital solutions built for financial institutions and business operations.',
-    Icon: Landmark,
-  },
-  {
-    title: 'Government & Public Sector',
-    description:
-      'Scalable digital platforms and technology solutions that support efficient public service delivery.',
-    Icon: Building2,
-  },
-  {
-    title: 'Education',
-    description:
-      'Modern learning platforms, institutional systems, analytics, and digital transformation for education.',
-    Icon: GraduationCap,
-  },
-  {
-    title: 'Manufacturing',
-    description:
-      'Engineering software and intelligent systems that improve operational visibility, automation, and productivity.',
-    Icon: Factory,
-  },
-  {
-    title: 'Logistics & Supply Chain',
-    description:
-      'Technology solutions that optimize movement, visibility, planning, and operational decision-making.',
-    Icon: Truck,
   },
 ];
 
@@ -364,7 +325,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-10 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="industries-heading">
+      <section className="bg-white px-4 py-8 sm:px-6 sm:py-10 lg:py-12" aria-labelledby="industries-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="INDUSTRIES WE SERVE"
@@ -373,23 +334,7 @@ export default function Home() {
             description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
           />
 
-          <div className="mt-8 grid gap-4 sm:gap-5 md:grid-cols-2 lg:mt-9 lg:grid-cols-3 lg:gap-6">
-            {industries.map((industry) => (
-              <DesignSystemCard className="industry-card" interactive key={industry.title} variant="standard">
-                <industry.Icon
-                  aria-hidden="true"
-                  className="size-6 shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-7"
-                  strokeWidth={1.75}
-                />
-                <h3 className="mt-4 text-[1.25rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-[1.4375rem]">
-                  {industry.title}
-                </h3>
-                <p className="mt-3 max-w-[34rem] text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem] sm:leading-[1.6]">
-                  {industry.description}
-                </p>
-              </DesignSystemCard>
-            ))}
-          </div>
+          <IndustriesSlider />
         </div>
       </section>
 
