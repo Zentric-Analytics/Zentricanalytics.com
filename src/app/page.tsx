@@ -203,13 +203,15 @@ const trustPrinciples: Array<{ icon: 'wrench' | 'shield-check' | 'lock-keyhole' 
 export default function Home() {
   return (
     <PageShell>
-      <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white md:min-h-[720px]">
-        <div className="mx-auto grid w-full max-w-[1440px] items-center gap-10 px-4 py-16 md:min-h-[720px] md:grid-cols-[minmax(0,46%)_minmax(0,54%)] md:gap-0 md:px-8 md:py-0 lg:px-12">
-          <div className="min-w-0 max-w-[620px] self-center md:pr-8 lg:pr-10">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[620px] text-[clamp(2.4rem,9.5vw,3.625rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white md:text-[58px]">
-              Engineering reliable software, data, and AI systems for serious work.
+      <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-16 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:py-[88px] lg:gap-8">
+          <div className="max-w-[700px]">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[25rem] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white sm:max-w-[28rem] md:max-w-[700px] md:text-[56px]">
+              <span className="md:block md:whitespace-nowrap">Engineering reliable software,</span>{' '}
+              <span className="md:block md:whitespace-nowrap">data, and AI systems</span>{' '}
+              <span className="md:block md:whitespace-nowrap">for serious work.</span>
             </h1>
-            <p className="hero-reveal hero-reveal-2 mt-5 max-w-[520px] text-base font-normal leading-[1.7] text-slate-200 sm:text-lg md:text-[20px]">
+            <p className="hero-reveal hero-reveal-2 mt-5 max-w-[520px] text-base font-normal leading-[1.7] text-slate-200 sm:text-lg md:text-[22px]">
               Zentric Analytics engineers reliable software, AI, and data platforms that help organizations build secure, scalable, and future-ready technology.
             </p>
             <div className="hero-reveal hero-reveal-3 mt-9 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
@@ -225,16 +227,17 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-reveal hero-reveal-4 min-w-0 self-center justify-self-center md:w-full md:justify-self-end">
-            <Image
-              src="/images/hero/hero-engineering-team-v2.png"
-              alt="Software engineers collaborating on code and system architecture in a modern office"
-              width={1536}
-              height={1024}
-              priority
-              sizes="(min-width: 768px) 54vw, calc(100vw - 2rem)"
-              className="h-auto w-full max-w-full rounded-r-xl rounded-l-none object-contain"
-            />
+          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:-mr-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] md:w-[50vw] md:max-w-none md:justify-self-end lg:w-[49vw]">
+            <div className="relative aspect-[16/10.5] overflow-hidden rounded-r-xl rounded-l-none md:min-h-[29rem] lg:min-h-[31.5rem]">
+              <Image
+                src="/images/hero/hero-engineering-team-v2.png"
+                alt="Software engineers collaborating on code and system architecture in a modern office"
+                fill
+                priority
+                sizes="(min-width: 1180px) 50vw, (min-width: 768px) 50vw, calc(100vw - 2rem)"
+                className="object-cover object-[67%_30%] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.18)_12%,rgba(0,0,0,0.82)_32%,#000_43%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
+              />
+            </div>
           </div>
         </div>
         <svg
