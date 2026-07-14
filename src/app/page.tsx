@@ -1,10 +1,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, FlaskConical, ShieldCheck, Target, type LucideIcon } from 'lucide-react';
+import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, FlaskConical, Network, Rocket, Search, ShieldCheck, Target, RefreshCcw, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { IndustriesSlider } from '@/components/IndustriesSlider';
-import { EnterpriseAccordion } from '@/components/EnterpriseAccordion';
 
 const finalCtaMarqueeKeywords = [
   'Software Engineering',
@@ -69,42 +68,36 @@ const philosophyPrinciples: Array<{ Icon: LucideIcon; title: string; description
   },
 ];
 
-const trustPrinciples: Array<{ icon: 'wrench' | 'shield-check' | 'lock-keyhole' | 'microscope' | 'messages-square' | 'badge-check'; title: string; description: string }> = [
+const clientChoiceProcess: Array<{ Icon: LucideIcon; title: string; description: string }> = [
   {
-    icon: 'wrench',
-    title: 'Disciplined Engineering',
+    Icon: Search,
+    title: 'Understand Your Business',
     description:
-      'Every engagement begins with structured planning, thoughtful architecture, and implementation practices designed for reliability.',
+      'We begin by learning your goals, challenges, and technical requirements before proposing any solution.',
   },
   {
-    icon: 'shield-check',
-    title: 'Security by Design',
+    Icon: Network,
+    title: 'Design the Right Solution',
     description:
-      'Security, privacy, and operational resilience are considered throughout the development lifecycle, not added at the end.',
+      'We create scalable architectures and practical implementation plans tailored to your organization.',
   },
   {
-    icon: 'lock-keyhole',
-    title: 'Long-Term Maintainability',
+    Icon: CodeXml,
+    title: 'Build with Quality',
     description:
-      'Solutions are designed to evolve with changing business requirements instead of becoming short-term technical debt.',
+      'Our engineers develop secure, maintainable, and high-performance software using modern engineering practices.',
   },
   {
-    icon: 'microscope',
-    title: 'Research-Driven Innovation',
+    Icon: Rocket,
+    title: 'Deploy with Confidence',
     description:
-      'Emerging technologies are evaluated carefully and applied only where they create practical, measurable value.',
+      'Solutions are thoroughly tested and released using reliable deployment practices.',
   },
   {
-    icon: 'messages-square',
-    title: 'Transparent Collaboration',
+    Icon: RefreshCcw,
+    title: 'Support & Improve',
     description:
-      'Clear communication, measurable milestones, and shared visibility keep teams aligned from discovery through delivery.',
-  },
-  {
-    icon: 'badge-check',
-    title: 'Quality Without Compromise',
-    description:
-      'Testing, review, documentation, and continuous improvement are treated as core parts of engineering delivery.',
+      'We continue monitoring, maintaining, and improving your systems as your business evolves.',
   },
 ];
 
@@ -234,14 +227,41 @@ export default function Home() {
       <section className="why-choose-section bg-white px-4 py-8 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="why-choose-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
-            eyebrow="WHY CHOOSE ZENTRIC ANALYTICS"
-            heading="Built for organizations that need technology they can depend on."
+            eyebrow="WHY CLIENTS CHOOSE ZENTRIC"
+            heading="A disciplined approach to building technology that lasts."
             headingId="why-choose-heading"
-            description="Zentric Analytics combines disciplined engineering, responsible technology adoption, and long-term architectural thinking to help organizations build systems that remain reliable beyond launch."
-            className="why-choose-header"
+            description="Every successful partnership begins with understanding your business, designing the right solution, building with quality, deploying with confidence, and supporting long-term growth."
+            className="engineering-process-header"
           />
 
-          <EnterpriseAccordion items={trustPrinciples} />
+          <div className="relative mt-6 lg:mt-7">
+            <div
+              aria-hidden="true"
+              className="absolute left-[26px] top-[26px] h-[calc(100%-52px)] w-0.5 bg-[#DCE3EA] md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
+            />
+            <div className="relative grid items-stretch gap-y-6 pl-[70px] md:grid-cols-3 md:gap-x-7 md:gap-y-7 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
+              {clientChoiceProcess.map((step) => (
+                <article
+                  className="engineering-process-card group relative flex min-h-[52px] w-full flex-col items-center text-center lg:flex-1"
+                  key={step.title}
+                >
+                  <div className="absolute -left-[70px] top-0 flex size-[52px] shrink-0 items-center justify-center rounded-full border border-[#DCE3EA] bg-white shadow-[0_8px_22px_rgba(11,31,58,0.08)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#94A3B8] group-hover:shadow-[0_12px_26px_rgba(11,31,58,0.10)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto">
+                    <step.Icon
+                      aria-hidden="true"
+                      className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
+                      strokeWidth={1.75}
+                    />
+                  </div>
+                  <h3 className="mt-0 flex w-full items-start justify-center text-center text-lg font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A] md:mt-4 md:text-[1.0625rem] lg:min-h-0">
+                    {step.title}
+                  </h3>
+                  <p className="mt-1.5 w-full max-w-[24rem] text-sm leading-[1.5] text-[#475569] sm:text-[0.9375rem] md:max-w-[13rem] md:text-center">
+                    {step.description}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
