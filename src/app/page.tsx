@@ -245,7 +245,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:py-12" aria-labelledby="industries-heading">
+      <section className="bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-12 lg:py-12" aria-labelledby="industries-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             eyebrow="INDUSTRIES WE SERVE"
