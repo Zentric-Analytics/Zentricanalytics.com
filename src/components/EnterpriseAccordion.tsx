@@ -59,7 +59,7 @@ export function EnterpriseAccordion({ items }: EnterpriseAccordionProps) {
   };
 
   return (
-    <div className="why-choose-accordion mx-auto mt-7 w-full max-w-[1000px]" role="presentation">
+    <div className="why-choose-accordion mx-auto mt-5 w-full max-w-[1000px]" role="presentation">
       {items.map((item, index) => {
         const isOpen = openIndex === index;
         const Icon = accordionIcons[item.icon];
@@ -74,7 +74,7 @@ export function EnterpriseAccordion({ items }: EnterpriseAccordionProps) {
             <button
               aria-controls={panelId}
               aria-expanded={isOpen}
-              className="group flex min-h-16 w-full items-center gap-2.5 px-4 py-3.5 text-left outline-none transition-colors duration-[275ms] ease-out focus-visible:bg-[#FAFAFA] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#10B981] sm:min-h-[68px] sm:gap-3 sm:px-5 sm:py-[18px] lg:px-6"
+              className="group flex min-h-[58px] w-full items-center gap-2.5 px-4 py-3 text-left outline-none transition-colors duration-[275ms] ease-out focus-visible:bg-[#FAFAFA] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#10B981] sm:min-h-[62px] sm:gap-3 sm:px-5 sm:py-3.5 lg:px-6"
               id={buttonId}
               onClick={() => setOpenIndex(index)}
               onKeyDown={(event) => handleKeyDown(event, index)}
@@ -88,7 +88,7 @@ export function EnterpriseAccordion({ items }: EnterpriseAccordionProps) {
                 className={`size-[21px] shrink-0 text-[#0B1F3A] transition-colors duration-[275ms] ease-out sm:size-[22px] ${isOpen ? 'text-[#10B981]' : 'group-hover:text-[#10B981]'}`}
                 strokeWidth={1.75}
               />
-              <span className="flex-1 text-lg font-bold leading-[1.18] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#102A4A] sm:text-[1.1875rem] lg:text-[1.3125rem]">
+              <span className="flex-1 text-[1.0625rem] font-bold leading-[1.18] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#102A4A] sm:text-lg lg:text-[1.1875rem]">
                 {item.title}
               </span>
               <span className="relative flex size-6 shrink-0 items-center justify-center text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#10B981] sm:size-7" aria-hidden="true">
@@ -103,7 +103,7 @@ export function EnterpriseAccordion({ items }: EnterpriseAccordionProps) {
               role="region"
             >
               <div className="min-h-0 overflow-hidden">
-                <p className="ml-[31px] max-w-[48rem] pb-[18px] pt-3 text-[0.9375rem] leading-[1.6] text-[#475569] sm:ml-[34px] sm:text-base">
+                <p className="ml-[31px] max-w-[48rem] pb-4 pt-1 text-[0.9375rem] leading-[1.6] text-[#475569] sm:ml-[34px] sm:text-base">
                   {item.description}
                 </p>
               </div>

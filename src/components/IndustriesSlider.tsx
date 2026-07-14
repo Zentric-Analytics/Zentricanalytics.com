@@ -90,7 +90,7 @@ const IndustryCard = memo(function IndustryCard({
   return (
     <article
       aria-hidden={isClone}
-      className="group flex min-w-[84vw] snap-start flex-col rounded-2xl border border-[#E5E7EB] bg-white p-5 text-left transition-[border-color] duration-200 ease-out hover:border-[#10B981]/55 focus-within:border-[#10B981]/70 sm:min-w-[calc((100%-18px)/2)] md:min-w-[calc((100%-36px)/3)] lg:min-w-[320px] lg:max-w-[320px]"
+      className="group flex min-w-[84vw] snap-start flex-col rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left sm:p-[18px] transition-[border-color] duration-200 ease-out hover:border-[#10B981]/55 focus-within:border-[#10B981]/70 sm:min-w-[calc((100%-18px)/2)] md:min-w-[calc((100%-36px)/3)] lg:min-w-[320px] lg:max-w-[320px]"
       data-industry-card=""
     >
       <industry.Icon
@@ -98,10 +98,10 @@ const IndustryCard = memo(function IndustryCard({
         className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
         strokeWidth={1.75}
       />
-      <h3 className="mt-3.5 text-[1.125rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-[1.25rem]">
+      <h3 className="mt-3 text-[1.0625rem] font-bold leading-[1.2] tracking-[-0.03em] text-[#0B1F3A] sm:text-[1.125rem]">
         {industry.title}
       </h3>
-      <p className="mt-2 max-w-[34rem] text-[0.9375rem] leading-[1.55] text-[#475569] sm:text-base">
+      <p className="mt-1.5 max-w-[34rem] text-[0.90625rem] leading-[1.5] text-[#475569] sm:text-[0.9375rem]">
         {industry.description}
       </p>
     </article>
@@ -352,7 +352,7 @@ export function IndustriesSlider() {
   ]);
 
   return (
-    <div className="relative mt-6 overflow-hidden">
+    <div className="relative mt-5 overflow-hidden">
       <div className="absolute right-0 top-0 z-10 flex justify-end gap-2">
         <button
           aria-label="Previous industries"
@@ -394,7 +394,7 @@ export function IndustriesSlider() {
 
       <div
         aria-label="Industries carousel"
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 pr-[12vw] [scrollbar-width:none] motion-reduce:scroll-auto sm:gap-[18px] sm:pr-[18vw] md:pr-0 [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-1 pr-[12vw] [scrollbar-width:none] motion-reduce:scroll-auto sm:gap-[18px] sm:pr-[18vw] md:pr-0 [&::-webkit-scrollbar]:hidden"
         onMouseEnter={pauseAutoplay}
         onMouseLeave={resumeAutoplay}
         onPointerCancel={resumeAutoplay}
