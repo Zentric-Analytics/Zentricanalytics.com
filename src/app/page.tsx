@@ -353,7 +353,7 @@ export default function Home() {
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[#0B1F3A]/76 md:bg-[linear-gradient(90deg,rgba(11,31,58,0.88)_0%,rgba(11,31,58,0.76)_42%,rgba(11,31,58,0.42)_68%,rgba(11,31,58,0.24)_100%)]"
+          className="absolute inset-0 -z-10 bg-[rgba(11,31,58,0.9)] md:bg-[linear-gradient(90deg,rgba(11,31,58,0.9)_0%,rgba(11,31,58,0.8)_42%,rgba(11,31,58,0.5)_68%,rgba(11,31,58,0.3)_100%)]"
         />
         <div className="editorial-reveal mx-auto flex max-w-6xl items-center md:min-h-[300px] lg:min-h-[344px]">
           <div className="flex max-w-[38rem] flex-col items-start md:w-[48%] lg:w-[46%]">
@@ -366,8 +366,24 @@ export default function Home() {
               tone="dark"
             />
             <Link
-              className="btn relative z-10 mt-6 bg-white text-[#0B1F3A] shadow-[0_12px_28px_rgba(0,0,0,0.16)] transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[#F8FAFC] hover:shadow-[0_16px_34px_rgba(0,0,0,0.20)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:mt-7"
+              className="mt-6 shadow-[0_12px_28px_rgba(0,0,0,0.16)] transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[#F8FAFC] hover:shadow-[0_16px_34px_rgba(0,0,0,0.20)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:mt-7"
               href="/careers"
+              style={{
+                background: '#ffffff',
+                color: '#0b1f3a',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '48px',
+                padding: '0 24px',
+                borderRadius: '14px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                position: 'relative',
+                zIndex: 30,
+                opacity: 1,
+                visibility: 'visible',
+              }}
             >
               View Careers
             </Link>
