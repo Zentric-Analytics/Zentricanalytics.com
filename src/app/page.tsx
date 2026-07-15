@@ -265,15 +265,24 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="flex items-center bg-[#F8FAFC] px-4 py-20 sm:px-6 sm:py-20 lg:py-24" aria-labelledby="industries-heading">
-        <div className="mx-auto w-full max-w-[1200px]">
-          <SectionHeader
-            eyebrow="INDUSTRIES WE SERVE"
-            heading="Engineering technology for organizations across critical industries."
-            headingId="industries-heading"
-            description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
-            className="[&>p:first-child]:mb-2 [&>p:last-child]:mx-auto [&>p:last-child]:mt-3 [&>p:last-child]:max-w-[650px]"
-          />
+      <section className="bg-[#F8FAFC] px-4 py-14 sm:px-6 sm:py-16 lg:py-20" aria-labelledby="industries-heading">
+        <div className="mx-auto grid w-full max-w-[1240px] items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14 xl:gap-16">
+          <div className="flex flex-col items-start">
+            <SectionHeader
+              eyebrow="INDUSTRIES WE SERVE"
+              heading="Engineering technology for organizations across critical industries."
+              headingId="industries-heading"
+              description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
+              className="[&>p:first-child]:mb-2 [&>p:last-child]:mt-4 [&>p:last-child]:max-w-[36rem]"
+            />
+
+            <Link className="btn zentric-primary-cta mt-7 w-full justify-center sm:w-auto" href="/industries">
+              <span>Explore All Industries</span>
+              <span className="zentric-primary-cta__arrow" aria-hidden="true">
+                →
+              </span>
+            </Link>
+          </div>
 
           <IndustriesIconGrid />
         </div>
