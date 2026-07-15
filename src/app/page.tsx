@@ -223,20 +223,21 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="why-choose-section bg-white px-4 py-8 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="why-choose-heading">
-        <div className="mx-auto max-w-6xl">
+      <section className="why-choose-section bg-white px-4 py-12 sm:px-6 sm:py-14 lg:py-16" aria-labelledby="why-choose-heading">
+        <div className="mx-auto max-w-[1280px] rounded-[28px] bg-[#0B1F3A] px-6 py-16 sm:px-8 md:px-12 lg:px-16 lg:py-20">
           <SectionHeader
             eyebrow="WHY CLIENTS CHOOSE ZENTRIC"
             heading="A disciplined approach to building technology that lasts."
             headingId="why-choose-heading"
             description="Every successful partnership begins with understanding your business, designing the right solution, building with quality, deploying with confidence, and supporting long-term growth."
+            tone="dark"
             className="engineering-process-header"
           />
 
           <div className="relative mt-6 lg:mt-7">
             <div
               aria-hidden="true"
-              className="absolute left-[26px] top-[26px] h-[calc(100%-52px)] w-0.5 bg-[#DCE3EA] md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
+              className="absolute left-[26px] top-[26px] h-[calc(100%-52px)] w-0.5 bg-slate-200/30 md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
             />
             <div className="relative grid items-stretch gap-y-6 pl-[70px] md:grid-cols-3 md:gap-x-7 md:gap-y-7 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
               {clientChoiceProcess.map((step) => (
@@ -244,17 +245,17 @@ export default function Home() {
                   className="engineering-process-card group relative flex min-h-[52px] w-full flex-col items-center text-center lg:flex-1"
                   key={step.title}
                 >
-                  <div className="absolute -left-[70px] top-0 flex size-[52px] shrink-0 items-center justify-center rounded-full border border-[#DCE3EA] bg-white shadow-[0_8px_22px_rgba(11,31,58,0.08)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#94A3B8] group-hover:shadow-[0_12px_26px_rgba(11,31,58,0.10)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto">
+                  <div className="absolute -left-[70px] top-0 flex size-[52px] shrink-0 items-center justify-center rounded-full border border-white/70 bg-[#F8FAFC] shadow-[0_10px_24px_rgba(2,8,23,0.18)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#10B981]/70 group-hover:shadow-[0_12px_26px_rgba(2,8,23,0.22)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto">
                     <step.Icon
                       aria-hidden="true"
                       className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
                       strokeWidth={1.75}
                     />
                   </div>
-                  <h3 className="mt-0 flex w-full items-start justify-center text-center text-lg font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A] md:mt-4 md:text-[1.0625rem] lg:min-h-0">
+                  <h3 className="mt-0 flex w-full items-start justify-center text-center text-lg font-bold leading-[1.2] tracking-[-0.025em] text-white md:mt-4 md:text-[1.0625rem] lg:min-h-0">
                     {step.title}
                   </h3>
-                  <p className="mt-1.5 w-full max-w-[24rem] text-sm leading-[1.5] text-[#475569] sm:text-[0.9375rem] md:max-w-[13rem] md:text-center">
+                  <p className="mt-1.5 w-full max-w-[24rem] text-sm leading-[1.5] text-slate-300 sm:text-[0.9375rem] md:max-w-[13rem] md:text-center">
                     {step.description}
                   </p>
                 </article>
