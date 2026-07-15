@@ -266,7 +266,7 @@ export default function Home() {
       </section>
 
       <section
-        className="relative isolate overflow-hidden bg-white px-4 py-8 sm:px-6 sm:py-10 lg:py-12"
+        className="relative isolate overflow-hidden bg-[#F7F8FA] px-4 py-8 sm:px-6 sm:py-10 lg:py-12"
         aria-labelledby="final-cta-heading"
       >
         <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
