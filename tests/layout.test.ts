@@ -5,13 +5,14 @@ const publicPages = [
   'src/app/page.tsx',
   'src/app/about/page.tsx',
   'src/app/services/page.tsx',
+  'src/app/industries/page.tsx',
   'src/app/careers/page.tsx',
   'src/app/apply/page.tsx',
   'src/app/track/page.tsx',
   'src/app/track/portal/page.tsx',
 ];
 
-const primaryNavLinks = ['Home', 'Services', 'Industries', 'Careers'];
+const primaryNavLinks = ['Home', 'Services', 'Solutions Across Industries', 'Careers'];
 const applicantNavLinks = ['Apply', 'Track Application'];
 
 const publicFacingBrandSourceFiles = [
@@ -93,7 +94,7 @@ describe('public layout shell', () => {
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
     expect(navigation).toContain("['/', 'Home']");
-    expect(navigation).toContain("['/industries', 'Industries']");
+    expect(navigation).toContain("['/industries', 'Solutions Across Industries']");
     expect(header).toContain("const isHomepage = pathname === '/'");
     expect(header).toContain("primaryNavigationLinks.filter(([href]) => href !== '/')");
     expect(header).toContain('{visibleNavigationLinks.map(([href, label]) => {');
