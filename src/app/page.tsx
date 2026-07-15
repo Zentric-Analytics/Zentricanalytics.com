@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, FlaskConical, Network, Rocket, Search, ShieldCheck, Target, RefreshCcw, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
-import { IndustriesSlider } from '@/components/IndustriesSlider';
+import { IndustriesIconGrid } from '@/components/IndustriesIconGrid';
 
 const finalCtaMarqueeKeywords = [
   'Software Engineering',
@@ -272,10 +272,10 @@ export default function Home() {
             heading="Engineering technology for organizations across critical industries."
             headingId="industries-heading"
             description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
-            className="[&>p:last-child]:mt-3"
+            className="[&>p:last-child]:mx-auto [&>p:last-child]:mt-3 [&>p:last-child]:max-w-[650px]"
           />
 
-          <IndustriesSlider />
+          <IndustriesIconGrid />
         </div>
       </section>
 
