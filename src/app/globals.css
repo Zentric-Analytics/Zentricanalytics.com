@@ -168,10 +168,14 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:Inter,system-ui,-appl
 .engineering-process-header>p:first-child{margin-bottom:10px}
 .engineering-process-header>h2{font-size:clamp(1.75rem,3.2vw,2.75rem);line-height:1.12}
 .engineering-process-header>h2+p{margin-top:14px;max-width:43rem;font-size:.9375rem;line-height:1.58}
+.why-choose-header>p:first-child{margin-bottom:8px}
+.why-choose-header>h2+p{margin-top:10px}
 
 @media (min-width:640px){
   .engineering-process-header>p:first-child{margin-bottom:12px}
   .engineering-process-header>h2+p{margin-top:16px;font-size:1rem}
+  .why-choose-header>p:first-child{margin-bottom:8px}
+  .why-choose-header>h2+p{margin-top:12px}
 }
 
 @media (min-width:1024px){
