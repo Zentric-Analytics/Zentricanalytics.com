@@ -34,7 +34,7 @@ function FormSection({ eyebrow, title, helper, children }: { eyebrow: string; ti
   return (
     <section className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
       <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-5 py-5 sm:px-6 lg:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand">{eyebrow}</p>
+        <p className="text-base font-bold uppercase tracking-[0.18em] text-brand">{eyebrow}</p>
         <h2 className="mt-2 text-xl font-bold text-ink sm:text-2xl">{title}</h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{helper}</p>
       </div>

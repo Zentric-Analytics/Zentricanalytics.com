@@ -297,7 +297,7 @@ export default function Home() {
         />
         <div className="editorial-reveal relative z-20 mx-auto flex max-w-6xl items-center sm:min-h-[288px] md:min-h-[292px] lg:min-h-[292px]">
           <div className="flex max-w-[36rem] flex-col items-start md:w-[48%] lg:w-[44%]">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#10B981]">
+            <p className="text-base font-bold uppercase tracking-[0.18em] text-[#10B981]">
               CAREERS
             </p>
             <h2 id="careers-preview-heading" className="mt-3 max-w-[34rem] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.04em] text-white">

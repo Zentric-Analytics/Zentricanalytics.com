@@ -224,7 +224,7 @@ export default async function Portal({
             <div className="border-b border-slate-100 bg-white p-5 sm:p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold uppercase tracking-widest text-accent">
+                  <p className="text-base font-bold uppercase tracking-[0.18em] text-accent">
                     Application ID
                   </p>
                   <h2
@@ -288,7 +288,7 @@ export default async function Portal({
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-widest text-accent">
+                <p className="text-base font-bold uppercase tracking-[0.18em] text-accent">
                   Progress
                 </p>
                 <h2
@@ -381,7 +381,7 @@ export default async function Portal({
           >
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-widest text-accent">
+                <p className="text-base font-bold uppercase tracking-[0.18em] text-accent">
                   Stage workspace
                 </p>
                 <h2

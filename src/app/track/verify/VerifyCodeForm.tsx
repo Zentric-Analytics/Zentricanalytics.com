@@ -25,7 +25,7 @@ export function VerifyCodeForm({ applicationId, email, requested, verifiedFailed
     <div className="mx-auto max-w-xl">
       <form action={verifyAccessCode} className="card space-y-6 border border-slate-200 p-5 shadow-sm sm:p-7" aria-labelledby="track-verify-heading">
         <div className="space-y-3">
-          <p className="text-sm font-semibold uppercase tracking-widest text-accent">Verification</p>
+          <p className="text-base font-bold uppercase tracking-[0.18em] text-accent">Verification</p>
           <h2 id="track-verify-heading" className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
             Enter your passcode
           </h2>
