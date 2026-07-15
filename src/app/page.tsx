@@ -266,10 +266,12 @@ export default function Home() {
       </section>
 
       <section
-        className="relative isolate overflow-hidden bg-[#F7F8FA] px-4 py-8 sm:px-6 sm:py-10 lg:py-12"
+        className="relative isolate overflow-hidden bg-[#F7F8FA] bg-cover bg-center bg-no-repeat px-4 py-8 sm:px-6 sm:py-10 lg:py-12"
+        style={{ backgroundImage: "url('/images/careers/careers-team-collaboration.png')" }}
         aria-labelledby="final-cta-heading"
       >
-        <div className="editorial-reveal mx-auto flex max-w-3xl flex-col items-center text-center">
+        <div aria-hidden="true" className="absolute inset-0 z-0 bg-white/90" />
+        <div className="editorial-reveal relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
           <SectionHeader
             align="center"
             eyebrow="READY TO BUILD?"
