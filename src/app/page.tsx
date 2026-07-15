@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, FlaskConical, Network, Rocket, Search, ShieldCheck, Target, RefreshCcw, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
-import { IndustriesIconGrid } from '@/components/IndustriesIconGrid';
 
 const finalCtaMarqueeKeywords = [
   'Software Engineering',
@@ -262,22 +261,6 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="bg-[#F8FAFC] px-4 py-14 sm:px-6 sm:py-16 lg:py-20" aria-labelledby="industries-heading">
-        <div className="mx-auto grid w-full max-w-[1240px] items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14 xl:gap-16">
-          <div className="flex flex-col items-start">
-            <SectionHeader
-              eyebrow="INDUSTRIES WE SERVE"
-              heading="Engineering technology for organizations across critical industries."
-              headingId="industries-heading"
-              description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
-              className="[&>p:first-child]:mb-2 [&>p:last-child]:mt-4 [&>p:last-child]:max-w-[36rem]"
-            />
-          </div>
-
-          <IndustriesIconGrid />
         </div>
       </section>
 
