@@ -39,11 +39,11 @@ const industries: Array<{ Icon: LucideIcon; title: string }> = [
 
 export function IndustriesIconGrid() {
   return (
-    <div className="mt-8">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-2 md:gap-y-8">
+    <div className="mt-6">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-x-10 gap-y-4 md:grid-cols-2 md:gap-y-5">
         {industries.map(({ Icon, title }) => (
           <Link
-            className="group flex min-h-16 cursor-pointer items-center gap-4 text-left text-[#0B1F3A] no-underline transition-colors duration-200 ease-out hover:text-[#10B981] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
+            className="group flex min-h-14 cursor-pointer items-center gap-4 text-left text-[#0B1F3A] no-underline transition-colors duration-200 ease-out hover:text-[#10B981] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]"
             href="/industries"
             key={title}
           >
@@ -64,7 +64,7 @@ export function IndustriesIconGrid() {
         ))}
       </div>
 
-      <div className="mt-8 flex justify-center">
+      <div className="mt-6 flex justify-center">
         <Link className="btn zentric-primary-cta" href="/industries">
           <span>Explore All Industries</span>
           <span className="zentric-primary-cta__arrow" aria-hidden="true">
