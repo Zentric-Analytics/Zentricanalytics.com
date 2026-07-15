@@ -275,13 +275,6 @@ export default function Home() {
               description="Every industry has unique operational, regulatory, and technical challenges. Zentric Analytics applies disciplined engineering, artificial intelligence, data platforms, and modern software solutions to help organizations build reliable, scalable, and future-ready technology."
               className="[&>p:first-child]:mb-2 [&>p:last-child]:mt-4 [&>p:last-child]:max-w-[36rem]"
             />
-
-            <Link className="btn zentric-primary-cta mt-7 w-full justify-center sm:w-auto" href="/industries">
-              <span>Explore All Industries</span>
-              <span className="zentric-primary-cta__arrow" aria-hidden="true">
-                →
-              </span>
-            </Link>
           </div>
 
           <IndustriesIconGrid />
