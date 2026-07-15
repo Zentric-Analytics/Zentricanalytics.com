@@ -265,43 +265,6 @@ export default function Home() {
       </section>
 
       <section
-        className="relative overflow-hidden bg-[#0B1F3A] px-4 py-16 text-white sm:min-h-[400px] sm:px-6 sm:py-14 md:min-h-[400px] lg:min-h-[420px] lg:py-16"
-        aria-labelledby="careers-preview-heading"
-      >
-        <Image
-          src="/images/careers/careers-team-collaboration.png"
-          alt=""
-          fill
-          sizes="100vw"
-          className="z-0 object-cover object-center md:object-[68%_center] lg:object-[center_right]"
-          priority={false}
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 z-10 bg-[rgba(11,31,58,0.72)] md:bg-[linear-gradient(90deg,rgba(11,31,58,0.78)_0%,rgba(11,31,58,0.64)_42%,rgba(11,31,58,0.36)_72%,rgba(11,31,58,0.2)_100%)]"
-        />
-        <div className="editorial-reveal relative z-20 mx-auto flex max-w-6xl items-center sm:min-h-[288px] md:min-h-[292px] lg:min-h-[292px]">
-          <div className="flex max-w-[36rem] flex-col items-start md:w-[48%] lg:w-[44%]">
-            <p className="text-base font-bold uppercase tracking-[0.18em] text-[#10B981]">
-              CAREERS
-            </p>
-            <h2 id="careers-preview-heading" className="mt-3 max-w-[34rem] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.04em] text-white">
-              Build technology that matters.
-            </h2>
-            <p className="mt-4 max-w-[34rem] text-base leading-[1.65] text-slate-100 sm:text-lg">
-              Join engineers, researchers, and designers building secure software, AI, and data solutions for organizations solving real-world challenges.
-            </p>
-            <Link
-              className="mt-6 inline-flex min-h-12 items-center justify-center rounded-[14px] bg-white px-6 font-semibold text-[#0B1F3A] no-underline shadow-[0_12px_28px_rgba(0,0,0,0.16)] transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[#F8FAFC] hover:shadow-[0_16px_34px_rgba(0,0,0,0.20)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-              href="/careers"
-            >
-              View Careers
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section
         className="relative isolate overflow-hidden bg-white px-4 py-8 sm:px-6 sm:py-10 lg:py-12"
         aria-labelledby="final-cta-heading"
       >
@@ -309,9 +272,9 @@ export default function Home() {
           <SectionHeader
             align="center"
             eyebrow="READY TO BUILD?"
-            heading={<>Let&apos;s build technology that lasts.</>}
+            heading={<>Let&apos;s build technology that creates lasting impact.</>}
             headingId="final-cta-heading"
-            description="Whether you're planning a new platform, modernizing existing systems, exploring artificial intelligence, or developing a research-led technology initiative, Zentric Analytics can help you move from idea to reliable execution."
+            description="Whether you're looking for a trusted technology partner or exploring career opportunities, Zentric Analytics is committed to solving meaningful challenges through engineering, AI, data, cloud, and research-driven innovation."
           />
           <div
             className="final-cta-marquee mt-5 w-full max-w-3xl overflow-hidden sm:mt-6"
@@ -339,10 +302,16 @@ export default function Home() {
           </div>
           <div className="mt-5 flex w-full flex-col items-center gap-4 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center">
             <Link
-              className="btn btn-primary w-full sm:w-auto"
+              className="btn btn-primary w-full min-w-[12rem] sm:w-auto"
               href="/contact"
             >
-              Let&apos;s Talk
+              Start a Conversation
+            </Link>
+            <Link
+              className="btn btn-secondary w-full min-w-[12rem] sm:w-auto"
+              href="/careers"
+            >
+              Explore Careers
             </Link>
           </div>
         </div>
