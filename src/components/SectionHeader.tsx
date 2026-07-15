@@ -27,7 +27,7 @@ export function SectionHeader({
     <div
       className={`section-header ${isCentered ? 'mx-auto flex max-w-3xl flex-col items-center text-center' : 'max-w-4xl text-left'} ${className}`}
     >
-      <p className="mb-3 text-[0.8125rem] font-bold uppercase leading-none tracking-[0.15em] text-[#10B981] sm:text-sm">
+      <p className="mb-3 text-base font-bold uppercase leading-none tracking-[0.18em] text-[#10B981]">
         {eyebrow}
       </p>
       <h2
