@@ -251,6 +251,10 @@ html{scroll-padding-top:82px}
 .why-choose-section .why-choose-header>h2{max-width:48rem;font-size:clamp(1.875rem,3vw,2.5rem);line-height:1.1;font-weight:700}
 .why-choose-section .why-choose-header>h2+p{margin-top:16px;margin-bottom:0;max-width:650px;font-size:1rem;line-height:1.6;font-weight:400}
 .why-choose-section .why-choose-accordion{margin-top:28px}
+@media (max-width:767px){
+  .why-choose-section .why-choose-header>p:first-child{font-size:1rem;font-weight:700}
+  .why-choose-section .why-choose-header>h2{font-size:1.5rem;line-height:1.2}
+}
 @media (min-width:640px){.why-choose-section .why-choose-header>h2+p{font-size:1.0625rem}}
 
 @keyframes final-cta-marquee-scroll{
