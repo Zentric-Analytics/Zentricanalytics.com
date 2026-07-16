@@ -266,13 +266,14 @@ export default function Home() {
       </section>
 
       <section
-        className="relative isolate overflow-hidden bg-[#F7F8FA] bg-cover bg-center bg-no-repeat px-4 py-8 sm:px-6 sm:py-10 lg:py-12"
+        className="relative isolate overflow-hidden bg-[#F7F8FA] bg-cover bg-center bg-no-repeat px-4 py-12 md:px-6 md:py-10 lg:py-12"
         style={{ backgroundImage: "url('/images/careers/careers-team-collaboration.png')" }}
         aria-labelledby="final-cta-heading"
       >
         <div aria-hidden="true" className="absolute inset-0 z-0 bg-white/90" />
         <div className="editorial-reveal relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
           <SectionHeader
+            className="max-md:[&_h2]:text-[24px] max-md:[&_h2]:font-bold max-md:[&_h2]:leading-[1.2] max-md:[&_p:last-child]:mt-3 max-md:[&_p:last-child]:text-[16px] max-md:[&_p:last-child]:font-normal max-md:[&_p:last-child]:leading-[1.6]"
             align="center"
             eyebrow="READY TO BUILD?"
             heading={<>Let&apos;s build technology that creates lasting impact.</>}
@@ -280,7 +281,7 @@ export default function Home() {
             description="Whether you're looking for a trusted technology partner or exploring career opportunities, Zentric Analytics is committed to solving meaningful challenges through engineering, AI, data, cloud, and research-driven innovation."
           />
           <div
-            className="final-cta-marquee mt-5 w-full max-w-3xl overflow-hidden sm:mt-6"
+            className="final-cta-marquee mt-4 w-full max-w-3xl overflow-hidden sm:mt-6"
             aria-label={finalCtaMarqueeKeywords.join(' • ')}
           >
             <p className="sr-only">{finalCtaMarqueeKeywords.join(' • ')}</p>
@@ -303,7 +304,7 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <div className="mt-5 flex w-full flex-col items-center gap-4 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center">
+          <div className="mt-4 flex w-full flex-col items-center gap-3 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] max-md:[&_.btn]:text-[16px] max-md:[&_.btn]:font-semibold">
             <Link
               className="btn btn-primary w-full min-w-[12rem] sm:w-auto"
               href="/contact"
