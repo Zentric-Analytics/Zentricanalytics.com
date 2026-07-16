@@ -184,7 +184,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 pb-2 pt-3 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="core-capabilities-heading">
+      <section className="core-capabilities-section border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 pb-2 pt-3 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="core-capabilities-heading">
         <div className="mx-auto max-w-6xl">
           <SectionHeader
             className="[&_h2]:mt-2.5 [&_h2]:text-[clamp(1.75rem,3.15vw,2.5rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-2 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:text-[0.9375rem] [&_p:last-child]:leading-[1.58] sm:[&_p:last-child]:mt-3.5 sm:[&_p:last-child]:text-base"
