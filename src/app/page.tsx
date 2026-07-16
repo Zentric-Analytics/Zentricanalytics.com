@@ -223,7 +223,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="why-choose-section bg-white px-4 py-10 sm:px-6 sm:py-12 lg:py-14" aria-labelledby="why-choose-heading">
+      <section className="why-choose-section bg-white px-4 py-12 sm:px-4 sm:py-12 md:px-6 lg:py-14" aria-labelledby="why-choose-heading">
         <div className="mx-auto max-w-[1280px] rounded-[28px] bg-[#0B1F3A] px-6 py-12 sm:px-8 sm:py-14 md:px-12 lg:px-16 lg:py-16">
           <SectionHeader
             eyebrow="WHY CLIENTS CHOOSE ZENTRIC"
@@ -237,25 +237,25 @@ export default function Home() {
           <div className="relative mt-4 lg:mt-5">
             <div
               aria-hidden="true"
-              className="absolute left-[26px] top-[26px] h-[calc(100%-52px)] w-0.5 bg-slate-200/30 md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
+              className="absolute left-[23px] top-[23px] h-[calc(100%-46px)] w-px bg-slate-200/30 md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
             />
-            <div className="relative grid items-stretch gap-y-6 pl-[70px] md:grid-cols-3 md:gap-x-7 md:gap-y-5 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
+            <div className="relative grid items-stretch gap-y-5 pl-[62px] md:grid-cols-3 md:gap-x-7 md:gap-y-5 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
               {clientChoiceProcess.map((step) => (
                 <article
-                  className="engineering-process-card group relative flex min-h-[52px] w-full flex-col items-center text-center lg:flex-1"
+                  className="engineering-process-card group relative flex min-h-[46px] w-full flex-col items-center text-center md:min-h-[52px] lg:flex-1"
                   key={step.title}
                 >
-                  <div className="absolute -left-[70px] top-0 flex size-[52px] shrink-0 items-center justify-center rounded-full border border-white/70 bg-[#F8FAFC] shadow-[0_10px_24px_rgba(2,8,23,0.18)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#10B981]/70 group-hover:shadow-[0_12px_26px_rgba(2,8,23,0.22)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto">
+                  <div className="absolute -left-[62px] top-0 flex size-[46px] shrink-0 items-center justify-center rounded-full border border-white/70 bg-[#F8FAFC] shadow-[0_10px_24px_rgba(2,8,23,0.18)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#10B981]/70 group-hover:shadow-[0_12px_26px_rgba(2,8,23,0.22)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto md:size-[52px]">
                     <step.Icon
                       aria-hidden="true"
                       className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
                       strokeWidth={1.75}
                     />
                   </div>
-                  <h3 className="mt-0 flex w-full items-start justify-center text-center text-lg font-bold leading-[1.2] tracking-[-0.025em] text-white md:mt-3 md:text-[1.0625rem] lg:min-h-0">
+                  <h3 className="mt-0 flex w-full items-start justify-center text-center text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-white md:mt-3 md:text-[1.0625rem] md:leading-[1.2] lg:min-h-0">
                     {step.title}
                   </h3>
-                  <p className="mt-1.5 w-full max-w-[24rem] text-sm leading-[1.5] text-slate-300 sm:text-[0.9375rem] md:max-w-[13rem] md:text-center">
+                  <p className="mt-1.5 w-full max-w-[24rem] text-base font-normal leading-[1.6] text-slate-300 md:max-w-[13rem] md:text-[0.9375rem] md:text-center md:leading-[1.5]">
                     {step.description}
                   </p>
                 </article>
