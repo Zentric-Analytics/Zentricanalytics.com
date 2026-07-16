@@ -152,7 +152,7 @@ export default function Home() {
       </section>
 
       <section className="philosophy-section bg-white px-4 py-8 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="how-we-think-heading">
-        <div className="editorial-reveal editorial-reveal-4 mx-auto grid max-w-6xl gap-6 text-left md:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:items-start md:gap-7 lg:gap-8">
+        <div className="editorial-reveal editorial-reveal-4 mx-auto grid max-w-6xl gap-2 text-left sm:gap-6 md:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:items-start md:gap-7 lg:gap-8">
           <SectionHeader
             className="editorial-reveal editorial-reveal-1 md:sticky md:top-24 [&_h2]:max-w-[29rem] [&_h2]:text-[clamp(1.75rem,3.6vw,2.625rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-3 [&_p:last-child]:max-w-[28rem] [&_p:last-child]:text-[0.9375rem] [&_p:last-child]:leading-[1.58] sm:[&_p:last-child]:text-base lg:[&_p:last-child]:text-base"
             eyebrow="HOW WE THINK"
@@ -161,10 +161,10 @@ export default function Home() {
             description="Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment."
           />
 
-          <div className="grid gap-3 sm:grid-cols-2 sm:gap-3.5 lg:gap-4">
+          <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 sm:gap-3.5 md:auto-rows-auto lg:gap-4">
             {philosophyPrinciples.map((principle, index) => (
               <article
-                className={`philosophy-row editorial-reveal editorial-reveal-${index + 5} group rounded-2xl border border-[#E5E7EB] bg-white p-4 transition-[background-color,border-color] duration-200 ease-out hover:border-[#10B981]/55 hover:bg-[#F8FAFC] sm:p-[18px] lg:p-5`}
+                className={`philosophy-row editorial-reveal editorial-reveal-${index + 5} group h-full rounded-2xl border border-[#E5E7EB] bg-white p-6 transition-[background-color,border-color] duration-200 ease-out hover:border-[#10B981]/40 hover:bg-[#F8FAFC] sm:p-[18px] md:hover:border-[#10B981]/55 lg:p-5`}
                 key={principle.title}
               >
                 <principle.Icon
