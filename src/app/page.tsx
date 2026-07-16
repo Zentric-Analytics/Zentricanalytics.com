@@ -104,22 +104,22 @@ export default function Home() {
   return (
     <PageShell>
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-4 px-4 pb-6 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:py-16 lg:gap-8">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:py-16 lg:gap-8">
           <div className="max-w-[700px]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[600px] text-[36px] font-bold leading-[1.04] tracking-[-0.03em] text-white md:text-[56px] md:leading-[1.05]">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[600px] text-[29.12px] font-extrabold leading-[1.09] tracking-[-0.03em] text-white md:text-[56px] md:font-bold md:leading-[1.05]">
               <span className="md:block">Engineering reliable software,</span>{' '}
               <span className="md:block">data, and AI systems</span>{' '}
               <span className="md:block">for serious</span>{' '}
               <span className="md:block">work.</span>
             </h1>
-            <p className="hero-reveal hero-reveal-2 mt-2.5 max-w-[520px] text-base font-normal leading-[1.65] text-slate-200 md:text-[20px] md:leading-[1.62]">
+            <p className="hero-reveal hero-reveal-2 mt-4 max-w-[520px] text-[15px] font-normal leading-[1.6] text-slate-200 md:text-[20px] md:leading-[1.62]">
               Zentric Analytics engineers reliable software, AI, and data platforms that help organizations build secure, scalable, and future-ready technology.
             </p>
-            <div className="hero-reveal hero-reveal-3 mt-3 flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
-              <Link className="btn hero-cta-primary h-[52px] min-h-[52px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/services">
+            <div className="hero-reveal hero-reveal-3 mt-5 flex flex-col gap-2.5 md:gap-3 md:flex-row md:flex-wrap md:items-center">
+              <Link className="btn hero-cta-primary h-[48px] min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/services">
                 Explore Services
               </Link>
-              <Link className="btn hero-cta-secondary h-[52px] min-h-[52px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/contact">
+              <Link className="btn hero-cta-secondary h-[48px] min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/contact">
                 <span>Let&apos;s Talk</span>
                 <span className="zentric-primary-cta__arrow" aria-hidden="true">
                   →
@@ -128,7 +128,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-reveal hero-reveal-4 w-full max-w-[34rem] justify-self-center md:-mr-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] md:w-[50vw] md:max-w-none md:justify-self-end lg:w-[49vw]">
+          <div className="hero-reveal hero-reveal-4 -mt-1 w-full max-w-[34rem] justify-self-center md:mt-0 md:-mr-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] md:w-[50vw] md:max-w-none md:justify-self-end lg:w-[49vw]">
             <div className="relative aspect-[16/10.5] overflow-hidden rounded-r-xl rounded-l-none md:min-h-[25rem] lg:min-h-[27.5rem]">
               <Image
                 src="/images/hero/hero-engineering-team-v2.png"
