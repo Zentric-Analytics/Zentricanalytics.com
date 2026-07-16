@@ -104,9 +104,9 @@ export default function Home() {
   return (
     <PageShell>
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-12 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:py-14 lg:py-16 lg:gap-8">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-5 px-6 py-6 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:py-16 lg:gap-8">
           <div className="max-w-[700px]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[600px] text-[56px] font-bold leading-[1.05] tracking-[-0.03em] text-white">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[600px] text-[52px] font-bold leading-[1.07] tracking-[-0.03em] text-white md:text-[56px] md:leading-[1.05]">
               <span className="md:block">Engineering reliable software,</span>{' '}
               <span className="md:block">data, and AI systems</span>{' '}
               <span className="md:block">for serious</span>{' '}
@@ -115,11 +115,11 @@ export default function Home() {
             <p className="hero-reveal hero-reveal-2 mt-4 max-w-[520px] text-base font-normal leading-[1.62] text-slate-200 sm:text-lg md:text-[20px]">
               Zentric Analytics engineers reliable software, AI, and data platforms that help organizations build secure, scalable, and future-ready technology.
             </p>
-            <div className="hero-reveal hero-reveal-3 mt-7 flex flex-col gap-3.5 sm:flex-row sm:flex-wrap sm:items-center">
-              <Link className="btn hero-cta-primary" href="/services">
+            <div className="hero-reveal hero-reveal-3 mt-5 flex flex-col gap-3.5 sm:flex-row sm:flex-wrap sm:items-center">
+              <Link className="btn hero-cta-primary w-full sm:w-auto" href="/services">
                 Explore Services
               </Link>
-              <Link className="btn hero-cta-secondary" href="/contact">
+              <Link className="btn hero-cta-secondary w-full sm:w-auto" href="/contact">
                 <span>Let&apos;s Talk</span>
                 <span className="zentric-primary-cta__arrow" aria-hidden="true">
                   →
