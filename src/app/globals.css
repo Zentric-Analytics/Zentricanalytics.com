@@ -326,3 +326,33 @@ html{scroll-padding-top:82px}
     white-space:normal;
   }
 }
+
+/* Global mobile design system: these rules intentionally stop at the tablet breakpoint. */
+@media (max-width:767px){
+  body{font-family:Inter,system-ui,sans-serif;font-size:16px;font-weight:400;line-height:1.5}
+
+  /* Typography scale */
+  h1{font-size:clamp(1.75rem,8vw,1.875rem)}
+  .hero-reveal{font-size:36px}
+  .card h2,[class~="rounded-2xl"] h2,[class~="rounded-3xl"] h2{font-size:18px;line-height:1.25}
+  small,.text-xs{font-size:.75rem}
+  .text-sm{font-size:.875rem}
+
+  /* Shared form controls */
+  .input,
+  input:not([type="checkbox"]):not([type="radio"]),
+  select{height:48px;min-height:48px;border-radius:12px;padding-right:12px;padding-left:12px;font-size:16px;line-height:1.5}
+  textarea.input,textarea{border-radius:12px;padding-right:12px;padding-left:12px;font-size:16px;line-height:1.5}
+
+  /* Shared action sizing */
+  .btn{height:48px;min-height:48px;gap:8px;border-radius:12px;padding-right:20px;padding-left:20px;font-size:16px;font-weight:600}
+  .btn-compact,.btn.h-11{height:44px;min-height:44px;font-size:14px}
+  .zentric-primary-cta{height:48px;min-height:48px;gap:8px;border-radius:12px;padding-right:20px;padding-left:20px;font-size:16px}
+
+  /* Cards and surfaces */
+  .card,[class~="rounded-2xl"],[class~="rounded-3xl"]{border-radius:16px}
+  .card{box-shadow:0 8px 22px rgba(15,23,42,.05)}
+
+  /* Keep section rhythm on the approved 32 / 48 / 64 pixel scale. */
+  .mx-auto.w-full.max-w-6xl.min-w-0.px-4.py-10{padding-top:48px;padding-bottom:48px}
+}

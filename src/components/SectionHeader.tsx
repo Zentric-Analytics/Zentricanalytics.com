@@ -32,7 +32,7 @@ export function SectionHeader({
       </p>
       <h2
         id={headingId}
-        className={`max-w-[56rem] text-[clamp(1.75rem,4.8vw,2.625rem)] font-bold leading-[1.1] tracking-[-0.04em] ${headingColor}`}
+        className={`max-w-[56rem] text-[clamp(1.5rem,4.8vw,2.625rem)] sm:text-[clamp(1.75rem,4.8vw,2.625rem)] font-bold leading-[1.1] tracking-[-0.04em] ${headingColor}`}
       >
         {heading}
       </h2>

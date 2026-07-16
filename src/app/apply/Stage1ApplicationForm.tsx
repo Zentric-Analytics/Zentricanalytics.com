@@ -32,7 +32,7 @@ function Required() { return <span className="text-red-600" aria-label="required
 
 function FormSection({ eyebrow, title, helper, children }: { eyebrow: string; title: string; helper: string; children: React.ReactNode }) {
   return (
-    <section className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+    <section className="w-full min-w-0 overflow-hidden rounded-2xl sm:rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
       <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-5 py-5 sm:px-6 lg:px-8">
         <p className="text-base font-bold uppercase tracking-[0.18em] text-brand">{eyebrow}</p>
         <h2 className="mt-2 text-xl font-bold text-ink sm:text-2xl">{title}</h2>
@@ -145,6 +145,6 @@ export function Stage1ApplicationForm() {
       <ConsentBox state={displayState} name="signatureConsent">I confirm this typed name is my electronic signature.</ConsentBox>
     </FormSection>
 
-    <div className="flex w-full min-w-0 flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-ink p-5 text-white shadow-xl sm:p-6 md:flex-row md:items-center md:justify-between"><p className="text-sm leading-6 text-slate-200">Review your details before submitting. We will email your application ID after successful submission.</p><button className="btn btn-primary w-full min-w-0 justify-center md:w-auto" type="submit" disabled={pending}>{pending ? 'Submitting...' : 'Submit stage 1 application'}</button></div>
+    <div className="flex w-full min-w-0 flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-ink p-5 text-white shadow-[0_12px_30px_rgba(15,23,42,0.10)] sm:shadow-xl sm:p-6 md:flex-row md:items-center md:justify-between"><p className="text-sm leading-6 text-slate-200">Review your details before submitting. We will email your application ID after successful submission.</p><button className="btn btn-primary w-full min-w-0 justify-center md:w-auto" type="submit" disabled={pending}>{pending ? 'Submitting...' : 'Submit stage 1 application'}</button></div>
   </form>;
 }

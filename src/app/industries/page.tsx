@@ -69,7 +69,7 @@ export default function Industries() {
       <section className="bg-[#0B1F3A] px-4 py-14 text-white sm:px-6 sm:py-16 lg:py-20" aria-labelledby="industries-page-heading">
         <div className="mx-auto max-w-6xl">
           <p className="mb-4 text-base font-bold uppercase tracking-[0.18em] text-[#10B981]">Industries</p>
-          <h1 id="industries-page-heading" className="max-w-4xl text-[clamp(2.4rem,6vw,4.75rem)] font-bold leading-[1.02] tracking-[-0.055em]">
+          <h1 id="industries-page-heading" className="max-w-4xl text-[clamp(1.875rem,6vw,4.75rem)] sm:text-[clamp(2.4rem,6vw,4.75rem)] font-bold leading-[1.02] tracking-[-0.055em]">
             Solutions Across Industries
           </h1>
           <p className="mt-6 max-w-4xl text-lg leading-[1.7] text-slate-100 sm:text-xl">
