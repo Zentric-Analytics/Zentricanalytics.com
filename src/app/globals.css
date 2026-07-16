@@ -111,6 +111,19 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:Inter,system-ui,-appl
 
 @media (max-width:767px){
   .philosophy-row:hover::before{opacity:.72}
+
+  /* Keep the How We Think section compact without affecting its tablet or desktop layout. */
+  .philosophy-section>.grid{gap:.25rem}
+  .philosophy-section .section-header>p:first-child{margin-bottom:.5rem}
+  .philosophy-section .section-header>h2{font-size:1.45rem;line-height:1.2}
+  .philosophy-section .section-header>h2+p{margin-top:.625rem;font-size:1rem;line-height:1.68}
+  .philosophy-section .section-header+.grid{gap:.875rem}
+  .philosophy-section .philosophy-row{padding:1rem}
+  .philosophy-section .philosophy-row>h3{margin-top:.375rem;font-size:1.05rem;line-height:1.2}
+  .philosophy-section .philosophy-row>p{font-size:1rem;line-height:1.6}
+  .philosophy-section .philosophy-row::before{background:#34B889}
+  .philosophy-section .philosophy-row:hover{border-color:rgba(52,184,137,.3)}
+  .philosophy-section .philosophy-row:hover::before{opacity:.62}
 }
 
 .core-capability-card{
