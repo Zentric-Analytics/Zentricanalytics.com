@@ -94,7 +94,7 @@ export function SiteHeader() {
           : 'border-transparent'
       }`}
     >
-      <nav className={`mx-auto flex w-full max-w-7xl items-center justify-between gap-5 px-5 transition-[height] duration-300 sm:px-6 lg:gap-7 lg:px-8 ${hasScrolled ? 'h-[56px] sm:h-[60px]' : 'h-[66px] sm:h-[70px] lg:h-[72px]'}`}>
+      <nav className={`mx-auto flex w-full max-w-7xl items-center justify-between gap-5 px-4 transition-[height] duration-300 sm:px-6 lg:gap-7 lg:px-8 ${hasScrolled ? 'h-[56px] sm:h-[60px]' : 'h-[66px] sm:h-[70px] lg:h-[72px]'}`}>
         <Link
           href="/"
           aria-label="Zentric Analytics homepage"
@@ -165,7 +165,7 @@ export function SiteHeader() {
           aria-labelledby="mobile-menu-title"
           className="fixed inset-0 z-50 flex h-screen min-h-dvh w-full flex-col overflow-hidden bg-white md:hidden"
         >
-          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-[#0B1F3A]/10 px-5 py-4 sm:px-8">
+          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-[#0B1F3A]/10 px-4 py-4 sm:px-8">
             <h2 id="mobile-menu-title" className="text-2xl font-semibold tracking-[-0.03em] text-[#0B1F3A]">
               Menu
             </h2>
@@ -182,7 +182,7 @@ export function SiteHeader() {
             </button>
           </div>
 
-          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-8 overflow-y-auto overscroll-contain px-5 py-7 sm:px-8">
+          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-8 overflow-y-auto overscroll-contain px-4 py-7 sm:px-8">
             <section aria-label="Primary navigation">
               <div className="flex flex-col gap-1">
                 {[...visibleNavigationLinks, contactLink].map(([href, label]) => {

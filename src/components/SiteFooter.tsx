@@ -40,7 +40,7 @@ function FooterHeading({ children }: { children: React.ReactNode }) {
 export function SiteFooter() {
   return (
     <footer className="bg-[#0B1F3A] text-white" aria-label="Site footer">
-      <div className="mx-auto w-full max-w-7xl px-5 py-7 sm:px-6 sm:py-8 lg:px-8 lg:py-8">
+      <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 sm:py-8 lg:px-8 lg:py-8">
         <div className="grid gap-5 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.7fr)_minmax(0,0.95fr)_minmax(0,0.8fr)] lg:gap-x-10">
           <section aria-labelledby="footer-company-overview" className="min-w-0">
             <h2

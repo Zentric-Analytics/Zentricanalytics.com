@@ -66,7 +66,7 @@ export default function Services() {
       </Section>
 
       <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:py-14" aria-labelledby="engineering-process-heading">
-        <div className="mx-auto max-w-6xl rounded-3xl bg-[#122746] p-6 text-white shadow-[0_24px_60px_rgba(11,31,58,0.16)] sm:p-8 lg:p-10">
+        <div className="mx-auto max-w-6xl rounded-2xl sm:rounded-3xl bg-[#122746] p-6 text-white shadow-[0_12px_30px_rgba(11,31,58,0.10)] sm:shadow-[0_24px_60px_rgba(11,31,58,0.16)] sm:p-8 lg:p-10">
           <SectionHeader
             eyebrow="ENGINEERING PROCESS"
             heading="Every successful solution begins with a disciplined engineering process."

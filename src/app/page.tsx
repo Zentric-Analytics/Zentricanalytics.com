@@ -104,9 +104,9 @@ export default function Home() {
   return (
     <PageShell>
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-4 px-6 pb-6 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:py-16 lg:gap-8">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-4 px-4 pb-6 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:py-16 lg:gap-8">
           <div className="max-w-[700px]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[600px] text-[46px] font-bold leading-[1.04] tracking-[-0.03em] text-white md:text-[56px] md:leading-[1.05]">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[600px] text-[36px] font-bold leading-[1.04] tracking-[-0.03em] text-white md:text-[56px] md:leading-[1.05]">
               <span className="md:block">Engineering reliable software,</span>{' '}
               <span className="md:block">data, and AI systems</span>{' '}
               <span className="md:block">for serious</span>{' '}
