@@ -66,7 +66,16 @@ const trustReasons = [
 export default function Industries() {
   return (
     <PageShell>
-      <section className="bg-[#0B1F3A] px-4 py-14 text-white sm:px-6 sm:py-16 lg:py-20" aria-labelledby="industries-page-heading">
+      <section
+        className="bg-[#12284A] px-4 py-14 text-white sm:px-6 sm:py-16 lg:py-20"
+        style={{
+          backgroundImage: "linear-gradient(rgba(18, 40, 74, 0.85), rgba(18, 40, 74, 0.85)), url('/images/images/industries/industries-hero-bg.png')",
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'cover',
+        }}
+        aria-labelledby="industries-page-heading"
+      >
         <div className="mx-auto max-w-6xl">
           <p className="mb-4 text-base font-bold uppercase tracking-[0.18em] text-[#10B981]">Industries</p>
           <h1 id="industries-page-heading" className="max-w-4xl text-[clamp(1.875rem,6vw,4.75rem)] sm:text-[clamp(2.4rem,6vw,4.75rem)] font-bold leading-[1.02] tracking-[-0.055em]">
