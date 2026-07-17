@@ -57,7 +57,7 @@ const organizationCapabilities: Array<{ Icon: LucideIcon; title: string; descrip
     Icon: Handshake,
     title: 'IT Consulting & Support',
     description:
-      'Partner with experienced technology consultants who help align IT investments with long-term business goals.',
+      'Partner with experienced technology consultants who help align technology investments with long-term business goals.',
   },
 ];
 
@@ -114,9 +114,9 @@ export default function Industries() {
 
       <IndustriesWeServe />
 
-      <section className="bg-white px-4 py-12 sm:px-6 sm:py-14 lg:py-20" aria-labelledby="organization-capabilities-heading">
-        <div className="mx-auto max-w-6xl">
-          <header className="max-w-[48rem] text-left md:mx-auto md:text-center">
+      <section className="bg-white px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-20" aria-labelledby="organization-capabilities-heading">
+        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-16">
+          <header className="max-w-[30rem] text-left">
             <h2
               id="organization-capabilities-heading"
               className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]"
@@ -126,23 +126,25 @@ export default function Industries() {
             <p className="mt-4 text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
               Every organization has unique goals, processes, and challenges. We combine technology, strategy, and innovation to design solutions that improve efficiency, strengthen security, accelerate growth, and create measurable business value.
             </p>
+            <p className="mt-5 text-base leading-[1.6] text-[#294A43] sm:text-[1.0625rem]">
+              Whether the goal is modernization, growth, stronger security, better customer experiences, or improved operations, our solutions are shaped around the organization—not a fixed industry template.
+            </p>
           </header>
 
-          <div className="mt-8 grid auto-rows-fr gap-4 md:mt-10 md:grid-cols-3 md:gap-5">
+          <div className="border-y border-[#DCE3EA]">
             {organizationCapabilities.map(({ Icon, title, description }) => (
-              <article
-                className="group flex h-full flex-col rounded-[20px] border border-[#DCE3EA] bg-white p-5 shadow-[0_8px_22px_rgba(11,31,58,0.06)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:border-[#C5D1DD] hover:shadow-[0_14px_30px_rgba(11,31,58,0.1)] sm:p-6"
-                key={title}
-              >
-                <span className="flex size-11 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out group-hover:scale-105">
-                  <Icon aria-hidden="true" className="size-5.5" strokeWidth={1.8} />
+              <article className="group grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 py-5 first:pt-5 last:pb-5 not-last:border-b not-last:border-[#DCE3EA] sm:grid-cols-[3.25rem_minmax(0,1fr)] sm:gap-x-4 sm:py-6" key={title}>
+                <span className="flex size-10 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out group-hover:translate-x-0.5 sm:size-11">
+                  <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                 </span>
-                <h3 className="mt-5 text-xl font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A]">
-                  {title}
-                </h3>
-                <p className="mt-3 text-[0.9375rem] leading-[1.6] text-[#475569]">
-                  {description}
-                </p>
+                <div className="min-w-0">
+                  <h3 className="text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#0B7F60] sm:text-xl">
+                    {title}
+                  </h3>
+                  <p className="mt-2 text-[0.9375rem] leading-[1.6] text-[#475569] sm:text-base">
+                    {description}
+                  </p>
+                </div>
               </article>
             ))}
           </div>
