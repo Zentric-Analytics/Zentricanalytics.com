@@ -104,13 +104,6 @@ const commonChallenges = [
   'Scaling platforms, teams, and infrastructure for long-term growth',
 ];
 
-const trustReasons = [
-  'Sector-aware discovery that starts with business outcomes',
-  'Disciplined engineering practices for secure and maintainable systems',
-  'Flexible delivery models for startups, SMBs, enterprises, agencies, and nonprofits',
-  'Practical innovation that balances emerging technology with measurable value',
-];
-
 export default function Industries() {
   return (
     <PageShell>
@@ -252,14 +245,25 @@ export default function Industries() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:py-14" aria-labelledby="why-industries-choose-heading">
-        <div className="mx-auto grid max-w-6xl gap-8 rounded-3xl bg-[#0B1F3A] p-6 text-white sm:p-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:p-10">
-          <SectionHeader eyebrow="WHY ORGANIZATIONS CHOOSE US" heading="A partner for virtually every sector." headingId="why-industries-choose-heading" description="Clients choose Zentric Analytics because we combine enterprise-grade engineering discipline with the flexibility to meet diverse missions, markets, and maturity levels." tone="dark" />
-          <div className="grid gap-3 self-center">
-            {trustReasons.map((reason) => (
-              <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-4 font-semibold leading-[1.5] text-slate-100" key={reason}>{reason}</div>
-            ))}
-            <Link className="btn mt-2 w-full bg-white text-[#0B1F3A] hover:bg-[#F8FAFC] sm:w-fit" href="/contact">Discuss Your Industry</Link>
+      <section className="bg-[#0B1F3A] px-4 py-12 text-white sm:px-6 sm:py-14 lg:px-8 lg:py-20" aria-labelledby="industries-final-cta-heading">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.55fr)] lg:items-center lg:gap-16">
+          <div className="max-w-[44rem]">
+            <h2
+              id="industries-final-cta-heading"
+              className="max-w-[38rem] text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] sm:text-[2.125rem] lg:text-[2.625rem]"
+            >
+              Whatever Your Industry, We&apos;re Ready to Build With You
+            </h2>
+            <p className="mt-4 max-w-[42rem] text-base leading-[1.6] text-slate-100 sm:mt-5 sm:text-[1.0625rem]">
+              Whether you are an established organization, a growing startup, a public institution, a professional, a creator, or a personal brand, Zentric Analytics can design a technology solution around your goals.
+            </p>
+          </div>
+
+          <div className="border-white/15 lg:border-l lg:pl-10">
+            <Link className="btn hero-cta-primary w-full sm:w-fit" href="/contact">Discuss Your Needs</Link>
+            <p className="mt-4 max-w-[22rem] text-sm leading-[1.6] text-slate-300 sm:text-base">
+              Tell us what you are trying to achieve, and we will help you identify the right next step.
+            </p>
           </div>
         </div>
       </section>
