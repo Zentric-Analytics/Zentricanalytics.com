@@ -67,26 +67,27 @@ export default function Industries() {
   return (
     <PageShell>
       <section
-        className="bg-[#12284A] px-4 py-14 text-white sm:px-6 sm:py-16 lg:py-20"
+        className="relative isolate flex min-h-[620px] items-center overflow-hidden bg-[#0B1F3A] bg-[position:60%_center] px-4 py-16 text-white sm:min-h-[640px] sm:px-6 sm:py-20 lg:min-h-[650px] lg:bg-[position:center_right] lg:px-8 lg:py-24"
         style={{
-          backgroundImage: "linear-gradient(rgba(18, 40, 74, 0.85), rgba(18, 40, 74, 0.85)), url('/images/images/industries/industries-hero-bg.png')",
-          backgroundPosition: 'center',
+          backgroundImage: "linear-gradient(rgba(11, 31, 58, 0.8), rgba(11, 31, 58, 0.8)), url('/images/industries/industries-hero-bg.png')",
           backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
         }}
         aria-labelledby="industries-page-heading"
       >
-        <div className="mx-auto max-w-6xl">
-          <p className="mb-4 text-base font-bold uppercase tracking-[0.18em] text-[#10B981]">Industries</p>
-          <h1 id="industries-page-heading" className="max-w-4xl text-[clamp(1.875rem,6vw,4.75rem)] sm:text-[clamp(2.4rem,6vw,4.75rem)] font-bold leading-[1.02] tracking-[-0.055em]">
-            Solutions Across Industries
-          </h1>
-          <p className="mt-6 max-w-4xl text-lg leading-[1.7] text-slate-100 sm:text-xl">
-            Zentric Analytics delivers innovative technology solutions for organizations across virtually every industry. Rather than offering one-size-fits-all products, we tailor our expertise to each client&apos;s business objectives, operational requirements, regulatory environment, and growth strategy.
-          </p>
-          <p className="mt-4 max-w-4xl text-base leading-[1.7] text-slate-200 sm:text-lg">
-            We collaborate with startups, small and medium-sized businesses, large enterprises, government agencies, and nonprofit organizations, helping them leverage technology to solve complex business challenges and accelerate digital transformation.
-          </p>
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="max-w-[44rem]">
+            <h1 id="industries-page-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.045em] sm:text-[clamp(2.35rem,4.5vw,4rem)] sm:leading-[1.06]">
+              Technology Solutions for Every Industry, Organization, and Ambition
+            </h1>
+            <p className="mt-6 max-w-[43rem] text-base leading-[1.7] text-slate-100 sm:mt-7 sm:text-lg sm:leading-[1.7]">
+              From global enterprises and growing startups to public institutions and personal brands, Zentric Analytics delivers tailored technology solutions designed around each client&apos;s unique goals, challenges, and opportunities.
+            </p>
+            <div className="mt-8 flex flex-col gap-3.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-4">
+              <Link className="btn hero-cta-primary w-full sm:w-auto" href="/contact">Discuss Your Needs</Link>
+              <Link className="btn hero-cta-secondary w-full sm:w-auto" href="#industry-spectrum-heading">Explore Industries</Link>
+            </div>
+          </div>
         </div>
       </section>
 
