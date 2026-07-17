@@ -6,6 +6,7 @@ import {
   Bolt,
   BriefcaseBusiness,
   Building2,
+  ChevronDown,
   Factory,
   GraduationCap,
   HeartPulse,
@@ -39,7 +40,8 @@ const industries: Industry[] = [
 ];
 
 export function IndustriesWeServe() {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedIndustry, setExpandedIndustry] = useState<number | null>(null);
+  const [showAllIndustries, setShowAllIndustries] = useState(false);
 
   return (
     <section className="relative z-10 -mt-12 px-4 sm:-mt-14 sm:px-6 lg:-mt-20 lg:px-8" aria-labelledby="industry-spectrum-heading">
@@ -53,34 +55,51 @@ export function IndustriesWeServe() {
           </p>
         </header>
 
-        <div id="additional-industries" className="mt-7 grid gap-4 md:grid-cols-3 lg:gap-5 xl:grid-cols-4" aria-label="Industries we serve">
+        <div id="additional-industries" className="mt-7 grid gap-4 md:grid-cols-3 lg:gap-5" aria-label="Industries we serve">
           {industries.map(({ Icon, title, description }, index) => (
-            <article
-              className={`group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-4 transition duration-200 hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] sm:p-5 ${index > 5 && !isExpanded ? 'hidden md:block' : ''}`}
+            <button
+              type="button"
+              className={`group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-5 ${index > 5 && !showAllIndustries ? 'hidden md:block' : ''}`}
               key={title}
+              aria-expanded={expandedIndustry === index}
+              aria-controls={`industry-description-${index}`}
+              onClick={() => setExpandedIndustry((current) => (current === index ? null : index))}
             >
               <div className="flex items-center gap-3">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60]">
                   <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                 </span>
                 <h3 className="text-base font-bold leading-[1.3] tracking-[-0.02em] text-[#0B1F3A]">{title}</h3>
+                <ChevronDown
+                  aria-hidden="true"
+                  className={`ml-auto size-5 shrink-0 text-[#475569] transition-transform duration-300 ${expandedIndustry === index ? 'rotate-180' : ''}`}
+                  strokeWidth={1.8}
+                />
               </div>
-              <p className="mt-3 text-sm leading-[1.55] text-[#475569]">{description}</p>
-            </article>
+              <div
+                id={`industry-description-${index}`}
+                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${expandedIndustry === index ? 'mt-3 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+              >
+                <p className="overflow-hidden text-sm leading-[1.55] text-[#475569]">{description}</p>
+              </div>
+            </button>
           ))}
         </div>
 
         <button
           type="button"
           className="btn btn-secondary mt-5 w-full md:hidden"
-          aria-expanded={isExpanded}
+          aria-expanded={showAllIndustries}
           aria-controls="additional-industries"
-          onClick={() => setIsExpanded((expanded) => !expanded)}
+          onClick={() => {
+            setShowAllIndustries((expanded) => !expanded);
+            setExpandedIndustry(null);
+          }}
         >
-          {isExpanded ? 'Show Fewer Industries' : 'View All Industries'}
+          {showAllIndustries ? 'Show Fewer Industries' : 'View All Industries'}
         </button>
         <div className="sr-only" aria-live="polite">
-          {isExpanded ? 'All industries are shown.' : 'Six additional industries are available.'}
+          {showAllIndustries ? 'All industries are shown.' : 'Six additional industries are available.'}
         </div>
 
         <aside className="mt-5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3.5 text-sm leading-[1.6] text-[#294A43] sm:mt-6 sm:px-5 sm:py-4 sm:text-base">
