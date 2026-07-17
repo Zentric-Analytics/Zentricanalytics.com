@@ -133,7 +133,6 @@ export default function Industries() {
             </p>
             <div className="mt-8 flex flex-col gap-3.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-4">
               <Link className="btn hero-cta-primary w-full sm:w-auto" href="/contact">Discuss Your Needs</Link>
-              <Link className="btn hero-cta-secondary w-full sm:w-auto" href="#industry-spectrum-heading">Explore Industries</Link>
             </div>
           </div>
         </div>
