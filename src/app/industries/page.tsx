@@ -1,4 +1,4 @@
-import { ArrowRight, BrainCircuit, Building2, CloudCog, CodeXml, Network, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react';
+import { ArrowRight, BrainCircuit, Building2, CloudCog, Code2, CodeXml, Handshake, Network, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { IndustriesWeServe } from '@/components/IndustriesWeServe';
 import { PageShell } from '@/components/PageShell';
@@ -19,6 +19,45 @@ const adaptationSteps: Array<{ Icon: LucideIcon; title: string; description: str
     Icon: Sparkles,
     title: 'Tailor the solution strategy',
     description: 'We combine engineering, AI, cloud, data, cybersecurity, and consulting capabilities based on the outcome each organization needs.',
+  },
+];
+
+const organizationCapabilities: Array<{ Icon: LucideIcon; title: string; description: string }> = [
+  {
+    Icon: Sparkles,
+    title: 'Digital Transformation',
+    description:
+      'Modernize business processes with scalable digital solutions that improve efficiency and prepare your organization for future growth.',
+  },
+  {
+    Icon: Code2,
+    title: 'Custom Software Development',
+    description:
+      'Design and build secure, scalable software tailored to your organization\'s unique workflows and objectives.',
+  },
+  {
+    Icon: CloudCog,
+    title: 'Cloud & Infrastructure',
+    description:
+      'Deploy reliable cloud solutions that improve performance, scalability, collaboration, and operational resilience.',
+  },
+  {
+    Icon: BrainCircuit,
+    title: 'Data & AI Solutions',
+    description:
+      'Transform business data into actionable insights through analytics, automation, and intelligent AI-powered solutions.',
+  },
+  {
+    Icon: ShieldCheck,
+    title: 'Cybersecurity',
+    description:
+      "Protect critical systems, data, and operations using modern security practices designed for today's digital landscape.",
+  },
+  {
+    Icon: Handshake,
+    title: 'IT Consulting & Support',
+    description:
+      'Partner with experienced technology consultants who help align IT investments with long-term business goals.',
   },
 ];
 
@@ -74,6 +113,41 @@ export default function Industries() {
       </section>
 
       <IndustriesWeServe />
+
+      <section className="bg-white px-4 py-12 sm:px-6 sm:py-14 lg:py-20" aria-labelledby="organization-capabilities-heading">
+        <div className="mx-auto max-w-6xl">
+          <header className="max-w-[48rem] text-left md:mx-auto md:text-center">
+            <h2
+              id="organization-capabilities-heading"
+              className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]"
+            >
+              How We Help Organizations Succeed
+            </h2>
+            <p className="mt-4 text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
+              Every organization has unique goals, processes, and challenges. We combine technology, strategy, and innovation to design solutions that improve efficiency, strengthen security, accelerate growth, and create measurable business value.
+            </p>
+          </header>
+
+          <div className="mt-8 grid auto-rows-fr gap-4 md:mt-10 md:grid-cols-3 md:gap-5">
+            {organizationCapabilities.map(({ Icon, title, description }) => (
+              <article
+                className="group flex h-full flex-col rounded-[20px] border border-[#DCE3EA] bg-white p-5 shadow-[0_8px_22px_rgba(11,31,58,0.06)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:border-[#C5D1DD] hover:shadow-[0_14px_30px_rgba(11,31,58,0.1)] sm:p-6"
+                key={title}
+              >
+                <span className="flex size-11 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out group-hover:scale-105">
+                  <Icon aria-hidden="true" className="size-5.5" strokeWidth={1.8} />
+                </span>
+                <h3 className="mt-5 text-xl font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A]">
+                  {title}
+                </h3>
+                <p className="mt-3 text-[0.9375rem] leading-[1.6] text-[#475569]">
+                  {description}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-12 lg:py-14" aria-labelledby="adaptation-heading">
         <div className="mx-auto max-w-6xl">
