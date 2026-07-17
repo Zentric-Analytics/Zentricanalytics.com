@@ -191,9 +191,9 @@ export default function Industries() {
             </p>
           </header>
 
-          <div className="mt-9 divide-y divide-[#DCE3EA] border-y border-[#DCE3EA] lg:mt-12 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0 lg:border-y-0">
+          <div className="mt-9 divide-y divide-[#DCE3EA] lg:mt-12 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0">
             {organizationValues.map(({ number, Icon, title, description }) => (
-              <article className="group grid grid-cols-[2.875rem_minmax(0,1fr)] gap-x-3 py-5 first:pt-5 last:pb-5 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-x-4 lg:block lg:px-7 lg:py-0 first:lg:pl-0 last:lg:pr-0" key={title}>
+              <article className="group grid grid-cols-[2.875rem_minmax(0,1fr)] gap-x-3 py-5 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-x-4 lg:block lg:px-7 lg:py-0 first:lg:pl-0 last:lg:pr-0" key={title}>
                 <span className="text-2xl font-bold leading-none tracking-[-0.05em] text-[#0B7F60] sm:text-[1.75rem] lg:block">{number}</span>
                 <div className="min-w-0 lg:mt-7">
                   <Icon aria-hidden="true" className="size-5 text-[#0B7F60] transition-transform duration-200 ease-out group-hover:translate-x-0.5 sm:size-[1.375rem]" strokeWidth={1.8} />
