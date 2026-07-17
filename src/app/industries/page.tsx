@@ -90,26 +90,28 @@ export default function Industries() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:py-14" aria-labelledby="industry-spectrum-heading">
-        <div className="mx-auto max-w-6xl">
-          <SectionHeader
-            eyebrow="INDUSTRY SPECTRUM"
-            heading="Built for flexibility, not a fixed list of sectors."
-            headingId="industry-spectrum-heading"
-            description="The categories below represent common areas where our work applies, but they are not limits. Zentric Analytics supports established sectors, cross-industry business models, and many other emerging industries."
-            className="[&_h2]:text-[clamp(1.875rem,3.5vw,2.75rem)]"
-          />
-          <div className="mt-8 grid gap-5 lg:grid-cols-2">
-            {industryGroups.map((group) => (
-              <article className="rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-6" key={group.title}>
-                <h2 className="text-xl font-bold tracking-[-0.025em] text-[#0B1F3A]">{group.title}</h2>
-                <div className="mt-4 flex flex-wrap gap-2.5">
-                  {group.industries.map((industry) => (
-                    <span className="rounded-full border border-[#DCE3EA] bg-white px-3 py-1.5 text-sm font-semibold text-[#0B1F3A]" key={industry}>{industry}</span>
-                  ))}
-                </div>
-              </article>
-            ))}
+      <section className="relative z-10 -mt-12 px-4 sm:-mt-14 sm:px-6 lg:-mt-20" aria-labelledby="industry-spectrum-heading">
+        <div className="mx-auto max-w-[75rem] rounded-[22px] bg-white py-10 shadow-[0_18px_40px_rgba(11,31,58,0.12)] sm:py-12 lg:py-14">
+          <div className="mx-auto max-w-6xl">
+            <SectionHeader
+              eyebrow="INDUSTRY SPECTRUM"
+              heading="Built for flexibility, not a fixed list of sectors."
+              headingId="industry-spectrum-heading"
+              description="The categories below represent common areas where our work applies, but they are not limits. Zentric Analytics supports established sectors, cross-industry business models, and many other emerging industries."
+              className="[&_h2]:text-[clamp(1.875rem,3.5vw,2.75rem)]"
+            />
+            <div className="mt-8 grid gap-5 lg:grid-cols-2">
+              {industryGroups.map((group) => (
+                <article className="rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-6" key={group.title}>
+                  <h2 className="text-xl font-bold tracking-[-0.025em] text-[#0B1F3A]">{group.title}</h2>
+                  <div className="mt-4 flex flex-wrap gap-2.5">
+                    {group.industries.map((industry) => (
+                      <span className="rounded-full border border-[#DCE3EA] bg-white px-3 py-1.5 text-sm font-semibold text-[#0B1F3A]" key={industry}>{industry}</span>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
