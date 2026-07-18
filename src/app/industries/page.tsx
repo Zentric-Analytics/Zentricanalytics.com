@@ -74,6 +74,7 @@ const organizationCapabilities: Array<{ Icon: LucideIcon; title: string; descrip
 export default function Industries() {
   return (
     <PageShell>
+      <link rel="preload" as="image" href="/images/industries/industries-hero-bg.png" fetchPriority="high" />
       <section
         className="relative isolate flex min-h-[620px] items-center overflow-hidden bg-[#0B1F3A] bg-[position:60%_center] px-4 py-16 text-white sm:min-h-[640px] sm:px-6 sm:py-20 lg:min-h-[650px] lg:bg-[position:center_right] lg:px-8 lg:py-24"
         style={{
@@ -85,13 +86,13 @@ export default function Industries() {
       >
         <div className="mx-auto w-full max-w-6xl">
           <div className="max-w-[44rem]">
-            <h1 id="industries-page-heading" className="industries-hero-reveal industries-hero-reveal-1 text-[28px] font-bold leading-[1.12] tracking-[-0.045em] sm:text-[clamp(2.35rem,4.5vw,4rem)] sm:leading-[1.06]">
+            <h1 id="industries-page-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.045em] sm:text-[clamp(2.35rem,4.5vw,4rem)] sm:leading-[1.06]">
               Technology Solutions for Every Industry, Organization, and Ambition
             </h1>
-            <p className="industries-hero-reveal industries-hero-reveal-2 mt-6 max-w-[43rem] text-base leading-[1.7] text-slate-100 sm:mt-7 sm:text-lg sm:leading-[1.7]">
+            <p className="mt-6 max-w-[43rem] text-base leading-[1.7] text-slate-100 sm:mt-7 sm:text-lg sm:leading-[1.7]">
               From enterprises and startups to public institutions and personal brands, Zentric Analytics delivers tailored technology solutions around your unique goals, challenges, and opportunities.
             </p>
-            <div className="industries-hero-reveal industries-hero-reveal-3 mt-8 flex flex-col gap-3.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-4">
+            <div className="mt-8 flex flex-col gap-3.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-4">
               <Link className="btn hero-cta-primary w-full sm:w-auto" href="/contact">Discuss Your Needs</Link>
             </div>
           </div>
