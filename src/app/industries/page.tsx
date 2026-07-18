@@ -87,7 +87,7 @@ export default function Industries() {
               Technology Solutions for Every Industry, Organization, and Ambition
             </h1>
             <p className="mt-6 max-w-[43rem] text-base leading-[1.7] text-slate-100 sm:mt-7 sm:text-lg sm:leading-[1.7]">
-              From global enterprises and growing startups to public institutions and personal brands, Zentric Analytics delivers tailored technology solutions designed around each client&apos;s unique goals, challenges, and opportunities.
+              From enterprises and startups to public institutions and personal brands, Zentric Analytics delivers tailored technology solutions around your unique goals, challenges, and opportunities.
             </p>
             <div className="mt-8 flex flex-col gap-3.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-4">
               <Link className="btn hero-cta-primary w-full sm:w-auto" href="/contact">Discuss Your Needs</Link>
