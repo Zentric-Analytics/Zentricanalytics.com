@@ -65,7 +65,7 @@ export default function Industries() {
 
       <ScrollReveal>
         <section className="bg-white px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="organization-capabilities-heading">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-12">
+        <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-8">
           <header className="max-w-[30rem] text-left">
             <h2
               id="organization-capabilities-heading"
