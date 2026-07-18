@@ -371,3 +371,57 @@ html{scroll-padding-top:82px}
   /* Keep section rhythm on the approved 32 / 48 / 64 pixel scale. */
   .mx-auto.w-full.max-w-6xl.min-w-0.px-4.py-10{padding-top:48px;padding-bottom:48px}
 }
+
+@keyframes industries-hero-fade-up{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.industries-hero-reveal{
+  animation:industries-hero-fade-up 520ms ease-out both;
+  will-change:opacity,transform;
+}
+.industries-hero-reveal-1{animation-delay:40ms}
+.industries-hero-reveal-2{animation-delay:130ms}
+.industries-hero-reveal-3{animation-delay:220ms}
+
+.industries-scroll-reveal{
+  opacity:0;
+  transform:translateY(20px);
+  transition:opacity 520ms ease-out,transform 520ms ease-out;
+  transition-delay:var(--industries-reveal-delay,0ms);
+  will-change:opacity,transform;
+}
+
+.industries-scroll-reveal.is-visible{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.industries-child-reveal{
+  opacity:0;
+  transform:translateY(18px);
+  transition:opacity 500ms ease-out,transform 500ms ease-out;
+  transition-delay:var(--industries-reveal-delay,0ms);
+  will-change:opacity,transform;
+}
+
+.industries-scroll-reveal.is-visible .industries-child-reveal{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.industries-delay-1{--industries-reveal-delay:80ms}
+.industries-delay-2{--industries-reveal-delay:160ms}
+
+@media (prefers-reduced-motion:reduce){
+  .industries-hero-reveal,
+  .industries-scroll-reveal,
+  .industries-child-reveal{
+    animation:none;
+    opacity:1;
+    transform:none;
+    transition:none;
+    will-change:auto;
+  }
+}
