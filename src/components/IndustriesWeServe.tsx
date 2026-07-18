@@ -103,8 +103,8 @@ export function IndustriesWeServe() {
         </div>
 
         <aside className="mt-5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3.5 text-sm leading-[1.6] text-[#294A43] sm:mt-6 sm:px-5 sm:py-4 sm:text-base">
-          <span className="font-bold text-[#0B1F3A]">Don&apos;t see your industry listed?</span>{' '}
-          Zentric Analytics is not limited to specific sectors. We work with businesses, institutions, startups, professionals, creators, and personal brands across every industry.
+          <span className="font-bold text-[#0B1F3A]">Don&apos;t see your industry?</span>{' '}
+          That&apos;s not a limitation. Zentric Analytics delivers tailored technology solutions for organizations, businesses, institutions, and professionals across every sector.
         </aside>
       </div>
     </section>
