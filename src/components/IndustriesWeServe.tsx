@@ -59,7 +59,7 @@ export function IndustriesWeServe() {
           {industries.map(({ Icon, title, description }, index) => (
             <button
               type="button"
-              className={`group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-5 ${index > 5 && !showAllIndustries ? 'hidden md:block' : ''}`}
+              className={`group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-5 ${index > 5 && !showAllIndustries ? 'hidden' : ''}`}
               key={title}
               aria-expanded={expandedIndustry === index}
               aria-controls={`industry-description-${index}`}
@@ -88,7 +88,7 @@ export function IndustriesWeServe() {
 
         <button
           type="button"
-          className="btn btn-secondary mt-5 w-full md:hidden"
+          className="btn btn-secondary mt-5 w-full md:mx-auto md:flex md:w-fit"
           aria-expanded={showAllIndustries}
           aria-controls="additional-industries"
           onClick={() => {
@@ -96,10 +96,10 @@ export function IndustriesWeServe() {
             setExpandedIndustry(null);
           }}
         >
-          {showAllIndustries ? 'Show Fewer Industries' : 'View All Industries'}
+          {showAllIndustries ? 'Show Fewer Industries' : 'Show More Industries'}
         </button>
         <div className="sr-only" aria-live="polite">
-          {showAllIndustries ? 'All industries are shown.' : 'Six additional industries are available.'}
+          {showAllIndustries ? 'Show Fewer Industries' : 'Show More Industries'}
         </div>
 
         <aside className="mt-5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3.5 text-sm leading-[1.6] text-[#294A43] sm:mt-6 sm:px-5 sm:py-4 sm:text-base">
