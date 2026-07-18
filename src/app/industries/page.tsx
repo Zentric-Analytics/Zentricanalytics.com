@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react';
-import { BrainCircuit, CloudCog, Code2, Handshake, ShieldCheck, Sparkles, Target, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Handshake, ShieldCheck, Target, TrendingUp, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { IndustriesWeServe } from '@/components/IndustriesWeServe';
+import { OrganizationCapabilitiesReveal } from '@/components/OrganizationCapabilitiesReveal';
 import { PageShell } from '@/components/PageShell';
 import { ScrollReveal } from '@/components/ScrollReveal';
 
@@ -29,45 +30,6 @@ const organizationValues: Array<{ number: string; Icon: LucideIcon; title: strin
     Icon: Handshake,
     title: 'Long-Term Partnership',
     description: 'We support clients beyond launch through guidance, improvement, maintenance, and continued collaboration.',
-  },
-];
-
-const organizationCapabilities: Array<{ Icon: LucideIcon; title: string; description: string }> = [
-  {
-    Icon: Sparkles,
-    title: 'Digital Transformation',
-    description:
-      'Modernize business processes with scalable digital solutions that improve efficiency and prepare your organization for future growth.',
-  },
-  {
-    Icon: Code2,
-    title: 'Custom Software Development',
-    description:
-      'Design and build secure, scalable software tailored to your organization\'s unique workflows and objectives.',
-  },
-  {
-    Icon: CloudCog,
-    title: 'Cloud & Infrastructure',
-    description:
-      'Deploy reliable cloud solutions that improve performance, scalability, collaboration, and operational resilience.',
-  },
-  {
-    Icon: BrainCircuit,
-    title: 'Data & AI Solutions',
-    description:
-      'Transform business data into actionable insights through analytics, automation, and intelligent AI-powered solutions.',
-  },
-  {
-    Icon: ShieldCheck,
-    title: 'Cybersecurity',
-    description:
-      "Protect critical systems, data, and operations using modern security practices designed for today's digital landscape.",
-  },
-  {
-    Icon: Handshake,
-    title: 'IT Consulting & Support',
-    description:
-      'Partner with experienced technology consultants who help align technology investments with long-term business goals.',
   },
 ];
 
@@ -119,23 +81,7 @@ export default function Industries() {
             </p>
           </header>
 
-          <div className="border-y border-[#DCE3EA]">
-            {organizationCapabilities.map(({ Icon, title, description }, index) => (
-              <article style={{ '--industries-reveal-delay': `${index * 75}ms` } as CSSProperties} className="industries-child-reveal group grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 py-4 first:pt-4 last:pb-4 not-last:border-b not-last:border-[#DCE3EA] sm:grid-cols-[3.25rem_minmax(0,1fr)] sm:gap-x-4 sm:py-5" key={title}>
-                <span className="flex size-10 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out group-hover:translate-x-0.5 sm:size-11">
-                  <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
-                </span>
-                <div className="min-w-0">
-                  <h3 className="text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#0B7F60] sm:text-xl">
-                    {title}
-                  </h3>
-                  <p className="mt-1.5 text-[0.9375rem] leading-[1.6] text-[#475569] sm:text-base">
-                    {description}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
+          <OrganizationCapabilitiesReveal />
         </div>
         </section>
       </ScrollReveal>
