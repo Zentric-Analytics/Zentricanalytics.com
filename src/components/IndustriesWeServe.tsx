@@ -46,18 +46,18 @@ export function IndustriesWeServe() {
 
   return (
     <ScrollReveal>
-      <section className="relative z-10 -mt-12 px-4 sm:-mt-14 sm:px-6 lg:-mt-20 lg:px-8" aria-labelledby="industry-spectrum-heading">
-      <div className="mx-auto max-w-[75rem] rounded-[20px] border border-[#DCE3EA] bg-white p-5 shadow-[0_18px_40px_rgba(11,31,58,0.12)] sm:rounded-[22px] sm:p-8 lg:p-10 xl:p-12">
+      <section className="relative z-10 -mt-10 px-4 sm:-mt-12 sm:px-6 lg:-mt-16 lg:px-8" aria-labelledby="industry-spectrum-heading">
+      <div className="mx-auto max-w-[75rem] rounded-[20px] border border-[#DCE3EA] bg-white p-5 shadow-[0_18px_40px_rgba(11,31,58,0.12)] sm:rounded-[22px] sm:p-7 lg:p-8 xl:p-10">
         <header className="max-w-[46rem] text-left md:mx-auto md:text-center">
           <h2 id="industry-spectrum-heading" className="industries-child-reveal text-[clamp(1.75rem,4.8vw,2.625rem)] font-bold leading-[1.1] tracking-[-0.04em] text-[#0B1F3A]">
             Industries We Serve
           </h2>
-          <p className="industries-child-reveal industries-delay-1 mt-4 text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
+          <p className="industries-child-reveal industries-delay-1 mt-3 text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
             We partner with organizations across a wide range of sectors, adapting our technology, data, and digital solutions to the unique needs of each business, institution, and personal brand.
           </p>
         </header>
 
-        <div id="additional-industries" className="mt-7 grid gap-4 md:grid-cols-3 lg:gap-5" aria-label="Industries we serve">
+        <div id="additional-industries" className="mt-6 grid gap-4 md:grid-cols-3 lg:gap-4" aria-label="Industries we serve">
           {industries.map(({ Icon, title, description }, index) => (
             <button
               type="button"
@@ -91,7 +91,7 @@ export function IndustriesWeServe() {
 
         <button
           type="button"
-          className="btn btn-secondary mt-5 w-full md:mx-auto md:flex md:w-fit"
+          className="btn btn-secondary mt-4 w-full md:mx-auto md:flex md:w-fit"
           aria-expanded={showAllIndustries}
           aria-controls="additional-industries"
           onClick={() => {
@@ -105,7 +105,7 @@ export function IndustriesWeServe() {
           {showAllIndustries ? 'Show Fewer Industries' : 'Show More Industries'}
         </div>
 
-        <aside className="mt-5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3.5 text-sm leading-[1.6] text-[#294A43] sm:mt-6 sm:px-5 sm:py-4 sm:text-base">
+        <aside className="mt-4 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3.5 text-sm leading-[1.6] text-[#294A43] sm:mt-5 sm:px-5 sm:py-4 sm:text-base">
           <span className="font-bold text-[#0B1F3A]">Don&apos;t see your industry?</span>{' '}
           That&apos;s not a limitation. Zentric Analytics delivers tailored technology solutions for organizations, businesses, institutions, and professionals across every sector.
         </aside>
