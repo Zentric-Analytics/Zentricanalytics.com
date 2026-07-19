@@ -140,13 +140,13 @@ export default function Careers() {
                   href="/apply"
                   key={title}
                   style={{ '--industries-reveal-delay': `${index * 70}ms` } as CSSProperties}
-                  className="industries-child-reveal group flex min-h-[13rem] min-w-0 flex-col rounded-[1.25rem] border border-[#DCE3EA] bg-white p-5 text-left no-underline shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#BFD0DD] hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:p-6"
+                  className="industries-child-reveal group flex min-h-[11.5rem] min-w-0 flex-col rounded-[1.25rem] border border-[#DCE3EA] bg-white p-5 text-left no-underline shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#BFD0DD] hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:min-h-[12rem] sm:p-6"
                 >
                   <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#E8F5F0] text-[#0B7F60]">
                     <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                   </span>
                   <h3 className="mt-4 text-xl font-bold leading-[1.25] tracking-[-0.025em] text-[#0B1F3A]">{title}</h3>
-                  <p className="mt-2 min-w-0 flex-1 text-[0.9375rem] leading-[1.6] text-[#475569]">{description}</p>
+                  <p className="mt-2 min-w-0 overflow-hidden text-[0.9375rem] leading-[1.45] text-[#475569] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">{description}</p>
                   <span className="mt-4 text-sm font-bold text-[#0B7F60] transition-colors group-hover:text-[#0B1F3A]">{action}</span>
                 </Link>
               ))}
