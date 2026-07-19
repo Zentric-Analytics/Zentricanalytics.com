@@ -20,7 +20,6 @@ type Role = {
   Icon: LucideIcon;
   title: string;
   description: string;
-  action: string;
 };
 
 const roles: Role[] = [
@@ -28,37 +27,31 @@ const roles: Role[] = [
     Icon: Code2,
     title: 'Software Engineer',
     description: 'Build reliable application features, integrations, and systems with maintainable engineering practices.',
-    action: 'View Role',
   },
   {
     Icon: PanelsTopLeft,
     title: 'Web Developer',
     description: 'Create accessible, responsive web experiences that support practical business and user needs.',
-    action: 'View Role',
   },
   {
     Icon: BrainCircuit,
     title: 'AI Solutions Engineer',
     description: 'Design applied AI workflows that are useful, responsible, measurable, and grounded in real problems.',
-    action: 'View Role',
   },
   {
     Icon: ChartNoAxesCombined,
     title: 'Data Analyst',
     description: 'Turn structured information into clear analysis, reporting, and decisions stakeholders can trust.',
-    action: 'View Role',
   },
   {
     Icon: FlaskConical,
     title: 'Research Associate',
     description: 'Support discovery, market research, documentation, and careful evaluation of technology opportunities.',
-    action: 'View Role',
   },
   {
     Icon: FileUser,
     title: 'General Application',
     description: 'Share your background for future opportunities if your experience does not match a listed role.',
-    action: 'Apply',
   },
 ];
 
@@ -134,22 +127,27 @@ export default function Careers() {
               </p>
             </header>
 
-            <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:mt-9 lg:grid-cols-3">
-              {roles.map(({ Icon, title, description, action }, index) => (
-                <Link
-                  href="/apply"
+            <div className="mx-auto mt-7 grid max-w-[22rem] gap-3 sm:max-w-[54rem] sm:grid-cols-2 lg:mt-9 lg:grid-cols-3">
+              {roles.map(({ Icon, title, description }, index) => (
+                <article
                   key={title}
                   style={{ '--industries-reveal-delay': `${index * 70}ms` } as CSSProperties}
-                  className="industries-child-reveal group flex min-h-[11.5rem] min-w-0 flex-col rounded-[1.25rem] border border-[#DCE3EA] bg-white p-5 text-left no-underline shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#BFD0DD] hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:min-h-[12rem] sm:p-6"
+                  className="industries-child-reveal group flex min-h-[9.5rem] min-w-0 flex-col rounded-[1.125rem] border border-[#DCE3EA] bg-white p-4 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#BFD0DD] hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] sm:min-h-[10rem] sm:p-5"
                 >
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#E8F5F0] text-[#0B7F60]">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#E8F5F0] text-[#0B7F60]">
                     <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                   </span>
-                  <h3 className="mt-4 text-xl font-bold leading-[1.25] tracking-[-0.025em] text-[#0B1F3A]">{title}</h3>
+                  <h3 className="mt-3 text-xl font-bold leading-[1.25] tracking-[-0.025em] text-[#0B1F3A]">{title}</h3>
                   <p className="mt-2 min-w-0 overflow-hidden text-[0.9375rem] leading-[1.45] text-[#475569] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">{description}</p>
-                  <span className="mt-4 text-sm font-bold text-[#0B7F60] transition-colors group-hover:text-[#0B1F3A]">{action}</span>
-                </Link>
+                </article>
               ))}
+            </div>
+
+            <div className="mx-auto mt-8 flex max-w-[34rem] flex-col items-center text-center sm:mt-9">
+              <Link className="btn hero-cta-primary w-full sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>
+              <p className="mt-3 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
+                Don&apos;t see a suitable role? Submit a general application and we&apos;ll keep your profile on file for future opportunities.
+              </p>
             </div>
           </div>
         </section>
