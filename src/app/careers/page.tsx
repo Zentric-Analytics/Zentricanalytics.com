@@ -205,14 +205,14 @@ export default function Careers() {
 
       <ScrollReveal>
         <section
-          className="relative isolate flex min-h-[34rem] items-center overflow-hidden bg-[#0B1F3A] bg-[url('/images/careers/careers-cta-background.png')] bg-cover bg-center bg-no-repeat px-4 py-12 sm:min-h-[36rem] sm:px-6 sm:py-14 lg:min-h-[38rem] lg:px-8 lg:py-16"
+          className="relative isolate mb-16 flex min-h-[31.25rem] items-center overflow-hidden bg-[#0B1F3A] bg-[url('/images/careers/careers-cta-background.png')] bg-cover bg-center bg-no-repeat px-4 py-10 sm:min-h-[32.5rem] sm:px-6 sm:py-12 lg:min-h-[35rem] lg:px-8"
           aria-labelledby="careers-final-cta-heading"
         >
           <link rel="preload" as="image" href="/images/careers/careers-cta-background.png" />
           <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.58)]" aria-hidden="true" />
 
-          <div className="mx-auto grid w-full max-w-6xl gap-7 rounded-[1.5rem] bg-white p-6 shadow-[0_28px_70px_rgba(2,8,23,0.28)] sm:p-8 lg:grid-cols-[minmax(0,1.85fr)_minmax(19rem,1fr)] lg:items-center lg:gap-12 lg:p-16">
-            <div className="min-w-0">
+          <div className="mx-auto grid w-full max-w-[70rem] gap-7 rounded-[1.25rem] bg-white p-6 shadow-[0_24px_64px_rgba(2,8,23,0.24)] sm:p-8 lg:grid-cols-[minmax(0,65fr)_minmax(18rem,35fr)] lg:items-center lg:gap-0 lg:p-12">
+            <div className="min-w-0 lg:pr-12">
               <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]">
                 Ready to Build Meaningful Technology With Us?
               </h2>
@@ -221,7 +221,7 @@ export default function Careers() {
               </p>
             </div>
 
-            <div className="flex min-w-0 flex-col gap-4 lg:border-l lg:border-[#DCE3EA] lg:pl-10">
+            <div className="flex min-w-0 flex-col gap-4 lg:border-l lg:border-[#DCE3EA] lg:pl-12">
               <Link className="btn hero-cta-primary w-full" href="/apply">Apply Now</Link>
               <Link className="btn hero-cta-secondary w-full" href="/track">Track Application</Link>
               <p className="text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
