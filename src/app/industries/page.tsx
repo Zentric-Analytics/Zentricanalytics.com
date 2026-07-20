@@ -60,9 +60,9 @@ export default function Industries() {
       <IndustriesWeServe />
 
       <ScrollReveal>
-        <section className="bg-white px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="organization-capabilities-heading">
-        <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-8">
-          <header className="max-w-[30rem] text-left">
+        <section className="bg-white px-4 py-8 sm:px-6 sm:py-9 lg:px-8 lg:py-14" aria-labelledby="organization-capabilities-heading">
+        <div className="mx-auto grid max-w-[58rem] gap-7 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:items-start lg:gap-6">
+          <header className="max-w-[30rem] pt-[1.125rem] text-left sm:pt-6 lg:pt-[1.125rem]">
             <h2
               id="organization-capabilities-heading"
               className="industries-child-reveal text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]"
