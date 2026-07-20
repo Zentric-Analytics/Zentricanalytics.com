@@ -204,20 +204,29 @@ export default function Careers() {
       </ScrollReveal>
 
       <ScrollReveal>
-        <section className="bg-[#0B1F3A] px-4 py-10 text-white sm:px-6 sm:py-12 lg:px-8 lg:py-16" aria-labelledby="careers-final-cta-heading">
-          <div className="mx-auto grid max-w-6xl gap-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.65fr)] lg:items-center lg:gap-12">
-            <div className="max-w-[44rem]">
-              <h2 id="careers-final-cta-heading" className="max-w-[40rem] text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] sm:text-[2.125rem] lg:text-[2.625rem]">
+        <section
+          className="relative isolate flex min-h-[34rem] items-center overflow-hidden bg-[#0B1F3A] bg-[url('/images/careers/careers-cta-background.png')] bg-cover bg-center bg-no-repeat px-4 py-12 sm:min-h-[36rem] sm:px-6 sm:py-14 lg:min-h-[38rem] lg:px-8 lg:py-16"
+          aria-labelledby="careers-final-cta-heading"
+        >
+          <link rel="preload" as="image" href="/images/careers/careers-cta-background.png" />
+          <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.58)]" aria-hidden="true" />
+
+          <div className="mx-auto grid w-full max-w-6xl gap-7 rounded-[1.5rem] bg-white p-6 shadow-[0_28px_70px_rgba(2,8,23,0.28)] sm:p-8 lg:grid-cols-[minmax(0,1.85fr)_minmax(19rem,1fr)] lg:items-center lg:gap-12 lg:p-16">
+            <div className="min-w-0">
+              <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]">
                 Ready to Build Meaningful Technology With Us?
               </h2>
-              <p className="mt-3 max-w-[42rem] text-base leading-[1.6] text-slate-100 sm:mt-4 sm:text-[1.0625rem]">
-                Apply for an open role, submit a general application, or track the progress of an existing application.
+              <p className="mt-3 max-w-[43rem] text-base leading-[1.6] text-[#475569] sm:mt-4 sm:text-[1.0625rem]">
+                Join a team that values practical engineering, continuous learning, thoughtful collaboration, and building technology that creates lasting impact.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 lg:items-stretch lg:border-l lg:border-white/15 lg:pl-8">
+            <div className="flex min-w-0 flex-col gap-4 lg:border-l lg:border-[#DCE3EA] lg:pl-10">
               <Link className="btn hero-cta-primary w-full" href="/apply">Apply Now</Link>
               <Link className="btn hero-cta-secondary w-full" href="/track">Track Application</Link>
+              <p className="text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
+                Whether you&apos;re applying for an open position or submitting a general application, we&apos;d love to learn more about you.
+              </p>
             </div>
           </div>
         </section>
