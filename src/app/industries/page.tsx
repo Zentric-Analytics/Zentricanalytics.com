@@ -87,30 +87,30 @@ export default function Industries() {
       </ScrollReveal>
 
       <ScrollReveal>
-        <section className="bg-[#F3F6F9] px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="organization-values-heading">
+        <section className="bg-[#0B1F3A] px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="organization-values-heading">
         <div className="mx-auto max-w-6xl">
           <header className="max-w-[47rem] text-left">
             <h2
               id="organization-values-heading"
-              className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]"
+              className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[2.125rem] lg:text-[2.625rem]"
             >
               Why Organizations Choose Zentric
             </h2>
-            <p className="mt-3 max-w-[46rem] text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
+            <p className="mt-3 max-w-[46rem] text-base leading-[1.6] text-slate-100 sm:text-[1.0625rem]">
               We do not apply the same solution to every client. Our work begins with understanding your goals, operations, audience, challenges, and opportunities before designing the right technology approach.
             </p>
           </header>
 
-          <div className="mt-7 divide-y divide-[#DCE3EA] lg:mt-9 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0">
+          <div className="mt-7 divide-y divide-white/15 lg:mt-9 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0">
             {organizationValues.map(({ number, Icon, title, description }, index) => (
               <article style={{ '--industries-reveal-delay': `${index * 85}ms` } as CSSProperties} className="industries-child-reveal group grid grid-cols-[2.875rem_minmax(0,1fr)] gap-x-3 py-4 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-x-4 lg:block lg:px-6 lg:py-0 first:lg:pl-0 last:lg:pr-0" key={title}>
-                <span className="text-2xl font-bold leading-none tracking-[-0.05em] text-[#0B7F60] sm:text-[1.75rem] lg:block">{number}</span>
+                <span className="text-2xl font-bold leading-none tracking-[-0.05em] text-[#5EE0BF] sm:text-[1.75rem] lg:block">{number}</span>
                 <div className="min-w-0 lg:mt-5">
-                  <Icon aria-hidden="true" className="size-5 text-[#0B7F60] transition-transform duration-200 ease-out group-hover:translate-x-0.5 sm:size-[1.375rem]" strokeWidth={1.8} />
-                  <h3 className="mt-3 text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#0B7F60] sm:text-xl">
+                  <Icon aria-hidden="true" className="size-5 text-[#5EE0BF] transition-transform duration-200 ease-out group-hover:translate-x-0.5 sm:size-[1.375rem]" strokeWidth={1.8} />
+                  <h3 className="mt-3 text-lg font-bold leading-[1.3] tracking-[-0.025em] text-white transition-colors duration-200 ease-out group-hover:text-[#5EE0BF] sm:text-xl">
                     {title}
                   </h3>
-                  <p className="mt-1.5 text-[0.9375rem] leading-[1.6] text-[#475569] sm:text-base">{description}</p>
+                  <p className="mt-1.5 text-[0.9375rem] leading-[1.6] text-slate-200 sm:text-base">{description}</p>
                 </div>
               </article>
             ))}
@@ -120,23 +120,23 @@ export default function Industries() {
       </ScrollReveal>
 
       <ScrollReveal>
-        <section className="bg-[#0B1F3A] px-4 py-9 text-white sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="industries-final-cta-heading">
+        <section className="bg-white px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="industries-final-cta-heading">
         <div className="mx-auto grid max-w-6xl gap-7 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.55fr)] lg:items-center lg:gap-12">
           <div className="max-w-[44rem]">
             <h2
               id="industries-final-cta-heading"
-              className="max-w-[38rem] text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] sm:text-[2.125rem] lg:text-[2.625rem]"
+              className="max-w-[38rem] text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]"
             >
               Whatever Your Industry, We&apos;re Ready to Build With You
             </h2>
-            <p className="mt-3 max-w-[42rem] text-base leading-[1.6] text-slate-100 sm:mt-4 sm:text-[1.0625rem]">
+            <p className="mt-3 max-w-[42rem] text-base leading-[1.6] text-[#475569] sm:mt-4 sm:text-[1.0625rem]">
               Whether you are an established organization, a growing startup, a public institution, a professional, a creator, or a personal brand, Zentric Analytics can design a technology solution around your goals.
             </p>
           </div>
 
-          <div className="border-white/15 lg:border-l lg:pl-8">
+          <div className="border-[#DCE3EA] lg:border-l lg:pl-8">
             <Link className="btn hero-cta-primary w-full sm:w-fit" href="/contact">Discuss Your Needs</Link>
-            <p className="mt-3 max-w-[22rem] text-sm leading-[1.6] text-slate-300 sm:text-base">
+            <p className="mt-3 max-w-[22rem] text-sm leading-[1.6] text-[#475569] sm:text-base">
               Tell us what you are trying to achieve, and we will help you identify the right next step.
             </p>
           </div>
