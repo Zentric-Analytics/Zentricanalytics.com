@@ -60,9 +60,9 @@ export default function Industries() {
       <IndustriesWeServe />
 
       <ScrollReveal>
-        <section className="bg-white px-4 py-8 sm:px-6 sm:py-9 lg:px-8 lg:py-14" aria-labelledby="organization-capabilities-heading">
-        <div className="mx-auto grid max-w-[58rem] gap-7 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:items-start lg:gap-6">
-          <header className="max-w-[30rem] pt-[1.125rem] text-left sm:pt-6 lg:pt-[1.125rem]">
+        <section className="bg-white px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="organization-capabilities-heading">
+        <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-8">
+          <header className="max-w-[30rem] text-left">
             <h2
               id="organization-capabilities-heading"
               className="industries-child-reveal text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]"
@@ -73,7 +73,7 @@ export default function Industries() {
               Every organization has unique goals, processes, and challenges. We combine technology, strategy, and innovation to design solutions that improve efficiency, strengthen security, accelerate growth, and create measurable business value.
             </p>
             <p className="industries-child-reveal industries-delay-2 mt-4 text-base leading-[1.6] text-[#294A43] sm:text-[1.0625rem]">
-              Whether the goal is modernization, growth, stronger security, better customer experiences, or improved operations, our solutions are shaped around the organization—not a fixed industry template.
+              Whether the goal is modernization, growth, stronger security, better customer experiences, or improved operations, our solutions are shaped around the organization, not a fixed industry template.
             </p>
           </header>
 
