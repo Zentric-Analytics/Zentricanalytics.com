@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { Handshake, ShieldCheck, Target, TrendingUp, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { IndustriesHeroTyping } from '@/components/IndustriesHeroTyping';
 import { IndustriesWeServe } from '@/components/IndustriesWeServe';
 import { OrganizationCapabilitiesReveal } from '@/components/OrganizationCapabilitiesReveal';
 import { PageShell } from '@/components/PageShell';
@@ -47,7 +48,8 @@ export default function Industries() {
             <h1 id="industries-page-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.045em] sm:text-[clamp(2.35rem,4.5vw,4rem)] sm:leading-[1.06]">
               Technology Solutions for Every Industry, Organization, and Ambition
             </h1>
-            <p className="mt-4 max-w-[43rem] text-base leading-[1.7] text-slate-100 sm:mt-5 sm:text-lg sm:leading-[1.7]">
+            <IndustriesHeroTyping />
+            <p className="mt-3 max-w-[43rem] text-base leading-[1.7] text-slate-100 sm:mt-4 sm:text-lg sm:leading-[1.7]">
               From enterprises and startups to public institutions and personal brands, Zentric Analytics delivers tailored technology solutions around your unique goals, challenges, and opportunities.
             </p>
             <div className="mt-6 flex flex-col gap-3.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-4">
