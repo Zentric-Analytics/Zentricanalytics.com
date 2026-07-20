@@ -46,8 +46,8 @@ export function IndustriesWeServe() {
 
   return (
     <ScrollReveal>
-      <section className="relative z-10 -mt-10 px-4 sm:-mt-12 sm:px-6 lg:-mt-16 lg:px-8" aria-labelledby="industry-spectrum-heading">
-      <div className="mx-auto max-w-[75rem] rounded-[20px] border border-[#DCE3EA] bg-white p-5 shadow-[0_18px_40px_rgba(11,31,58,0.12)] sm:rounded-[22px] sm:p-7 lg:p-8 xl:p-10">
+      <section className="relative z-10 -mt-8 px-4 sm:-mt-10 sm:px-6 lg:-mt-12 lg:px-8" aria-labelledby="industry-spectrum-heading">
+      <div className="mx-auto max-w-[68rem] rounded-[18px] border border-[#DCE3EA] bg-white p-4 shadow-[0_14px_34px_rgba(11,31,58,0.09)] sm:rounded-[20px] sm:p-6 lg:p-7 xl:p-8">
         <header className="max-w-[46rem] text-left md:mx-auto md:text-center">
           <h2 id="industry-spectrum-heading" className="industries-child-reveal text-[clamp(1.75rem,4.8vw,2.625rem)] font-bold leading-[1.1] tracking-[-0.04em] text-[#0B1F3A]">
             Industries We Serve
@@ -57,12 +57,12 @@ export function IndustriesWeServe() {
           </p>
         </header>
 
-        <div id="additional-industries" className="mt-6 grid gap-4 md:grid-cols-3 lg:gap-4" aria-label="Industries we serve">
+        <div id="additional-industries" className="mt-5 grid gap-3 md:grid-cols-3 lg:gap-3.5" aria-label="Industries we serve">
           {industries.map(({ Icon, title, description }, index) => (
             <button
               type="button"
               style={{ '--industries-reveal-delay': `${index * 70}ms` } as CSSProperties}
-              className={`industries-child-reveal group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-5 ${index > 5 && !showAllIndustries ? 'hidden' : ''}`}
+              className={`industries-child-reveal group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-3.5 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-4 ${index > 5 && !showAllIndustries ? 'hidden' : ''}`}
               key={title}
               aria-expanded={expandedIndustry === index}
               aria-controls={`industry-description-${index}`}
@@ -81,7 +81,7 @@ export function IndustriesWeServe() {
               </div>
               <div
                 id={`industry-description-${index}`}
-                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${expandedIndustry === index ? 'mt-3 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${expandedIndustry === index ? 'mt-2.5 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
               >
                 <p className="overflow-hidden text-sm leading-[1.55] text-[#475569]">{description}</p>
               </div>
@@ -91,7 +91,7 @@ export function IndustriesWeServe() {
 
         <button
           type="button"
-          className="btn btn-secondary mt-4 w-full md:mx-auto md:flex md:w-fit"
+          className="btn btn-secondary mt-3.5 w-full md:mx-auto md:flex md:w-fit"
           aria-expanded={showAllIndustries}
           aria-controls="additional-industries"
           onClick={() => {
@@ -105,7 +105,7 @@ export function IndustriesWeServe() {
           {showAllIndustries ? 'Show Fewer Industries' : 'Show More Industries'}
         </div>
 
-        <aside className="mt-4 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3.5 text-sm leading-[1.6] text-[#294A43] sm:mt-5 sm:px-5 sm:py-4 sm:text-base">
+        <aside className="mt-3.5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3 text-sm leading-[1.6] text-[#294A43] sm:mt-4 sm:px-5 sm:py-3.5 sm:text-base">
           <span className="font-bold text-[#0B1F3A]">Don&apos;t see your industry?</span>{' '}
           That&apos;s not a limitation. Zentric Analytics delivers tailored technology solutions for organizations, businesses, institutions, and professionals across every sector.
         </aside>
