@@ -6,27 +6,23 @@ import { OrganizationCapabilitiesReveal } from '@/components/OrganizationCapabil
 import { PageShell } from '@/components/PageShell';
 import { ScrollReveal } from '@/components/ScrollReveal';
 
-const organizationValues: Array<{ number: string; Icon: LucideIcon; title: string; description: string }> = [
+const organizationValues: Array<{ Icon: LucideIcon; title: string; description: string }> = [
   {
-    number: '01',
     Icon: Target,
     title: 'Tailored to Your Goals',
     description: 'Every solution is shaped around your organization’s priorities, workflows, audience, and long-term objectives.',
   },
   {
-    number: '02',
     Icon: TrendingUp,
     title: 'Built for Growth',
     description: 'We design scalable systems that can evolve with your business, institution, startup, or personal brand.',
   },
   {
-    number: '03',
     Icon: ShieldCheck,
     title: 'Secure by Design',
     description: 'Security, reliability, and responsible technology practices are considered throughout every stage of delivery.',
   },
   {
-    number: '04',
     Icon: Handshake,
     title: 'Long-Term Partnership',
     description: 'We support clients beyond launch through guidance, improvement, maintenance, and continued collaboration.',
@@ -102,10 +98,9 @@ export default function Industries() {
           </header>
 
           <div className="mt-7 divide-y divide-white/15 lg:mt-9 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0">
-            {organizationValues.map(({ number, Icon, title, description }, index) => (
-              <article style={{ '--industries-reveal-delay': `${index * 85}ms` } as CSSProperties} className="industries-child-reveal group grid grid-cols-[2.875rem_minmax(0,1fr)] gap-x-3 py-4 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-x-4 lg:block lg:px-6 lg:py-0 first:lg:pl-0 last:lg:pr-0" key={title}>
-                <span className="text-2xl font-bold leading-none tracking-[-0.05em] text-[#5EE0BF] sm:text-[1.75rem] lg:block">{number}</span>
-                <div className="min-w-0 lg:mt-5">
+            {organizationValues.map(({ Icon, title, description }, index) => (
+              <article style={{ '--industries-reveal-delay': `${index * 85}ms` } as CSSProperties} className="industries-child-reveal group py-4 lg:px-6 lg:py-0 first:lg:pl-0 last:lg:pr-0" key={title}>
+                <div className="min-w-0">
                   <Icon aria-hidden="true" className="size-5 text-[#5EE0BF] transition-transform duration-200 ease-out group-hover:translate-x-0.5 sm:size-[1.375rem]" strokeWidth={1.8} />
                   <h3 className="mt-3 text-lg font-bold leading-[1.3] tracking-[-0.025em] text-white transition-colors duration-200 ease-out group-hover:text-[#5EE0BF] sm:text-xl">
                     {title}
