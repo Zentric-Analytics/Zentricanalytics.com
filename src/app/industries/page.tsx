@@ -83,26 +83,26 @@ export default function Industries() {
       </ScrollReveal>
 
       <ScrollReveal>
-        <section className="bg-[#0B1F3A] px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="organization-values-heading">
+        <section className="bg-[#0B1F3A] px-4 py-8 sm:px-6 sm:py-9 lg:px-8 lg:py-14" aria-labelledby="organization-values-heading">
         <div className="mx-auto max-w-6xl">
-          <header className="max-w-[47rem] text-left">
+          <header className="max-w-[45rem] text-left">
             <h2
               id="organization-values-heading"
               className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[2.125rem] lg:text-[2.625rem]"
             >
               Why Organizations Choose Zentric
             </h2>
-            <p className="mt-3 max-w-[46rem] text-base leading-[1.6] text-slate-100 sm:text-[1.0625rem]">
+            <p className="mt-2.5 max-w-[45rem] text-base leading-[1.6] text-slate-100 sm:text-[1.0625rem]">
               We do not apply the same solution to every client. Our work begins with understanding your goals, operations, audience, challenges, and opportunities before designing the right technology approach.
             </p>
           </header>
 
-          <div className="mt-7 divide-y divide-white/15 lg:mt-9 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0">
+          <div className="mt-6 divide-y divide-white/10 lg:mt-7 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0">
             {organizationValues.map(({ Icon, title, description }, index) => (
-              <article style={{ '--industries-reveal-delay': `${index * 85}ms` } as CSSProperties} className="industries-child-reveal group py-4 lg:px-6 lg:py-0 first:lg:pl-0 last:lg:pr-0" key={title}>
+              <article style={{ '--industries-reveal-delay': `${index * 85}ms` } as CSSProperties} className="industries-child-reveal group py-5 transition-transform duration-[225ms] ease-out lg:px-6 lg:py-0 lg:hover:-translate-y-1 first:lg:pl-0 last:lg:pr-0" key={title}>
                 <div className="min-w-0">
-                  <Icon aria-hidden="true" className="size-5 text-[#5EE0BF] transition-transform duration-200 ease-out group-hover:translate-x-0.5 sm:size-[1.375rem]" strokeWidth={1.8} />
-                  <h3 className="mt-3 text-lg font-bold leading-[1.3] tracking-[-0.025em] text-white transition-colors duration-200 ease-out group-hover:text-[#5EE0BF] sm:text-xl">
+                  <Icon aria-hidden="true" className="size-[1.375rem] text-[#5EE0BF] transition-colors duration-[225ms] ease-out lg:group-hover:text-[#7FEBD0] sm:size-6" strokeWidth={1.8} />
+                  <h3 className="mt-4 text-lg font-bold leading-[1.3] tracking-[-0.025em] text-white transition-colors duration-[225ms] ease-out lg:group-hover:text-slate-100 sm:text-xl">
                     {title}
                   </h3>
                   <p className="mt-1.5 text-[0.9375rem] leading-[1.6] text-slate-200 sm:text-base">{description}</p>
