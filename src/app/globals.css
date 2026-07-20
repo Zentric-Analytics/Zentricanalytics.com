@@ -413,11 +413,10 @@ html{scroll-padding-top:82px}
   }
 }
 
-.industries-hero-typing{margin-top:.85rem;max-width:100%;min-width:0;color:#5EE0BF}
-.industries-hero-typing__label{margin:0 0 .2rem;font-size:.6875rem;font-weight:600;line-height:1.1;letter-spacing:.16em;text-transform:uppercase;color:#5EE0BF}
+.industries-hero-typing{margin-top:.65rem;max-width:100%;min-width:0;color:#5EE0BF}
 .industries-hero-typing__line{position:relative;display:inline-grid;max-width:100%;margin:0;align-items:baseline;font-family:Manrope,Inter,system-ui,sans-serif;font-size:clamp(1.55rem,7.2vw,2.375rem);font-weight:800;line-height:1.02;letter-spacing:-.045em;color:#5EE0BF;text-wrap:balance;overflow-wrap:anywhere}
 .industries-hero-typing__text,.industries-hero-typing__ghost{grid-area:1/1;min-width:0}
 .industries-hero-typing__text{position:relative;z-index:1;text-shadow:0 0 24px rgba(94,224,191,.22)}
 .industries-hero-typing__ghost{visibility:hidden;pointer-events:none;white-space:normal}
 
-@media (min-width:640px){.industries-hero-typing{margin-top:1rem}.industries-hero-typing__label{margin-bottom:.25rem;font-size:.75rem}.industries-hero-typing__line{font-size:clamp(1.9rem,3.6vw,2.875rem)}}
+@media (min-width:640px){.industries-hero-typing{margin-top:.8rem}.industries-hero-typing__line{font-size:clamp(1.9rem,3.6vw,2.875rem)}}
