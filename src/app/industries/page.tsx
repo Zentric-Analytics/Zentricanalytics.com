@@ -116,31 +116,31 @@ export default function Industries() {
 
       <ScrollReveal>
         <section
-          className="relative overflow-hidden bg-[#0B1F3A] bg-cover bg-center bg-no-repeat px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16"
+          className="relative overflow-hidden bg-[#0B1F3A] bg-cover bg-center bg-no-repeat py-12 sm:py-16 lg:py-20"
           style={{ backgroundImage: "url('/images/careers/careers-cta-background.png')" }}
           aria-labelledby="industries-final-cta-heading"
         >
-          <div className="absolute inset-0 bg-[rgba(8,27,52,0.68)]" aria-hidden="true" />
-          <div className="relative z-[1] mx-auto grid max-w-6xl gap-7 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.55fr)] lg:items-center lg:gap-12">
-          <div className="max-w-[44rem]">
-            <h2
-              id="industries-final-cta-heading"
-              className="max-w-[38rem] text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[2.125rem] lg:text-[2.625rem]"
-            >
-              Whatever Your Industry, We&apos;re Ready to Build With You
-            </h2>
-            <p className="mt-3 max-w-[42rem] text-base leading-[1.6] text-slate-100 sm:mt-4 sm:text-[1.0625rem]">
-              Whether you are an established organization, a growing startup, a public institution, a professional, a creator, or a personal brand, Zentric Analytics can design a technology solution around your goals.
-            </p>
-          </div>
+          <div className="absolute inset-0 bg-[rgba(8,27,52,0.62)]" aria-hidden="true" />
+          <div className="relative z-[2] mx-auto grid w-[calc(100%-32px)] max-w-[73.75rem] gap-7 rounded-[1.25rem] bg-white p-6 shadow-[0_28px_80px_rgba(2,8,23,0.26),0_8px_24px_rgba(15,23,42,0.14)] sm:p-7 lg:w-[calc(100%-80px)] lg:grid-cols-[minmax(0,68fr)_minmax(16rem,32fr)] lg:items-start lg:gap-16 lg:p-14">
+            <div className="min-w-0">
+              <h2
+                id="industries-final-cta-heading"
+                className="max-w-[38rem] text-[1.625rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]"
+              >
+                Whatever Your Industry, We&apos;re Ready to Build With You
+              </h2>
+              <p className="mt-3 max-w-[42rem] text-base leading-[1.6] text-[#475569] sm:mt-4 sm:text-[1.0625rem]">
+                Whether you are an established organization, a growing startup, a public institution, a professional, a creator, or a personal brand, Zentric Analytics can design a technology solution around your goals.
+              </p>
+            </div>
 
-          <div className="border-white/25 lg:border-l lg:pl-8">
-            <Link className="btn hero-cta-primary w-full sm:w-fit" href="/contact">Discuss Your Needs</Link>
-            <p className="mt-3 max-w-[22rem] text-sm leading-[1.6] text-slate-100 sm:text-base">
-              Tell us what you are trying to achieve, and we will help you identify the right next step.
-            </p>
+            <div className="flex min-w-0 flex-col items-stretch lg:items-start">
+              <Link className="btn hero-cta-primary w-full sm:w-fit" href="/contact">Discuss Your Needs</Link>
+              <p className="mt-5 max-w-[22rem] text-sm leading-[1.6] text-[#475569] sm:mt-6 sm:text-base">
+                Tell us what you are trying to achieve, and we will help you identify the right next step.
+              </p>
+            </div>
           </div>
-        </div>
         </section>
       </ScrollReveal>
     </PageShell>
