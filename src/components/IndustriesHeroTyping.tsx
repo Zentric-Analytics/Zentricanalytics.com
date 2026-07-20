@@ -124,7 +124,6 @@ export function IndustriesHeroTyping() {
       <p className="industries-hero-typing__line">
         <span className="industries-hero-typing__text">{typedIndustry}</span>
         <span className="industries-hero-typing__ghost" aria-hidden="true">{longestIndustry}</span>
-        <span className="industries-hero-typing__cursor" aria-hidden="true" />
       </p>
     </div>
   );
