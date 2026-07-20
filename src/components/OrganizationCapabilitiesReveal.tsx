@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, type CSSProperties } from 'react';
-import { BrainCircuit, CloudCog, Code2, Handshake, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react';
+import { BrainCircuit, ChevronDown, CloudCog, Code2, Handshake, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react';
 
 const organizationCapabilities: Array<{ Icon: LucideIcon; title: string; description: string }> = [
   {
@@ -65,7 +65,7 @@ export function OrganizationCapabilitiesReveal() {
         return (
           <article
             style={{ '--industries-reveal-delay': `${index * 75}ms` } as CSSProperties}
-            className="industries-child-reveal group py-4 first:pt-4 last:pb-4 not-last:border-b not-last:border-[#DCE3EA] sm:py-5"
+            className="industries-child-reveal group -mx-2 px-2 py-[1.125rem] first:pt-[1.125rem] last:pb-[1.125rem] not-last:border-b not-last:border-[#DCE3EA] transition-colors duration-200 ease-out hover:bg-[#EAF7F2]/40 focus-within:bg-[#EAF7F2]/40 sm:-mx-3 sm:px-3 sm:py-6"
             key={title}
             onPointerEnter={() => {
               if (supportsHover) {
@@ -80,7 +80,7 @@ export function OrganizationCapabilitiesReveal() {
           >
             <button
               type="button"
-              className="grid w-full grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:grid-cols-[3.25rem_minmax(0,1fr)] sm:gap-x-4"
+              className="grid w-full grid-cols-[2.75rem_minmax(0,1fr)_1.25rem] items-start gap-x-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:grid-cols-[3.25rem_minmax(0,1fr)_1.5rem] sm:gap-x-4"
               aria-expanded={isExpanded}
               aria-controls={descriptionId}
               onClick={() => {
@@ -116,6 +116,12 @@ export function OrganizationCapabilitiesReveal() {
                   </span>
                 </span>
               </span>
+              <ChevronDown
+                aria-hidden="true"
+                className="mt-2 size-4 justify-self-end text-[#0B7F60] transition-transform duration-[275ms] ease-out group-hover:rotate-180 group-focus-within:rotate-180 data-[expanded=true]:rotate-180 sm:mt-2.5 sm:size-[1.125rem]"
+                data-expanded={isExpanded}
+                strokeWidth={1.8}
+              />
             </button>
           </article>
         );
