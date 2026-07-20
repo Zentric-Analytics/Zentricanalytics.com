@@ -78,8 +78,7 @@ export function IndustriesHeroTyping() {
   const typedIndustry = prefersReducedMotion ? industries[0] : currentIndustry.slice(0, characterCount);
 
   return (
-    <div className="industries-hero-typing" aria-live="polite" aria-label={`Serving ${typedIndustry}`}>
-      <p className="industries-hero-typing__label">Serving</p>
+    <div className="industries-hero-typing" aria-live="polite" aria-label={typedIndustry}>
       <p className="industries-hero-typing__line">
         <span className="industries-hero-typing__text">{typedIndustry}</span>
         <span className="industries-hero-typing__ghost" aria-hidden="true">{longestIndustry}</span>
