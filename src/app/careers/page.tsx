@@ -144,9 +144,9 @@ export default function Careers() {
         />
         <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.52)]" aria-hidden="true" />
 
-        <div className="mx-auto w-full max-w-6xl">
-          <Stagger className="max-w-[53rem]" staggerDelay={90}>
-            <h1 id="careers-hero-heading" className="max-w-[18rem] text-[2rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:max-w-[44rem] sm:text-[3rem] lg:max-w-[53rem] lg:text-[4.15rem] xl:text-[4.35rem]">
+        <div className="mx-auto w-full max-w-7xl">
+          <Stagger className="max-w-[53rem] lg:max-w-[64rem]" staggerDelay={90}>
+            <h1 id="careers-hero-heading" className="max-w-[18rem] text-[2rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:max-w-[44rem] sm:text-[3rem] lg:max-w-[64rem] lg:text-[4rem] lg:leading-[1.07] lg:tracking-[-0.04em] xl:text-[4.2rem]">
               Build Practical Technology With Care and Accountability
             </h1>
             <p className="mt-6 max-w-[41rem] text-base leading-[1.7] text-white/90 sm:mt-7 sm:text-lg lg:mt-8">
