@@ -105,6 +105,7 @@ const clientChoiceProcess: Array<{ Icon: LucideIcon; title: string; description:
 export default function Home() {
   return (
     <PageShell>
+      <link rel="preload" as="image" href="/images/hero/hero-engineering-team-v2.png" fetchPriority="high" />
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:py-16 lg:gap-8">
           <div className="max-w-[700px]">
@@ -137,6 +138,8 @@ export default function Home() {
                 alt="Software engineers collaborating on code and system architecture in a modern office"
                 fill
                 priority
+                fetchPriority="high"
+                decoding="async"
                 sizes="(min-width: 1180px) 50vw, (min-width: 768px) 50vw, calc(100vw - 2rem)"
                 className="object-cover object-[67%_30%] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.18)_12%,rgba(0,0,0,0.82)_32%,#000_43%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
               />
@@ -277,10 +280,20 @@ export default function Home() {
       </section>
 
       <section
-        className="relative isolate overflow-hidden bg-[#F7F8FA] bg-cover bg-center bg-no-repeat px-4 py-12 md:px-6 md:py-10 lg:py-12"
-        style={{ backgroundImage: "url('/images/careers/careers-team-collaboration.png')" }}
+        className="relative isolate overflow-hidden bg-[#F7F8FA] px-4 py-12 md:px-6 md:py-10 lg:py-12"
         aria-labelledby="final-cta-heading"
       >
+        <Image
+          src="/images/careers/careers-team-collaboration.png"
+          sizes="100vw"
+          alt=""
+          width={1536}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 z-0 size-full object-cover object-center"
+          aria-hidden="true"
+        />
         <div aria-hidden="true" className="absolute inset-0 z-0 bg-white/90" />
         <ScrollReveal>
           <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
