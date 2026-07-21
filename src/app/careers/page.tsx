@@ -105,7 +105,7 @@ export default function Careers() {
   return (
     <PageShell>
       <div className="bg-[#F3F6F9]">
-        <section className="relative isolate flex min-h-[420px] items-center overflow-hidden rounded-t-[40px] bg-[#0B1F3A] px-4 py-16 sm:min-h-[550px] sm:rounded-t-[72px] sm:px-6 sm:py-20 lg:min-h-[610px] lg:rounded-t-[104px] lg:px-8 lg:py-24" aria-labelledby="careers-hero-heading">
+        <section className="relative isolate flex min-h-[420px] items-center overflow-hidden bg-[#0B1F3A] px-4 py-16 sm:min-h-[550px] sm:px-6 sm:py-20 lg:min-h-[610px] lg:px-8 lg:py-24" aria-labelledby="careers-hero-heading">
           <Image
             src="/images/careers/careers-team-collaboration.png"
             sizes="100vw"
@@ -130,7 +130,7 @@ export default function Careers() {
         </section>
       </div>
 
-      <section className="bg-[#F3F6F9] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16" aria-labelledby="open-roles-heading">
+      <section className="relative z-20 -mt-10 rounded-t-[72px] bg-white px-4 pb-10 pt-20 sm:-mt-12 sm:rounded-t-[96px] sm:px-6 sm:pb-12 sm:pt-24 lg:-mt-16 lg:rounded-t-[120px] lg:px-8 lg:pb-16 lg:pt-28" aria-labelledby="open-roles-heading">
         <div className="mx-auto max-w-6xl">
             <Reveal as="header" className="max-w-[45rem] text-left">
               <h2 id="open-roles-heading" className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]">Open Roles</h2>
