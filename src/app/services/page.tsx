@@ -1,6 +1,6 @@
 import { Braces, LifeBuoy, Network, Rocket, Search, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { Reveal, Stagger } from '@/components/Motion';
 import { PageShell } from '@/components/PageShell';
-import { Section } from '@/components/Section';
 import { SectionHeader } from '@/components/SectionHeader';
 
 const services = [
@@ -54,34 +54,46 @@ const engineeringProcess: Array<{ Icon: LucideIcon; title: string; description: 
 export default function Services() {
   return (
     <PageShell>
-      <Section eyebrow="Services" title="Technology services with disciplined implementation.">
-        <div className="grid gap-5 md:grid-cols-2">
+      <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
+        <Stagger className="min-w-0" staggerDelay={90}>
+          <p className="mb-3 min-w-0 break-words text-base font-bold uppercase tracking-[0.18em] text-accent">Services</p>
+          <h1 className="mb-5 max-w-3xl break-words text-3xl font-bold tracking-tight text-ink sm:text-4xl md:text-5xl">
+            Technology services with disciplined implementation.
+          </h1>
+        </Stagger>
+
+        <Stagger className="grid min-w-0 gap-5 break-words text-slate-700 md:grid-cols-2" staggerDelay={90}>
           {services.map(([t, d]) => (
-            <article className="card p-6" key={t}>
+            <article
+              className="card za-hover za-hover-lift group p-6 hover:shadow-[0_16px_34px_rgba(11,31,58,0.10)]"
+              key={t}
+            >
               <h2 className="text-xl font-bold text-ink">{t}</h2>
               <p className="mt-3">{d}</p>
             </article>
           ))}
-        </div>
-      </Section>
+        </Stagger>
+      </section>
 
       <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:py-14" aria-labelledby="engineering-process-heading">
         <div className="mx-auto max-w-6xl rounded-2xl sm:rounded-3xl bg-[#122746] p-6 text-white shadow-[0_12px_30px_rgba(11,31,58,0.10)] sm:shadow-[0_24px_60px_rgba(11,31,58,0.16)] sm:p-8 lg:p-10">
-          <SectionHeader
-            eyebrow="ENGINEERING PROCESS"
-            heading="Every successful solution begins with a disciplined engineering process."
-            headingId="engineering-process-heading"
-            description="Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time."
-            className="engineering-process-header [&_h2]:text-[clamp(1.875rem,3.2vw,2.5rem)] [&_h2]:leading-[1.12]"
-            tone="dark"
-          />
+          <Reveal>
+            <SectionHeader
+              eyebrow="ENGINEERING PROCESS"
+              heading="Every successful solution begins with a disciplined engineering process."
+              headingId="engineering-process-heading"
+              description="Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time."
+              className="engineering-process-header [&_h2]:text-[clamp(1.875rem,3.2vw,2.5rem)] [&_h2]:leading-[1.12]"
+              tone="dark"
+            />
+          </Reveal>
 
           <div className="relative mt-4 md:mt-6 lg:mt-7">
             <div
               aria-hidden="true"
               className="absolute left-[22px] top-[22px] h-[calc(100%-44px)] w-[1.5px] bg-white/20 md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto md:bg-white/25 lg:left-[calc((100%-8.75rem)/12)] lg:right-[calc((100%-8.75rem)/12)]"
             />
-            <div className="relative grid items-stretch gap-y-3 pl-[58px] md:grid-cols-3 md:gap-x-7 md:gap-y-7 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
+            <Stagger className="relative grid items-stretch gap-y-3 pl-[58px] md:grid-cols-3 md:gap-x-7 md:gap-y-7 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7" staggerDelay={90}>
               {engineeringProcess.map((step) => (
                 <article
                   className="engineering-process-card group relative flex min-h-[44px] w-full flex-col items-center text-center md:min-h-[52px] lg:flex-1"
@@ -102,7 +114,7 @@ export default function Services() {
                   </p>
                 </article>
               ))}
-            </div>
+            </Stagger>
           </div>
         </div>
       </section>
