@@ -104,13 +104,25 @@ const hiringSteps = [
 export default function Careers() {
   return (
     <PageShell>
-      <section className="bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24" aria-labelledby="careers-hero-heading">
+      <section className="relative isolate flex min-h-[30rem] items-center overflow-hidden bg-[#0B1F3A] px-4 py-16 sm:min-h-[34rem] sm:px-6 sm:py-20 lg:min-h-[39rem] lg:px-8 lg:py-24" aria-labelledby="careers-hero-heading">
+        <Image
+          src="/images/careers/careers-team-collaboration.png"
+          sizes="100vw"
+          alt=""
+          width={1536}
+          height={1024}
+          priority
+          className="absolute inset-0 -z-20 size-full object-cover object-[58%_center] sm:object-center"
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.52)]" aria-hidden="true" />
+
         <div className="mx-auto w-full max-w-6xl">
-          <Stagger className="max-w-[46rem]" staggerDelay={90}>
-            <h1 id="careers-hero-heading" className="text-[1.8rem] font-bold leading-[1.12] tracking-[-0.045em] text-[#0B1F3A] sm:text-[2.6rem] lg:text-[3.75rem]">
+          <Stagger className="max-w-[53rem]" staggerDelay={90}>
+            <h1 id="careers-hero-heading" className="max-w-[18rem] text-[2rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:max-w-[44rem] sm:text-[3rem] lg:max-w-[53rem] lg:text-[4.15rem] xl:text-[4.35rem]">
               Build Practical Technology With Care and Accountability
             </h1>
-            <p className="mt-4 max-w-[44rem] text-base leading-[1.7] text-[#475569] sm:mt-5 sm:text-lg">
+            <p className="mt-6 max-w-[41rem] text-base leading-[1.7] text-white/90 sm:mt-7 sm:text-lg lg:mt-8">
               Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, thoughtful problem-solving, and continuous learning. If a specific role is not listed, candidates may submit a general application.
             </p>
           </Stagger>
