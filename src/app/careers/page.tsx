@@ -130,7 +130,7 @@ export default function Careers() {
         </section>
       </div>
 
-      <section className="relative z-20 -mt-10 rounded-t-[72px] bg-white px-4 pb-10 pt-20 sm:-mt-12 sm:rounded-t-[96px] sm:px-6 sm:pb-12 sm:pt-24 lg:-mt-16 lg:rounded-t-[120px] lg:px-8 lg:pb-16 lg:pt-28" aria-labelledby="open-roles-heading">
+      <section className="relative z-20 -mt-5 rounded-t-[32px] bg-white px-4 pb-16 pt-12 sm:-mt-7 sm:rounded-t-[44px] sm:px-6 sm:pb-20 sm:pt-14 lg:-mt-8 lg:rounded-t-[56px] lg:px-8 lg:pb-24 lg:pt-16" aria-labelledby="open-roles-heading">
         <div className="mx-auto max-w-6xl">
             <Reveal as="header" className="max-w-[45rem] text-left">
               <h2 id="open-roles-heading" className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]">Open Roles</h2>
