@@ -116,8 +116,17 @@ export default function Careers() {
           aria-hidden="true"
         />
         <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.52)]" aria-hidden="true" />
+        <svg
+          className="pointer-events-none absolute inset-x-0 bottom-[-1px] z-0 h-8 w-full sm:h-14 lg:h-20"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M0 0 C25 92 75 92 100 0 V100 H0 Z" fill="#F3F6F9" />
+        </svg>
 
-        <div className="mx-auto w-full max-w-7xl">
+        <div className="relative z-10 mx-auto w-full max-w-7xl">
           <Stagger className="max-w-[53rem] lg:max-w-[64rem]" staggerDelay={90}>
             <h1 id="careers-hero-heading" className="max-w-[18rem] text-[2rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:max-w-[44rem] sm:text-[3rem] lg:max-w-[64rem] lg:text-[4rem] lg:leading-[1.07] lg:tracking-[-0.04em] xl:text-[4.2rem]">
               Build Practical Technology With Care and Accountability
