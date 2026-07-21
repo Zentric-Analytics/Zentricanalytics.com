@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type CSSProperties } from 'react';
+import { useState } from 'react';
 import {
   Banknote,
   Bolt,
@@ -17,7 +17,7 @@ import {
   Truck,
   type LucideIcon,
 } from 'lucide-react';
-import { ScrollReveal } from '@/components/ScrollReveal';
+import { Stagger } from '@/components/Motion';
 
 type Industry = {
   Icon: LucideIcon;
@@ -45,24 +45,22 @@ export function IndustriesWeServe() {
   const [showAllIndustries, setShowAllIndustries] = useState(false);
 
   return (
-    <ScrollReveal>
-      <section className="relative z-10 -mt-8 px-4 sm:-mt-10 sm:px-6 lg:-mt-12 lg:px-8" aria-labelledby="industry-spectrum-heading">
+    <section className="relative z-10 -mt-8 px-4 sm:-mt-10 sm:px-6 lg:-mt-12 lg:px-8" aria-labelledby="industry-spectrum-heading">
       <div className="mx-auto max-w-[68rem] rounded-[18px] border border-[#DCE3EA] bg-white p-4 shadow-[0_14px_34px_rgba(11,31,58,0.09)] sm:rounded-[20px] sm:p-6 lg:p-7 xl:p-8">
-        <header className="max-w-[46rem] text-left md:mx-auto md:text-center">
-          <h2 id="industry-spectrum-heading" className="industries-child-reveal text-[clamp(1.75rem,4.8vw,2.625rem)] font-bold leading-[1.1] tracking-[-0.04em] text-[#0B1F3A]">
+        <Stagger as="header" className="max-w-[46rem] text-left md:mx-auto md:text-center" staggerDelay={80}>
+          <h2 id="industry-spectrum-heading" className="text-[clamp(1.75rem,4.8vw,2.625rem)] font-bold leading-[1.1] tracking-[-0.04em] text-[#0B1F3A]">
             Industries We Serve
           </h2>
-          <p className="industries-child-reveal industries-delay-1 mt-3 text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
+          <p className="mt-3 text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
             We partner with organizations across a wide range of sectors, adapting our technology, data, and digital solutions to the unique needs of each business, institution, and personal brand.
           </p>
-        </header>
+        </Stagger>
 
-        <div id="additional-industries" className="mt-5 grid gap-3 md:grid-cols-3 lg:gap-3.5" aria-label="Industries we serve">
+        <Stagger id="additional-industries" className="mt-5 grid gap-3 md:grid-cols-3 lg:gap-3.5" aria-label="Industries we serve" delay={120} staggerDelay={70}>
           {industries.map(({ Icon, title, description }, index) => (
             <button
               type="button"
-              style={{ '--industries-reveal-delay': `${index * 70}ms` } as CSSProperties}
-              className={`industries-child-reveal group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-3.5 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-4 ${index > 5 && !showAllIndustries ? 'hidden' : ''}`}
+              className={`group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-3.5 text-left transition duration-200 motion-safe:hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-4 ${index > 5 && !showAllIndustries ? 'hidden' : ''}`}
               key={title}
               aria-expanded={expandedIndustry === index}
               aria-controls={`industry-description-${index}`}
@@ -87,7 +85,7 @@ export function IndustriesWeServe() {
               </div>
             </button>
           ))}
-        </div>
+        </Stagger>
 
         <button
           type="button"
@@ -111,6 +109,5 @@ export function IndustriesWeServe() {
         </aside>
       </div>
       </section>
-    </ScrollReveal>
   );
 }
