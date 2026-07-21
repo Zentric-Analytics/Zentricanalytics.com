@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import { BrainCircuit, ChevronDown, CloudCog, Code2, Handshake, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react';
+import { Stagger } from '@/components/Motion';
 
 const organizationCapabilities: Array<{ Icon: LucideIcon; title: string; description: string }> = [
   {
@@ -57,15 +58,14 @@ export function OrganizationCapabilitiesReveal() {
   }, []);
 
   return (
-    <div className="border-y border-[#DCE3EA]">
+    <Stagger className="border-y border-[#DCE3EA]" delay={120} staggerDelay={75}>
       {organizationCapabilities.map(({ Icon, title, description }, index) => {
         const descriptionId = `organization-capability-${index}-description`;
         const isExpanded = expandedCapability === title;
 
         return (
           <article
-            style={{ '--industries-reveal-delay': `${index * 75}ms` } as CSSProperties}
-            className="industries-child-reveal group -mx-2 px-2 py-[1.125rem] first:pt-[1.125rem] last:pb-[1.125rem] not-last:border-b not-last:border-[#DCE3EA] transition-colors duration-200 ease-out hover:bg-[#EAF7F2]/40 focus-within:bg-[#EAF7F2]/40 sm:-mx-3 sm:px-3 sm:py-6"
+            className="group -mx-2 px-2 py-[1.125rem] first:pt-[1.125rem] last:pb-[1.125rem] not-last:border-b not-last:border-[#DCE3EA] transition-colors duration-200 ease-out hover:bg-[#EAF7F2]/40 focus-within:bg-[#EAF7F2]/40 sm:-mx-3 sm:px-3 sm:py-6"
             key={title}
             onPointerEnter={() => {
               if (supportsHover) {
@@ -99,7 +99,7 @@ export function OrganizationCapabilitiesReveal() {
                 }
               }}
             >
-              <span className="flex size-10 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out group-hover:translate-x-0.5 sm:size-11">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out motion-safe:group-hover:translate-x-0.5 sm:size-11">
                 <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
               </span>
               <span className="min-w-0">
@@ -126,6 +126,6 @@ export function OrganizationCapabilitiesReveal() {
           </article>
         );
       })}
-    </div>
+    </Stagger>
   );
 }
