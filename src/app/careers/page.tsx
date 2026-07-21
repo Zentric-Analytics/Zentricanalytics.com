@@ -1,17 +1,13 @@
 import {
   BadgeCheck,
   BookOpenCheck,
-  BriefcaseBusiness,
   BrainCircuit,
   ChartNoAxesCombined,
   Code2,
-  GraduationCap,
   FileUser,
   FlaskConical,
-  HeartHandshake,
   MessagesSquare,
   PanelsTopLeft,
-  UsersRound,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -79,29 +75,6 @@ const values: Array<{ Icon: LucideIcon; title: string; description: string }> = 
     Icon: BadgeCheck,
     title: 'Ownership and Accountability',
     description: 'Take responsibility for outcomes, follow through on commitments, and raise concerns early.',
-  },
-];
-
-const lifeAtZentric: Array<{ Icon: LucideIcon; title: string; description: string }> = [
-  {
-    Icon: BriefcaseBusiness,
-    title: 'Meaningful Work',
-    description: 'Create practical technology that supports real business decisions and outcomes.',
-  },
-  {
-    Icon: GraduationCap,
-    title: 'Continuous Learning',
-    description: 'Grow your craft through feedback, research, and applied problem-solving.',
-  },
-  {
-    Icon: UsersRound,
-    title: 'Flexible Collaboration',
-    description: 'Work thoughtfully with teammates while respecting focus, autonomy, and clarity.',
-  },
-  {
-    Icon: HeartHandshake,
-    title: 'Supportive Environment',
-    description: 'Share ideas, raise concerns early, and build with people who care about quality.',
   },
 ];
 
@@ -209,49 +182,6 @@ export default function Careers() {
                 </article>
               ))}
             </Stagger>
-        </div>
-      </section>
-
-      <section className="bg-white px-4 pb-10 pt-2 sm:px-6 sm:pb-12 lg:px-8 lg:pb-16" aria-labelledby="life-at-zentric-heading">
-        <div className="mx-auto max-w-6xl pt-5">
-          <div className="relative">
-            <Reveal
-              className="absolute left-1/2 top-0 z-10 max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-[42%] sm:left-8 sm:translate-x-0 lg:left-10"
-              variant="down"
-            >
-              <span className="block whitespace-nowrap rounded-[0.875rem] bg-[#0B1F3A] px-5 py-2.5 text-center text-xs font-bold uppercase tracking-[0.16em] text-white shadow-[0_12px_24px_rgba(11,31,58,0.16)] sm:px-6 sm:text-[0.8125rem]">
-                LIFE AT ZENTRIC
-              </span>
-            </Reveal>
-
-            <div className="rounded-[1.5rem] border border-[#DCE3EA] bg-[#F8FAFC] px-5 pb-6 pt-10 shadow-[0_18px_50px_rgba(11,31,58,0.07)] sm:rounded-[1.75rem] sm:px-7 sm:pb-7 sm:pt-11 lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(26rem,1.08fr)] lg:items-center lg:gap-10 lg:px-10 lg:py-10">
-              <Stagger as="div" className="min-w-0" delay={80} staggerDelay={90}>
-                <h2 id="life-at-zentric-heading" className="max-w-[35rem] text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]">
-                  Build, Learn and Grow With People Who Care
-                </h2>
-                <p className="mt-3 max-w-[39rem] text-base leading-[1.65] text-[#475569] sm:text-[1.0625rem]">
-                  At Zentric Analytics, we combine practical engineering, continuous learning and thoughtful collaboration to build technology that creates lasting value.
-                </p>
-              </Stagger>
-
-              <Stagger className="mt-7 grid gap-0 divide-y divide-[#DCE3EA] sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:mt-0" delay={180} staggerDelay={80}>
-                {lifeAtZentric.map(({ Icon, title, description }) => (
-                  <article
-                    className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-4 py-4 sm:px-5 sm:py-5 sm:[&:nth-child(odd)]:pl-0 sm:[&:nth-child(even)]:pr-0 sm:[&:nth-child(n+3)]:border-t sm:[&:nth-child(n+3)]:border-[#DCE3EA]"
-                    key={title}
-                  >
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#E8F5F0] text-[#0B7F60]">
-                      <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
-                    </span>
-                    <div className="min-w-0">
-                      <h3 className="text-base font-bold leading-[1.3] tracking-[-0.02em] text-[#0B1F3A] sm:text-lg">{title}</h3>
-                      <p className="mt-1 text-[0.875rem] leading-[1.55] text-[#475569] sm:text-[0.9375rem]">{description}</p>
-                    </div>
-                  </article>
-                ))}
-              </Stagger>
-            </div>
-          </div>
         </div>
       </section>
 
