@@ -1,8 +1,10 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, FlaskConical, Network, Rocket, Search, ShieldCheck, Target, RefreshCcw, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
+import { ScrollReveal } from '@/components/ScrollReveal';
 
 const finalCtaMarqueeKeywords = [
   'Software Engineering',
@@ -152,117 +154,126 @@ export default function Home() {
       </section>
 
       <section className="philosophy-section bg-white px-4 py-8 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="how-we-think-heading">
-        <div className="editorial-reveal editorial-reveal-4 mx-auto grid max-w-6xl gap-2 text-left sm:gap-6 md:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:items-start md:gap-7 lg:gap-8">
-          <SectionHeader
-            className="editorial-reveal editorial-reveal-1 md:sticky md:top-24 [&_h2]:max-w-[29rem] [&_h2]:text-[clamp(1.75rem,3.6vw,2.625rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-3 [&_p:last-child]:max-w-[28rem] [&_p:last-child]:text-[0.9375rem] [&_p:last-child]:leading-[1.58] sm:[&_p:last-child]:text-base lg:[&_p:last-child]:text-base"
-            eyebrow="HOW WE THINK"
-            heading={<>Engineering isn&apos;t just what we build. It&apos;s how we solve problems.</>}
-            headingId="how-we-think-heading"
-            description="Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment."
-          />
-
-          <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 sm:gap-3.5 md:auto-rows-auto lg:gap-4">
-            {philosophyPrinciples.map((principle, index) => (
-              <article
-                className={`philosophy-row editorial-reveal editorial-reveal-${index + 5} group h-full rounded-2xl border border-[#E5E7EB] bg-white p-6 transition-[background-color,border-color] duration-200 ease-out hover:border-[#10B981]/40 hover:bg-[#F8FAFC] sm:p-[18px] md:hover:border-[#10B981]/55 lg:p-5`}
-                key={principle.title}
-              >
-                <principle.Icon
-                  aria-hidden="true"
-                  className="size-[1.375rem] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] lg:size-6"
-                  strokeWidth={1.75}
-                />
-                <h3 className="mt-2.5 text-[1.125rem] font-bold leading-[1.18] tracking-[-0.025em] text-[#0B1F3A] sm:text-xl">
-                  {principle.title}
-                </h3>
-                <p className="mt-1.5 text-[0.90625rem] leading-[1.55] text-[#475569] sm:text-[0.96875rem]">
-                  {principle.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="core-capabilities-section border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 pb-2 pt-3 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="core-capabilities-heading">
-        <div className="mx-auto max-w-6xl">
-          <SectionHeader
-            className="[&_h2]:mt-2.5 [&_h2]:text-[clamp(1.75rem,3.15vw,2.5rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-2 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:text-[0.9375rem] [&_p:last-child]:leading-[1.58] sm:[&_p:last-child]:mt-3.5 sm:[&_p:last-child]:text-base"
-            eyebrow="CORE CAPABILITIES"
-            heading="Engineering expertise across software, AI, data, infrastructure, and research."
-            headingId="core-capabilities-heading"
-            description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
-          />
-
-          <div className="mt-4 grid gap-x-12 sm:mt-6 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-3 lg:gap-x-16">
-            {capabilities.map((capability) => (
-              <div
-                className="group flex items-center gap-3.5 border-b border-[#DCE3EA] py-2.5 text-left transition-colors duration-200 ease-out last:border-b-0 sm:py-3 sm:[&:nth-child(3)]:border-b-0 sm:[&:nth-last-child(-n+1)]:border-b-0"
-                key={capability.title}
-              >
-                <capability.Icon
-                  aria-hidden="true"
-                  className="size-[23px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-[22px]"
-                  strokeWidth={1.75}
-                />
-                <h3 className="text-[1.0625rem] font-bold leading-[1.2] tracking-[-0.018em] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:text-lg">
-                  {capability.title}
-                </h3>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 flex justify-center sm:mt-6">
-            <Link className="btn zentric-primary-cta w-full sm:w-auto" href="/services">
-              <span>Explore All Capabilities</span>
-              <span className="zentric-primary-cta__arrow" aria-hidden="true">
-                →
-              </span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="why-choose-section bg-white px-4 py-12 sm:px-4 sm:py-12 md:px-6 lg:py-14" aria-labelledby="why-choose-heading">
-        <div className="mx-auto max-w-[1280px] rounded-[28px] bg-[#0B1F3A] px-6 py-12 sm:px-8 sm:py-14 md:px-12 lg:px-16 lg:py-16">
-          <SectionHeader
-            eyebrow="WHY CLIENTS CHOOSE ZENTRIC"
-            heading="A disciplined approach to building technology that lasts."
-            headingId="why-choose-heading"
-            description="Every successful partnership begins with understanding your business, designing the right solution, building with quality, deploying with confidence, and supporting long-term growth."
-            tone="dark"
-            className="engineering-process-header why-choose-header"
-          />
-
-          <div className="relative mt-4 lg:mt-5">
-            <div
-              aria-hidden="true"
-              className="absolute left-[23px] top-[23px] h-[calc(100%-46px)] w-px bg-slate-200/30 md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
+        <ScrollReveal>
+          <div className="mx-auto grid max-w-6xl gap-2 text-left sm:gap-6 md:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:items-start md:gap-7 lg:gap-8">
+            <SectionHeader
+              className="industries-child-reveal md:sticky md:top-24 [&_h2]:max-w-[29rem] [&_h2]:text-[clamp(1.75rem,3.6vw,2.625rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-3 [&_p:last-child]:max-w-[28rem] [&_p:last-child]:text-[0.9375rem] [&_p:last-child]:leading-[1.58] sm:[&_p:last-child]:text-base lg:[&_p:last-child]:text-base"
+              eyebrow="HOW WE THINK"
+              heading={<>Engineering isn&apos;t just what we build. It&apos;s how we solve problems.</>}
+              headingId="how-we-think-heading"
+              description="Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment."
             />
-            <div className="relative grid items-stretch gap-y-5 pl-[62px] md:grid-cols-3 md:gap-x-7 md:gap-y-5 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
-              {clientChoiceProcess.map((step) => (
+
+            <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 sm:gap-3.5 md:auto-rows-auto lg:gap-4">
+              {philosophyPrinciples.map((principle, index) => (
                 <article
-                  className="engineering-process-card group relative flex min-h-[46px] w-full flex-col items-center text-center md:min-h-[52px] lg:flex-1"
-                  key={step.title}
+                  className="philosophy-row industries-child-reveal group h-full rounded-2xl border border-[#E5E7EB] bg-white p-6 transition-[background-color,border-color] duration-200 ease-out hover:border-[#10B981]/40 hover:bg-[#F8FAFC] sm:p-[18px] md:hover:border-[#10B981]/55 lg:p-5"
+                  key={principle.title}
+                  style={{ '--industries-reveal-delay': `${80 + index * 100}ms` } as CSSProperties}
                 >
-                  <div className="absolute -left-[62px] top-0 flex size-[46px] shrink-0 items-center justify-center rounded-full border border-white/70 bg-[#F8FAFC] shadow-[0_10px_24px_rgba(2,8,23,0.18)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#10B981]/70 group-hover:shadow-[0_12px_26px_rgba(2,8,23,0.22)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto md:size-[52px]">
-                    <step.Icon
-                      aria-hidden="true"
-                      className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
-                      strokeWidth={1.75}
-                    />
-                  </div>
-                  <h3 className="mt-0 flex w-full items-start justify-center text-center text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-white md:mt-3 md:text-[1.0625rem] md:leading-[1.2] lg:min-h-0">
-                    {step.title}
+                  <principle.Icon
+                    aria-hidden="true"
+                    className="size-[1.375rem] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] lg:size-6"
+                    strokeWidth={1.75}
+                  />
+                  <h3 className="mt-2.5 text-[1.125rem] font-bold leading-[1.18] tracking-[-0.025em] text-[#0B1F3A] sm:text-xl">
+                    {principle.title}
                   </h3>
-                  <p className="mt-1.5 w-full max-w-[24rem] text-base font-normal leading-[1.6] text-slate-300 md:max-w-[13rem] md:text-[0.9375rem] md:text-center md:leading-[1.5]">
-                    {step.description}
+                  <p className="mt-1.5 text-[0.90625rem] leading-[1.55] text-[#475569] sm:text-[0.96875rem]">
+                    {principle.description}
                   </p>
                 </article>
               ))}
             </div>
           </div>
-        </div>
+        </ScrollReveal>
+      </section>
+
+      <section className="core-capabilities-section border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 pb-2 pt-3 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="core-capabilities-heading">
+        <ScrollReveal>
+          <div className="mx-auto max-w-6xl">
+            <SectionHeader
+              className="industries-child-reveal [&_h2]:mt-2.5 [&_h2]:text-[clamp(1.75rem,3.15vw,2.5rem)] [&_h2]:leading-[1.12] [&_p:last-child]:mt-2 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:text-[0.9375rem] [&_p:last-child]:leading-[1.58] sm:[&_p:last-child]:mt-3.5 sm:[&_p:last-child]:text-base"
+              eyebrow="CORE CAPABILITIES"
+              heading="Engineering expertise across software, AI, data, infrastructure, and research."
+              headingId="core-capabilities-heading"
+              description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
+            />
+
+            <div className="mt-4 grid gap-x-12 sm:mt-6 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-3 lg:gap-x-16">
+              {capabilities.map((capability, index) => (
+                <div
+                  className="industries-child-reveal group flex items-center gap-3.5 border-b border-[#DCE3EA] py-2.5 text-left transition-colors duration-200 ease-out last:border-b-0 sm:py-3 sm:[&:nth-child(3)]:border-b-0 sm:[&:nth-last-child(-n+1)]:border-b-0"
+                  key={capability.title}
+                  style={{ '--industries-reveal-delay': `${80 + index * 100}ms` } as CSSProperties}
+                >
+                  <capability.Icon
+                    aria-hidden="true"
+                    className="size-[23px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-[22px]"
+                    strokeWidth={1.75}
+                  />
+                  <h3 className="text-[1.0625rem] font-bold leading-[1.2] tracking-[-0.018em] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:text-lg">
+                    {capability.title}
+                  </h3>
+                </div>
+              ))}
+            </div>
+
+            <div className="industries-child-reveal mt-4 flex justify-center sm:mt-6" style={{ '--industries-reveal-delay': '680ms' } as CSSProperties}>
+              <Link className="btn zentric-primary-cta w-full sm:w-auto" href="/services">
+                <span>Explore All Capabilities</span>
+                <span className="zentric-primary-cta__arrow" aria-hidden="true">
+                  →
+                </span>
+              </Link>
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+
+      <section className="why-choose-section bg-white px-4 py-12 sm:px-4 sm:py-12 md:px-6 lg:py-14" aria-labelledby="why-choose-heading">
+        <ScrollReveal>
+          <div className="mx-auto max-w-[1280px] rounded-[28px] bg-[#0B1F3A] px-6 py-12 sm:px-8 sm:py-14 md:px-12 lg:px-16 lg:py-16">
+            <SectionHeader
+              eyebrow="WHY CLIENTS CHOOSE ZENTRIC"
+              heading="A disciplined approach to building technology that lasts."
+              headingId="why-choose-heading"
+              description="Every successful partnership begins with understanding your business, designing the right solution, building with quality, deploying with confidence, and supporting long-term growth."
+              tone="dark"
+              className="industries-child-reveal engineering-process-header why-choose-header"
+            />
+
+            <div className="relative mt-4 lg:mt-5">
+              <div
+                aria-hidden="true"
+                className="absolute left-[23px] top-[23px] h-[calc(100%-46px)] w-px bg-slate-200/30 md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
+              />
+              <div className="relative grid items-stretch gap-y-5 pl-[62px] md:grid-cols-3 md:gap-x-7 md:gap-y-5 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
+                {clientChoiceProcess.map((step, index) => (
+                  <article
+                    className="industries-child-reveal group relative flex min-h-[46px] w-full flex-col items-center text-center md:min-h-[52px] lg:flex-1"
+                    key={step.title}
+                    style={{ '--industries-reveal-delay': `${120 + index * 100}ms` } as CSSProperties}
+                  >
+                    <div className="absolute -left-[62px] top-0 flex size-[46px] shrink-0 items-center justify-center rounded-full border border-white/70 bg-[#F8FAFC] shadow-[0_10px_24px_rgba(2,8,23,0.18)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#10B981]/70 group-hover:shadow-[0_12px_26px_rgba(2,8,23,0.22)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto md:size-[52px]">
+                      <step.Icon
+                        aria-hidden="true"
+                        className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
+                        strokeWidth={1.75}
+                      />
+                    </div>
+                    <h3 className="mt-0 flex w-full items-start justify-center text-center text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-white md:mt-3 md:text-[1.0625rem] md:leading-[1.2] lg:min-h-0">
+                      {step.title}
+                    </h3>
+                    <p className="mt-1.5 w-full max-w-[24rem] text-base font-normal leading-[1.6] text-slate-300 md:max-w-[13rem] md:text-[0.9375rem] md:text-center md:leading-[1.5]">
+                      {step.description}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
       </section>
 
       <section
@@ -271,54 +282,57 @@ export default function Home() {
         aria-labelledby="final-cta-heading"
       >
         <div aria-hidden="true" className="absolute inset-0 z-0 bg-white/90" />
-        <div className="editorial-reveal relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
-          <SectionHeader
-            className="max-md:[&_h2]:text-[24px] max-md:[&_h2]:font-bold max-md:[&_h2]:leading-[1.2] max-md:[&_p:last-child]:mt-3 max-md:[&_p:last-child]:text-[16px] max-md:[&_p:last-child]:font-normal max-md:[&_p:last-child]:leading-[1.6]"
-            align="center"
-            eyebrow="READY TO BUILD?"
-            heading={<>Let&apos;s build technology that creates lasting impact.</>}
-            headingId="final-cta-heading"
-            description="Whether you're looking for a trusted technology partner or exploring career opportunities, Zentric Analytics is committed to solving meaningful challenges through engineering, AI, data, cloud, and research-driven innovation."
-          />
-          <div
-            className="final-cta-marquee mt-4 w-full max-w-3xl overflow-hidden sm:mt-6"
-            aria-label={finalCtaMarqueeKeywords.join(' • ')}
-          >
-            <p className="sr-only">{finalCtaMarqueeKeywords.join(' • ')}</p>
-            <div className="final-cta-marquee__track" aria-hidden="true">
-              {[0, 1].map((group) => (
-                <div className="final-cta-marquee__group" key={group}>
-                  {[0, 1].map((set) => (
-                    <span className="final-cta-marquee__sequence" key={set}>
-                      {finalCtaMarqueeKeywords.map((keyword, index) => (
-                        <span className="final-cta-marquee__item" key={keyword}>
-                          <span>{keyword}</span>
-                          {index < finalCtaMarqueeKeywords.length - 1 ? (
-                            <span className="final-cta-marquee__separator">•</span>
-                          ) : null}
-                        </span>
-                      ))}
-                    </span>
-                  ))}
-                </div>
-              ))}
+        <ScrollReveal>
+          <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
+            <SectionHeader
+              className="industries-child-reveal max-md:[&_h2]:text-[24px] max-md:[&_h2]:font-bold max-md:[&_h2]:leading-[1.2] max-md:[&_p:last-child]:mt-3 max-md:[&_p:last-child]:text-[16px] max-md:[&_p:last-child]:font-normal max-md:[&_p:last-child]:leading-[1.6]"
+              align="center"
+              eyebrow="READY TO BUILD?"
+              heading={<>Let&apos;s build technology that creates lasting impact.</>}
+              headingId="final-cta-heading"
+              description="Whether you're looking for a trusted technology partner or exploring career opportunities, Zentric Analytics is committed to solving meaningful challenges through engineering, AI, data, cloud, and research-driven innovation."
+            />
+            <div
+              className="final-cta-marquee industries-child-reveal mt-4 w-full max-w-3xl overflow-hidden sm:mt-6"
+              aria-label={finalCtaMarqueeKeywords.join(' • ')}
+              style={{ '--industries-reveal-delay': '100ms' } as CSSProperties}
+            >
+              <p className="sr-only">{finalCtaMarqueeKeywords.join(' • ')}</p>
+              <div className="final-cta-marquee__track" aria-hidden="true">
+                {[0, 1].map((group) => (
+                  <div className="final-cta-marquee__group" key={group}>
+                    {[0, 1].map((set) => (
+                      <span className="final-cta-marquee__sequence" key={set}>
+                        {finalCtaMarqueeKeywords.map((keyword, index) => (
+                          <span className="final-cta-marquee__item" key={keyword}>
+                            <span>{keyword}</span>
+                            {index < finalCtaMarqueeKeywords.length - 1 ? (
+                              <span className="final-cta-marquee__separator">•</span>
+                            ) : null}
+                          </span>
+                        ))}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="industries-child-reveal mt-4 flex w-full flex-col items-center gap-3 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] max-md:[&_.btn]:text-[16px] max-md:[&_.btn]:font-semibold" style={{ '--industries-reveal-delay': '200ms' } as CSSProperties}>
+              <Link
+                className="btn btn-primary w-full min-w-[12rem] sm:w-auto"
+                href="/contact"
+              >
+                Start a Conversation
+              </Link>
+              <Link
+                className="btn btn-secondary w-full min-w-[12rem] sm:w-auto"
+                href="/careers"
+              >
+                Explore Careers
+              </Link>
             </div>
           </div>
-          <div className="mt-4 flex w-full flex-col items-center gap-3 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] max-md:[&_.btn]:text-[16px] max-md:[&_.btn]:font-semibold">
-            <Link
-              className="btn btn-primary w-full min-w-[12rem] sm:w-auto"
-              href="/contact"
-            >
-              Start a Conversation
-            </Link>
-            <Link
-              className="btn btn-secondary w-full min-w-[12rem] sm:w-auto"
-              href="/careers"
-            >
-              Explore Careers
-            </Link>
-          </div>
-        </div>
+        </ScrollReveal>
       </section>
 
     </PageShell>
