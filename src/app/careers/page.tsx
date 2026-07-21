@@ -104,39 +104,31 @@ const hiringSteps = [
 export default function Careers() {
   return (
     <PageShell>
-      <section className="relative isolate flex min-h-[30rem] items-center overflow-hidden bg-[#0B1F3A] px-4 py-16 sm:min-h-[34rem] sm:px-6 sm:py-20 lg:min-h-[39rem] lg:px-8 lg:py-24" aria-labelledby="careers-hero-heading">
-        <Image
-          src="/images/careers/careers-team-collaboration.png"
-          sizes="100vw"
-          alt=""
-          width={1536}
-          height={1024}
-          priority
-          className="absolute inset-0 -z-20 size-full object-cover object-[58%_center] sm:object-center"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.52)]" aria-hidden="true" />
-        <svg
-          className="pointer-events-none absolute inset-x-0 bottom-[-1px] z-0 h-8 w-full sm:h-14 lg:h-20"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path d="M0 0 C25 92 75 92 100 0 V100 H0 Z" fill="#F3F6F9" />
-        </svg>
-
-        <div className="relative z-10 mx-auto w-full max-w-7xl">
-          <Stagger className="max-w-[53rem] lg:max-w-[64rem]" staggerDelay={90}>
-            <h1 id="careers-hero-heading" className="max-w-[18rem] text-[2rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:max-w-[44rem] sm:text-[3rem] lg:max-w-[64rem] lg:text-[4rem] lg:leading-[1.07] lg:tracking-[-0.04em] xl:text-[4.2rem]">
-              Build Practical Technology With Care and Accountability
-            </h1>
-            <p className="mt-6 max-w-[41rem] text-base leading-[1.7] text-white/90 sm:mt-7 sm:text-lg lg:mt-8">
-              Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, thoughtful problem-solving, and continuous learning. If a specific role is not listed, candidates may submit a general application.
-            </p>
-          </Stagger>
-        </div>
-      </section>
+      <div className="bg-[#F3F6F9]">
+        <section className="relative isolate flex min-h-[30rem] items-center overflow-hidden rounded-b-[40px] bg-[#0B1F3A] px-4 py-16 sm:min-h-[34rem] sm:rounded-b-[72px] sm:px-6 sm:py-20 lg:min-h-[39rem] lg:rounded-b-[104px] lg:px-8 lg:py-24" aria-labelledby="careers-hero-heading">
+          <Image
+            src="/images/careers/careers-team-collaboration.png"
+            sizes="100vw"
+            alt=""
+            width={1536}
+            height={1024}
+            priority
+            className="absolute inset-0 -z-20 size-full object-cover object-[58%_center] sm:object-center"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.52)]" aria-hidden="true" />
+          <div className="relative z-10 mx-auto w-full max-w-7xl">
+            <Stagger className="max-w-[53rem] lg:max-w-[64rem]" staggerDelay={90}>
+              <h1 id="careers-hero-heading" className="max-w-[18rem] text-[2rem] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:max-w-[44rem] sm:text-[3rem] lg:max-w-[64rem] lg:text-[4rem] lg:leading-[1.07] lg:tracking-[-0.04em] xl:text-[4.2rem]">
+                Build Practical Technology With Care and Accountability
+              </h1>
+              <p className="mt-6 max-w-[41rem] text-base leading-[1.7] text-white/90 sm:mt-7 sm:text-lg lg:mt-8">
+                Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, thoughtful problem-solving, and continuous learning. If a specific role is not listed, candidates may submit a general application.
+              </p>
+            </Stagger>
+          </div>
+        </section>
+      </div>
 
       <section className="bg-[#F3F6F9] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16" aria-labelledby="open-roles-heading">
         <div className="mx-auto max-w-6xl">
