@@ -119,7 +119,7 @@ export default function Careers() {
           <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.52)]" aria-hidden="true" />
           <div className="relative z-10 mx-auto w-full max-w-7xl">
             <Stagger className="max-w-[53rem] lg:max-w-[64rem]" staggerDelay={90}>
-              <h1 id="careers-hero-heading" className="max-w-[18rem] text-[1.75rem] font-bold leading-[1.14] tracking-[-0.045em] text-white sm:max-w-[44rem] sm:text-[2.625rem] md:text-[3rem] lg:max-w-[64rem] lg:text-[3.5rem] lg:leading-[1.11] lg:tracking-[-0.04em] xl:text-[3.65rem]">
+              <h1 id="careers-hero-heading" className="max-w-[18rem] text-5xl font-bold leading-[1.14] tracking-[-0.045em] text-white sm:max-w-[44rem] md:text-6xl lg:max-w-[64rem] lg:text-6xl lg:leading-[1.11] lg:tracking-[-0.04em] xl:text-7xl">
                 Build Practical Technology With Care and Accountability
               </h1>
               <p className="mt-6 max-w-[41rem] text-base leading-[1.7] text-white/90 sm:mt-7 sm:text-lg lg:mt-8">
