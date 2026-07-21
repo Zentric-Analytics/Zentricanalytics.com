@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { submitContactEnquiry, type ContactFormState } from './actions';
 
 const serviceOptions = [
@@ -22,13 +22,13 @@ const initialState: ContactFormState = { status: 'idle', message: '' };
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="mt-2 text-sm font-medium text-red-700">{message}</p>;
+  return <p className="mt-2 text-sm font-medium text-red-700 transition-colors duration-200 ease-out">{message}</p>;
 }
 
 export function ContactForm() {
   const [state, formAction, isPending] = useActionState(submitContactEnquiry, initialState);
-  const inputClass = 'mt-2 h-14 w-full rounded-[14px] border border-[#CBD5E1] bg-white px-4 text-base text-[#0B1F3A] outline-none transition focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15';
-  const labelClass = 'text-sm font-semibold text-[#0B1F3A]';
+  const inputClass = 'mt-2 h-14 w-full rounded-[14px] border border-[#CBD5E1] bg-white px-4 text-base text-[#0B1F3A] outline-none transition-[border-color,box-shadow,color] duration-200 ease-out focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15';
+  const labelClass = 'text-sm font-semibold text-[#0B1F3A] transition-colors duration-200 ease-out';
 
   return (
     <form action={formAction} className="rounded-[22px] border border-[#DCE3EA] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-8 lg:p-11" noValidate>
@@ -43,11 +43,11 @@ export function ContactForm() {
         <div className="md:col-span-2"><FieldError message={state.fieldErrors?.message} /></div>
       </div>
       <p className="mt-5 text-sm leading-6 text-[#64748B]">By submitting this form, you agree that Zentric Analytics may contact you regarding your enquiry. Your information will be handled responsibly and will not be sold.</p>
-      <button type="submit" disabled={isPending} className="btn zentric-primary-cta mt-6 w-full sm:w-auto">
-        <span>{isPending ? 'Sending...' : 'Send Enquiry'}</span><ArrowRight aria-hidden="true" className="size-4" />
+      <button type="submit" disabled={isPending} className="btn zentric-primary-cta group mt-6 min-w-[10rem] w-full justify-center sm:w-auto">
+        <span>{isPending ? 'Sending...' : 'Send Enquiry'}</span>{isPending ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <ArrowRight aria-hidden="true" className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />}
       </button>
       <div className="mt-5" aria-live="polite">
-        {state.status !== 'idle' ? <p className={`rounded-2xl border p-4 text-sm font-semibold ${state.status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'}`}>{state.message}</p> : null}
+        {state.status !== 'idle' ? <p className={`rounded-2xl border p-4 text-sm font-semibold transition-[opacity,border-color,background-color,color] duration-200 ease-out ${state.status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'}`}>{state.message}</p> : null}
       </div>
     </form>
   );
