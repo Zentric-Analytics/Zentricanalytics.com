@@ -211,7 +211,7 @@ export default function Careers() {
           className="absolute inset-0 -z-20 size-full object-cover object-center"
           aria-hidden="true"
         />
-        <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.58)]" aria-hidden="true" />
+        <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.38)]" aria-hidden="true" />
 
 
         <Stagger className="mx-auto grid w-full max-w-[70rem] gap-7 rounded-[1.25rem] bg-white p-6 shadow-[0_24px_64px_rgba(2,8,23,0.24)] sm:p-8 lg:grid-cols-[minmax(0,65fr)_minmax(18rem,35fr)] lg:items-center lg:gap-0 lg:p-12" staggerDelay={90}>
