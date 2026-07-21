@@ -11,6 +11,7 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { PageShell } from '@/components/PageShell';
 import { Reveal, Stagger } from '@/components/Motion';
@@ -196,10 +197,20 @@ export default function Careers() {
       </section>
 
       <section
-        className="relative isolate mb-16 flex min-h-[31.25rem] items-center overflow-hidden bg-[#0B1F3A] bg-[url('/images/careers/careers-cta-background.png')] bg-cover bg-center bg-no-repeat px-4 py-10 sm:min-h-[32.5rem] sm:px-6 sm:py-12 lg:min-h-[35rem] lg:px-8"
+        className="relative isolate mb-16 flex min-h-[31.25rem] items-center overflow-hidden bg-[#0B1F3A] px-4 py-10 sm:min-h-[32.5rem] sm:px-6 sm:py-12 lg:min-h-[35rem] lg:px-8"
         aria-labelledby="careers-final-cta-heading"
       >
-        <link rel="preload" as="image" href="/images/careers/careers-cta-background.png" />
+        <Image
+          src="/images/careers/careers-cta-background.png"
+          sizes="100vw"
+          alt=""
+          width={1717}
+          height={916}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 -z-20 size-full object-cover object-center"
+          aria-hidden="true"
+        />
         <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.58)]" aria-hidden="true" />
 
 

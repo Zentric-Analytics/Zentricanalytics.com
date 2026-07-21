@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Handshake, ShieldCheck, Target, TrendingUp, type LucideIcon } from 'lucide-react';
 import { IndustriesHeroTyping } from '@/components/IndustriesHeroTyping';
 import { IndustriesWeServe } from '@/components/IndustriesWeServe';
@@ -33,14 +34,22 @@ export default function Industries() {
     <PageShell>
       <link rel="preload" as="image" href="/images/industries/industries-hero-bg.png" fetchPriority="high" />
       <section
-        className="relative isolate flex min-h-[540px] items-center overflow-hidden bg-[#0B1F3A] bg-[position:60%_center] px-4 py-12 text-white sm:min-h-[560px] sm:px-6 sm:py-16 lg:min-h-[575px] lg:bg-[position:center_right] lg:px-8 lg:py-[4.5rem]"
-        style={{
-          backgroundImage: "linear-gradient(rgba(11, 31, 58, 0.8), rgba(11, 31, 58, 0.8)), url('/images/industries/industries-hero-bg.png')",
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: 'cover',
-        }}
+        className="relative isolate flex min-h-[540px] items-center overflow-hidden bg-[#0B1F3A] px-4 py-12 text-white sm:min-h-[560px] sm:px-6 sm:py-16 lg:min-h-[575px] lg:px-8 lg:py-[4.5rem]"
         aria-labelledby="industries-page-heading"
       >
+        <Image
+          src="/images/industries/industries-hero-bg.png"
+          sizes="100vw"
+          alt=""
+          width={1717}
+          height={916}
+          priority
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 -z-20 size-full object-cover object-[60%_center] lg:object-[center_right]"
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 -z-10 bg-[#0B1F3A]/80" aria-hidden="true" />
         <div className="mx-auto w-full max-w-6xl">
           <div className="max-w-[44rem]">
             <Reveal as="h1" id="industries-page-heading" delay={40} className="text-[28px] font-bold leading-[1.12] tracking-[-0.045em] sm:text-[clamp(2.35rem,4.5vw,4rem)] sm:leading-[1.06]">
@@ -113,10 +122,20 @@ export default function Industries() {
       </section>
 
       <section
-          className="relative overflow-hidden bg-[#0B1F3A] bg-cover bg-center bg-no-repeat py-12 sm:py-16 lg:py-20"
-          style={{ backgroundImage: "url('/images/careers/careers-cta-background.png')" }}
+          className="relative overflow-hidden bg-[#0B1F3A] py-12 sm:py-16 lg:py-20"
           aria-labelledby="industries-final-cta-heading"
         >
+          <Image
+            src="/images/careers/careers-cta-background.png"
+            sizes="100vw"
+            alt=""
+            width={1717}
+            height={916}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 size-full object-cover object-center"
+            aria-hidden="true"
+          />
           <div className="absolute inset-0 bg-[rgba(8,27,52,0.62)]" aria-hidden="true" />
           <Reveal className="relative z-[2] mx-auto grid w-[calc(100%-32px)] max-w-[73.75rem] gap-7 rounded-[1.25rem] bg-white p-6 shadow-[0_28px_80px_rgba(2,8,23,0.26),0_8px_24px_rgba(15,23,42,0.14)] sm:p-7 lg:w-[calc(100%-80px)] lg:grid-cols-[minmax(0,68fr)_minmax(16rem,32fr)] lg:items-start lg:gap-16 lg:p-14">
             <Stagger className="min-w-0" staggerDelay={80}>
