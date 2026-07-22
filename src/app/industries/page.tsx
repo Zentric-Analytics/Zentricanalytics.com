@@ -79,10 +79,10 @@ export default function Industries() {
             >
               How We Help Organizations Succeed
             </h2>
-            <p className="mt-3 text-sm leading-6 text-[#475569] sm:text-base sm:leading-7">
+            <p className="mt-3 text-sm leading-7 text-[#475569] sm:text-[0.9375rem] lg:text-[0.9375rem]">
               Every organization has unique goals, processes, and challenges. We combine technology, strategy, and innovation to design solutions that improve efficiency, strengthen security, accelerate growth, and create measurable business value.
             </p>
-            <p className="mt-4 text-sm leading-6 text-[#294A43] sm:text-base sm:leading-7">
+            <p className="mt-4 text-sm leading-7 text-[#294A43] sm:text-[0.9375rem] lg:text-[0.9375rem]">
               Whether the goal is modernization, growth, stronger security, better customer experiences, or improved operations, our solutions are shaped around the organization, not a fixed industry template.
             </p>
           </Stagger>

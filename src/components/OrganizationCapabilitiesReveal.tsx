@@ -103,7 +103,7 @@ export function OrganizationCapabilitiesReveal() {
                 <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
               </span>
               <span className="min-w-0">
-                <span className="block text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#0B7F60] group-focus-within:text-[#0B7F60] sm:text-xl lg:text-[1.375rem]">
+                <span className="block text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#0B7F60] group-focus-within:text-[#0B7F60] sm:text-[1.1875rem] lg:text-[1.25rem]">
                   {title}
                 </span>
                 <span
@@ -111,7 +111,7 @@ export function OrganizationCapabilitiesReveal() {
                   className="block max-h-0 overflow-hidden opacity-0 transition-[max-height,opacity] duration-[275ms] ease-out group-hover:max-h-28 group-hover:opacity-100 group-focus-within:max-h-28 group-focus-within:opacity-100 data-[expanded=true]:max-h-28 data-[expanded=true]:opacity-100"
                   data-expanded={isExpanded}
                 >
-                  <span className="mt-1.5 block text-sm leading-6 text-[#475569] sm:text-base sm:leading-7">
+                  <span className="mt-1.5 block text-sm leading-7 text-[#475569] sm:text-[0.9375rem] lg:text-[0.9375rem]">
                     {description}
                   </span>
                 </span>
