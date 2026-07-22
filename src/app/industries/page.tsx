@@ -70,19 +70,19 @@ export default function Industries() {
 
       <IndustriesWeServe />
 
-      <section className="bg-white px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="organization-capabilities-heading">
-        <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-8">
-          <Stagger as="header" className="max-w-[30rem] text-left" staggerDelay={80}>
+      <section className="bg-[#F8FAFC] px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16" aria-labelledby="organization-capabilities-heading">
+        <div className="mx-auto grid max-w-[1280px] gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
+          <Stagger as="header" className="max-w-3xl text-left" staggerDelay={80}>
             <h2
               id="organization-capabilities-heading"
-              className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]"
+              className="text-xl font-bold leading-tight tracking-[-0.02em] text-[#0B1F3A] sm:text-2xl lg:text-[2rem]"
             >
               How We Help Organizations Succeed
             </h2>
-            <p className="mt-3 text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[#475569] sm:text-base sm:leading-7">
               Every organization has unique goals, processes, and challenges. We combine technology, strategy, and innovation to design solutions that improve efficiency, strengthen security, accelerate growth, and create measurable business value.
             </p>
-            <p className="mt-4 text-base leading-[1.6] text-[#294A43] sm:text-[1.0625rem]">
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-[#294A43] sm:text-base sm:leading-7">
               Whether the goal is modernization, growth, stronger security, better customer experiences, or improved operations, our solutions are shaped around the organization, not a fixed industry template.
             </p>
           </Stagger>
@@ -91,29 +91,29 @@ export default function Industries() {
         </div>
       </section>
 
-      <section className="bg-[#0B1F3A] px-4 py-8 sm:px-6 sm:py-9 lg:px-8 lg:py-14" aria-labelledby="organization-values-heading">
-        <div className="mx-auto max-w-6xl">
-          <Stagger as="header" className="max-w-[45rem] text-left" staggerDelay={80}>
+      <section className="bg-[#0B1F3A] px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16" aria-labelledby="organization-values-heading">
+        <div className="mx-auto max-w-[1280px]">
+          <Stagger as="header" className="max-w-3xl text-left" staggerDelay={80}>
             <h2
               id="organization-values-heading"
-              className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[2.125rem] lg:text-[2.625rem]"
+              className="text-xl font-bold leading-tight tracking-[-0.02em] text-white sm:text-2xl lg:text-[2rem]"
             >
               Why Organizations Choose Zentric
             </h2>
-            <p className="mt-2.5 max-w-[45rem] text-base leading-[1.6] text-slate-100 sm:text-[1.0625rem]">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100 sm:text-base sm:leading-7">
               We do not apply the same solution to every client. Our work begins with understanding your goals, operations, audience, challenges, and opportunities before designing the right technology approach.
             </p>
           </Stagger>
 
-          <Stagger className="mt-6 divide-y divide-white/10 lg:mt-7 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0" delay={120} staggerDelay={85}>
+          <Stagger className="mt-6 grid gap-4 sm:gap-5 lg:mt-8 lg:grid-cols-4 lg:gap-6" delay={120} staggerDelay={85}>
             {organizationValues.map(({ Icon, title, description }, index) => (
-              <article className="group py-5 transition-transform duration-[225ms] ease-out lg:px-6 lg:py-0 motion-safe:lg:hover:-translate-y-1 first:lg:pl-0 last:lg:pr-0" key={title}>
+              <article className="group h-full rounded-[20px] border border-white/10 bg-white/5 p-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md sm:p-5 lg:p-6" key={title}>
                 <div className="min-w-0">
-                  <Icon aria-hidden="true" className="size-[1.375rem] text-[#5EE0BF] transition-colors duration-[225ms] ease-out lg:group-hover:text-[#7FEBD0] sm:size-6" strokeWidth={1.8} />
-                  <h3 className="mt-4 text-lg font-bold leading-[1.3] tracking-[-0.025em] text-white transition-colors duration-[225ms] ease-out lg:group-hover:text-slate-100 sm:text-xl">
+                  <Icon aria-hidden="true" className="size-6 text-[#5EE0BF] transition-colors duration-[225ms] ease-out lg:group-hover:text-[#7FEBD0]" strokeWidth={1.8} />
+                  <h3 className="mt-4 text-lg font-bold leading-tight tracking-[-0.02em] text-white transition-colors duration-[225ms] ease-out lg:group-hover:text-slate-100 sm:text-xl lg:text-2xl">
                     {title}
                   </h3>
-                  <p className="mt-1.5 text-[0.9375rem] leading-[1.6] text-slate-200 sm:text-base">{description}</p>
+                  <p className="mt-2 text-sm font-normal leading-6 text-slate-200 sm:text-base">{description}</p>
                 </div>
               </article>
             ))}
@@ -122,7 +122,7 @@ export default function Industries() {
       </section>
 
       <section
-          className="relative overflow-hidden bg-[#0B1F3A] py-12 sm:py-16 lg:py-20"
+          className="relative overflow-hidden bg-[#0B1F3A] px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-20"
           aria-labelledby="industries-final-cta-heading"
         >
           <Image
@@ -137,22 +137,22 @@ export default function Industries() {
             aria-hidden="true"
           />
           <div className="absolute inset-0 bg-[rgba(8,27,52,0.40)]" aria-hidden="true" />
-          <Reveal className="relative z-[2] mx-auto grid w-[calc(100%-32px)] max-w-[73.75rem] gap-7 rounded-[1.25rem] bg-white p-6 shadow-[0_28px_80px_rgba(2,8,23,0.26),0_8px_24px_rgba(15,23,42,0.14)] sm:p-7 lg:w-[calc(100%-80px)] lg:grid-cols-[minmax(0,68fr)_minmax(16rem,32fr)] lg:items-start lg:gap-16 lg:p-14">
+          <Reveal className="relative z-[2] mx-auto grid max-w-[1280px] gap-7 rounded-[20px] bg-white p-6 shadow-[0_28px_80px_rgba(2,8,23,0.26),0_8px_24px_rgba(15,23,42,0.14)] sm:p-7 lg:grid-cols-[minmax(0,68fr)_minmax(16rem,32fr)] lg:items-center lg:gap-12 lg:p-10">
             <Stagger className="min-w-0" staggerDelay={80}>
               <h2
                 id="industries-final-cta-heading"
-                className="max-w-[38rem] text-[1.625rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]"
+                className="max-w-3xl text-2xl font-bold leading-tight tracking-[-0.02em] text-[#0B1F3A] sm:text-3xl lg:text-[2.5rem]"
               >
                 Whatever Your Industry, We&apos;re Ready to Build With You
               </h2>
-              <p className="mt-3 max-w-[42rem] text-base leading-[1.6] text-[#475569] sm:mt-4 sm:text-[1.0625rem]">
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-[#475569] sm:mt-4 sm:text-base sm:leading-7">
                 Whether you are an established organization, a growing startup, a public institution, a professional, a creator, or a personal brand, Zentric Analytics can design a technology solution around your goals.
               </p>
             </Stagger>
 
             <Stagger className="flex min-w-0 flex-col items-stretch lg:items-start" delay={160} staggerDelay={80}>
               <MotionLink className="btn hero-cta-primary w-full sm:w-fit" href="/contact">Discuss Your Needs</MotionLink>
-              <p className="mt-5 max-w-[22rem] text-sm leading-[1.6] text-[#475569] sm:mt-6 sm:text-base">
+              <p className="mt-5 max-w-[22rem] text-sm leading-6 text-[#475569] sm:mt-6 sm:text-base">
                 Tell us what you are trying to achieve, and we will help you identify the right next step.
               </p>
             </Stagger>

@@ -58,14 +58,14 @@ export function OrganizationCapabilitiesReveal() {
   }, []);
 
   return (
-    <Stagger className="border-y border-[#DCE3EA]" delay={120} staggerDelay={75}>
+    <Stagger className="grid gap-4 sm:gap-5 lg:gap-6" delay={120} staggerDelay={75}>
       {organizationCapabilities.map(({ Icon, title, description }, index) => {
         const descriptionId = `organization-capability-${index}-description`;
         const isExpanded = expandedCapability === title;
 
         return (
           <article
-            className="group -mx-2 px-2 py-[1.125rem] first:pt-[1.125rem] last:pb-[1.125rem] not-last:border-b not-last:border-[#DCE3EA] transition-colors duration-200 ease-out hover:bg-[#EAF7F2]/40 focus-within:bg-[#EAF7F2]/40 sm:-mx-3 sm:px-3 sm:py-6"
+            className="group rounded-[20px] border border-slate-200/80 bg-white p-4 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-md focus-within:bg-white sm:p-5 lg:p-6"
             key={title}
             onPointerEnter={() => {
               if (supportsHover) {
@@ -80,7 +80,7 @@ export function OrganizationCapabilitiesReveal() {
           >
             <button
               type="button"
-              className="grid w-full grid-cols-[2.75rem_minmax(0,1fr)_1.25rem] items-start gap-x-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:grid-cols-[3.25rem_minmax(0,1fr)_1.5rem] sm:gap-x-4"
+              className="grid w-full grid-cols-[3rem_minmax(0,1fr)_1.25rem] items-start gap-x-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:grid-cols-[3rem_minmax(0,1fr)_1.5rem] sm:gap-x-4"
               aria-expanded={isExpanded}
               aria-controls={descriptionId}
               onClick={() => {
@@ -99,11 +99,11 @@ export function OrganizationCapabilitiesReveal() {
                 }
               }}
             >
-              <span className="flex size-10 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out motion-safe:group-hover:translate-x-0.5 sm:size-11">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out motion-safe:group-hover:translate-x-0.5">
                 <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
               </span>
               <span className="min-w-0">
-                <span className="block text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#0B7F60] group-focus-within:text-[#0B7F60] sm:text-xl">
+                <span className="block text-lg font-bold leading-tight tracking-[-0.02em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#0B7F60] group-focus-within:text-[#0B7F60] sm:text-xl lg:text-2xl">
                   {title}
                 </span>
                 <span
@@ -111,7 +111,7 @@ export function OrganizationCapabilitiesReveal() {
                   className="block max-h-0 overflow-hidden opacity-0 transition-[max-height,opacity] duration-[275ms] ease-out group-hover:max-h-28 group-hover:opacity-100 group-focus-within:max-h-28 group-focus-within:opacity-100 data-[expanded=true]:max-h-28 data-[expanded=true]:opacity-100"
                   data-expanded={isExpanded}
                 >
-                  <span className="mt-1.5 block text-[0.9375rem] leading-[1.6] text-[#475569] sm:text-base">
+                  <span className="mt-2 block text-sm font-normal leading-6 text-[#475569] sm:text-base">
                     {description}
                   </span>
                 </span>
