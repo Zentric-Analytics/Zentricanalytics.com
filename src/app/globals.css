@@ -268,7 +268,7 @@ html{scroll-padding-top:82px}
   max-width:44rem;
   padding:.35rem 0;
   color:#475569;
-  font-size:1rem;
+  font-size:.875rem;
   font-weight:600;
   letter-spacing:.02em;
   line-height:1.6;
@@ -298,11 +298,7 @@ html{scroll-padding-top:82px}
 .final-cta-marquee__separator{color:#10B981}
 
 @media (min-width:640px){
-  .final-cta-marquee{font-size:1.0625rem}
-}
-
-@media (min-width:1024px){
-  .final-cta-marquee{font-size:1.125rem}
+  .final-cta-marquee{font-size:.9375rem}
 }
 
 @media (prefers-reduced-motion:reduce){
