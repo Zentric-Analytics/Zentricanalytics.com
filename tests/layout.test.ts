@@ -161,9 +161,9 @@ describe('public layout shell', () => {
   it('renders the careers open roles CTA with apply and tracking actions', () => {
     const careers = readFileSync('src/app/careers/page.tsx', 'utf8');
 
-    expect(careers).toContain('<Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>');
-    expect(careers).toContain('<Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/track">Track Application</Link>');
-    expect(careers).toContain('flex-col items-center gap-3 sm:max-w-none sm:flex-row sm:justify-center sm:gap-4');
+    expect(careers).toContain('<Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto" href="/apply">Apply Now</Link>');
+    expect(careers).toContain('<Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto" href="/track">Track Application</Link>');
+    expect(careers).toContain('flex-col items-stretch gap-3.5 sm:w-auto sm:max-w-none sm:flex-row sm:items-start sm:gap-3.5');
   });
 
   it('renders the premium corporate footer navigation and contact resources', () => {
