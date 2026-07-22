@@ -163,7 +163,10 @@ describe('public layout shell', () => {
 
     expect(careers).toContain('<Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto" href="/apply">Apply Now</Link>');
     expect(careers).toContain('<Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto" href="/track">Track Application</Link>');
-    expect(careers).toContain('flex-col items-stretch gap-3.5 sm:w-auto sm:max-w-none sm:flex-row sm:items-start sm:gap-3.5');
+    expect(careers).toContain('mt-8 grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-3 lg:mt-10');
+    expect(careers).toContain('flex h-[160px] min-w-0 items-center gap-6 rounded-[24px] border border-[#E3EAF1] bg-white p-7');
+    expect(careers).toContain('flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-[#EEF8F5]');
+    expect(careers).toContain('flex w-full max-w-[280px] flex-col items-stretch gap-4 sm:w-auto sm:max-w-none sm:flex-row sm:items-start');
   });
 
   it('renders the premium corporate footer navigation and contact resources', () => {
