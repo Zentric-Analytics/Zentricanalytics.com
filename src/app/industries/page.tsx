@@ -46,13 +46,13 @@ export default function Industries() {
           priority
           fetchPriority="high"
           decoding="async"
-          className="absolute inset-0 -z-20 size-full object-cover object-[60%_center] lg:object-[center_right]"
+          className="absolute inset-0 -z-20 size-full object-cover object-[62%_center] sm:object-[60%_center] lg:object-[58%_48%]"
           aria-hidden="true"
         />
         <div className="absolute inset-0 -z-10 bg-[#0B1F3A]/80" aria-hidden="true" />
         <div className="mx-auto w-full max-w-6xl">
           <div className="max-w-[44rem]">
-            <Reveal as="h1" id="industries-page-heading" delay={40} className="text-[28px] font-bold leading-[1.12] tracking-[-0.045em] sm:text-[clamp(2.35rem,4.5vw,4rem)] sm:leading-[1.06]">
+            <Reveal as="h1" id="industries-page-heading" delay={40} className="max-w-[21rem] text-[1.82rem] font-bold leading-[1.12] tracking-[-0.045em] sm:max-w-2xl sm:text-[2.15rem] sm:leading-[1.06] lg:max-w-3xl lg:text-[2.65rem]">
               Technology Solutions for Every Industry, Organization, and Ambition
             </Reveal>
             <Reveal delay={120}>
