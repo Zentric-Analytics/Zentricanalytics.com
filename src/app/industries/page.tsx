@@ -58,7 +58,7 @@ export default function Industries() {
             <Reveal delay={120}>
               <IndustriesHeroTyping />
             </Reveal>
-            <Reveal as="p" delay={200} className="mt-3 max-w-[43rem] text-base leading-[1.7] text-slate-100 sm:mt-4 sm:text-lg sm:leading-[1.7]">
+            <Reveal as="p" delay={200} className="mt-3 max-w-[43rem] text-sm leading-[1.6] text-slate-100 sm:mt-4 sm:text-base sm:leading-[1.6]">
               From enterprises and startups to public institutions and personal brands, Zentric Analytics delivers tailored technology solutions around your unique goals, challenges, and opportunities.
             </Reveal>
             <Reveal delay={280} className="mt-6 flex flex-col gap-3.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-4">
@@ -141,7 +141,7 @@ export default function Industries() {
             <Stagger className="min-w-0" staggerDelay={80}>
               <h2
                 id="industries-final-cta-heading"
-                className="max-w-[38rem] text-xl font-bold leading-[1.12] tracking-[-0.04em] sm:text-2xl lg:text-[2rem] text-[#0B1F3A] "
+                className="max-w-[38rem] text-2xl font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2rem] lg:text-[2.5rem]"
               >
                 Whatever Your Industry, We&apos;re Ready to Build With You
               </h2>
