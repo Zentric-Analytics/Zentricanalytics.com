@@ -163,7 +163,7 @@ export default function Careers() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16" aria-labelledby="careers-values-heading">
+      <section className="border-t border-slate-200/70 bg-[#F8FAFC] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24" aria-labelledby="careers-values-heading">
         <div className="mx-auto max-w-6xl">
             <Reveal as="header" className="max-w-[45rem] text-left">
               <h2 id="careers-values-heading" className="text-[1.75rem] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2.125rem] lg:text-[2.625rem]">What We Value</h2>
