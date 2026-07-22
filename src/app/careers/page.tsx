@@ -140,25 +140,25 @@ export default function Careers() {
               </p>
             </Reveal>
 
-            <Stagger className="mx-auto mt-8 grid max-w-[22rem] gap-x-4 gap-y-4 sm:max-w-[54rem] sm:grid-cols-2 lg:mt-10 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-5" delay={120} staggerDelay={90}>
+            <Stagger className="mx-auto mt-8 grid max-w-[22rem] gap-x-4 gap-y-5 sm:max-w-[54rem] sm:grid-cols-2 lg:mt-10 lg:grid-cols-3 lg:gap-x-5" delay={120} staggerDelay={90}>
               {roles.map(({ Icon, title, description }) => (
                 <article
                   key={title}
-                  className="group flex min-w-0 flex-col rounded-[22px] border border-[#E3EAF1] bg-white p-4 text-left shadow-[0_18px_42px_rgba(15,23,42,0.06)] transition duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#D4DEE8] hover:shadow-[0_20px_46px_rgba(15,23,42,0.08)] sm:rounded-[24px] sm:p-5 lg:p-6"
+                  className="group flex h-auto min-w-0 flex-col rounded-[22px] border border-[#E3EAF1] bg-white p-5 text-left shadow-[0_18px_42px_rgba(15,23,42,0.06)] transition duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#D4DEE8] hover:shadow-[0_20px_46px_rgba(15,23,42,0.08)] lg:p-6"
                 >
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-[14px] bg-[#EEF8F5] text-[#0B7F60] sm:size-10">
+                  <span className="mb-4 flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-[#EEF8F5] text-[#0B7F60]">
                     <Icon aria-hidden="true" className="size-[18px] sm:size-5" strokeWidth={1.8} />
                   </span>
-                  <h3 className="mt-2.5 text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A] sm:mt-3 sm:text-[19px]">{title}</h3>
-                  <p className="mt-2 max-w-[18rem] min-w-0 text-[14px] font-normal leading-[1.5] text-[#475569] sm:text-[15px]">{description}</p>
+                  <h3 className="mb-2.5 text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A] lg:text-[19px]">{title}</h3>
+                  <p className="max-w-[18rem] min-w-0 text-[14px] font-normal leading-[1.5] text-[#475569] lg:text-[15px]">{description}</p>
                 </article>
               ))}
             </Stagger>
 
-            <Reveal className="mt-7 flex flex-col items-start lg:mt-8" delay={160}>
-              <div className="flex w-full flex-col items-center gap-3 sm:max-w-none sm:flex-row sm:justify-center sm:gap-4 sm:w-auto [&_.btn]:min-h-14 [&_.btn]:rounded-[16px] [&_.btn]:px-[22px] [&_.btn]:py-[15px] [&_.btn]:text-[16px] [&_.btn]:font-bold [&_.btn]:leading-none [&_.btn-primary]:bg-[#0B1F3A] [&_.btn-primary]:text-white [&_.btn-primary]:shadow-[0_10px_22px_rgba(11,31,58,0.14)] hover:[&_.btn-primary]:bg-[#123052] hover:[&_.btn-primary]:shadow-[0_12px_26px_rgba(11,31,58,0.18)] [&_.btn-secondary]:border [&_.btn-secondary]:border-[#C8D7E5] [&_.btn-secondary]:bg-white [&_.btn-secondary]:text-[#0B1F3A] [&_.btn-secondary]:shadow-none hover:[&_.btn-secondary]:border-[#B7C9DA] hover:[&_.btn-secondary]:bg-[#F6FAFD] sm:[&_.btn]:min-w-[11rem]">
-                <Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>
-                <Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/track">Track Application</Link>
+            <Reveal className="mt-6 flex flex-col items-start lg:mt-7" delay={160}>
+              <div className="flex w-full max-w-[280px] flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-start sm:gap-3.5 [&_.btn]:h-14 [&_.btn]:rounded-[16px] [&_.btn]:px-[22px] [&_.btn]:text-[16px] [&_.btn]:font-bold [&_.btn]:leading-none [&_.btn-primary]:bg-[#0B1F3A] [&_.btn-primary]:text-white [&_.btn-primary]:shadow-[0_10px_22px_rgba(11,31,58,0.14)] hover:[&_.btn-primary]:bg-[#123052] hover:[&_.btn-primary]:shadow-[0_12px_26px_rgba(11,31,58,0.18)] [&_.btn-secondary]:border [&_.btn-secondary]:border-[#C8D7E5] [&_.btn-secondary]:bg-white [&_.btn-secondary]:text-[#0B1F3A] [&_.btn-secondary]:shadow-none hover:[&_.btn-secondary]:border-[#B7C9DA] hover:[&_.btn-secondary]:bg-[#F6FAFD]">
+                <Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto" href="/apply">Apply Now</Link>
+                <Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto" href="/track">Track Application</Link>
               </div>
             </Reveal>
         </div>
