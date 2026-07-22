@@ -51,7 +51,7 @@ export function IndustriesWeServe() {
           <h2 id="industry-spectrum-heading" className="text-xl font-bold sm:text-2xl lg:text-[2rem] leading-[1.1] tracking-[-0.04em] text-[#0B1F3A]">
             Industries We Serve
           </h2>
-          <p className="mt-3 text-sm leading-[1.6] text-[#475569] sm:text-base">
+          <p className="mt-3 text-sm leading-7 text-[#475569] sm:text-[0.9375rem] lg:text-[0.9375rem]">
             We partner with organizations across a wide range of sectors, adapting our technology, data, and digital solutions to the unique needs of each business, institution, and personal brand.
           </p>
         </Stagger>
@@ -70,7 +70,7 @@ export function IndustriesWeServe() {
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60]">
                   <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                 </span>
-                <h3 className="text-lg font-bold leading-[1.3] tracking-[-0.02em] text-[#0B1F3A] sm:text-xl lg:text-[1.375rem]">{title}</h3>
+                <h3 className="text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[1.1875rem] lg:text-[1.25rem]">{title}</h3>
                 <ChevronDown
                   aria-hidden="true"
                   className={`ml-auto size-5 shrink-0 text-[#475569] transition-transform duration-300 ${expandedIndustry === index ? 'rotate-180' : ''}`}
@@ -103,8 +103,8 @@ export function IndustriesWeServe() {
           {showAllIndustries ? 'Show Fewer Industries' : 'Show More Industries'}
         </div>
 
-        <aside className="mt-3.5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3 text-sm leading-[1.6] text-[#294A43] sm:mt-4 sm:px-5 sm:py-3.5 sm:text-base">
-          <span className="font-bold text-[#0B1F3A]">Don&apos;t see your industry?</span>{' '}
+        <aside className="mt-3.5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3 text-sm leading-7 text-[#294A43] sm:mt-4 sm:px-5 sm:py-3.5 sm:text-[0.9375rem] lg:text-[0.9375rem]">
+          <span className="text-lg font-bold text-[#0B1F3A] sm:text-[1.1875rem] lg:text-[1.25rem]">Don&apos;t see your industry?</span>{' '}
           That&apos;s not a limitation. Zentric Analytics delivers tailored technology solutions for organizations, businesses, institutions, and professionals across every sector.
         </aside>
       </div>
