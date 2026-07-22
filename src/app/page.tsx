@@ -298,7 +298,7 @@ export default function Home() {
         <ScrollReveal>
           <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
             <SectionHeader
-              className="industries-child-reveal [&_h2]:text-2xl sm:[&_h2]:text-[2rem] lg:[&_h2]:text-[2.5rem] max-md:[&_h2]:font-bold max-md:[&_h2]:leading-[1.2] max-md:[&_p:last-child]:mt-3 [&_p:last-child]:text-sm sm:[&_p:last-child]:text-[0.9375rem] max-md:[&_p:last-child]:font-normal max-md:[&_p:last-child]:leading-[1.6]"
+              className="industries-child-reveal [&>p:first-child]:text-sm sm:[&>p:first-child]:text-[0.9375rem] lg:[&>p:first-child]:text-base [&_h2]:text-2xl sm:[&_h2]:text-[2rem] lg:[&_h2]:text-[2.5rem] max-md:[&_h2]:font-bold max-md:[&_h2]:leading-[1.2] max-md:[&_p:last-child]:mt-3 [&_p:last-child]:text-sm sm:[&_p:last-child]:text-[0.9375rem] max-md:[&_p:last-child]:font-normal max-md:[&_p:last-child]:leading-7 [&_p:last-child]:leading-7"
               align="center"
               eyebrow="READY TO BUILD?"
               heading={<>Let&apos;s build technology that creates lasting impact.</>}
@@ -330,7 +330,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <div className="industries-child-reveal mt-4 flex w-full flex-col items-center gap-3 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] max-md:[&_.btn]:text-[16px] max-md:[&_.btn]:font-semibold" style={{ '--industries-reveal-delay': '200ms' } as CSSProperties}>
+            <div className="industries-child-reveal mt-4 flex w-full flex-col items-center gap-3 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center [&_.btn]:!text-sm sm:[&_.btn]:!text-[0.9375rem] max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] max-md:[&_.btn]:font-semibold" style={{ '--industries-reveal-delay': '200ms' } as CSSProperties}>
               <Link
                 className="btn btn-primary w-full min-w-[12rem] sm:w-auto"
                 href="/contact"
