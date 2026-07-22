@@ -130,7 +130,7 @@ export default function Careers() {
         </section>
       </div>
 
-      <section className="relative z-20 -mt-5 rounded-t-[32px] bg-white px-4 pb-10 pt-12 sm:-mt-7 sm:rounded-t-[44px] sm:px-6 sm:pb-12 sm:pt-14 lg:-mt-8 lg:rounded-t-[56px] lg:px-8 lg:pb-16 lg:pt-16" aria-labelledby="open-roles-heading">
+      <section className="relative z-20 -mt-5 rounded-t-[32px] bg-white px-4 pb-12 pt-10 sm:-mt-7 sm:rounded-t-[44px] sm:px-6 sm:pt-12 lg:-mt-8 lg:rounded-t-[56px] lg:px-8 lg:pb-16 lg:pt-14" aria-labelledby="open-roles-heading">
         <div className="mx-auto max-w-6xl">
             <Reveal as="header" className="max-w-[45rem] text-left">
               <h2 id="open-roles-heading" className="text-xl font-bold leading-[1.12] tracking-[-0.04em] sm:text-2xl lg:text-[2rem] text-[#0B1F3A] ">Open Roles</h2>
@@ -139,7 +139,7 @@ export default function Careers() {
               </p>
             </Reveal>
 
-            <Stagger className="mx-auto mt-5 grid max-w-[22rem] gap-3 sm:mt-6 sm:max-w-[54rem] sm:grid-cols-2 lg:mt-7 lg:grid-cols-3" delay={120} staggerDelay={90}>
+            <Stagger className="mx-auto mt-8 grid max-w-[22rem] gap-x-3 gap-y-5 sm:max-w-[54rem] sm:grid-cols-2 lg:mt-10 lg:grid-cols-3" delay={120} staggerDelay={90}>
               {roles.map(({ Icon, title, description }) => (
                 <article
                   key={title}
@@ -154,9 +154,9 @@ export default function Careers() {
               ))}
             </Stagger>
 
-            <Reveal className="mx-auto mt-4 flex max-w-[34rem] flex-col items-center text-center sm:mt-5 lg:mt-5" delay={160}>
+            <Reveal className="mx-auto mt-8 flex max-w-[34rem] flex-col items-center text-center" delay={160}>
               <Link className="btn hero-cta-primary za-button-motion w-full sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>
-              <p className="mt-4 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
+              <p className="mt-5 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
                 Don&apos;t see a suitable role? Submit a general application and we&apos;ll keep your profile on file for future opportunities.
               </p>
             </Reveal>
