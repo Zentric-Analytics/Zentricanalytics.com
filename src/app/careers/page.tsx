@@ -155,7 +155,10 @@ export default function Careers() {
             </Stagger>
 
             <Reveal className="mx-auto mt-8 flex max-w-[34rem] flex-col items-center text-center" delay={160}>
-              <Link className="btn hero-cta-primary za-button-motion w-full sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>
+              <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
+                <Link className="btn hero-cta-primary za-button-motion w-full sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>
+                <Link className="btn hero-cta-secondary za-button-motion w-full sm:w-auto sm:min-w-[11rem]" href="/track">Track Application</Link>
+              </div>
               <p className="mt-5 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
                 Don&apos;t see a suitable role? Submit a general application and we&apos;ll keep your profile on file for future opportunities.
               </p>
