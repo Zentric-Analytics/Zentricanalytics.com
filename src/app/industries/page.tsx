@@ -58,7 +58,7 @@ export default function Industries() {
             <Reveal delay={120}>
               <IndustriesHeroTyping />
             </Reveal>
-            <Reveal as="p" delay={200} className="mt-3 max-w-[43rem] text-sm leading-[1.6] text-slate-100 sm:mt-4 sm:text-base sm:leading-[1.6]">
+            <Reveal as="p" delay={200} className="mt-3 max-w-[43rem] text-sm leading-[1.6] text-slate-100 sm:mt-4 sm:text-[0.9375rem] sm:leading-[1.6]">
               From enterprises and startups to public institutions and personal brands, Zentric Analytics delivers tailored technology solutions around your unique goals, challenges, and opportunities.
             </Reveal>
             <Reveal delay={280} className="mt-6 flex flex-col gap-3.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-4">
@@ -100,7 +100,7 @@ export default function Industries() {
             >
               Why Organizations Choose Zentric
             </h2>
-            <p className="mt-2.5 max-w-[45rem] text-sm leading-[1.6] text-slate-100 sm:text-base">
+            <p className="mt-2.5 max-w-[45rem] text-sm leading-[1.6] text-slate-100 sm:text-[0.9375rem]">
               We do not apply the same solution to every client. Our work begins with understanding your goals, operations, audience, challenges, and opportunities before designing the right technology approach.
             </p>
           </Stagger>
@@ -113,7 +113,7 @@ export default function Industries() {
                   <h3 className="mt-4 text-lg font-bold leading-[1.3] tracking-[-0.025em] text-white transition-colors duration-[225ms] ease-out lg:group-hover:text-slate-100 sm:text-xl lg:text-2xl">
                     {title}
                   </h3>
-                  <p className="mt-1.5 text-sm leading-[1.6] text-slate-200 sm:text-base">{description}</p>
+                  <p className="mt-1.5 text-sm leading-[1.6] text-slate-200 sm:text-[0.9375rem]">{description}</p>
                 </div>
               </article>
             ))}
@@ -145,14 +145,14 @@ export default function Industries() {
               >
                 Whatever Your Industry, We&apos;re Ready to Build With You
               </h2>
-              <p className="mt-3 max-w-[42rem] text-sm leading-[1.6] text-[#475569] sm:mt-4 sm:text-base">
+              <p className="mt-3 max-w-[42rem] text-sm leading-[1.6] text-[#475569] sm:mt-4 sm:text-[0.9375rem]">
                 Whether you are an established organization, a growing startup, a public institution, a professional, a creator, or a personal brand, Zentric Analytics can design a technology solution around your goals.
               </p>
             </Stagger>
 
             <Stagger className="flex min-w-0 flex-col items-stretch lg:items-start" delay={160} staggerDelay={80}>
               <MotionLink className="btn hero-cta-primary w-full sm:w-fit" href="/contact">Discuss Your Needs</MotionLink>
-              <p className="mt-5 max-w-[22rem] text-sm leading-[1.6] text-[#475569] sm:mt-6 sm:text-base">
+              <p className="mt-5 max-w-[22rem] text-sm leading-[1.6] text-[#475569] sm:mt-6 sm:text-[0.9375rem]">
                 Tell us what you are trying to achieve, and we will help you identify the right next step.
               </p>
             </Stagger>

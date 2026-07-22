@@ -25,8 +25,8 @@ export default function About() {
     <PageShell>
       <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
         <Stagger className="max-w-3xl" staggerDelay={90}>
-          <p className="mb-3 min-w-0 break-words text-base font-bold uppercase tracking-[0.18em] text-accent">About</p>
-          <h1 className="mb-5 max-w-3xl break-words text-3xl font-bold tracking-tight text-ink sm:text-4xl md:text-5xl">
+          <p className="mb-3 min-w-0 break-words text-sm font-bold uppercase tracking-[0.18em] text-accent">About</p>
+          <h1 className="mb-5 max-w-3xl break-words text-[1.82rem] font-bold tracking-tight text-ink sm:text-[2.15rem] lg:text-[2.65rem]">
             A technology company committed to careful engineering.
           </h1>
         </Stagger>
@@ -35,8 +35,8 @@ export default function About() {
             {aboutCards.map((card) => (
               <div key={card.title}>
                 <HoverMotion className="card za-hover-glow p-6">
-                  <h2 className="font-bold">{card.title}</h2>
-                  <p className="mt-3">{card.body}</p>
+                  <h2 className="text-lg font-bold sm:text-xl lg:text-2xl">{card.title}</h2>
+                  <p className="mt-3 text-sm sm:text-[0.9375rem]">{card.body}</p>
                 </HoverMotion>
               </div>
             ))}

@@ -88,7 +88,7 @@ export function EnterpriseAccordion({ items }: EnterpriseAccordionProps) {
                 className={`size-[21px] shrink-0 text-[#0B1F3A] transition-colors duration-[275ms] ease-out sm:size-[22px] ${isOpen ? 'text-[#10B981]' : 'group-hover:text-[#10B981]'}`}
                 strokeWidth={1.75}
               />
-              <span className="flex-1 text-[1.0625rem] font-bold leading-[1.18] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#102A4A] sm:text-lg lg:text-[1.1875rem]">
+              <span className="flex-1 text-lg font-bold leading-[1.18] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#102A4A] sm:text-[1.1875rem] lg:text-[1.25rem]">
                 {item.title}
               </span>
               <span className="relative flex size-6 shrink-0 items-center justify-center text-[#0B1F3A] transition-colors duration-[275ms] ease-out group-hover:text-[#10B981] sm:size-7" aria-hidden="true">
@@ -103,7 +103,7 @@ export function EnterpriseAccordion({ items }: EnterpriseAccordionProps) {
               role="region"
             >
               <div className="min-h-0 overflow-hidden">
-                <p className="ml-[31px] max-w-[48rem] pb-4 pt-1 text-[0.9375rem] leading-[1.6] text-[#475569] sm:ml-[34px] sm:text-base">
+                <p className="ml-[31px] max-w-[48rem] pb-4 pt-1 text-sm leading-[1.6] text-[#475569] sm:ml-[34px] sm:text-[0.9375rem]">
                   {item.description}
                 </p>
               </div>

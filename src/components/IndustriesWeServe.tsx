@@ -81,7 +81,7 @@ export function IndustriesWeServe() {
                 id={`industry-description-${index}`}
                 className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${expandedIndustry === index ? 'mt-2.5 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
               >
-                <p className="overflow-hidden text-sm leading-[1.6] text-[#475569] sm:text-base">{description}</p>
+                <p className="overflow-hidden text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">{description}</p>
               </div>
             </button>
           ))}

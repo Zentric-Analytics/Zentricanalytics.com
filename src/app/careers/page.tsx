@@ -122,7 +122,7 @@ export default function Careers() {
               <h1 id="careers-hero-heading" className="max-w-[21rem] text-[1.82rem] font-bold leading-[1.14] tracking-[-0.045em] text-white sm:max-w-2xl sm:text-[2.15rem] lg:max-w-3xl lg:text-[2.65rem] lg:leading-[1.11] lg:tracking-[-0.04em]">
                 Build Practical Technology With Care and Accountability
               </h1>
-              <p className="mt-6 max-w-[41rem] text-base leading-[1.7] text-white/90 sm:mt-7 sm:text-lg lg:mt-8">
+              <p className="mt-6 max-w-[41rem] text-sm leading-[1.7] text-white/90 sm:mt-7 sm:text-[0.9375rem] lg:mt-8">
                 Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, thoughtful problem-solving, and continuous learning. If a specific role is not listed, candidates may submit a general application.
               </p>
             </Stagger>
@@ -134,7 +134,7 @@ export default function Careers() {
         <div className="mx-auto max-w-6xl">
             <Reveal as="header" className="max-w-[45rem] text-left">
               <h2 id="open-roles-heading" className="text-xl font-bold leading-[1.12] tracking-[-0.04em] sm:text-2xl lg:text-[2rem] text-[#0B1F3A] ">Open Roles</h2>
-              <p className="mt-3 text-sm leading-[1.6] text-[#475569] sm:text-base">
+              <p className="mt-3 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
                 Explore current opportunities or submit a general application if your experience does not match a listed role.
               </p>
             </Reveal>
@@ -148,15 +148,15 @@ export default function Careers() {
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#E8F5F0] text-[#0B7F60]">
                     <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                   </span>
-                  <h3 className="mt-3 text-lg font-bold leading-[1.25] sm:text-xl lg:text-2xl tracking-[-0.025em] text-[#0B1F3A]">{title}</h3>
-                  <p className="mt-2 min-w-0 overflow-hidden text-sm leading-[1.45] text-[#475569] sm:text-base [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">{description}</p>
+                  <h3 className="mt-3 text-lg font-bold leading-[1.25] tracking-[-0.025em] text-[#0B1F3A] sm:text-xl lg:text-2xl">{title}</h3>
+                  <p className="mt-2 min-w-0 overflow-hidden text-sm leading-[1.45] text-[#475569] sm:text-[0.9375rem] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">{description}</p>
                 </article>
               ))}
             </Stagger>
 
             <Reveal className="mx-auto mt-4 flex max-w-[34rem] flex-col items-center text-center sm:mt-5 lg:mt-5" delay={160}>
               <Link className="btn hero-cta-primary za-button-motion w-full sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>
-              <p className="mt-4 text-sm leading-[1.6] text-[#475569] sm:text-base">
+              <p className="mt-4 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
                 Don&apos;t see a suitable role? Submit a general application and we&apos;ll keep your profile on file for future opportunities.
               </p>
             </Reveal>
@@ -167,7 +167,7 @@ export default function Careers() {
         <div className="mx-auto max-w-6xl">
             <Reveal as="header" className="max-w-[45rem] text-left">
               <h2 id="careers-values-heading" className="text-xl font-bold leading-[1.12] tracking-[-0.04em] sm:text-2xl lg:text-[2rem] text-[#0B1F3A] ">What We Value</h2>
-              <p className="mt-3 text-sm leading-[1.6] text-[#475569] sm:text-base">
+              <p className="mt-3 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
                 We value people who approach technology with discipline, curiosity, integrity, and respect for the people affected by their work.
               </p>
             </Reveal>
@@ -178,7 +178,7 @@ export default function Careers() {
                   <Icon aria-hidden="true" className="mt-1 size-5 text-[#0B7F60] transition-[filter] duration-200 ease-out group-hover:brightness-110 lg:mt-0" strokeWidth={1.8} />
                   <div className="min-w-0">
                     <h3 className="text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] lg:mt-4 sm:text-xl lg:text-2xl">{title}</h3>
-                    <p className="mt-1.5 text-sm leading-[1.6] text-[#475569] sm:text-base">{description}</p>
+                    <p className="mt-1.5 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">{description}</p>
                   </div>
                 </article>
               ))}
@@ -190,7 +190,7 @@ export default function Careers() {
           <div className="mx-auto max-w-6xl">
             <Reveal as="header" className="max-w-[45rem] text-left">
               <h2 id="hiring-process-heading" className="text-xl font-bold leading-[1.12] tracking-[-0.04em] sm:text-2xl lg:text-[2rem] text-[#0B1F3A] ">Our Hiring Process</h2>
-              <p className="mt-3 text-sm leading-[1.6] text-[#475569] sm:text-base">
+              <p className="mt-3 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
                 Our hiring process is designed to be clear, practical, and respectful of candidates’ time.
               </p>
             </Reveal>
@@ -200,8 +200,8 @@ export default function Careers() {
                 <article className="grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 py-5 lg:block lg:px-6 lg:py-0 first:lg:pl-0 last:lg:pr-0" key={title}>
                   <span className="text-2xl font-bold leading-none tracking-[-0.05em] text-[#0B7F60] sm:text-[1.75rem]">{number}</span>
                   <div className="min-w-0 lg:mt-5">
-                    <h3 className="text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-xl lg:text-2xl">{title}</h3>
-                    <p className="mt-1.5 text-sm leading-[1.6] text-[#475569] sm:text-base">{description}</p>
+                    <h3 className="text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[1.1875rem] lg:text-[1.25rem]">{title}</h3>
+                    <p className="mt-1.5 text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">{description}</p>
                   </div>
                 </article>
               ))}
@@ -229,10 +229,10 @@ export default function Careers() {
 
         <Stagger className="mx-auto grid w-full max-w-[70rem] gap-7 rounded-[1.25rem] bg-white p-6 shadow-[0_24px_64px_rgba(2,8,23,0.24)] sm:p-8 lg:grid-cols-[minmax(0,65fr)_minmax(18rem,35fr)] lg:items-center lg:gap-0 lg:p-12" staggerDelay={90}>
             <div className="min-w-0 lg:pr-12">
-              <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-xl font-bold leading-[1.12] tracking-[-0.04em] sm:text-2xl lg:text-[2rem] text-[#0B1F3A] ">
+              <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-2xl font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[2rem] lg:text-[2.5rem] ">
                 Ready to Build Meaningful Technology With Us?
               </h2>
-              <p className="mt-3 max-w-[43rem] text-sm leading-[1.6] text-[#475569] sm:mt-4 sm:text-base">
+              <p className="mt-3 max-w-[43rem] text-sm leading-[1.6] text-[#475569] sm:mt-4 sm:text-[0.9375rem]">
                 Join a team that values practical engineering, continuous learning, thoughtful collaboration, and building technology that creates lasting impact.
               </p>
             </div>
@@ -240,7 +240,7 @@ export default function Careers() {
             <div className="flex min-w-0 flex-col gap-4 lg:border-l lg:border-[#DCE3EA] lg:pl-12">
               <Link className="btn hero-cta-primary za-button-motion w-full" href="/apply">Apply Now</Link>
               <Link className="btn hero-cta-secondary za-button-motion w-full" href="/track">Track Application</Link>
-              <p className="text-sm leading-[1.6] text-[#475569] sm:text-base">
+              <p className="text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">
                 Whether you&apos;re applying for an open position or submitting a general application, we&apos;d love to learn more about you.
               </p>
             </div>
