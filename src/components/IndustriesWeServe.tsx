@@ -48,10 +48,10 @@ export function IndustriesWeServe() {
     <section className="relative z-10 -mt-8 px-4 sm:-mt-10 sm:px-6 lg:-mt-12 lg:px-8" aria-labelledby="industry-spectrum-heading">
       <div className="mx-auto max-w-[68rem] rounded-[18px] border border-[#DCE3EA] bg-white p-4 shadow-[0_14px_34px_rgba(11,31,58,0.09)] sm:rounded-[20px] sm:p-6 lg:p-7 xl:p-8">
         <Stagger as="header" className="max-w-[46rem] text-left md:mx-auto md:text-center" staggerDelay={80}>
-          <h2 id="industry-spectrum-heading" className="text-xl font-bold sm:text-2xl lg:text-[2rem] leading-[1.1] tracking-[-0.04em] text-[#0B1F3A]">
+          <h2 id="industry-spectrum-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">
             Industries We Serve
           </h2>
-          <p className="mt-3 text-sm leading-7 text-[#475569] sm:text-[0.9375rem] lg:text-[0.9375rem]">
+          <p className="mt-3 text-[14px] leading-[1.65] text-[#475569] sm:text-[15px] lg:text-[15px]">
             We partner with organizations across a wide range of sectors, adapting our technology, data, and digital solutions to the unique needs of each business, institution, and personal brand.
           </p>
         </Stagger>
@@ -70,7 +70,7 @@ export function IndustriesWeServe() {
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60]">
                   <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                 </span>
-                <h3 className="text-lg font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[1.1875rem] lg:text-[1.25rem]">{title}</h3>
+                <h3 className="text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:text-[20px]">{title}</h3>
                 <ChevronDown
                   aria-hidden="true"
                   className={`ml-auto size-5 shrink-0 text-[#475569] transition-transform duration-300 ${expandedIndustry === index ? 'rotate-180' : ''}`}
@@ -81,7 +81,7 @@ export function IndustriesWeServe() {
                 id={`industry-description-${index}`}
                 className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${expandedIndustry === index ? 'mt-2.5 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
               >
-                <p className="overflow-hidden text-sm leading-[1.6] text-[#475569] sm:text-[0.9375rem]">{description}</p>
+                <p className="overflow-hidden text-[14px] leading-[1.6] text-[#475569] sm:text-[14px] lg:text-[15px]">{description}</p>
               </div>
             </button>
           ))}
@@ -89,7 +89,7 @@ export function IndustriesWeServe() {
 
         <button
           type="button"
-          className="btn btn-secondary mt-3.5 w-full md:mx-auto md:flex md:w-fit"
+          className="btn btn-secondary mt-3.5 w-full text-[16px] md:mx-auto md:flex md:w-fit"
           aria-expanded={showAllIndustries}
           aria-controls="additional-industries"
           onClick={() => {
@@ -103,8 +103,8 @@ export function IndustriesWeServe() {
           {showAllIndustries ? 'Show Fewer Industries' : 'Show More Industries'}
         </div>
 
-        <aside className="mt-3.5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3 text-sm leading-7 text-[#294A43] sm:mt-4 sm:px-5 sm:py-3.5 sm:text-[0.9375rem] lg:text-[0.9375rem]">
-          <span className="text-lg font-bold text-[#0B1F3A] sm:text-[1.1875rem] lg:text-[1.25rem]">Don&apos;t see your industry?</span>{' '}
+        <aside className="mt-3.5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3 text-[14px] leading-[1.65] text-[#294A43] sm:mt-4 sm:px-5 sm:py-3.5 sm:text-[14px] lg:text-[15px]">
+          <span className="text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:text-[20px]">Don&apos;t see your industry?</span>{' '}
           That&apos;s not a limitation. Zentric Analytics delivers tailored technology solutions for organizations, businesses, institutions, and professionals across every sector.
         </aside>
       </div>
