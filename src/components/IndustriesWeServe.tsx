@@ -45,32 +45,32 @@ export function IndustriesWeServe() {
   const [showAllIndustries, setShowAllIndustries] = useState(false);
 
   return (
-    <section className="relative z-10 -mt-8 px-4 sm:-mt-10 sm:px-6 lg:-mt-12 lg:px-8" aria-labelledby="industry-spectrum-heading">
-      <div className="mx-auto max-w-[68rem] rounded-[18px] border border-[#DCE3EA] bg-white p-4 shadow-[0_14px_34px_rgba(11,31,58,0.09)] sm:rounded-[20px] sm:p-6 lg:p-7 xl:p-8">
-        <Stagger as="header" className="max-w-[46rem] text-left md:mx-auto md:text-center" staggerDelay={80}>
-          <h2 id="industry-spectrum-heading" className="text-[clamp(1.75rem,4.8vw,2.625rem)] font-bold leading-[1.1] tracking-[-0.04em] text-[#0B1F3A]">
+    <section className="relative z-10 -mt-8 px-4 pb-12 sm:-mt-10 sm:px-6 sm:pb-14 lg:-mt-12 lg:px-8 lg:pb-16" aria-labelledby="industry-spectrum-heading">
+      <div className="mx-auto max-w-[1280px] rounded-[20px] border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+        <Stagger as="header" className="max-w-3xl text-left md:mx-auto md:text-center" staggerDelay={80}>
+          <h2 id="industry-spectrum-heading" className="text-xl font-bold leading-tight tracking-[-0.02em] text-[#0B1F3A] sm:text-2xl lg:text-[2rem]">
             Industries We Serve
           </h2>
-          <p className="mt-3 text-base leading-[1.6] text-[#475569] sm:text-[1.0625rem]">
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-[#475569] sm:text-base sm:leading-7">
             We partner with organizations across a wide range of sectors, adapting our technology, data, and digital solutions to the unique needs of each business, institution, and personal brand.
           </p>
         </Stagger>
 
-        <Stagger id="additional-industries" className="mt-5 grid gap-3 md:grid-cols-3 lg:gap-3.5" aria-label="Industries we serve" delay={120} staggerDelay={70}>
+        <Stagger id="additional-industries" className="mt-6 grid gap-4 sm:gap-5 md:grid-cols-3 lg:gap-6" aria-label="Industries we serve" delay={120} staggerDelay={70}>
           {industries.map(({ Icon, title, description }, index) => (
             <button
               type="button"
-              className={`group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-3.5 text-left transition duration-200 motion-safe:hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-4 ${index > 5 && !showAllIndustries ? 'hidden' : ''}`}
+              className={`group min-w-0 rounded-[20px] border border-slate-200/80 bg-white p-4 text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#C5D1DD] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-5 lg:p-6 ${index > 5 && !showAllIndustries ? 'hidden' : ''}`}
               key={title}
               aria-expanded={expandedIndustry === index}
               aria-controls={`industry-description-${index}`}
               onClick={() => setExpandedIndustry((current) => (current === index ? null : index))}
             >
               <div className="flex items-center gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60]">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EAF7F2] text-[#0B7F60]">
                   <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                 </span>
-                <h3 className="text-base font-bold leading-[1.3] tracking-[-0.02em] text-[#0B1F3A]">{title}</h3>
+                <h3 className="text-lg font-bold leading-tight tracking-[-0.02em] text-[#0B1F3A] sm:text-xl lg:text-2xl">{title}</h3>
                 <ChevronDown
                   aria-hidden="true"
                   className={`ml-auto size-5 shrink-0 text-[#475569] transition-transform duration-300 ${expandedIndustry === index ? 'rotate-180' : ''}`}
@@ -81,7 +81,7 @@ export function IndustriesWeServe() {
                 id={`industry-description-${index}`}
                 className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${expandedIndustry === index ? 'mt-2.5 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
               >
-                <p className="overflow-hidden text-sm leading-[1.55] text-[#475569]">{description}</p>
+                <p className="overflow-hidden text-sm font-normal leading-6 text-[#475569] sm:text-base">{description}</p>
               </div>
             </button>
           ))}
@@ -89,7 +89,7 @@ export function IndustriesWeServe() {
 
         <button
           type="button"
-          className="btn btn-secondary mt-3.5 w-full md:mx-auto md:flex md:w-fit"
+          className="btn btn-secondary mt-4 min-h-12 w-full rounded-full px-6 sm:px-7 md:mx-auto md:flex md:w-fit"
           aria-expanded={showAllIndustries}
           aria-controls="additional-industries"
           onClick={() => {
@@ -103,7 +103,7 @@ export function IndustriesWeServe() {
           {showAllIndustries ? 'Show Fewer Industries' : 'Show More Industries'}
         </div>
 
-        <aside className="mt-3.5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3 text-sm leading-[1.6] text-[#294A43] sm:mt-4 sm:px-5 sm:py-3.5 sm:text-base">
+        <aside className="mt-4 rounded-[20px] border border-[#D8E8E3] bg-[#F8FAFC] px-4 py-3 text-sm leading-6 text-[#294A43] sm:px-5 sm:py-3.5 sm:text-base">
           <span className="font-bold text-[#0B1F3A]">Don&apos;t see your industry?</span>{' '}
           That&apos;s not a limitation. Zentric Analytics delivers tailored technology solutions for organizations, businesses, institutions, and professionals across every sector.
         </aside>
