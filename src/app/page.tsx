@@ -109,7 +109,7 @@ export default function Home() {
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:py-16 lg:gap-8">
           <div className="max-w-[700px]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[600px] text-[29.12px] font-extrabold leading-[1.09] tracking-[-0.03em] text-white md:text-[56px] md:font-bold md:leading-[1.05]">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[21rem] text-[1.82rem] font-extrabold leading-[1.09] tracking-[-0.03em] text-white sm:max-w-2xl sm:text-[2.15rem] md:font-bold md:leading-[1.05] lg:max-w-3xl lg:text-[2.65rem]">
               <span className="md:block">Engineering reliable software,</span>{' '}
               <span className="md:block">data, and AI systems</span>{' '}
               <span className="md:block">for serious</span>{' '}
@@ -141,7 +141,7 @@ export default function Home() {
                 fetchPriority="high"
                 decoding="async"
                 sizes="(min-width: 1180px) 50vw, (min-width: 768px) 50vw, calc(100vw - 2rem)"
-                className="object-cover object-[67%_30%] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.18)_12%,rgba(0,0,0,0.82)_32%,#000_43%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
+                className="object-cover object-[62%_center] sm:object-[60%_center] lg:object-[58%_48%] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.18)_12%,rgba(0,0,0,0.82)_32%,#000_43%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
               />
             </div>
           </div>
