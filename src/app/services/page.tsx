@@ -56,8 +56,8 @@ export default function Services() {
     <PageShell>
       <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
         <Stagger className="min-w-0" staggerDelay={90}>
-          <p className="mb-3 min-w-0 break-words text-base font-bold uppercase tracking-[0.18em] text-accent">Services</p>
-          <h1 className="mb-5 max-w-3xl break-words text-3xl font-bold tracking-tight text-ink sm:text-4xl md:text-5xl">
+          <p className="mb-3 min-w-0 break-words text-sm font-bold uppercase tracking-[0.18em] text-accent">Services</p>
+          <h1 className="mb-5 max-w-3xl break-words text-[1.82rem] font-bold tracking-tight text-ink sm:text-[2.15rem] lg:text-[2.65rem]">
             Technology services with disciplined implementation.
           </h1>
         </Stagger>
@@ -68,8 +68,8 @@ export default function Services() {
               className="card za-hover za-hover-lift group p-6 hover:shadow-[0_16px_34px_rgba(11,31,58,0.10)]"
               key={t}
             >
-              <h2 className="text-xl font-bold text-ink">{t}</h2>
-              <p className="mt-3">{d}</p>
+              <h2 className="text-lg font-bold text-ink sm:text-xl lg:text-2xl">{t}</h2>
+              <p className="mt-3 text-sm sm:text-[0.9375rem]">{d}</p>
             </article>
           ))}
         </Stagger>
@@ -83,7 +83,7 @@ export default function Services() {
               heading="Every successful solution begins with a disciplined engineering process."
               headingId="engineering-process-heading"
               description="Every engagement follows a structured workflow designed to reduce risk, improve collaboration, and deliver technology that remains reliable, maintainable, and scalable over time."
-              className="engineering-process-header [&_h2]:text-[clamp(1.875rem,3.2vw,2.5rem)] [&_h2]:leading-[1.12]"
+              className="engineering-process-header [&_h2]:text-xl sm:[&_h2]:text-2xl lg:[&_h2]:text-[2rem] [&_h2]:leading-[1.12]"
               tone="dark"
             />
           </Reveal>
@@ -106,7 +106,7 @@ export default function Services() {
                       strokeWidth={1.75}
                     />
                   </div>
-                  <h3 className="mt-0 flex w-full items-start justify-center text-center text-lg font-bold leading-[1.2] tracking-[-0.025em] text-white md:mt-4 md:text-[1.0625rem] lg:min-h-0">
+                  <h3 className="mt-0 flex w-full items-start justify-center text-center text-lg font-bold leading-[1.2] tracking-[-0.025em] text-white md:mt-4 sm:text-[1.1875rem] lg:min-h-0 lg:text-[1.25rem]">
                     {step.title}
                   </h3>
                   <p className="mt-1.5 w-full max-w-[24rem] text-sm leading-[1.5] text-white/[0.82] sm:text-[0.9375rem] md:max-w-[13rem] md:text-center">
