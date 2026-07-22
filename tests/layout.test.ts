@@ -157,6 +157,15 @@ describe('public layout shell', () => {
     expect(globals).toContain('.site-header a:focus-visible,.site-header button:focus-visible{outline:2px solid #0B1F3A;outline-offset:4px;box-shadow:none}');
   });
 
+
+  it('renders the careers open roles CTA with apply and tracking actions', () => {
+    const careers = readFileSync('src/app/careers/page.tsx', 'utf8');
+
+    expect(careers).toContain('<Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>');
+    expect(careers).toContain('<Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/track">Track Application</Link>');
+    expect(careers).toContain('flex-col items-center gap-3 sm:max-w-none sm:flex-row sm:justify-center sm:gap-4');
+  });
+
   it('renders the premium corporate footer navigation and contact resources', () => {
     const footer = readFileSync('src/components/SiteFooter.tsx', 'utf8');
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');

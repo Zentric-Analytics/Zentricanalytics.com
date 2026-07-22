@@ -160,8 +160,8 @@ export default function Careers() {
                 Don&apos;t see a suitable role? Submit a general application and we&apos;ll keep your profile on file for future opportunities.
               </p>
               <div className="mt-5 flex w-full max-w-[22rem] flex-col items-center gap-3 sm:max-w-none sm:flex-row sm:justify-center sm:gap-4">
-                <Link className="btn hero-cta-primary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>
-                <Link className="btn hero-cta-secondary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/track">Track Application</Link>
+                <Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/apply">Apply Now</Link>
+                <Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto sm:min-w-[11rem]" href="/track">Track Application</Link>
               </div>
             </Reveal>
         </div>
