@@ -143,13 +143,14 @@ export default function Careers() {
               {roles.map(({ Icon, title, description }) => (
                 <article
                   key={title}
-                  className="group flex min-h-[9.5rem] min-w-0 flex-col rounded-[1.125rem] border border-[#DCE3EA] bg-white p-4 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition duration-200 ease-out motion-safe:hover:-translate-y-1 hover:border-[#BFD0DD] hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] sm:min-h-[10rem] sm:p-5"
+                  tabIndex={0}
+                  className="group flex min-h-[9.5rem] min-w-0 flex-col rounded-[1.125rem] border border-slate-200/80 bg-white p-4 text-left shadow-md outline-none transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:bg-[#07133F] hover:shadow-xl focus-visible:-translate-y-2 focus-visible:scale-[1.02] focus-visible:bg-[#07133F] focus-visible:shadow-xl focus-visible:ring-2 focus-visible:ring-[#07133F] focus-visible:ring-offset-2 sm:min-h-[10rem] sm:p-5"
                 >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#E8F5F0] text-[#0B7F60]">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#E8F5F0] text-[#07133F] transition-colors duration-300 ease-out group-hover:bg-white group-focus-visible:bg-white">
                     <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                   </span>
-                  <h3 className="mt-3 text-xl font-bold leading-[1.25] tracking-[-0.025em] text-[#0B1F3A]">{title}</h3>
-                  <p className="mt-2 min-w-0 overflow-hidden text-[0.9375rem] leading-[1.45] text-[#475569] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">{description}</p>
+                  <h3 className="mt-3 text-xl font-bold leading-[1.25] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-300 ease-out group-hover:text-white group-focus-visible:text-white">{title}</h3>
+                  <p className="mt-2 min-w-0 overflow-hidden text-[0.9375rem] leading-[1.45] text-[#475569] transition-colors duration-300 ease-out [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] group-hover:text-white/85 group-focus-visible:text-white/85">{description}</p>
                 </article>
               ))}
             </Stagger>
