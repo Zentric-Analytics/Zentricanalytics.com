@@ -130,122 +130,103 @@ export default function Careers() {
         </section>
       </div>
 
-      <section className="relative z-20 -mt-5 rounded-t-[32px] bg-white px-4 pb-12 pt-10 sm:-mt-7 sm:rounded-t-[44px] sm:px-6 sm:pt-12 lg:-mt-8 lg:rounded-t-[56px] lg:px-8 lg:pb-16 lg:pt-14" aria-labelledby="open-roles-heading">
+      <section className="bg-[#F7F9FC] px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-[72px]" aria-labelledby="open-roles-heading">
         <div className="mx-auto max-w-6xl">
-            <Reveal as="header" className="max-w-[45rem] text-left">
-              <h2 id="open-roles-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">Open Roles</h2>
-              <p className="mt-3 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
-                Explore current opportunities or submit a general application if your experience does not match a listed role.
-              </p>
-            </Reveal>
+          <Reveal as="header" className="max-w-[720px] text-left">
+            <h2 id="open-roles-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">Open Roles</h2>
+            <p className="mt-3 max-w-[680px] text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
+              Explore current opportunities or submit a general application if your experience does not match a listed role.
+            </p>
+          </Reveal>
 
-            <Stagger className="mt-8 grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-3 lg:mt-10" delay={120} staggerDelay={90}>
-              {roles.map(({ Icon, title, description }) => (
-                <article
-                  key={title}
-                  className="group flex h-[160px] min-w-0 items-center gap-6 rounded-[24px] border border-[#E3EAF1] bg-white p-7 text-left shadow-[0_18px_42px_rgba(15,23,42,0.06)] transition duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#D4DEE8] hover:shadow-[0_20px_46px_rgba(15,23,42,0.08)]"
-                >
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-[#EEF8F5] text-[#0B7F60]">
-                    <Icon aria-hidden="true" className="size-[18px] sm:size-5" strokeWidth={1.8} />
-                  </span>
-                  <div className="min-w-0 max-w-[18rem]">
-                    <h3 className="mb-3 text-[19px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A]">{title}</h3>
-                    <p className="mb-0 text-[15px] font-normal leading-[1.55] text-[#475569]">{description}</p>
-                  </div>
-                </article>
-              ))}
-            </Stagger>
+          <Stagger className="mt-8 grid grid-cols-1 gap-x-5 gap-y-[18px] md:grid-cols-2 lg:mt-10 lg:grid-cols-3" delay={120} staggerDelay={90}>
+            {roles.map(({ Icon, title, description }) => (
+              <article
+                key={title}
+                className="group flex min-h-[138px] min-w-0 items-start gap-[18px] rounded-[20px] border border-[#E3EAF1] bg-white p-5 text-left shadow-[0_18px_42px_rgba(15,23,42,0.06)] transition duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#D4DEE8] hover:shadow-[0_20px_46px_rgba(15,23,42,0.08)] lg:h-[148px] lg:p-6"
+              >
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#EEF8F5] text-[#0B7F60]">
+                  <Icon aria-hidden="true" className="size-[18px] sm:size-5" strokeWidth={1.8} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="mb-2 text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A]">{title}</h3>
+                  <p className="m-0 text-[14px] font-normal leading-[1.5] text-[#475569]">{description}</p>
+                </div>
+              </article>
+            ))}
+          </Stagger>
 
-            <Reveal className="mt-8 flex flex-col items-start" delay={160}>
-              <div className="flex w-full max-w-[280px] flex-col items-stretch gap-4 sm:w-auto sm:max-w-none sm:flex-row sm:items-start [&_.btn]:h-14 [&_.btn]:rounded-[16px] [&_.btn]:px-6 [&_.btn]:text-[16px] [&_.btn]:font-bold [&_.btn]:leading-none [&_.btn-primary]:bg-[#0B1F3A] [&_.btn-primary]:text-white [&_.btn-primary]:shadow-[0_10px_22px_rgba(11,31,58,0.14)] hover:[&_.btn-primary]:bg-[#123052] hover:[&_.btn-primary]:shadow-[0_12px_26px_rgba(11,31,58,0.18)] [&_.btn-secondary]:border [&_.btn-secondary]:border-[#C8D7E5] [&_.btn-secondary]:bg-white [&_.btn-secondary]:text-[#0B1F3A] [&_.btn-secondary]:shadow-none hover:[&_.btn-secondary]:border-[#B7C9DA] hover:[&_.btn-secondary]:bg-[#F6FAFD]">
-                <Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto" href="/apply">Apply Now</Link>
-                <Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto" href="/track">Track Application</Link>
-              </div>
-            </Reveal>
+          <Reveal className="mt-7 flex flex-col items-start" delay={160}>
+            <div className="flex w-full max-w-[280px] flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-start sm:gap-[14px] [&_.btn]:h-[52px] [&_.btn]:rounded-[14px] [&_.btn]:px-6 [&_.btn]:text-[15px] [&_.btn]:font-bold [&_.btn]:leading-none [&_.btn-primary]:bg-[#0B1F3A] [&_.btn-primary]:text-white [&_.btn-primary]:shadow-[0_10px_22px_rgba(11,31,58,0.14)] hover:[&_.btn-primary]:bg-[#123052] hover:[&_.btn-primary]:shadow-[0_12px_26px_rgba(11,31,58,0.18)] [&_.btn-secondary]:border [&_.btn-secondary]:border-[#C8D7E5] [&_.btn-secondary]:bg-white [&_.btn-secondary]:text-[#0B1F3A] [&_.btn-secondary]:shadow-none hover:[&_.btn-secondary]:border-[#B7C9DA] hover:[&_.btn-secondary]:bg-[#F6FAFD]">
+              <Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto" href="/apply">Apply Now</Link>
+              <Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto" href="/track">Track Application</Link>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      <section className="border-t border-slate-200/70 bg-[#F8FAFC] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24" aria-labelledby="careers-values-heading">
-        <div className="mx-auto max-w-6xl">
-            <Reveal as="header" className="max-w-[45rem] text-left">
-              <h2 id="careers-values-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">What We Value</h2>
-              <p className="mt-3 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
-                We value people who approach technology with discipline, curiosity, integrity, and respect for the people affected by their work.
-              </p>
-            </Reveal>
+      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24" aria-labelledby="careers-values-heading">
+        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[36fr_64fr] lg:gap-16">
+          <Reveal as="header" className="max-w-[430px] text-left">
+            <h2 id="careers-values-heading" className="text-[34px] font-bold leading-[1.08] tracking-[-0.045em] text-[#0B1F3A] sm:text-[40px] lg:text-[44px]">What We Value</h2>
+            <p className="mt-4 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
+              We value people who approach technology with discipline, curiosity, integrity, and respect for the people affected by their work.
+            </p>
+          </Reveal>
 
-            <Stagger className="mt-7 divide-y divide-[#DCE3EA] lg:mt-9 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0" delay={120} staggerDelay={90}>
-              {values.map(({ Icon, title, description }) => (
-                <article className="group grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-4 py-5 transition-[transform,box-shadow] duration-200 ease-out motion-safe:hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(11,31,58,0.08)] lg:block lg:px-6 lg:py-0 first:lg:pl-0 last:lg:pr-0" key={title}>
-                  <Icon aria-hidden="true" className="mt-1 size-5 text-[#0B7F60] transition-[filter] duration-200 ease-out group-hover:brightness-110 lg:mt-0" strokeWidth={1.8} />
-                  <div className="min-w-0">
-                    <h3 className="text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:mt-4 lg:text-[20px]">{title}</h3>
-                    <p className="mt-1.5 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">{description}</p>
-                  </div>
-                </article>
-              ))}
-            </Stagger>
+          <Stagger className="grid grid-cols-1 divide-y divide-[#DCE3EA] md:grid-cols-2 md:divide-x md:divide-y-0 [&>article:nth-child(3)]:md:border-t [&>article:nth-child(3)]:md:border-[#DCE3EA] [&>article:nth-child(odd)]:md:border-l-0" delay={120} staggerDelay={90}>
+            {values.map(({ Icon, title, description }) => (
+              <article className="p-6 transition-colors duration-200 hover:bg-[#F8FAFC]" key={title}>
+                <Icon aria-hidden="true" className="size-5 text-[#0B7F60]" strokeWidth={1.8} />
+                <h3 className="mt-4 text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A]">{title}</h3>
+                <p className="mt-2 text-[14px] leading-[1.55] text-[#475569]">{description}</p>
+              </article>
+            ))}
+          </Stagger>
         </div>
       </section>
 
-      <section className="bg-[#F3F6F9] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16" aria-labelledby="hiring-process-heading">
-          <div className="mx-auto max-w-6xl">
-            <Reveal as="header" className="max-w-[45rem] text-left">
-              <h2 id="hiring-process-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">Our Hiring Process</h2>
-              <p className="mt-3 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
-                Our hiring process is designed to be clear, practical, and respectful of candidates’ time.
-              </p>
-            </Reveal>
+      <section className="bg-[#F3F6F9] px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-20" aria-labelledby="hiring-process-heading">
+        <div className="mx-auto max-w-6xl">
+          <Reveal as="header" className="mx-auto max-w-[45rem] text-center">
+            <h2 id="hiring-process-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">Our Hiring Process</h2>
+            <p className="mt-3 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
+              Our hiring process is designed to be clear, practical, and respectful of candidates’ time.
+            </p>
+          </Reveal>
 
-            <Stagger className="mt-7 divide-y divide-[#DCE3EA] lg:mt-9 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0" delay={120} staggerDelay={90}>
-              {hiringSteps.map(({ number, title, description }) => (
-                <article className="grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 py-5 lg:block lg:px-6 lg:py-0 first:lg:pl-0 last:lg:pr-0" key={title}>
-                  <span className="text-[14px] font-bold leading-none tracking-[-0.04em] text-[#0B7F60]">{number}</span>
-                  <div className="min-w-0 lg:mt-5">
-                    <h3 className="text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:text-[20px]">{title}</h3>
-                    <p className="mt-1.5 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">{description}</p>
-                  </div>
-                </article>
-              ))}
-            </Stagger>
+          <Stagger className="relative mx-auto mt-10 max-w-[900px] before:absolute before:bottom-0 before:left-[21px] before:top-0 before:w-px before:bg-[#9BCDC1] lg:mt-12 lg:before:left-1/2 lg:before:-translate-x-1/2" delay={120} staggerDelay={90}>
+            {hiringSteps.map(({ number, title, description }, index) => (
+              <article className="relative grid gap-4 pb-10 pl-[64px] last:pb-0 lg:grid-cols-[1fr_42px_1fr] lg:gap-7 lg:pl-0" key={title}>
+                <div className={`min-w-0 rounded-[18px] border border-[#DCE8EF] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)] ${index % 2 === 0 ? 'lg:col-start-1 lg:text-right' : 'lg:col-start-3 lg:text-left'}`}>
+                  <h3 className="text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:text-[20px]">{title}</h3>
+                  <p className="mt-2 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">{description}</p>
+                </div>
+                <span className="absolute left-0 top-0 z-10 flex size-[42px] items-center justify-center rounded-full border border-[#BEE3DA] bg-[#F0FAF7] text-[14px] font-bold leading-none text-[#0B7F60] shadow-[0_0_0_6px_#F3F6F9] lg:left-1/2 lg:-translate-x-1/2">{number}</span>
+              </article>
+            ))}
+          </Stagger>
         </div>
       </section>
 
       <section
-        className="relative isolate mb-16 flex min-h-[31.25rem] items-center overflow-hidden bg-[#0B1F3A] px-4 py-10 sm:min-h-[32.5rem] sm:px-6 sm:py-12 lg:min-h-[35rem] lg:px-8"
+        className="bg-[#0B1F3A] px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-20"
         aria-labelledby="careers-final-cta-heading"
       >
-        <Image
-          src="/images/careers/careers-cta-background.png"
-          sizes="100vw"
-          alt=""
-          width={1717}
-          height={916}
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 -z-20 size-full object-cover object-center"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 -z-10 bg-[rgba(10,28,56,0.38)]" aria-hidden="true" />
+        <Stagger className="mx-auto grid w-full max-w-[70rem] gap-8 lg:grid-cols-[minmax(0,62fr)_minmax(18rem,38fr)] lg:items-center" staggerDelay={90}>
+          <div className="min-w-0">
+            <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-[30px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[36px] lg:text-[40px]">
+              Ready to Build Meaningful Technology With Us?
+            </h2>
+            <p className="mt-3 max-w-[43rem] text-[14px] leading-[1.6] text-[#C8D7E5] sm:mt-4 sm:text-[15px]">
+              Join a team that values practical engineering, continuous learning, thoughtful collaboration, and building technology that creates lasting impact.
+            </p>
+          </div>
 
-
-        <Stagger className="mx-auto grid w-full max-w-[70rem] gap-7 rounded-[1.25rem] bg-white p-6 shadow-[0_24px_64px_rgba(2,8,23,0.24)] sm:p-8 lg:grid-cols-[minmax(0,65fr)_minmax(18rem,35fr)] lg:items-center lg:gap-0 lg:p-12" staggerDelay={90}>
-            <div className="min-w-0 lg:pr-12">
-              <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-[30px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[36px] lg:text-[40px]">
-                Ready to Build Meaningful Technology With Us?
-              </h2>
-              <p className="mt-3 max-w-[43rem] text-[14px] leading-[1.6] text-[#475569] sm:mt-4 sm:text-[15px]">
-                Join a team that values practical engineering, continuous learning, thoughtful collaboration, and building technology that creates lasting impact.
-              </p>
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-4 lg:border-l lg:border-[#DCE3EA] lg:pl-12">
-              <Link className="btn hero-cta-primary za-button-motion w-full text-base" href="/apply">Apply Now</Link>
-              <Link className="btn hero-cta-secondary za-button-motion w-full text-base" href="/track">Track Application</Link>
-              <p className="text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
-                Whether you&apos;re applying for an open position or submitting a general application, we&apos;d love to learn more about you.
-              </p>
-            </div>
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row lg:justify-end">
+            <Link className="btn za-button-motion h-[52px] rounded-[14px] bg-white px-6 text-[15px] font-bold text-[#0B1F3A] hover:bg-[#F3F6F9]" href="/apply">Apply Now</Link>
+            <Link className="btn za-button-motion h-[52px] rounded-[14px] border border-white/70 bg-transparent px-6 text-[15px] font-bold text-white hover:bg-white/10" href="/track">Track Application</Link>
+          </div>
         </Stagger>
       </section>
     </PageShell>
