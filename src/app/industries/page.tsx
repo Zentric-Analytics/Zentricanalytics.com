@@ -34,7 +34,7 @@ export default function Industries() {
     <PageShell>
       <link rel="preload" as="image" href="/images/industries/industries-hero-bg.png" fetchPriority="high" />
       <section
-        className="relative isolate flex h-auto min-h-[520px] items-center overflow-hidden bg-[#0B1F3A] px-4 pb-[40px] pt-[56px] text-white sm:h-[580px] sm:min-h-[580px] sm:px-6 sm:pb-[48px] sm:pt-[64px] lg:h-[620px] lg:min-h-[620px] lg:max-h-[620px] lg:px-8 lg:pb-[56px] lg:pt-[72px]"
+        className="relative isolate h-auto min-h-[500px] max-h-none overflow-hidden bg-[#0B1F3A] text-white sm:h-[520px] sm:min-h-[520px] sm:max-h-[520px] lg:h-[540px] lg:min-h-[540px] lg:max-h-[540px]"
         aria-labelledby="industries-page-heading"
       >
         <Image
@@ -50,7 +50,7 @@ export default function Industries() {
           aria-hidden="true"
         />
         <div className="absolute inset-0 -z-10 bg-[#0B1F3A]/80" aria-hidden="true" />
-        <div className="mx-auto flex h-full w-full max-w-6xl flex-col justify-center">
+        <div className="mx-auto flex h-full w-full max-w-6xl flex-col justify-center px-4 pb-[40px] pt-[56px] sm:px-6 lg:px-8">
           <div className="max-w-[44rem]">
             <Reveal as="h1" id="industries-page-heading" delay={40} className="max-w-[21rem] text-[36px] font-bold leading-[1.1] tracking-[-0.04em] sm:max-w-2xl sm:text-[40px] sm:leading-[1.08] lg:max-w-3xl lg:text-[42px]">
               Technology Solutions for Every Industry, Organization, and Ambition
