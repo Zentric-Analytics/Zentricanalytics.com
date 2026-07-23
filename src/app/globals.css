@@ -414,12 +414,13 @@ html{scroll-padding-top:82px}
 }
 
 .industries-hero-typing{margin-top:.65rem;max-width:100%;min-width:0;color:#5EE0BF}
-.industries-hero-typing__line{position:relative;display:inline-grid;max-width:100%;margin:0;align-items:baseline;font-family:Manrope,Inter,system-ui,sans-serif;font-size:14px;font-weight:700;line-height:1.25;letter-spacing:.14em;text-transform:uppercase;color:#5EE0BF;text-wrap:balance;overflow-wrap:anywhere}
+.industries-hero-typing__line{position:relative;display:inline-grid;max-width:none;margin:0;align-items:baseline;font-family:Manrope,Inter,system-ui,sans-serif;font-size:22px;font-weight:700;line-height:1.25;letter-spacing:.14em;text-transform:uppercase;color:#5EE0BF;white-space:nowrap}
 .industries-hero-typing__text,.industries-hero-typing__ghost{grid-area:1/1;min-width:0}
 .industries-hero-typing__text{position:relative;z-index:1;text-shadow:0 0 24px rgba(94,224,191,.22)}
-.industries-hero-typing__ghost{visibility:hidden;pointer-events:none;white-space:normal}
+.industries-hero-typing__ghost{visibility:hidden;pointer-events:none;white-space:nowrap}
 
-@media (min-width:640px){.industries-hero-typing{margin-top:.8rem}.industries-hero-typing__line{font-size:14px}}
+@media (min-width:640px){.industries-hero-typing{margin-top:.8rem}.industries-hero-typing__line{font-size:26px}}
+@media (min-width:1024px){.industries-hero-typing__line{font-size:30px}}
 
 /* Zentric Analytics global motion foundation. These opt-in utilities are not page-specific. */
 :root{
