@@ -46,7 +46,7 @@ export function IndustriesWeServe() {
 
   return (
     <section className="relative z-10 px-4 sm:px-6 lg:px-8" aria-labelledby="industry-spectrum-heading">
-      <div className="mx-auto max-w-[68rem] rounded-[18px] border border-[#DCE3EA] bg-white p-4 shadow-[0_14px_34px_rgba(11,31,58,0.09)] sm:rounded-[20px] sm:p-6 lg:p-7 xl:p-8">
+      <div className="relative z-20 mx-auto mt-[-32px] max-w-[68rem] rounded-[18px] border border-[#DCE3EA] bg-white p-4 shadow-[0_14px_34px_rgba(11,31,58,0.09)] sm:mt-[-56px] sm:rounded-[20px] sm:p-6 lg:mt-[-72px] lg:p-7 xl:p-8">
         <Stagger as="header" className="max-w-[46rem] text-left md:mx-auto md:text-center" staggerDelay={80}>
           <h2 id="industry-spectrum-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">
             Industries We Serve
