@@ -46,11 +46,11 @@ export default function Industries() {
           priority
           fetchPriority="high"
           decoding="async"
-          className="absolute inset-0 -z-20 size-full object-cover object-[62%_center] sm:object-[60%_center] lg:object-[58%_48%]"
+          className="absolute inset-0 z-0 size-full object-cover object-[62%_center] sm:object-[60%_center] lg:object-[58%_48%]"
           aria-hidden="true"
         />
-        <div className="absolute inset-0 -z-10 bg-[#0B1F3A]/80" aria-hidden="true" />
-        <div className="mx-auto flex h-full w-full max-w-6xl flex-col justify-center px-4 pb-[40px] pt-[56px] sm:px-6 lg:px-8">
+        <div className="absolute inset-0 z-[1] bg-[#0B1F3A]/80" aria-hidden="true" />
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-center px-4 pb-[40px] pt-[56px] sm:px-6 lg:px-8">
           <div className="max-w-[44rem]">
             <Reveal as="h1" id="industries-page-heading" delay={40} className="max-w-[21rem] text-[36px] font-bold leading-[1.1] tracking-[-0.04em] sm:max-w-2xl sm:text-[40px] sm:leading-[1.08] lg:max-w-3xl lg:text-[42px]">
               Technology Solutions for Every Industry, Organization, and Ambition
