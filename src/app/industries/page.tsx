@@ -34,7 +34,7 @@ export default function Industries() {
     <PageShell>
       <link rel="preload" as="image" href="/images/industries/industries-hero-bg.png" fetchPriority="high" />
       <section
-        className="relative isolate flex min-h-[540px] items-center overflow-hidden bg-[#0B1F3A] px-4 py-12 text-white sm:min-h-[560px] sm:px-6 sm:py-16 lg:min-h-[575px] lg:px-8 lg:py-[4.5rem]"
+        className="relative isolate flex h-[560px] items-start overflow-hidden bg-[#0B1F3A] px-4 pb-12 pt-[72px] text-white sm:h-[620px] sm:px-6 sm:pb-14 sm:pt-[88px] lg:h-[680px] lg:px-8 lg:pb-16 lg:pt-24"
         aria-labelledby="industries-page-heading"
       >
         <Image
