@@ -175,11 +175,7 @@ export default function Careers() {
             <p className="mt-3 max-w-[43rem] text-[14px] leading-[1.6] text-[#C8D7E5] sm:mt-4 sm:text-[15px]">
               Join a team that values practical engineering, continuous learning, thoughtful collaboration, and building technology that creates lasting impact.
             </p>
-          </div>
-
-          <div className="flex min-w-0 flex-col gap-4 sm:flex-row lg:justify-end">
-            <Link className="btn za-button-motion h-[52px] rounded-[14px] bg-white px-6 text-[15px] font-bold text-[#0B1F3A] hover:bg-[#F3F6F9]" href="/apply">Apply Now</Link>
-            <Link className="btn za-button-motion h-[52px] rounded-[14px] border border-white/70 bg-transparent px-6 text-[15px] font-bold text-white hover:bg-white/10" href="/track">Track Application</Link>
+            <Link className="btn btn-primary za-button-motion mt-7 h-14 w-full max-w-[280px] rounded-2xl bg-[#0B1F3A] px-7 text-base font-bold text-white shadow-[0_10px_22px_rgba(11,31,58,0.14)] hover:bg-[#123052] hover:shadow-[0_12px_26px_rgba(11,31,58,0.18)] sm:w-auto" href="/apply">Apply Now</Link>
           </div>
         </Stagger>
       </section>
