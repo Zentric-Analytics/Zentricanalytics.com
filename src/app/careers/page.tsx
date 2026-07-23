@@ -105,7 +105,7 @@ export default function Careers() {
   return (
     <PageShell>
       <div className="bg-[#F3F6F9]">
-        <section className="relative isolate flex min-h-[420px] items-center overflow-hidden bg-[#0B1F3A] px-4 py-16 sm:min-h-[550px] sm:px-6 sm:py-20 lg:min-h-[610px] lg:px-8 lg:py-24" aria-labelledby="careers-hero-heading">
+        <section className="relative isolate flex h-auto min-h-[420px] flex-col justify-center overflow-hidden bg-[#0B1F3A] px-4 py-8 sm:h-[480px] sm:min-h-[480px] sm:max-h-[480px] sm:px-6 sm:py-10 lg:h-[520px] lg:min-h-[520px] lg:max-h-[520px] lg:px-8 lg:py-12" aria-labelledby="careers-hero-heading">
           <Image
             src="/images/careers/careers-team-collaboration.png"
             sizes="100vw"
