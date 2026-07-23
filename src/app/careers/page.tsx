@@ -78,29 +78,6 @@ const values: Array<{ Icon: LucideIcon; title: string; description: string }> = 
   },
 ];
 
-const hiringSteps = [
-  {
-    number: '01',
-    title: 'Application Review',
-    description: 'We review your experience, interests, and alignment with the role.',
-  },
-  {
-    number: '02',
-    title: 'Initial Conversation',
-    description: 'A short discussion helps us understand your goals, experience, and expectations.',
-  },
-  {
-    number: '03',
-    title: 'Practical Assessment',
-    description: 'Depending on the role, you may complete a focused technical, analytical, or problem-solving exercise.',
-  },
-  {
-    number: '04',
-    title: 'Final Discussion',
-    description: 'We discuss the team, responsibilities, working expectations, and next steps.',
-  },
-];
-
 export default function Careers() {
   return (
     <PageShell>
@@ -180,29 +157,6 @@ export default function Careers() {
                 <Icon aria-hidden="true" className="size-5 text-[#0B7F60]" strokeWidth={1.8} />
                 <h3 className="mt-4 text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A]">{title}</h3>
                 <p className="mt-2 text-[14px] leading-[1.55] text-[#475569]">{description}</p>
-              </article>
-            ))}
-          </Stagger>
-        </div>
-      </section>
-
-      <section className="bg-[#F3F6F9] px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-20" aria-labelledby="hiring-process-heading">
-        <div className="mx-auto max-w-6xl">
-          <Reveal as="header" className="mx-auto max-w-[45rem] text-center">
-            <h2 id="hiring-process-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">Our Hiring Process</h2>
-            <p className="mt-3 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
-              Our hiring process is designed to be clear, practical, and respectful of candidates’ time.
-            </p>
-          </Reveal>
-
-          <Stagger className="relative mx-auto mt-10 max-w-[900px] before:absolute before:bottom-0 before:left-[21px] before:top-0 before:w-px before:bg-[#9BCDC1] lg:mt-12 lg:before:left-1/2 lg:before:-translate-x-1/2" delay={120} staggerDelay={90}>
-            {hiringSteps.map(({ number, title, description }, index) => (
-              <article className="relative grid gap-4 pb-10 pl-[64px] last:pb-0 lg:grid-cols-[1fr_42px_1fr] lg:gap-7 lg:pl-0" key={title}>
-                <div className={`min-w-0 rounded-[18px] border border-[#DCE8EF] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)] ${index % 2 === 0 ? 'lg:col-start-1 lg:text-right' : 'lg:col-start-3 lg:text-left'}`}>
-                  <h3 className="text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:text-[20px]">{title}</h3>
-                  <p className="mt-2 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">{description}</p>
-                </div>
-                <span className="absolute left-0 top-0 z-10 flex size-[42px] items-center justify-center rounded-full border border-[#BEE3DA] bg-[#F0FAF7] text-[14px] font-bold leading-none text-[#0B7F60] shadow-[0_0_0_6px_#F3F6F9] lg:left-1/2 lg:-translate-x-1/2">{number}</span>
               </article>
             ))}
           </Stagger>
