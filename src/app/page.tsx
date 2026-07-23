@@ -109,20 +109,20 @@ export default function Home() {
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:max-w-[90rem] lg:grid-cols-[minmax(0,56rem)_minmax(0,1fr)] lg:py-16 lg:gap-8">
           <div className="min-w-0 lg:max-w-[56rem]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[21rem] text-[48px] font-bold leading-[1.07] tracking-[-0.04em] text-white sm:max-w-2xl md:text-[54px] md:leading-[1.06] lg:max-w-[56rem] lg:text-[60px]">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[21rem] text-[36px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:max-w-2xl sm:text-[40px] lg:max-w-[56rem] lg:text-[42px]">
               <span className="lg:hidden">Engineering reliable software, data, and AI systems for serious work.</span>
               <span className="hidden lg:block">Engineering reliable software,</span>
               <span className="hidden lg:block">data, and AI systems</span>
               <span className="hidden lg:block">for serious work.</span>
             </h1>
-            <p className="hero-reveal hero-reveal-2 mt-4 max-w-[520px] text-[16px] font-normal leading-[1.6] text-slate-200 md:text-[17px] lg:text-[18px]">
+            <p className="hero-reveal hero-reveal-2 mt-4 max-w-[520px] text-[15px] font-normal leading-[1.65] text-slate-200 lg:text-[16px]">
               Zentric Analytics engineers reliable software, AI, and data platforms that help organizations build secure, scalable, and future-ready technology.
             </p>
             <div className="hero-reveal hero-reveal-3 mt-5 flex flex-col gap-2.5 md:gap-3 md:flex-row md:flex-wrap md:items-center">
-              <Link className="btn hero-cta-primary h-[48px] min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/services">
+              <Link className="btn hero-cta-primary h-[48px] text-[15px] font-bold leading-none min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/services">
                 Explore Services
               </Link>
-              <Link className="btn hero-cta-secondary h-[48px] min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/contact">
+              <Link className="btn hero-cta-secondary h-[48px] text-[15px] font-bold leading-none min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/contact">
                 <span>Let&apos;s Talk</span>
                 <span className="zentric-primary-cta__arrow" aria-hidden="true">
                   →
@@ -160,7 +160,7 @@ export default function Home() {
         <ScrollReveal>
           <div className="mx-auto grid max-w-6xl gap-2 text-left sm:gap-6 md:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:items-start md:gap-7 lg:gap-8">
             <SectionHeader
-              className="industries-child-reveal md:sticky md:top-24 [&_h2]:max-w-[29rem] [&_h2]:!text-[30px] sm:[&_h2]:!text-[36px] lg:[&_h2]:!text-[48px] [&_h2]:!font-bold [&_h2]:!leading-[1.1] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:mt-3 [&_p:last-child]:max-w-[28rem] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.6] sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[16px]"
+              className="industries-child-reveal md:sticky md:top-24 [&_h2]:max-w-[29rem] [&_h2]:!text-[28px] sm:[&_h2]:!text-[30px] lg:[&_h2]:!text-[32px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:mt-3 [&_p:last-child]:max-w-[28rem] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.65] sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[15px]"
               eyebrow="HOW WE THINK"
               heading={<>Engineering isn&apos;t just what we build. It&apos;s how we solve problems.</>}
               headingId="how-we-think-heading"
@@ -179,10 +179,10 @@ export default function Home() {
                     className="size-[1.375rem] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] lg:size-6"
                     strokeWidth={1.75}
                   />
-                  <h3 className="mt-2.5 text-[18px] font-bold leading-[1.2] tracking-[-0.025em] text-[#0B1F3A] sm:text-[20px]">
+                  <h3 className="mt-2.5 text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A]">
                     {principle.title}
                   </h3>
-                  <p className="mt-1.5 text-[14px] leading-[1.6] text-[#475569]">
+                  <p className="mt-1.5 text-[14px] font-normal leading-[1.5] text-[#475569]">
                     {principle.description}
                   </p>
                 </article>
@@ -196,7 +196,7 @@ export default function Home() {
         <ScrollReveal>
           <div className="mx-auto max-w-6xl">
             <SectionHeader
-              className="industries-child-reveal [&_h2]:mt-2.5 [&_h2]:!text-[30px] sm:[&_h2]:!text-[36px] lg:[&_h2]:!text-[48px] [&_h2]:!font-bold [&_h2]:!leading-[1.1] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:mt-2 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.6] sm:[&_p:last-child]:mt-3.5 sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[16px]"
+              className="industries-child-reveal [&_h2]:mt-2.5 [&_h2]:!text-[28px] sm:[&_h2]:!text-[30px] lg:[&_h2]:!text-[32px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:mt-2 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.65] sm:[&_p:last-child]:mt-3.5 sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[15px]"
               eyebrow="CORE CAPABILITIES"
               heading="Engineering expertise across software, AI, data, infrastructure, and research."
               headingId="core-capabilities-heading"
@@ -215,7 +215,7 @@ export default function Home() {
                     className="size-[23px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981] sm:size-[22px]"
                     strokeWidth={1.75}
                   />
-                  <h3 className="text-[16px] font-bold leading-[1.2] tracking-[-0.018em] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]">
+                  <h3 className="text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]">
                     {capability.title}
                   </h3>
                 </div>
@@ -223,7 +223,7 @@ export default function Home() {
             </div>
 
             <div className="industries-child-reveal mt-4 flex justify-center sm:mt-6" style={{ '--industries-reveal-delay': '680ms' } as CSSProperties}>
-              <Link className="btn zentric-primary-cta w-full sm:w-auto" href="/services">
+              <Link className="btn zentric-primary-cta w-full text-[15px] font-bold leading-none sm:w-auto" href="/services">
                 <span>Explore All Capabilities</span>
                 <span className="zentric-primary-cta__arrow" aria-hidden="true">
                   →
@@ -243,7 +243,7 @@ export default function Home() {
               headingId="why-choose-heading"
               description="Every successful partnership begins with understanding your business, designing the right solution, building with quality, deploying with confidence, and supporting long-term growth."
               tone="dark"
-              className="industries-child-reveal engineering-process-header why-choose-header [&_h2]:!text-[30px] sm:[&_h2]:!text-[36px] lg:[&_h2]:!text-[48px] [&_h2]:!font-bold [&_h2]:!leading-[1.1] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.6] sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[16px]"
+              className="industries-child-reveal engineering-process-header why-choose-header [&_h2]:!text-[28px] sm:[&_h2]:!text-[30px] lg:[&_h2]:!text-[32px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.65] sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[15px]"
             />
 
             <div className="relative mt-4 lg:mt-5">
@@ -265,10 +265,10 @@ export default function Home() {
                         strokeWidth={1.75}
                       />
                     </div>
-                    <h3 className="mt-0 flex w-full items-start justify-center text-center text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-white md:mt-3 md:text-[20px] md:leading-[1.2] lg:min-h-0">
+                    <h3 className="mt-0 flex w-full items-start justify-center text-center text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-white md:mt-3 lg:min-h-0">
                       {step.title}
                     </h3>
-                    <p className="mt-1.5 w-full max-w-[24rem] text-[14px] font-normal leading-[1.6] text-slate-300 md:max-w-[13rem] md:text-center">
+                    <p className="mt-1.5 w-full max-w-[24rem] text-[14px] font-normal leading-[1.5] text-slate-300 md:max-w-[13rem] md:text-center">
                       {step.description}
                     </p>
                   </article>
@@ -298,7 +298,7 @@ export default function Home() {
         <ScrollReveal>
           <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
             <SectionHeader
-              className="industries-child-reveal [&_h2]:!text-[30px] sm:[&_h2]:!text-[36px] lg:[&_h2]:!text-[48px] [&_h2]:!font-bold [&_h2]:!leading-[1.1] [&_h2]:!tracking-[-0.04em] max-md:[&_p:last-child]:mt-3 [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.6] sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[16px] max-md:[&_p:last-child]:font-normal"
+              className="industries-child-reveal [&_h2]:!text-[30px] sm:[&_h2]:!text-[36px] lg:[&_h2]:!text-[40px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] max-md:[&_p:last-child]:mt-3 [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.6] sm:[&_p:last-child]:!text-[15px] max-md:[&_p:last-child]:font-normal"
               align="center"
               eyebrow="READY TO BUILD?"
               heading={<>Let&apos;s build technology that creates lasting impact.</>}
@@ -330,15 +330,15 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <div className="industries-child-reveal mt-4 flex w-full flex-col items-center gap-3 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] max-md:[&_.btn]:text-[16px] max-md:[&_.btn]:font-semibold" style={{ '--industries-reveal-delay': '200ms' } as CSSProperties}>
+            <div className="industries-child-reveal mt-4 flex w-full flex-col items-center gap-3 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] [&_.btn]:text-[15px] [&_.btn]:font-bold [&_.btn]:leading-none" style={{ '--industries-reveal-delay': '200ms' } as CSSProperties}>
               <Link
-                className="btn btn-primary w-full min-w-[12rem] sm:w-auto"
+                className="btn btn-primary w-full min-w-[12rem] text-[15px] font-bold leading-none sm:w-auto"
                 href="/contact"
               >
                 Start a Conversation
               </Link>
               <Link
-                className="btn btn-secondary w-full min-w-[12rem] sm:w-auto"
+                className="btn btn-secondary w-full min-w-[12rem] text-[15px] font-bold leading-none sm:w-auto"
                 href="/careers"
               >
                 Explore Careers
