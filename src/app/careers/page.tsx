@@ -175,7 +175,7 @@ export default function Careers() {
             <p className="mt-3 max-w-[43rem] text-[14px] leading-[1.6] text-[#C8D7E5] sm:mt-4 sm:text-[15px]">
               Join a team that values practical engineering, continuous learning, thoughtful collaboration, and building technology that creates lasting impact.
             </p>
-            <Link className="btn za-button-motion mt-7 inline-flex h-14 w-full max-w-[280px] items-center justify-center rounded-2xl border border-white bg-white px-7 text-base font-bold text-[#0B1F3A] hover:border-[#EAF2F8] hover:bg-[#EAF2F8] hover:text-[#0B1F3A] sm:w-auto" href="/apply">Apply Now</Link>
+            <Link className="mt-7 inline-flex h-14 w-full max-w-[280px] items-center justify-center rounded-2xl border border-white bg-white px-7 text-base font-bold text-[#0B1F3A] opacity-100 visible hover:border-[#E8EEF5] hover:bg-[#E8EEF5] hover:text-[#0B1F3A] hover:opacity-100 sm:w-auto" href="/apply">Apply Now</Link>
           </div>
         </Stagger>
       </section>
