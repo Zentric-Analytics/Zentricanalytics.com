@@ -1,7 +1,9 @@
-import type { CSSProperties } from 'react';
+'use client';
+
+import { useId, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { BrainCircuit, ChartColumn, CloudCog, CodeXml, Cpu, DraftingCompass, FlaskConical, Network, Rocket, Search, ShieldCheck, Target, RefreshCcw, type LucideIcon } from 'lucide-react';
+import { BrainCircuit, ChartColumn, ChevronDown, CloudCog, CodeXml, Cpu, DraftingCompass, FlaskConical, Network, Rocket, Search, ShieldCheck, Target, RefreshCcw, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { ScrollReveal } from '@/components/ScrollReveal';
@@ -103,6 +105,30 @@ const clientChoiceProcess: Array<{ Icon: LucideIcon; title: string; description:
 ];
 
 export default function Home() {
+  const [isClientChoiceExpanded, setIsClientChoiceExpanded] = useState(false);
+  const clientChoiceDetailsId = useId();
+  const renderClientChoiceStep = (step: (typeof clientChoiceProcess)[number], index: number) => (
+    <article
+      className="industries-child-reveal group relative flex min-h-[46px] w-full flex-col items-center text-center md:min-h-[52px] lg:flex-1"
+      key={step.title}
+      style={{ '--industries-reveal-delay': `${120 + index * 100}ms` } as CSSProperties}
+    >
+      <div className="absolute -left-[62px] top-0 flex size-[46px] shrink-0 items-center justify-center rounded-full border border-white/70 bg-[#F8FAFC] shadow-[0_10px_24px_rgba(2,8,23,0.18)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#10B981]/70 group-hover:shadow-[0_12px_26px_rgba(2,8,23,0.22)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto md:size-[52px]">
+        <step.Icon
+          aria-hidden="true"
+          className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
+          strokeWidth={1.75}
+        />
+      </div>
+      <h3 className="mt-0 flex w-full items-start justify-center text-center text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-white md:mt-3 lg:min-h-0">
+        {step.title}
+      </h3>
+      <p className="mt-1.5 w-full max-w-[24rem] text-[14px] font-normal leading-[1.5] text-slate-300 md:max-w-[13rem] md:text-center">
+        {step.description}
+      </p>
+    </article>
+  );
+
   return (
     <PageShell>
       <link rel="preload" as="image" href="/images/hero/hero-engineering-team-v2.png" fetchPriority="high" />
@@ -252,27 +278,27 @@ export default function Home() {
                 className="absolute left-[23px] top-[23px] h-[calc(100%-46px)] w-px bg-slate-200/30 md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
               />
               <div className="relative grid items-stretch gap-y-5 pl-[62px] md:grid-cols-3 md:gap-x-7 md:gap-y-5 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
-                {clientChoiceProcess.map((step, index) => (
-                  <article
-                    className="industries-child-reveal group relative flex min-h-[46px] w-full flex-col items-center text-center md:min-h-[52px] lg:flex-1"
-                    key={step.title}
-                    style={{ '--industries-reveal-delay': `${120 + index * 100}ms` } as CSSProperties}
-                  >
-                    <div className="absolute -left-[62px] top-0 flex size-[46px] shrink-0 items-center justify-center rounded-full border border-white/70 bg-[#F8FAFC] shadow-[0_10px_24px_rgba(2,8,23,0.18)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#10B981]/70 group-hover:shadow-[0_12px_26px_rgba(2,8,23,0.22)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto md:size-[52px]">
-                      <step.Icon
-                        aria-hidden="true"
-                        className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
-                        strokeWidth={1.75}
-                      />
-                    </div>
-                    <h3 className="mt-0 flex w-full items-start justify-center text-center text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-white md:mt-3 lg:min-h-0">
-                      {step.title}
-                    </h3>
-                    <p className="mt-1.5 w-full max-w-[24rem] text-[14px] font-normal leading-[1.5] text-slate-300 md:max-w-[13rem] md:text-center">
-                      {step.description}
-                    </p>
-                  </article>
-                ))}
+                {clientChoiceProcess.slice(0, 3).map(renderClientChoiceStep)}
+                <button
+                  aria-controls={clientChoiceDetailsId}
+                  aria-expanded={isClientChoiceExpanded}
+                  className="inline-flex min-h-11 items-center gap-1.5 justify-self-start border-0 bg-transparent px-0 py-2 text-left text-[14px] font-bold leading-none text-[#10B981] transition-colors duration-200 ease-out hover:text-[#34D399] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] md:hidden"
+                  type="button"
+                  onClick={() => setIsClientChoiceExpanded((current) => !current)}
+                >
+                  <span>{isClientChoiceExpanded ? 'Show Less' : 'Show More'}</span>
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={`size-4 transition-transform duration-300 ease-out ${isClientChoiceExpanded ? 'rotate-180' : ''}`}
+                    strokeWidth={2.25}
+                  />
+                </button>
+                <div
+                  className={`grid gap-y-5 overflow-hidden transition-[max-height,opacity] duration-300 ease-out md:contents md:overflow-visible md:opacity-100 ${isClientChoiceExpanded ? 'max-h-[34rem] opacity-100' : 'max-h-0 opacity-0'}`}
+                  id={clientChoiceDetailsId}
+                >
+                  {clientChoiceProcess.slice(3).map((step, detailIndex) => renderClientChoiceStep(step, detailIndex + 3))}
+                </div>
               </div>
             </div>
           </div>
