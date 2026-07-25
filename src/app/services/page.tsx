@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Reveal, Stagger } from '@/components/Motion';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 const services = [
   ['Software Development', 'Custom applications, internal tools, APIs, integrations, and maintainable product engineering.'],
@@ -15,15 +13,22 @@ const services = [
   ['Emerging Technology Solutions', 'Practical evaluation and implementation of new technology where it creates measurable operational value.'],
 ];
 
-const technologies = [
+const topRowTechnologies = [
   'React',
   'Next.js',
   'TypeScript',
   'JavaScript',
-  'Node.js',
-  'Python',
+  'OpenAI',
+  'LangChain',
+  'Hugging Face',
+  'Power BI',
   'FastAPI',
   'Django',
+];
+
+const bottomRowTechnologies = [
+  'Node.js',
+  'Python',
   'PostgreSQL',
   'MongoDB',
   'Redis',
@@ -32,48 +37,31 @@ const technologies = [
   'Google Cloud',
   'Docker',
   'GitHub Actions',
-  'OpenAI',
-  'LangChain',
-  'Hugging Face',
-  'Power BI',
 ];
 
-function TechnologyTicker() {
-  const prefersReducedMotion = usePrefersReducedMotion();
-  const [activeTechnologyIndex, setActiveTechnologyIndex] = useState(0);
-
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      return undefined;
-    }
-
-    const highlightTimer = window.setInterval(() => {
-      setActiveTechnologyIndex((currentIndex) => (currentIndex + 1) % technologies.length);
-    }, 1800);
-
-    return () => window.clearInterval(highlightTimer);
-  }, [prefersReducedMotion]);
-
+function TechnologyRow({ technologies, variant }: { technologies: string[]; variant: 'top' | 'bottom' }) {
   return (
-    <div className="technology-ticker" aria-label="Technologies we build with">
+    <div className={`technology-ticker__row technology-ticker__row--${variant}`}>
       <div className="technology-ticker__track">
         {[0, 1].map((groupIndex) => (
           <div className="technology-ticker__group" aria-hidden={groupIndex === 1} key={groupIndex}>
-            {technologies.map((technology, technologyIndex) => (
-              <span
-                className={
-                  technologyIndex === activeTechnologyIndex
-                    ? 'technology-ticker__name technology-ticker__name--active'
-                    : 'technology-ticker__name'
-                }
-                key={`${groupIndex}-${technology}`}
-              >
+            {technologies.map((technology) => (
+              <span className="technology-ticker__name" key={`${groupIndex}-${technology}`}>
                 {technology}
               </span>
             ))}
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function TechnologyTicker() {
+  return (
+    <div className="technology-ticker" aria-label="Technologies we build with">
+      <TechnologyRow technologies={topRowTechnologies} variant="top" />
+      <TechnologyRow technologies={bottomRowTechnologies} variant="bottom" />
     </div>
   );
 }
