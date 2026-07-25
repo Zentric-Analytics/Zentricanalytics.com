@@ -187,9 +187,14 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:Inter,system-ui,-appl
 }
 
 
-@keyframes technology-ticker-scroll{
+@keyframes technology-ticker-scroll-left{
   from{transform:translateX(0)}
   to{transform:translateX(-50%)}
+}
+
+@keyframes technology-ticker-scroll-right{
+  from{transform:translateX(-50%)}
+  to{transform:translateX(0)}
 }
 
 .technologies-header>p:first-child{margin-bottom:8px}
@@ -200,10 +205,19 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:Inter,system-ui,-appl
   width:100%;
   max-width:100%;
   min-width:0;
-  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
   margin-top:36px;
-  padding-top:20px;
-  padding-bottom:20px;
+}
+
+.technology-ticker__row{
+  position:relative;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow:hidden;
+  padding:5px 0;
   -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%);
   mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%);
 }
@@ -212,9 +226,11 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:Inter,system-ui,-appl
   display:flex;
   width:max-content;
   max-width:none;
-  animation:technology-ticker-scroll 20s linear infinite;
   will-change:transform;
 }
+
+.technology-ticker__row--top .technology-ticker__track{animation:technology-ticker-scroll-left 20s linear infinite}
+.technology-ticker__row--bottom .technology-ticker__track{animation:technology-ticker-scroll-right 22s linear infinite}
 
 .technology-ticker__group{
   display:inline-flex;
@@ -233,35 +249,49 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:Inter,system-ui,-appl
   font-weight:600;
   letter-spacing:normal;
   line-height:1.2;
-  opacity:.55;
+  opacity:.82;
   white-space:nowrap;
-  transition:color 250ms ease,opacity 250ms ease,transform 250ms ease,font-weight 250ms ease;
+  transition:color 225ms ease,opacity 225ms ease,transform 225ms ease,text-shadow 225ms ease,font-weight 225ms ease;
 }
 
-.technology-ticker__name--active{
-  color:#14B8A6;
-  font-weight:800;
-  opacity:1;
-  transform:scale(1.04);
+.technology-ticker__row--top .technology-ticker__name{font-size:18px;font-weight:700}
+
+@media (hover:hover) and (pointer:fine){
+  .technology-ticker__row:hover .technology-ticker__track{animation-play-state:paused}
+
+  .technology-ticker__name:hover{
+    color:#14B8A6;
+    font-weight:800;
+    opacity:1;
+    transform:scale(1.04);
+    text-shadow:0 0 14px rgba(20,184,166,.18);
+  }
 }
 
 @media (min-width:768px){
-  .technology-ticker__track{animation-duration:24s}
+  .technology-ticker{gap:18px}
+  .technology-ticker__row--top .technology-ticker__track{animation-duration:24s}
+  .technology-ticker__row--bottom .technology-ticker__track{animation-duration:27s}
   .technology-ticker__group{gap:28px;padding-right:28px}
-  .technology-ticker__name{font-size:20px}
+  .technology-ticker__row--top .technology-ticker__name{font-size:20px}
+  .technology-ticker__row--bottom .technology-ticker__name{font-size:18px}
 }
 
 @media (min-width:1024px){
-  .technology-ticker__track{animation-duration:28s}
-  .technology-ticker__group{gap:34px;padding-right:34px}
-  .technology-ticker__name{font-size:22px}
+  .technology-ticker{gap:24px}
+  .technology-ticker__row--top .technology-ticker__track{animation-duration:28s}
+  .technology-ticker__row--bottom .technology-ticker__track{animation-duration:32s}
+  .technology-ticker__group{gap:36px;padding-right:36px}
+  .technology-ticker__row--top .technology-ticker__name{font-size:23px}
+  .technology-ticker__row--bottom .technology-ticker__name{font-size:20px}
 }
 
 @media (prefers-reduced-motion:reduce){
-  .technology-ticker{
+  .technology-ticker__row{
     overflow-x:auto;
     -webkit-mask-image:none;
     mask-image:none;
+    scrollbar-width:thin;
   }
 
   .technology-ticker__track{
