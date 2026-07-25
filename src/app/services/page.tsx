@@ -3,6 +3,7 @@
 import { Reveal, Stagger } from '@/components/Motion';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
+import { FeaturedSolutions } from './FeaturedSolutions';
 
 const services = [
   ['Software Development', 'Custom applications, internal tools, APIs, integrations, and maintainable product engineering.'],
@@ -105,6 +106,8 @@ export default function Services() {
           <TechnologyTicker />
         </div>
       </section>
+
+      <FeaturedSolutions />
     </PageShell>
   );
 }
