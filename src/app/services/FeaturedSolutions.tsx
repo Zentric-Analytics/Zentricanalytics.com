@@ -1,46 +1,190 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { Check } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import styles from './FeaturedSolutions.module.css';
 
 type PreviewType = 'analytics' | 'support' | 'workflow' | 'research' | 'cloud';
-type Solution = { label: string; title: string; summary: string; challenge: string; response: string; outcomes: string[]; technologies: string[]; previewType: PreviewType };
+type Solution = {
+  id: string;
+  title: string;
+  description: string;
+  challenge: string;
+  build: string;
+  impact: string;
+  technologies: string[];
+  previewType: PreviewType;
+};
 
 const solutions: Solution[] = [
-  { label: 'Business Intelligence', title: 'Business Intelligence and Performance Dashboard', summary: 'A centralized analytics environment that turns fragmented operational data into clear, actionable insight.', challenge: 'Disconnected reporting, manual analysis, and inconsistent performance metrics.', response: 'Secure dashboards that consolidate data, automate reporting, and provide reliable performance indicators.', outcomes: ['Faster decision-making', 'Less manual reporting', 'Better operational visibility'], technologies: ['React', 'Next.js', 'TypeScript', 'Python', 'PostgreSQL', 'Power BI'], previewType: 'analytics' },
-  { label: 'AI Customer Support', title: 'AI-Assisted Customer Support Platform', summary: 'An intelligent support environment that delivers quick answers while maintaining a clear path to human assistance.', challenge: 'Repetitive questions, disconnected knowledge, and growing request volumes slow support teams.', response: 'AI-assisted support that retrieves approved information, handles routine requests, and escalates complex cases.', outcomes: ['Faster response times', 'Less repetitive support work', 'More consistent experiences'], technologies: ['Next.js', 'Node.js', 'Python', 'OpenAI', 'PostgreSQL', 'Redis'], previewType: 'support' },
-  { label: 'Workflow Automation', title: 'Internal Workflow Automation System', summary: 'A custom operational platform that replaces repetitive processes with structured, measurable digital workflows.', challenge: 'Manual approvals, spreadsheet tracking, and fragmented communication create delays and errors.', response: 'Digital workflows that automate routing, approvals, notifications, status tracking, and reporting.', outcomes: ['Fewer process delays', 'Improved operational accuracy', 'Clearer ownership'], technologies: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'Docker', 'GitHub Actions'], previewType: 'workflow' },
-  { label: 'Research Analytics', title: 'Research Data and Analytics Platform', summary: 'A secure platform for collecting, managing, analyzing, and communicating complex research information.', challenge: 'Disconnected datasets and manual analysis make research reporting difficult to maintain and scale.', response: 'Structured tools for data collection, validation, analysis, visualization, and controlled reporting.', outcomes: ['More reliable research data', 'Faster analysis and reporting', 'Better team collaboration'], technologies: ['Python', 'Django', 'PostgreSQL', 'React', 'Power BI', 'Docker'], previewType: 'research' },
-  { label: 'Cloud Operations', title: 'Cloud Infrastructure and Operations Platform', summary: 'A unified operational view of digital infrastructure, deployments, reliability, and technical performance.', challenge: 'Cloud resources, deployments, and alerts spread across tools make growing systems hard to monitor.', response: 'A centralized environment for system health, deployment visibility, alerts, and infrastructure performance.', outcomes: ['Improved infrastructure visibility', 'Faster issue response', 'More reliable deployments'], technologies: ['AWS', 'Azure', 'Docker', 'GitHub Actions', 'Node.js', 'PostgreSQL'], previewType: 'cloud' },
+  {
+    id: 'business-intelligence', title: 'Business Intelligence', previewType: 'analytics',
+    description: 'Turn fragmented operational data into a trusted, decision-ready view of business performance.',
+    challenge: 'Teams lose time reconciling disconnected reports and inconsistent metrics.',
+    build: 'A secure analytics workspace that unifies data, reporting, and KPI monitoring.',
+    impact: 'Clearer decisions, less manual reporting, and stronger operational visibility.',
+    technologies: ['React', 'Next.js', 'Python', 'PostgreSQL'],
+  },
+  {
+    id: 'ai-customer-support', title: 'AI Customer Support', previewType: 'support',
+    description: 'Give customers useful, grounded answers while keeping human support close at hand.',
+    challenge: 'Repeated requests and scattered knowledge slow response teams and create inconsistency.',
+    build: 'A governed support assistant connected to approved knowledge and escalation workflows.',
+    impact: 'Quicker routine support and more time for teams to handle nuanced requests.',
+    technologies: ['Next.js', 'Python', 'OpenAI API', 'Vector Database'],
+  },
+  {
+    id: 'workflow-automation', title: 'Workflow Automation', previewType: 'workflow',
+    description: 'Replace manual handoffs with clear, trackable workflows built around how your teams operate.',
+    challenge: 'Email approvals and spreadsheet tracking make ownership and progress difficult to see.',
+    build: 'A tailored workflow system for routing, approvals, tasks, and status communication.',
+    impact: 'More consistent processes, fewer missed handoffs, and clearer accountability.',
+    technologies: ['React', 'Node.js', 'PostgreSQL', 'REST APIs'],
+  },
+  {
+    id: 'research-analytics', title: 'Research Analytics', previewType: 'research',
+    description: 'Bring study data, quality checks, and analysis together in a focused research environment.',
+    challenge: 'Complex datasets and manual validation make research analysis difficult to maintain.',
+    build: 'A structured platform for collection, quality control, analysis, and reporting.',
+    impact: 'More reliable datasets, repeatable analysis, and easier collaboration across teams.',
+    technologies: ['Python', 'Pandas', 'React', 'PostgreSQL'],
+  },
+  {
+    id: 'cloud-operations', title: 'Cloud Operations', previewType: 'cloud',
+    description: 'Monitor infrastructure, services, and deployments through one calm operational view.',
+    challenge: 'Infrastructure signals spread across tools make issues and deployments harder to follow.',
+    build: 'A unified operations workspace for health, delivery activity, and service visibility.',
+    impact: 'Faster investigation, clearer system ownership, and more dependable release operations.',
+    technologies: ['AWS', 'Docker', 'Kubernetes', 'Terraform'],
+  },
 ];
 
-const Dot = () => <span className={styles.dot} />;
-function PreviewShell({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className={styles.preview} aria-hidden="true"><div className={styles.previewBar}><span><Dot /> Zentric workspace</span><b>{title}</b></div>{children}</div>;
-}
-function Metrics({ items }: { items: [string, React.ReactNode][] }) { return <div className={styles.metrics}>{items.map(([label, value]) => <span key={label}>{label}<b>{value}</b></span>)}</div>; }
-function AnalyticsPreview() { return <PreviewShell title="Performance overview"><Metrics items={[["Revenue", "£482K"], ["Operations", "128"], ["Reporting", "92%"]]} /><div className={styles.chartArea}><div><small>Performance trend</small><svg viewBox="0 0 420 90" preserveAspectRatio="none"><path d="M5 77 C65 72 75 46 130 54 S210 25 260 38 S340 8 415 16" /><line x1="0" y1="88" x2="420" y2="88" /></svg></div><DataRows items={[["Operations", "94%"], ["Delivery", "89%"], ["Quality", "97%"]]} /></div></PreviewShell>; }
-function DataRows({ items }: { items: [string, string][] }) { return <div className={styles.dataRows}>{items.map(([label, value]) => <span key={label}>{label}<b>{value}</b></span>)}</div>; }
-function SupportPreview() { return <PreviewShell title="Support assistant"><div className={styles.support}><div className={styles.conversation}><span className={styles.customer}>How can I update my service access?</span><span className={styles.assistant}>I found the approved guide and can walk you through it.</span></div><aside><b><Dot /> 3 sources verified</b><span>Knowledge is up to date</span><hr /><b>Human support ready</b><span>Escalation available</span></aside></div></PreviewShell>; }
-function WorkflowPreview() { return <PreviewShell title="Operations workflow"><div className={styles.stages}>{['Submitted', 'Review', 'Approval', 'Complete'].map((x, i) => <span className={i === 1 ? styles.activeStage : ''} key={x}><i>{i + 1}</i>{x}</span>)}</div><div className={styles.taskList}><DataRows items={[["Validate request details", "In review"], ["Confirm department owner", "Queued"], ["Prepare approval record", "Queued"]]} /></div></PreviewShell>; }
-function ResearchPreview() { return <PreviewShell title="Study reporting"><div className={styles.researchTop}><span><small>Operational study 04</small><b>2,480 records</b></span><span><small>Data quality</small><b>96.8%</b></span></div><div className={styles.distribution}>{[48, 72, 58, 90, 64, 80, 55, 68].map((height, i) => <i style={{ height: `${height}%` }} key={i} />)}</div><DataRows items={[["Validation", "Complete"], ["Analysis", "Running"], ["Report", "76%"]]} /></PreviewShell>; }
-function CloudPreview() { return <PreviewShell title="Cloud operations"><Metrics items={[["System health", "Healthy"], ["Uptime", "99.98%"], ["Deployments", "12"]]} /><div className={styles.cloudRows}><DataRows items={[["API services", "Operational"], ["Data pipeline", "Operational"], ["Web deployment", "v2.8.1"]]} /><p><Dot /> Deployment completed successfully</p></div></PreviewShell>; }
-function SolutionPreview({ type }: { type: PreviewType }) { return type === 'analytics' ? <AnalyticsPreview /> : type === 'support' ? <SupportPreview /> : type === 'workflow' ? <WorkflowPreview /> : type === 'research' ? <ResearchPreview /> : <CloudPreview />; }
+function CountValue({ value, format }: { value: number; format: (value: number) => string }) {
+  const reducedMotion = usePrefersReducedMotion();
+  const [current, setCurrent] = useState(reducedMotion ? value : 0);
 
-function SolutionContent({ solution }: { solution: Solution }) {
-  return <div className={styles.content}><div className={styles.copy}><header><h3>{solution.title}</h3><p>{solution.summary}</p></header><div className={styles.info}><div><h4>Challenge</h4><p>{solution.challenge}</p></div><div><h4>What we build</h4><p>{solution.response}</p></div><div><h4>Expected impact</h4>{solution.outcomes.map(x => <p className={styles.outcome} key={x}><Check size={14} />{x}</p>)}</div></div><div className={styles.technologies}><h4>Technologies</h4><p>{solution.technologies.join(' • ')}</p></div></div><SolutionPreview type={solution.previewType} /></div>;
+  useEffect(() => {
+    if (reducedMotion) { setCurrent(value); return; }
+    let frame = 0;
+    const started = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - started) / 650, 1);
+      setCurrent(value * (1 - Math.pow(1 - progress, 3)));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [reducedMotion, value]);
+
+  return <>{format(current)}</>;
+}
+
+function PreviewFrame({ title, meta, children }: { title: string; meta: string; children: React.ReactNode }) {
+  return (
+    <div className={styles.previewFrame}>
+      <header className={styles.previewHeader}>
+        <span className={styles.windowDots} aria-hidden="true"><i /><i /><i /></span>
+        <strong>{title}</strong><small>{meta}</small>
+      </header>
+      {children}
+    </div>
+  );
+}
+
+function AnalyticsPreview() {
+  return (
+    <PreviewFrame title="Analytics Overview" meta="Updated now">
+      <div className={styles.analyticsMetrics}>
+        <span>Revenue<strong><CountValue value={248} format={v => `$${Math.round(v)}K`} /></strong></span>
+        <span>Active Users<strong><CountValue value={12.4} format={v => `${v.toFixed(1)}K`} /></strong></span>
+        <span>Growth<strong className={styles.positive}><CountValue value={18} format={v => `+${Math.round(v)}%`} /></strong></span>
+      </div>
+      <div className={styles.analyticsBody}>
+        <div className={styles.chart}><span>Revenue trend <b>Last 8 weeks</b></span><svg viewBox="0 0 420 116" role="img" aria-label="Revenue trending upward"><defs><linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#138c8c" stopOpacity=".18"/><stop offset="1" stopColor="#138c8c" stopOpacity="0"/></linearGradient></defs><path className={styles.chartArea} d="M5 94 C45 90 60 72 100 76 S160 48 202 58 S260 35 300 40 S360 15 415 22 L415 112 L5 112 Z"/><path className={styles.chartLine} d="M5 94 C45 90 60 72 100 76 S160 48 202 58 S260 35 300 40 S360 15 415 22"/></svg></div>
+        <div className={styles.reportList}><span>Recent reports</span>{[['Operations','Complete'],['Finance','Updated'],['Marketing','Processing']].map(([name,status], i) => <div style={{'--delay': `${i * 90 + 200}ms`} as React.CSSProperties} key={name}><i data-status={status}/><b>{name}</b><small>{status}</small></div>)}</div>
+      </div>
+    </PreviewFrame>
+  );
+}
+
+function AISupportPreview() {
+  return (
+    <PreviewFrame title="AI Support Assistant" meta="Conversation #2841">
+      <div className={styles.supportBody}>
+        <div className={styles.messages}><div className={styles.customerMessage}><small>Customer</small>I need help resetting my password.</div><div className={styles.aiMessage}><small>Zentric assistant</small>I can help. Open your account settings, choose Security, then select “Reset password.” I can connect you with support if you cannot sign in.</div></div>
+        <aside className={styles.supportStatus}><div className={styles.connected}><i />Knowledge Base Connected</div><div><i />Escalation Available</div><span>Response quality <strong>High · 94%</strong></span><em><i /></em></aside>
+      </div>
+    </PreviewFrame>
+  );
+}
+
+function WorkflowPreview() {
+  const stages = ['Submitted', 'Manager Review', 'HR Approval', 'Completed'];
+  return (
+    <PreviewFrame title="Employee Onboarding" meta="Workflow #108">
+      <div className={styles.workflowBody}><div className={styles.workflowPath}>{stages.map((stage, i) => <div className={i < 2 ? styles.stageDone : i === 2 ? styles.stageActive : ''} style={{'--delay': `${i * 110}ms`} as React.CSSProperties} key={stage}><i>{i < 2 ? '✓' : i + 1}</i><span>{stage}</span></div>)}</div><div className={styles.approval}><span><small>Current task</small><strong>Review employment details</strong></span><span><small>Owner</small><strong>People Operations</strong></span><span><small>Due</small><strong>Today</strong></span></div></div>
+    </PreviewFrame>
+  );
+}
+
+function ResearchPreview() {
+  return (
+    <PreviewFrame title="Study Overview" meta="Cohort 04">
+      <div className={styles.researchMetrics}><span>Participants<strong><CountValue value={1248} format={v => Math.round(v).toLocaleString()} /></strong></span><span>Completion<strong><CountValue value={86} format={v => `${Math.round(v)}%`} /></strong></span><span>Data quality<strong><CountValue value={96.4} format={v => `${v.toFixed(1)}%`} /></strong></span></div>
+      <div className={styles.researchBody}><div className={styles.barChart}><span>Weekly completions <b>+12 this week</b></span><div>{[42,55,48,72,64,82,74,92].map((height,i) => <i key={i} style={{'--height': `${height}%`, '--delay': `${i * 45}ms`} as React.CSSProperties}/>)}</div></div><div className={styles.cohorts}><span>Dataset summary</span><div><b>Primary cohort</b><em>672</em></div><div><b>Control cohort</b><em>576</em></div><small>18 fields validated</small></div></div>
+    </PreviewFrame>
+  );
+}
+
+function CloudPreview() {
+  return (
+    <PreviewFrame title="Infrastructure Health" meta="Production">
+      <div className={styles.cloudBody}><div className={styles.healthGrid}>{[['API','Healthy'],['Database','Healthy'],['Deployments','Running']].map(([name,status],i) => <span style={{'--delay': `${i * 100}ms`} as React.CSSProperties} key={name}><i/><small>{name}</small><strong>{status}</strong></span>)}<span><small>Latency</small><strong><CountValue value={42} format={v => `${Math.round(v)} ms`} /></strong></span></div><div className={styles.uptime}><span><small>30-day uptime</small><strong><CountValue value={99.98} format={v => `${v.toFixed(2)}%`} /></strong></span><svg viewBox="0 0 330 50" role="img" aria-label="Stable service health"><path d="M3 28 L40 27 L60 29 L82 25 L112 27 L134 13 L145 38 L158 26 L205 27 L230 24 L260 27 L290 22 L327 24"/></svg></div><div className={styles.timeline}><span>Deployment timeline</span><div><i/>API gateway updated <small>8 min ago</small></div><div><i/>Web services verified <small>21 min ago</small></div></div></div>
+    </PreviewFrame>
+  );
+}
+
+function SolutionPreview({ type }: { type: PreviewType }) {
+  if (type === 'analytics') return <AnalyticsPreview />;
+  if (type === 'support') return <AISupportPreview />;
+  if (type === 'workflow') return <WorkflowPreview />;
+  if (type === 'research') return <ResearchPreview />;
+  return <CloudPreview />;
+}
+
+function SolutionNavigation({ active, onSelect, tabRefs }: { active: number; onSelect: (index: number) => void; tabRefs: React.MutableRefObject<(HTMLButtonElement | null)[]> }) {
+  const handleKeyDown = (event: React.KeyboardEvent, index: number) => {
+    const vertical = window.matchMedia('(min-width: 900px)').matches;
+    const previous = vertical ? 'ArrowUp' : 'ArrowLeft';
+    const next = vertical ? 'ArrowDown' : 'ArrowRight';
+    if (![previous, next, 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const target = event.key === 'Home' ? 0 : event.key === 'End' ? solutions.length - 1 : (index + (event.key === next ? 1 : -1) + solutions.length) % solutions.length;
+    onSelect(target); tabRefs.current[target]?.focus();
+  };
+  return <div className={styles.navigation} role="tablist" aria-label="Featured solutions" aria-orientation="vertical" style={{'--active-index': active} as React.CSSProperties}><span className={styles.activeIndicator} aria-hidden="true"/>{solutions.map((solution,index) => <button key={solution.id} ref={node => {tabRefs.current[index] = node;}} id={`${solution.id}-tab`} role="tab" aria-controls={`${solution.id}-panel`} aria-selected={active === index} tabIndex={active === index ? 0 : -1} onKeyDown={event => handleKeyDown(event,index)} onClick={() => onSelect(index)}><span>{solution.title}</span><small>0{index + 1}</small></button>)}</div>;
+}
+
+function SolutionWorkspace({ solution }: { solution: Solution }) {
+  return (
+    <article className={styles.workspace} id={`${solution.id}-panel`} role="tabpanel" aria-labelledby={`${solution.id}-tab`} tabIndex={0}>
+      <header className={styles.workspaceIntro}><h3>{solution.title}</h3><p>{solution.description}</p></header>
+      <SolutionPreview type={solution.previewType}/>
+      <div className={styles.businessSummary}><div><h4>Challenge</h4><p>{solution.challenge}</p></div><div><h4>What We Build</h4><p>{solution.build}</p></div><div><h4>Expected Impact</h4><p>{solution.impact}</p></div></div>
+      <div className={styles.technologies} aria-label="Technologies">{solution.technologies.map((technology,index) => <span key={technology}>{technology}{index < solution.technologies.length - 1 && <i aria-hidden="true">·</i>}</span>)}</div>
+    </article>
+  );
 }
 
 export function FeaturedSolutions() {
   const [active, setActive] = useState(0);
-  const tabs = useRef<Array<HTMLButtonElement | null>>([]);
-  const select = (index: number) => { setActive(index); tabs.current[index]?.focus(); };
-  const onKeyDown = (event: React.KeyboardEvent, index: number) => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight' && event.key !== 'Home' && event.key !== 'End') return;
-    event.preventDefault();
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? solutions.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + solutions.length) % solutions.length;
-    select(next);
-  };
-  return <section className={styles.section} aria-labelledby="featured-solutions-heading"><div className={styles.container}><header className={styles.sectionHeader}><p>FEATURED SOLUTIONS</p><h2 id="featured-solutions-heading">Solutions Built Around Real Business Needs</h2><span>Explore how Zentric combines software engineering, artificial intelligence, data, and cloud technologies to solve complex operational challenges.</span></header><div className={styles.selector} role="tablist" aria-label="Featured solutions">{solutions.map((solution, i) => <button ref={element => { tabs.current[i] = element; }} id={`solution-tab-${i}`} role="tab" aria-selected={active === i} aria-controls="solution-panel" tabIndex={active === i ? 0 : -1} key={solution.label} onKeyDown={event => onKeyDown(event, i)} onClick={() => setActive(i)}>{solution.label}</button>)}</div><div className={styles.panel} id="solution-panel" role="tabpanel" aria-labelledby={`solution-tab-${active}`} key={active}><SolutionContent solution={solutions[active]} /></div></div></section>;
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  return (
+    <section className={styles.section} aria-labelledby="featured-solutions-heading">
+      <div className={styles.container}>
+        <header className={styles.sectionHeader}><p>FEATURED SOLUTIONS</p><h2 id="featured-solutions-heading">Explore What We Can Build</h2><span>See how Zentric Analytics transforms complex business requirements into practical, scalable digital solutions.</span></header>
+        <div className={styles.showcase}><SolutionNavigation active={active} onSelect={setActive} tabRefs={tabRefs}/><div className={styles.panel} key={solutions[active].id}><SolutionWorkspace solution={solutions[active]}/></div></div>
+      </div>
+    </section>
+  );
 }
