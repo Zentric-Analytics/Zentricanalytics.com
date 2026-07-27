@@ -131,7 +131,7 @@ export default function Home() {
 
   return (
     <PageShell>
-      <link rel="preload" as="image" href="/images/hero/hero-engineering-team-v2.png" fetchPriority="high" />
+      <link rel="preload" as="image" href="/images/hero/hero-engineering-team-v2.webp" fetchPriority="high" />
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:max-w-[90rem] lg:grid-cols-[minmax(0,56rem)_minmax(0,1fr)] lg:py-16 lg:gap-8">
           <div className="min-w-0 lg:max-w-[56rem]">
@@ -160,7 +160,7 @@ export default function Home() {
           <div className="hero-reveal hero-reveal-4 -mt-1 w-full max-w-[34rem] justify-self-center md:mt-0 md:-mr-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] md:w-[50vw] md:max-w-none md:justify-self-end lg:w-[49vw]">
             <div className="relative aspect-[16/10.5] overflow-hidden rounded-r-xl rounded-l-none md:min-h-[25rem] lg:min-h-[27.5rem]">
               <Image
-                src="/images/hero/hero-engineering-team-v2.png"
+                src="/images/hero/hero-engineering-team-v2.webp"
                 alt="Software engineers collaborating on code and system architecture in a modern office"
                 fill
                 priority
@@ -310,7 +310,7 @@ export default function Home() {
         aria-labelledby="final-cta-heading"
       >
         <Image
-          src="/images/careers/careers-team-collaboration.png"
+          src="/images/careers/careers-team-collaboration.webp"
           sizes="100vw"
           alt=""
           width={1536}

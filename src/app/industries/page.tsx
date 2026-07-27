@@ -32,13 +32,13 @@ const organizationValues: Array<{ Icon: LucideIcon; title: string; description: 
 export default function Industries() {
   return (
     <PageShell>
-      <link rel="preload" as="image" href="/images/industries/industries-hero-bg.png" fetchPriority="high" />
+      <link rel="preload" as="image" href="/images/industries/industries-hero-bg.webp" fetchPriority="high" />
       <section
         className="relative isolate h-auto min-h-[500px] max-h-none overflow-hidden bg-[#0B1F3A] text-white sm:h-[520px] sm:min-h-[520px] sm:max-h-[520px] lg:h-[540px] lg:min-h-[540px] lg:max-h-[540px]"
         aria-labelledby="industries-page-heading"
       >
         <Image
-          src="/images/industries/industries-hero-bg.png"
+          src="/images/industries/industries-hero-bg.webp"
           sizes="100vw"
           alt=""
           width={1717}
@@ -126,7 +126,7 @@ export default function Industries() {
           aria-labelledby="industries-final-cta-heading"
         >
           <Image
-            src="/images/careers/careers-cta-background.png"
+            src="/images/careers/careers-cta-background.webp"
             sizes="100vw"
             alt=""
             fill
