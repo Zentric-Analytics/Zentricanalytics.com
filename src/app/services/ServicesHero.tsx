@@ -112,29 +112,30 @@ export function ServicesHero() {
 
   return (
     <section className={styles.hero} ref={heroRef} aria-labelledby="services-hero-heading">
+      <Image
+        className={styles.heroBackground}
+        src="/images/services/services-hero-bg.webp"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        aria-hidden="true"
+      />
+      <div className={styles.heroOverlay} aria-hidden="true" />
       <div className={styles.heroInner}>
         <div className={`${styles.content} ${active ? styles.contentActive : ''}`}>
           <p className={styles.eyebrow}>Services</p>
           <h1 id="services-hero-heading">Custom Software, AI, and Data Solutions Built Around Your Business</h1>
           <p className={styles.description}>We partner with organizations to design, build, and scale secure digital products—from business applications and AI-powered solutions to analytics platforms and cloud infrastructure.</p>
           <div className={styles.actions}>
-            <Link className={`btn ${styles.primaryButton}`} href="/contact">Start a Project <span aria-hidden="true">→</span></Link>
-            <a className={`btn ${styles.secondaryButton}`} href="#technologies-heading">Explore Our Capabilities <span aria-hidden="true">↓</span></a>
+            <Link className="btn hero-cta-primary" href="/contact">Start a Project <span aria-hidden="true">→</span></Link>
+            <a className="btn hero-cta-secondary" href="#technologies-heading">Explore Our Capabilities <span aria-hidden="true">↓</span></a>
           </div>
           <ul className={styles.capabilities} aria-label="Core capabilities">
             {capabilities.map((capability) => <li key={capability}><span aria-hidden="true">✓</span>{capability}</li>)}
           </ul>
         </div>
         <div className={styles.visual}>
-          <div className={styles.workspaceAtmosphere} aria-hidden="true">
-            <Image
-              src="/images/services/services-hero-bg.webp"
-              alt=""
-              fill
-              priority
-              sizes="(min-width: 1100px) 760px, (min-width: 900px) 64vw, (min-width: 520px) calc(100vw - 32px), calc(100vw - 16px)"
-            />
-          </div>
           <EngineeringWorkspace active={active} />
         </div>
       </div>
