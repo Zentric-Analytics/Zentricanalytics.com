@@ -7,6 +7,7 @@ import styles from './FeaturedSolutions.module.css';
 type PreviewType = 'analytics' | 'support' | 'workflow' | 'research' | 'cloud';
 type Solution = {
   id: string;
+  category: string;
   title: string;
   description: string;
   challenge: string;
@@ -18,43 +19,43 @@ type Solution = {
 
 const solutions: Solution[] = [
   {
-    id: 'business-intelligence', title: 'Business Intelligence', previewType: 'analytics',
-    description: 'Turn fragmented operational data into a trusted, decision-ready view of business performance.',
-    challenge: 'Teams lose time reconciling disconnected reports and inconsistent metrics.',
-    build: 'A secure analytics workspace that unifies data, reporting, and KPI monitoring.',
-    impact: 'Clearer decisions, less manual reporting, and stronger operational visibility.',
+    id: 'business-intelligence', category: 'Data & Analytics', title: 'Business Intelligence Platform', previewType: 'analytics',
+    description: 'An example of how we can bring fragmented operational data into one secure, decision-ready analytics environment.',
+    challenge: 'Teams spend time reconciling disconnected reports, tools, and inconsistent performance metrics.',
+    build: 'Custom analytics platforms, reporting systems, data pipelines, KPI dashboards, and decision-support tools.',
+    impact: 'Clearer visibility, faster reporting, stronger governance, and more confident business decisions.',
     technologies: ['React', 'Next.js', 'Python', 'PostgreSQL'],
   },
   {
-    id: 'ai-customer-support', title: 'AI Customer Support', previewType: 'support',
-    description: 'Give customers useful, grounded answers while keeping human support close at hand.',
-    challenge: 'Repeated requests and scattered knowledge slow response teams and create inconsistency.',
-    build: 'A governed support assistant connected to approved knowledge and escalation workflows.',
-    impact: 'Quicker routine support and more time for teams to handle nuanced requests.',
+    id: 'ai-customer-support', category: 'Artificial Intelligence', title: 'AI Customer Support Assistant', previewType: 'support',
+    description: 'An example of how intelligent automation can improve customer support while keeping human teams in control.',
+    challenge: 'Support teams repeatedly handle similar requests while customers wait too long for straightforward answers.',
+    build: 'AI assistants, knowledge-search systems, intelligent workflows, recommendation tools, and language-based applications.',
+    impact: 'Faster responses, reduced repetitive work, improved service consistency, and better access to organizational knowledge.',
     technologies: ['Next.js', 'Python', 'OpenAI API', 'Vector Database'],
   },
   {
-    id: 'workflow-automation', title: 'Workflow Automation', previewType: 'workflow',
-    description: 'Replace manual handoffs with clear, trackable workflows built around how your teams operate.',
-    challenge: 'Email approvals and spreadsheet tracking make ownership and progress difficult to see.',
-    build: 'A tailored workflow system for routing, approvals, tasks, and status communication.',
-    impact: 'More consistent processes, fewer missed handoffs, and clearer accountability.',
+    id: 'workflow-automation', category: 'Custom Software', title: 'Workflow Automation Platform', previewType: 'workflow',
+    description: 'An example of a custom business application designed around an organization’s exact processes and approval requirements.',
+    challenge: 'Critical processes rely on spreadsheets, email chains, manual handoffs, and disconnected internal tools.',
+    build: 'Web applications, mobile applications, customer portals, internal platforms, workflow systems, and enterprise integrations.',
+    impact: 'More reliable processes, fewer manual errors, better accountability, and software that fits the organization instead of forcing the organization to fit the software.',
     technologies: ['React', 'Node.js', 'PostgreSQL', 'REST APIs'],
   },
   {
-    id: 'research-analytics', title: 'Research Analytics', previewType: 'research',
-    description: 'Bring study data, quality checks, and analysis together in a focused research environment.',
-    challenge: 'Complex datasets and manual validation make research analysis difficult to maintain.',
-    build: 'A structured platform for collection, quality control, analysis, and reporting.',
-    impact: 'More reliable datasets, repeatable analysis, and easier collaboration across teams.',
+    id: 'research-analytics', category: 'Research Platforms', title: 'Research Analytics Workspace', previewType: 'research',
+    description: 'An example of a secure digital environment for collecting, managing, analyzing, and communicating research data.',
+    challenge: 'Research teams often manage participants, datasets, analysis, and reporting across fragmented systems.',
+    build: 'Research portals, study-management systems, data-collection tools, survey platforms, analytical workspaces, and reporting applications.',
+    impact: 'Stronger data quality, clearer study oversight, easier collaboration, and more efficient research operations.',
     technologies: ['Python', 'Pandas', 'React', 'PostgreSQL'],
   },
   {
-    id: 'cloud-operations', title: 'Cloud Operations', previewType: 'cloud',
-    description: 'Monitor infrastructure, services, and deployments through one calm operational view.',
-    challenge: 'Infrastructure signals spread across tools make issues and deployments harder to follow.',
-    build: 'A unified operations workspace for health, delivery activity, and service visibility.',
-    impact: 'Faster investigation, clearer system ownership, and more dependable release operations.',
+    id: 'cloud-operations', category: 'Cloud & Infrastructure', title: 'Cloud Operations Platform', previewType: 'cloud',
+    description: 'An example of how we can improve the visibility, reliability, and management of cloud-based systems.',
+    challenge: 'Organizations struggle to monitor services, deployments, infrastructure health, reliability, and operational risks across multiple environments.',
+    build: 'Cloud architectures, deployment pipelines, monitoring systems, infrastructure automation, backend services, and platform integrations.',
+    impact: 'More reliable systems, faster deployments, stronger operational visibility, and infrastructure that can scale with demand.',
     technologies: ['AWS', 'Docker', 'Kubernetes', 'Terraform'],
   },
 ];
@@ -162,7 +163,7 @@ function SolutionNavigation({ active, onSelect, tabRefs }: { active: number; onS
     const target = event.key === 'Home' ? 0 : event.key === 'End' ? solutions.length - 1 : (index + (event.key === next ? 1 : -1) + solutions.length) % solutions.length;
     onSelect(target); tabRefs.current[target]?.focus();
   };
-  return <div className={styles.navigation} role="tablist" aria-label="Featured solutions" aria-orientation="vertical" style={{'--active-index': active} as React.CSSProperties}><span className={styles.activeIndicator} aria-hidden="true"/>{solutions.map((solution,index) => <button key={solution.id} ref={node => {tabRefs.current[index] = node;}} id={`${solution.id}-tab`} role="tab" aria-controls={`${solution.id}-panel`} aria-selected={active === index} tabIndex={active === index ? 0 : -1} onKeyDown={event => handleKeyDown(event,index)} onClick={() => onSelect(index)}><span>{solution.title}</span><small>0{index + 1}</small></button>)}</div>;
+  return <div className={styles.navigation} role="tablist" aria-label="Solution examples" aria-orientation="vertical" style={{'--active-index': active} as React.CSSProperties}><span className={styles.activeIndicator} aria-hidden="true"/>{solutions.map((solution,index) => <button key={solution.id} ref={node => {tabRefs.current[index] = node;}} id={`${solution.id}-tab`} role="tab" aria-controls={`${solution.id}-panel`} aria-selected={active === index} tabIndex={active === index ? 0 : -1} onKeyDown={event => handleKeyDown(event,index)} onClick={() => onSelect(index)}><span>{solution.category}</span><small>0{index + 1}</small></button>)}</div>;
 }
 
 function SolutionWorkspace({ solution }: { solution: Solution }) {
@@ -182,8 +183,9 @@ export function FeaturedSolutions() {
   return (
     <section className={styles.section} aria-labelledby="featured-solutions-heading">
       <div className={styles.container}>
-        <header className={styles.sectionHeader}><p>FEATURED SOLUTIONS</p><h2 id="featured-solutions-heading">Explore What We Can Build</h2><span>See how Zentric Analytics transforms complex business requirements into practical, scalable digital solutions.</span></header>
+        <header className={styles.sectionHeader}><p>SOLUTION EXAMPLES</p><h2 id="featured-solutions-heading">Examples of Solutions We Deliver</h2><span>Explore a selection of digital products and platforms we can design and build. These examples illustrate our capabilities, while every solution is tailored to each organization’s unique goals, users, and technical requirements.</span></header>
         <div className={styles.showcase}><SolutionNavigation active={active} onSelect={setActive} tabRefs={tabRefs}/><div className={styles.panel} key={solutions[active].id}><SolutionWorkspace solution={solutions[active]}/></div></div>
+        <p className={styles.scopeStatement}>These are representative examples, not a fixed catalogue. Zentric Analytics designs custom solutions across industries, platforms, and business functions.</p>
       </div>
     </section>
   );
