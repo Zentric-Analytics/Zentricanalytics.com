@@ -154,6 +154,61 @@ function SolutionPreview({ type }: { type: PreviewType }) {
 }
 
 function SolutionNavigation({ active, onSelect, tabRefs }: { active: number; onSelect: (index: number) => void; tabRefs: React.MutableRefObject<(HTMLButtonElement | null)[]> }) {
+  const navigationRef = useRef<HTMLDivElement | null>(null);
+  const navigationShellRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const navigation = navigationRef.current;
+    const shell = navigationShellRef.current;
+    if (!navigation || !shell) return;
+
+    let frame = 0;
+    const updateOverflowIndicators = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const vertical = window.matchMedia('(min-width: 900px)').matches;
+        const overflow = vertical && navigation.scrollHeight > navigation.clientHeight + 1;
+        shell.dataset.scrollable = String(overflow);
+        shell.dataset.atTop = String(!overflow || navigation.scrollTop <= 1);
+        shell.dataset.atBottom = String(!overflow || navigation.scrollTop + navigation.clientHeight >= navigation.scrollHeight - 1);
+      });
+    };
+
+    updateOverflowIndicators();
+    navigation.addEventListener('scroll', updateOverflowIndicators, { passive: true });
+    window.addEventListener('resize', updateOverflowIndicators, { passive: true });
+    const observer = new ResizeObserver(updateOverflowIndicators);
+    observer.observe(navigation);
+    Array.from(navigation.children).forEach(child => observer.observe(child));
+
+    return () => {
+      cancelAnimationFrame(frame);
+      navigation.removeEventListener('scroll', updateOverflowIndicators);
+      window.removeEventListener('resize', updateOverflowIndicators);
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const navigation = navigationRef.current;
+    const selected = tabRefs.current[active];
+    if (!navigation || !selected) return;
+
+    const vertical = window.matchMedia('(min-width: 900px)').matches;
+    const containerRect = navigation.getBoundingClientRect();
+    const itemRect = selected.getBoundingClientRect();
+    const before = vertical ? itemRect.top < containerRect.top : itemRect.left < containerRect.left;
+    const after = vertical ? itemRect.bottom > containerRect.bottom : itemRect.right > containerRect.right;
+    if (!before && !after) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    navigation.scrollTo({
+      [vertical ? 'top' : 'left']: (vertical ? navigation.scrollTop : navigation.scrollLeft)
+        + (before ? (vertical ? itemRect.top - containerRect.top : itemRect.left - containerRect.left) : (vertical ? itemRect.bottom - containerRect.bottom : itemRect.right - containerRect.right)),
+      behavior: reducedMotion ? 'auto' : 'smooth',
+    });
+  }, [active, tabRefs]);
+
   const handleKeyDown = (event: React.KeyboardEvent, index: number) => {
     const vertical = window.matchMedia('(min-width: 900px)').matches;
     const previous = vertical ? 'ArrowUp' : 'ArrowLeft';
@@ -163,7 +218,7 @@ function SolutionNavigation({ active, onSelect, tabRefs }: { active: number; onS
     const target = event.key === 'Home' ? 0 : event.key === 'End' ? solutions.length - 1 : (index + (event.key === next ? 1 : -1) + solutions.length) % solutions.length;
     onSelect(target); tabRefs.current[target]?.focus();
   };
-  return <div className={styles.navigation} role="tablist" aria-label="Solution examples" aria-orientation="vertical" style={{'--active-index': active} as React.CSSProperties}><span className={styles.activeIndicator} aria-hidden="true"/>{solutions.map((solution,index) => <button key={solution.id} ref={node => {tabRefs.current[index] = node;}} id={`${solution.id}-tab`} role="tab" aria-controls={`${solution.id}-panel`} aria-selected={active === index} tabIndex={active === index ? 0 : -1} onKeyDown={event => handleKeyDown(event,index)} onClick={() => onSelect(index)}><span>{solution.category}</span><small>0{index + 1}</small></button>)}</div>;
+  return <div className={styles.navigationShell} ref={navigationShellRef} data-scrollable="false" data-at-top="true" data-at-bottom="true"><div className={styles.navigation} ref={navigationRef} role="tablist" aria-label="Solution examples" aria-orientation="vertical" style={{'--active-index': active} as React.CSSProperties}><span className={styles.activeIndicator} aria-hidden="true"/>{solutions.map((solution,index) => <button key={solution.id} ref={node => {tabRefs.current[index] = node;}} id={`${solution.id}-tab`} role="tab" aria-controls={`${solution.id}-panel`} aria-selected={active === index} tabIndex={active === index ? 0 : -1} onKeyDown={event => handleKeyDown(event,index)} onClick={() => onSelect(index)}><span>{solution.category}</span><small>0{index + 1}</small></button>)}</div><span className={`${styles.scrollFade} ${styles.scrollFadeTop}`} aria-hidden="true"/><span className={`${styles.scrollFade} ${styles.scrollFadeBottom}`} aria-hidden="true"/></div>;
 }
 
 function SolutionWorkspace({ solution }: { solution: Solution }) {
