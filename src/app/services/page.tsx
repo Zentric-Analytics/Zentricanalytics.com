@@ -4,6 +4,7 @@ import { Reveal, Stagger } from '@/components/Motion';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { FeaturedSolutions } from './FeaturedSolutions';
+import { ServicesHero } from './ServicesHero';
 
 const services = [
   ['Software Development', 'Custom applications, internal tools, APIs, integrations, and maintainable product engineering.'],
@@ -70,14 +71,9 @@ function TechnologyTicker() {
 export default function Services() {
   return (
     <PageShell>
-      <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
-        <Stagger className="min-w-0" staggerDelay={90}>
-          <p className="mb-3 min-w-0 break-words text-sm font-bold uppercase tracking-[0.18em] text-accent">Services</p>
-          <h1 className="mb-5 max-w-3xl break-words text-[1.82rem] font-bold tracking-tight text-ink sm:text-[2.15rem] lg:text-[2.65rem]">
-            Technology services with disciplined implementation.
-          </h1>
-        </Stagger>
+      <ServicesHero />
 
+      <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14" aria-label="Service offerings">
         <Stagger className="grid min-w-0 gap-5 break-words text-slate-700 md:grid-cols-2" staggerDelay={90}>
           {services.map(([t, d]) => (
             <article
