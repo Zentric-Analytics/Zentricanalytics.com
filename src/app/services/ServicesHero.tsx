@@ -19,9 +19,8 @@ function EngineeringWorkspace({ active }: { active: boolean }) {
     <div className={`${styles.workspace} ${active ? styles.workspaceActive : ''}`} aria-label="Zentric engineering workspace preview">
       <header className={styles.toolbar}>
         <div className={styles.brandBlock}>
-          <span className={styles.brandMark} aria-hidden="true">Z</span>
-          <div>
-            <strong>Zentric Workspace</strong>
+          <div className={styles.brandText}>
+            <strong className={styles.workspaceWordmark}>Zentric Workspace</strong>
             <span className={styles.online}><i aria-hidden="true" />Online</span>
           </div>
         </div>
