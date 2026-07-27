@@ -2,15 +2,16 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { BrainCircuit, ChartNoAxesCombined, CloudCog, Code2, PanelsTopLeft } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import styles from './ServicesHero.module.css';
 
 const capabilities = [
-  'Custom Software',
-  'Artificial Intelligence',
-  'Data & Analytics',
-  'Cloud Solutions',
-  'Enterprise Platforms',
+  { label: 'Custom Software', Icon: Code2 },
+  { label: 'Artificial Intelligence', Icon: BrainCircuit },
+  { label: 'Data & Analytics', Icon: ChartNoAxesCombined },
+  { label: 'Cloud Solutions', Icon: CloudCog },
+  { label: 'Enterprise Platforms', Icon: PanelsTopLeft },
 ];
 
 function EngineeringWorkspace({ active }: { active: boolean }) {
@@ -132,7 +133,12 @@ export function ServicesHero() {
             <a className="btn hero-cta-secondary" href="#technologies-heading">Explore Our Capabilities <span aria-hidden="true">↓</span></a>
           </div>
           <ul className={styles.capabilities} aria-label="Core capabilities">
-            {capabilities.map((capability) => <li key={capability}><span aria-hidden="true">✓</span>{capability}</li>)}
+            {capabilities.map(({ label, Icon }) => (
+              <li key={label}>
+                <span className={styles.capabilityIcon} aria-hidden="true"><Icon size={19} strokeWidth={1.9} /></span>
+                {label}
+              </li>
+            ))}
           </ul>
         </div>
         <div className={styles.visual}>

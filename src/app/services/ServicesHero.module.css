@@ -10,8 +10,9 @@
 .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
 .actions span{font-size:18px}
 .capabilities{display:flex;flex-wrap:wrap;gap:10px 20px;max-width:650px;margin:28px 0 0;padding:22px 0 0;border-top:1px solid rgba(255,255,255,.14);list-style:none;color:rgba(255,255,255,.86);font-size:.79rem;font-weight:600}
-.capabilities li{display:flex;align-items:center;gap:7px;white-space:nowrap}
-.capabilities li span{display:grid;width:17px;height:17px;place-items:center;border-radius:50%;background:rgba(94,234,212,.14);color:#5eead4;font-size:.66rem;font-weight:800}
+.capabilities li{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.capabilityIcon{display:grid;width:30px;height:30px;flex:none;place-items:center;border:1px solid rgba(94,224,191,.18);border-radius:50%;background:rgba(94,224,191,.12);color:#5ee0bf}
+.capabilityIcon svg{display:block}
 .visual{position:relative;min-width:0;isolation:isolate;overflow:visible}
 .workspace{position:relative;z-index:2;width:100%;min-width:0;overflow:hidden;border:1px solid #d5e0e7;border-radius:18px;background:#fff;box-shadow:0 24px 60px rgba(2,8,23,.28),0 8px 24px rgba(2,8,23,.16);opacity:0;transform:translateY(16px) scale(.985)}
 .workspaceActive{animation:workspaceIn .7s cubic-bezier(.2,.75,.25,1) .12s forwards}
@@ -31,4 +32,5 @@
 @media(min-width:1024px){.content h1{font-size:42px}.description{margin-top:32px;font-size:16px}}
 @media(min-width:1100px){.heroInner{grid-template-columns:minmax(0,1fr) minmax(520px,1.08fr);gap:54px}.workspaceBody{padding:15px}.workspaceCard{padding:13px}.chart{height:84px}.search{width:180px}}
 @media(max-width:519px){.heroBackground{object-position:72% center}.heroOverlay{background:linear-gradient(90deg,rgba(11,31,58,.92) 0%,rgba(11,31,58,.86) 55%,rgba(11,31,58,.7) 100%)}.heroInner{gap:38px}.actions{flex-direction:column}.actions a{width:100%}.healthItems{grid-template-columns:repeat(3,1fr)}.activityCard{display:none}.content h1{text-wrap:pretty}}
+@media(hover:hover) and (pointer:fine){.capabilities li{transition:color .18s ease,transform .18s ease}.capabilities li:hover{color:#fff;transform:translateY(-1px)}.capabilityIcon{transition:color .18s ease,background-color .18s ease}.capabilities li:hover .capabilityIcon{background:rgba(94,224,191,.17);color:#74ebcb}}
 @media(prefers-reduced-motion:reduce){.content,.workspace,.assistantMessage,.activityCard li,.chartArea,.chartPoint{opacity:1;transform:none;animation:none!important}.chartLine{stroke-dasharray:none;stroke-dashoffset:0;animation:none!important}.progressTrack i{transform:scaleX(1);animation:none!important}.online i,.healthy:before,.connected i,.healthItems i{background:#138c8c;animation:none!important}}
