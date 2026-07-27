@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import styles from './ServicesHero.module.css';
 
@@ -124,7 +125,18 @@ export function ServicesHero() {
             {capabilities.map((capability) => <li key={capability}><span aria-hidden="true">✓</span>{capability}</li>)}
           </ul>
         </div>
-        <div className={styles.visual}><EngineeringWorkspace active={active} /></div>
+        <div className={styles.visual}>
+          <div className={styles.workspaceAtmosphere} aria-hidden="true">
+            <Image
+              src="/images/services/services-hero-bg.webp"
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 1100px) 680px, (min-width: 900px) 56vw, (min-width: 520px) calc(100vw - 48px), 1px"
+            />
+          </div>
+          <EngineeringWorkspace active={active} />
+        </div>
       </div>
     </section>
   );
