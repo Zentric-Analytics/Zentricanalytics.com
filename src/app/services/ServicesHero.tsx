@@ -132,7 +132,7 @@ export function ServicesHero() {
               alt=""
               fill
               priority
-              sizes="(min-width: 1100px) 680px, (min-width: 900px) 56vw, (min-width: 520px) calc(100vw - 48px), 1px"
+              sizes="(min-width: 1100px) 760px, (min-width: 900px) 64vw, (min-width: 520px) calc(100vw - 32px), calc(100vw - 16px)"
             />
           </div>
           <EngineeringWorkspace active={active} />
