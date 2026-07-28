@@ -20,23 +20,23 @@ export function SectionHeader({
   className = '',
 }: SectionHeaderProps) {
   const isCentered = align === 'center';
-  const headingColor = tone === 'dark' ? 'text-white' : 'text-[#0B1F3A]';
-  const descriptionColor = tone === 'dark' ? 'text-white/[0.82]' : 'text-[#475569]';
+  const headingColor = tone === 'dark' ? 'text-white' : 'text-ink';
+  const descriptionColor = tone === 'dark' ? 'text-white/90' : 'text-text-secondary';
 
   return (
     <div
       className={`section-header ${isCentered ? 'mx-auto flex max-w-3xl flex-col items-center text-center' : 'max-w-4xl text-left'} ${className}`}
     >
-      <p className="mb-3 text-sm font-bold uppercase leading-none tracking-[0.18em] text-[#10B981]">
+      <p className="za-eyebrow mb-3">
         {eyebrow}
       </p>
       <h2
         id={headingId}
-        className={`max-w-[56rem] text-xl sm:text-2xl lg:text-[2rem] font-bold leading-[1.1] tracking-[-0.04em] ${headingColor}`}
+        className={`za-section-heading max-w-[56rem] ${headingColor}`}
       >
         {heading}
       </h2>
-      <p className={`mt-4 max-w-[46rem] text-sm leading-[1.6] sm:text-[0.9375rem] ${descriptionColor}`}>
+      <p className={`za-body mt-4 max-w-[46rem] ${descriptionColor}`}>
         {description}
       </p>
     </div>

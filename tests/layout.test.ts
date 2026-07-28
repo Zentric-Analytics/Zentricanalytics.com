@@ -143,13 +143,13 @@ describe('public layout shell', () => {
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
-    expect(header).toContain('className="whitespace-nowrap text-[30px] font-extrabold leading-[1] tracking-[-0.04em] text-[#0B1F3A]"');
-    expect(header).toContain('focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B1F3A]');
+    expect(header).toContain('className="zentric-wordmark text-brand"');
+    expect(header).toContain('className={`za-container-wide');
     expect(header).not.toContain('focus-visible:ring-[#10B981]');
     expect(header).not.toContain('focus:ring-[#10B981]');
     expect(header).not.toContain(`aria-label="Zentric Analytics homepage"
           className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"`);
-    expect(header).toContain("style={{ fontFamily: 'var(--font-manrope), sans-serif' }}");
+    expect(header).not.toContain("style={{ fontFamily: 'var(--font-manrope), sans-serif' }}");
     expect(header).not.toContain('zentric-wordmark text-[#0B1F3A]');
     const layout = readFileSync('src/app/layout.tsx', 'utf8');
     expect(layout).toContain("import { Inter, Manrope } from 'next/font/google'");
@@ -177,7 +177,8 @@ describe('public layout shell', () => {
     const footer = readFileSync('src/components/SiteFooter.tsx', 'utf8');
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
-    expect(footer).toContain('bg-[#0B1F3A] text-white');
+    expect(footer).toContain('bg-brand text-white');
+    expect(footer).toContain('className="za-container-wide');
     expect(footer).toContain('className="zentric-wordmark text-white"');
     expect(footer).toContain('Zentric Analytics');
     expect(footer).toContain('<FooterHeading>Company</FooterHeading>');

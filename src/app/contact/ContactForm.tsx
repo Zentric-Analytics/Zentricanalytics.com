@@ -27,11 +27,11 @@ function FieldError({ message }: { message?: string }) {
 
 export function ContactForm() {
   const [state, formAction, isPending] = useActionState(submitContactEnquiry, initialState);
-  const inputClass = 'mt-2 h-14 w-full rounded-[14px] border border-[#CBD5E1] bg-white px-4 text-base text-[#0B1F3A] outline-none transition-[border-color,box-shadow,color] duration-200 ease-out focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15';
-  const labelClass = 'text-sm font-semibold text-[#0B1F3A] transition-colors duration-200 ease-out';
+  const inputClass = 'input mt-2';
+  const labelClass = 'text-sm font-semibold text-ink transition-colors duration-200 ease-out';
 
   return (
-    <form action={formAction} className="rounded-[22px] border border-[#DCE3EA] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-8 lg:p-11" noValidate>
+    <form action={formAction} className="za-panel p-6 sm:p-8 lg:p-11" noValidate>
       <div className="grid gap-5 md:grid-cols-2">
         <label className={labelClass} htmlFor="fullName">Full Name<span className="text-red-700"> *</span><input id="fullName" name="fullName" required autoComplete="name" className={inputClass} /><FieldError message={state.fieldErrors?.fullName} /></label>
         <label className={labelClass} htmlFor="workEmail">Work Email<span className="text-red-700"> *</span><input id="workEmail" name="workEmail" required type="email" autoComplete="email" className={inputClass} /><FieldError message={state.fieldErrors?.workEmail} /></label>
@@ -42,7 +42,7 @@ export function ContactForm() {
         <label className={`${labelClass} md:col-span-2`} htmlFor="message">Message<span className="text-red-700"> *</span><textarea id="message" name="message" required rows={7} className={`${inputClass} h-auto min-h-[180px] py-4 leading-6`} /></label>
         <div className="md:col-span-2"><FieldError message={state.fieldErrors?.message} /></div>
       </div>
-      <p className="mt-5 text-sm leading-6 text-[#64748B]">By submitting this form, you agree that Zentric Analytics may contact you regarding your enquiry. Your information will be handled responsibly and will not be sold.</p>
+      <p className="mt-5 text-sm leading-6 text-text-muted">By submitting this form, you agree that Zentric Analytics may contact you regarding your enquiry. Your information will be handled responsibly and will not be sold.</p>
       <button type="submit" disabled={isPending} className="btn zentric-primary-cta group mt-6 min-w-[10rem] w-full justify-center sm:w-auto">
         <span>{isPending ? 'Sending...' : 'Send Enquiry'}</span>{isPending ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <ArrowRight aria-hidden="true" className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />}
       </button>

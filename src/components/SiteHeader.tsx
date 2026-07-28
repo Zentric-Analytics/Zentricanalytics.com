@@ -90,18 +90,17 @@ export function SiteHeader() {
         shouldHideHeader ? 'pointer-events-none -translate-y-full opacity-0' : 'translate-y-0 opacity-100'
       } ${
         hasScrolled && !shouldHideHeader
-          ? 'border-[#0B1F3A]/10 shadow-[0_10px_26px_rgba(11,31,58,0.07)]'
+          ? 'border-brand/10 shadow-[0_10px_26px_rgba(11,31,58,0.07)]'
           : 'border-transparent'
       }`}
     >
-      <nav className={`mx-auto flex w-full max-w-7xl items-center justify-between gap-5 px-4 transition-[height] duration-300 sm:px-6 lg:gap-7 lg:px-8 ${hasScrolled ? 'h-[56px] sm:h-[60px]' : 'h-[66px] sm:h-[70px] lg:h-[72px]'}`}>
+      <nav className={`za-container-wide flex items-center justify-between gap-5 transition-[height] duration-300 lg:gap-7 ${hasScrolled ? 'h-[56px] sm:h-[60px]' : 'h-[66px] sm:h-[70px] lg:h-[72px]'}`}>
         <Link
           href="/"
           aria-label="Zentric Analytics homepage"
-          className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B1F3A]"
+          className="inline-flex shrink-0 items-center rounded-md"
         >
-          <span className="whitespace-nowrap text-[30px] font-extrabold leading-[1] tracking-[-0.04em] text-[#0B1F3A]"
-            style={{ fontFamily: 'var(--font-manrope), sans-serif' }}>
+          <span className="zentric-wordmark text-brand">
             Zentric Analytics
           </span>
         </Link>
@@ -113,9 +112,9 @@ export function SiteHeader() {
             return (
               <Link
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative whitespace-nowrap py-2 text-[15px] font-medium tracking-[-0.005em] transition-colors duration-200 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B1F3A] ${
-                  isActive ? 'text-[#0B1F3A]' : 'text-[#173B67]/72 hover:text-[#10B981]'
-                } after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-center after:rounded-full after:bg-[#10B981] after:transition-transform after:duration-200 ${
+                className={`relative whitespace-nowrap py-2 text-[15px] font-medium tracking-[-0.005em] transition-colors duration-200 ${
+                  isActive ? 'text-brand' : 'text-brand-hover/75 hover:text-accent'
+                } after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-center after:rounded-full after:bg-accent after:transition-transform after:duration-200 ${
                   isActive ? 'after:scale-x-100' : 'after:scale-x-0 hover:after:scale-x-100'
                 }`}
                 key={href}
