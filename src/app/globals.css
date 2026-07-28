@@ -206,7 +206,7 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:var(--font-inter),sys
   display:flex;
   flex-direction:column;
   gap:14px;
-  margin-top:36px;
+  margin-top:28px;
 }
 
 .technology-ticker__row{
@@ -215,7 +215,7 @@ body{margin:0;background:#f7f9fc;color:#0c1222;font-family:var(--font-inter),sys
   max-width:100%;
   min-width:0;
   overflow:hidden;
-  padding:5px 0;
+  padding:8px 0;
   -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%);
   mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%);
 }

@@ -102,7 +102,7 @@ export default function Services() {
 
       <section className="bg-white px-4 py-11 sm:px-6 sm:py-14 lg:py-[72px]" aria-labelledby="technologies-heading">
         <div className="mx-auto w-full max-w-6xl min-w-0">
-          <Reveal>
+          <Reveal disabled>
             <SectionHeader
               eyebrow="TECHNOLOGIES"
               heading="Technologies We Build With"

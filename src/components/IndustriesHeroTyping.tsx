@@ -17,6 +17,8 @@ const industries = [
   'Professional Services',
 ];
 
+const firstWordLength = (industry: string) => industry.split(' ')[0].length;
+
 function usePrefersReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
@@ -58,9 +60,11 @@ export function IndustriesHeroTyping() {
       return () => window.clearTimeout(pauseTimeout);
     }
 
-    if (isDeleting && characterCount === 0) {
+    if (isDeleting && characterCount === firstWordLength(currentIndustry)) {
       const nextTimeout = window.setTimeout(() => {
-        setIndustryIndex((index) => (index + 1) % industries.length);
+        const nextIndex = (industryIndex + 1) % industries.length;
+        setIndustryIndex(nextIndex);
+        setCharacterCount(firstWordLength(industries[nextIndex]));
         setIsDeleting(false);
       }, 180);
       return () => window.clearTimeout(nextTimeout);
@@ -73,7 +77,7 @@ export function IndustriesHeroTyping() {
     }, baseDelay + naturalVariance);
 
     return () => window.clearTimeout(timeout);
-  }, [characterCount, currentIndustry.length, isDeleting, prefersReducedMotion]);
+  }, [characterCount, currentIndustry, industryIndex, isDeleting, prefersReducedMotion]);
 
   const typedIndustry = prefersReducedMotion ? industries[0] : currentIndustry.slice(0, characterCount);
 

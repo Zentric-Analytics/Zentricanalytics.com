@@ -37,7 +37,7 @@ export function Reveal<T extends HTMLElement = HTMLDivElement>({
   return (
     <Component
       ref={ref}
-      className={cx('za-reveal', motionRevealVariants[variant], isVisible && 'is-visible', className)}
+      className={cx('za-reveal', motionRevealVariants[variant], (disabled || isVisible) && 'is-visible', className)}
       style={{ ...getMotionStyle({ delay, duration }), ...style } as CSSProperties}
       {...props}
     >
@@ -76,7 +76,7 @@ export function Stagger<T extends HTMLElement = HTMLDivElement>({
   const { ref, isVisible } = useScrollReveal<T>({ disabled, once, threshold, rootMargin });
 
   return (
-    <Component ref={ref} className={cx('za-stagger', isVisible && 'is-visible', className)} {...props}>
+    <Component ref={ref} className={cx('za-stagger', (disabled || isVisible) && 'is-visible', className)} {...props}>
       {Children.map(children, (child, index) => {
         const style = getMotionStyle({ delay, duration, staggerDelay, staggerIndex: index });
         const itemClassName = cx('za-stagger__item', motionRevealVariants[variant], childClassName);
