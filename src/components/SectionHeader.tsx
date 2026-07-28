@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 type SectionHeaderProps = {
-  eyebrow: string;
+  eyebrow?: string;
   heading: ReactNode;
   description: ReactNode;
   headingId?: string;
@@ -27,9 +27,7 @@ export function SectionHeader({
     <div
       className={`section-header ${isCentered ? 'mx-auto flex max-w-3xl flex-col items-center text-center' : 'max-w-4xl text-left'} ${className}`}
     >
-      <p className="za-eyebrow mb-3">
-        {eyebrow}
-      </p>
+      {eyebrow ? <p className="za-eyebrow mb-3">{eyebrow}</p> : null}
       <h2
         id={headingId}
         className={`za-section-heading max-w-[56rem] ${headingColor}`}

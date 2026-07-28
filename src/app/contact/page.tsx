@@ -26,8 +26,7 @@ export default function ContactPage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_10%,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_85%_20%,rgba(94,224,191,0.10),transparent_30%)]" aria-hidden="true" />
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,0.42fr)] lg:items-center lg:gap-14">
           <Stagger className="max-w-3xl" staggerDelay={90}>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#5EE0BF]">CONTACT ZENTRIC ANALYTICS</p>
-            <h1 id="contact-heading" className="mt-4 max-w-4xl text-[1.82rem] font-bold leading-[1.1] tracking-[-0.045em] sm:text-[2.15rem] lg:text-[2.65rem]">
+            <h1 id="contact-heading" className="max-w-4xl text-[1.82rem] font-bold leading-[1.1] tracking-[-0.045em] sm:text-[2.15rem] lg:text-[2.65rem]">
               Let&apos;s Build the Right Technology Solution Together
             </h1>
             <p className="mt-5 max-w-2xl text-sm leading-[1.7] text-slate-200 sm:text-[0.9375rem]">

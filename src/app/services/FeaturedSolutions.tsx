@@ -238,7 +238,7 @@ export function FeaturedSolutions() {
   return (
     <section className={styles.section} aria-labelledby="featured-solutions-heading">
       <div className={styles.container}>
-        <header className={styles.sectionHeader}><p>SOLUTION EXAMPLES</p><h2 id="featured-solutions-heading">Examples of Solutions We Deliver</h2><span>Explore a selection of digital products and platforms we can design and build. These examples illustrate our capabilities, while every solution is tailored to each organization’s unique goals, users, and technical requirements.</span></header>
+        <header className={styles.sectionHeader}><h2 id="featured-solutions-heading">Examples of Solutions We Deliver</h2><span>Explore a selection of digital products and platforms we can design and build. These examples illustrate our capabilities, while every solution is tailored to each organization’s unique goals, users, and technical requirements.</span></header>
         <div className={styles.showcase}><SolutionNavigation active={active} onSelect={setActive} tabRefs={tabRefs}/><div className={styles.panel} key={solutions[active].id}><SolutionWorkspace solution={solutions[active]}/></div></div>
         <p className={styles.scopeStatement}>These are representative examples, not a fixed catalogue. Zentric Analytics designs custom solutions across industries, platforms, and business functions.</p>
       </div>
