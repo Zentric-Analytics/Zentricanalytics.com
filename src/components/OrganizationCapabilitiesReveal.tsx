@@ -99,7 +99,7 @@ export function OrganizationCapabilitiesReveal() {
                 }
               }}
             >
-              <span className="flex size-12 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out motion-safe:group-hover:translate-x-0.5">
+              <span className="flex size-10 items-center justify-center text-[#0B7F60] transition-transform duration-200 ease-out motion-safe:group-hover:translate-x-0.5">
                 <Icon aria-hidden="true" className="size-[1.375rem]" strokeWidth={1.8} />
               </span>
               <span className="min-w-0">

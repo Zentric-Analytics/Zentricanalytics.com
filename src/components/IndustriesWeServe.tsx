@@ -56,18 +56,18 @@ export function IndustriesWeServe() {
           </p>
         </Stagger>
 
-        <Stagger id="additional-industries" className="mt-5 grid gap-3 md:grid-cols-3 lg:gap-3.5" aria-label="Industries we serve" delay={120} staggerDelay={70}>
+        <Stagger id="additional-industries" className="mt-5 grid border-y border-[#DCE3EA] md:grid-cols-3" aria-label="Industries we serve" delay={120} staggerDelay={70}>
           {industries.map(({ Icon, title, description }, index) => (
             <button
               type="button"
-              className={`group min-w-0 rounded-2xl border border-[#DCE3EA] bg-[#F8FAFC] p-3.5 text-left transition duration-200 motion-safe:hover:-translate-y-0.5 hover:border-[#C5D1DD] hover:shadow-[0_10px_24px_rgba(11,31,58,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-4 ${index > 5 && !showAllIndustries ? 'hidden' : ''}`}
+              className={`group min-w-0 border-b border-[#DCE3EA] bg-transparent p-3.5 text-left transition-colors duration-200 hover:bg-[#F8FAFC] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B7F60] sm:p-4 md:not-[:nth-child(3n+1)]:border-l ${index > 5 && !showAllIndustries ? 'hidden' : ''}`}
               key={title}
               aria-expanded={expandedIndustry === index}
               aria-controls={`industry-description-${index}`}
               onClick={() => setExpandedIndustry((current) => (current === index ? null : index))}
             >
               <div className="flex items-center gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60]">
+                <span className="flex size-8 shrink-0 items-center justify-center text-[#0B7F60]">
                   <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
                 </span>
                 <h3 className="text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:text-[20px]">{title}</h3>

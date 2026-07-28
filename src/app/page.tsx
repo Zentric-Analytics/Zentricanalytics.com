@@ -196,10 +196,10 @@ export default function Home() {
               description="Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment."
             />
 
-            <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 sm:gap-3.5 md:auto-rows-auto lg:gap-4">
+            <div className="grid auto-rows-fr border-y border-[#DCE3EA] sm:grid-cols-2 md:auto-rows-auto">
               {philosophyPrinciples.map((principle, index) => (
                 <article
-                  className="philosophy-row industries-child-reveal group h-full rounded-2xl border border-[#E5E7EB] bg-white p-6 transition-[background-color,border-color] duration-200 ease-out hover:border-[#10B981]/40 hover:bg-[#F8FAFC] sm:p-[18px] md:hover:border-[#10B981]/55 lg:p-5"
+                  className="philosophy-row industries-child-reveal group h-full border-b border-[#DCE3EA] px-2 py-5 transition-colors duration-200 ease-out hover:bg-[#F8FAFC] sm:px-5 sm:[&:nth-child(odd)]:border-r sm:[&:nth-last-child(-n+2)]:border-b-0"
                   key={principle.title}
                   style={{ '--industries-reveal-delay': `${80 + index * 100}ms` } as CSSProperties}
                 >
@@ -226,7 +226,6 @@ export default function Home() {
           <div className="mx-auto max-w-6xl">
             <SectionHeader
               className="industries-child-reveal [&_h2]:mt-2.5 [&_h2]:!text-[28px] sm:[&_h2]:!text-[30px] lg:[&_h2]:!text-[32px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:mt-2 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.65] sm:[&_p:last-child]:mt-3.5 sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[15px]"
-              eyebrow="CORE CAPABILITIES"
               heading="Engineering expertise across software, AI, data, infrastructure, and research."
               headingId="core-capabilities-heading"
               description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
@@ -251,7 +250,7 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="industries-child-reveal mt-4 flex justify-center sm:mt-6" style={{ '--industries-reveal-delay': '680ms' } as CSSProperties}>
+            <div className="industries-child-reveal mt-4 flex justify-start sm:mt-6" style={{ '--industries-reveal-delay': '680ms' } as CSSProperties}>
               <Link className="btn zentric-primary-cta w-full text-[15px] font-bold leading-none sm:w-auto" href="/services">
                 <span>Explore All Capabilities</span>
                 <span className="zentric-primary-cta__arrow" aria-hidden="true">
@@ -326,7 +325,6 @@ export default function Home() {
             <SectionHeader
               className="industries-child-reveal [&_h2]:!text-[30px] sm:[&_h2]:!text-[36px] lg:[&_h2]:!text-[40px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] max-md:[&_p:last-child]:mt-3 [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.6] sm:[&_p:last-child]:!text-[15px] max-md:[&_p:last-child]:font-normal"
               align="center"
-              eyebrow="READY TO BUILD?"
               heading={<>Let&apos;s build technology that creates lasting impact.</>}
               headingId="final-cta-heading"
               description="Whether you're looking for a trusted technology partner or exploring career opportunities, Zentric Analytics is committed to solving meaningful challenges through engineering, AI, data, cloud, and research-driven innovation."
