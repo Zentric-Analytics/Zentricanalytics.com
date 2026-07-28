@@ -70,8 +70,8 @@ export default function Industries() {
 
       <IndustriesWeServe />
 
-      <section className="bg-white px-4 py-9 sm:px-6 sm:py-11 lg:px-8 lg:py-16" aria-labelledby="organization-capabilities-heading">
-        <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-8">
+      <section className="bg-white px-4 py-7 sm:px-6 sm:py-9 lg:px-8 lg:py-12" aria-labelledby="organization-capabilities-heading">
+        <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-6">
           <Stagger as="header" className="max-w-[30rem] text-left" staggerDelay={80}>
             <h2
               id="organization-capabilities-heading"
@@ -79,10 +79,10 @@ export default function Industries() {
             >
               How We Help Organizations Succeed
             </h2>
-            <p className="mt-3 text-[14px] leading-[1.65] text-[#475569] sm:text-[15px] lg:text-[15px]">
+            <p className="mt-2.5 text-[14px] leading-[1.65] text-[#475569] sm:text-[15px] lg:text-[15px]">
               Every organization has unique goals, processes, and challenges. We combine technology, strategy, and innovation to design solutions that improve efficiency, strengthen security, accelerate growth, and create measurable business value.
             </p>
-            <p className="mt-4 text-[14px] leading-[1.65] text-[#294A43] sm:text-[15px] lg:text-[15px]">
+            <p className="mt-3 text-[14px] leading-[1.65] text-[#294A43] sm:text-[15px] lg:text-[15px]">
               Whether the goal is modernization, growth, stronger security, better customer experiences, or improved operations, our solutions are shaped around the organization, not a fixed industry template.
             </p>
           </Stagger>

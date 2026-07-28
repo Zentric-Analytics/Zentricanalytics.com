@@ -65,7 +65,7 @@ export function OrganizationCapabilitiesReveal() {
 
         return (
           <article
-            className="group -mx-2 px-2 py-[1.125rem] first:pt-[1.125rem] last:pb-[1.125rem] not-last:border-b not-last:border-[#DCE3EA] transition-colors duration-200 ease-out hover:bg-[#EAF7F2]/40 focus-within:bg-[#EAF7F2]/40 sm:-mx-3 sm:px-3 sm:py-6"
+            className="group -mx-2 px-2 py-3.5 first:pt-3.5 last:pb-3.5 not-last:border-b not-last:border-[#DCE3EA] transition-colors duration-200 ease-out hover:bg-[#EAF7F2]/40 focus-within:bg-[#EAF7F2]/40 sm:-mx-3 sm:px-3 sm:py-3.5"
             key={title}
             onPointerEnter={() => {
               if (supportsHover) {
@@ -80,7 +80,7 @@ export function OrganizationCapabilitiesReveal() {
           >
             <button
               type="button"
-              className="grid w-full grid-cols-[2.75rem_minmax(0,1fr)_1.25rem] items-start gap-x-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:grid-cols-[3.25rem_minmax(0,1fr)_1.5rem] sm:gap-x-4"
+              className="grid min-h-12 w-full grid-cols-[3rem_minmax(0,1fr)_1.25rem] items-start gap-x-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:grid-cols-[3rem_minmax(0,1fr)_1.5rem] sm:gap-x-3"
               aria-expanded={isExpanded}
               aria-controls={descriptionId}
               onClick={() => {
@@ -99,8 +99,8 @@ export function OrganizationCapabilitiesReveal() {
                 }
               }}
             >
-              <span className="flex size-10 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out motion-safe:group-hover:translate-x-0.5 sm:size-11">
-                <Icon aria-hidden="true" className="size-5" strokeWidth={1.8} />
+              <span className="flex size-12 items-center justify-center rounded-xl bg-[#EAF7F2] text-[#0B7F60] transition-transform duration-200 ease-out motion-safe:group-hover:translate-x-0.5">
+                <Icon aria-hidden="true" className="size-[1.375rem]" strokeWidth={1.8} />
               </span>
               <span className="min-w-0">
                 <span className="block text-[18px] font-semibold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out sm:text-[19px] group-hover:text-[#0B7F60] group-focus-within:text-[#0B7F60] lg:text-[20px]">
@@ -118,7 +118,7 @@ export function OrganizationCapabilitiesReveal() {
               </span>
               <ChevronDown
                 aria-hidden="true"
-                className="mt-2 size-4 justify-self-end text-[#0B7F60] transition-transform duration-[275ms] ease-out group-hover:rotate-180 group-focus-within:rotate-180 data-[expanded=true]:rotate-180 sm:mt-2.5 sm:size-[1.125rem]"
+                className="mt-1.5 size-4 justify-self-end text-[#0B7F60] transition-transform duration-[275ms] ease-out group-hover:rotate-180 group-focus-within:rotate-180 data-[expanded=true]:rotate-180 sm:mt-2 sm:size-[1.125rem]"
                 data-expanded={isExpanded}
                 strokeWidth={1.8}
               />
