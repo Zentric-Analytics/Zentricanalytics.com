@@ -33,7 +33,7 @@ export default function Industries() {
   return (
     <PageShell>
       <section
-        className="relative isolate h-auto min-h-[500px] max-h-none overflow-hidden bg-[#0B1F3A] text-white sm:h-[520px] sm:min-h-[520px] sm:max-h-[520px] lg:h-[540px] lg:min-h-[540px] lg:max-h-[540px]"
+        className="relative isolate h-[500px] overflow-hidden bg-[#0B1F3A] text-white sm:h-[520px] lg:h-[540px]"
         aria-labelledby="industries-page-heading"
       >
         <Image
@@ -120,7 +120,7 @@ export default function Industries() {
       </section>
 
       <section
-          className="relative isolate overflow-hidden bg-[#0B1F3A] py-12 sm:py-16 lg:py-20"
+          className="relative isolate overflow-hidden bg-[#0B1F3A] py-10 sm:py-12 lg:py-14"
           aria-labelledby="industries-final-cta-heading"
         >
           <Image
@@ -135,7 +135,7 @@ export default function Industries() {
             aria-hidden="true"
           />
           <div className="absolute inset-0 z-[1] bg-[rgba(8,27,52,0.40)]" aria-hidden="true" />
-          <Reveal className="relative z-[2] mx-auto grid w-[calc(100%-32px)] max-w-[73.75rem] gap-7 rounded-[1.25rem] bg-white p-6 shadow-[0_28px_80px_rgba(2,8,23,0.26),0_8px_24px_rgba(15,23,42,0.14)] sm:p-7 lg:w-[calc(100%-80px)] lg:grid-cols-[minmax(0,68fr)_minmax(16rem,32fr)] lg:items-start lg:gap-16 lg:p-14">
+          <Reveal className="relative z-[2] mx-auto grid w-[calc(100%-32px)] max-w-[73.75rem] gap-7 rounded-[1.25rem] bg-white p-6 shadow-[0_28px_80px_rgba(2,8,23,0.26),0_8px_24px_rgba(15,23,42,0.14)] sm:p-7 lg:w-[calc(100%-80px)] lg:grid-cols-[minmax(0,68fr)_minmax(16rem,32fr)] lg:items-start lg:gap-12 lg:p-10">
             <Stagger className="min-w-0" staggerDelay={80}>
               <h2
                 id="industries-final-cta-heading"

@@ -104,7 +104,7 @@ export default function Services() {
         </Stagger>
       </section>
 
-      <section className="bg-white px-4 py-11 sm:px-6 sm:py-14 lg:py-[72px]" aria-labelledby="technologies-heading">
+      <section className="bg-white px-4 py-[var(--za-section-compact)] sm:px-6" aria-labelledby="technologies-heading">
         <div className="mx-auto w-full max-w-6xl min-w-0">
           <Reveal disabled>
             <SectionHeader
@@ -123,11 +123,11 @@ export default function Services() {
       <FeaturedSolutions />
 
       <section
-        className="bg-[#0B1F3A] px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16"
+        className="bg-[#F7F9FC] px-4 py-10 sm:px-6 sm:py-12 lg:px-8"
         aria-labelledby="services-final-cta-heading"
       >
         <Stagger
-          className="mx-auto grid w-full max-w-6xl gap-7 rounded-[20px] border border-white/10 bg-white/[0.035] p-6 shadow-[0_20px_50px_rgba(2,8,23,0.18)] sm:p-8 md:grid-cols-[minmax(0,68fr)_minmax(14rem,32fr)] md:items-center md:gap-10 lg:px-12 lg:py-11"
+          className="mx-auto grid w-full max-w-6xl gap-7 rounded-[24px] border border-white/10 bg-[#0B1F3A] p-6 shadow-[0_20px_50px_rgba(2,8,23,0.16)] sm:p-8 md:grid-cols-[minmax(0,68fr)_minmax(14rem,32fr)] md:items-center md:gap-10 lg:px-12 lg:py-10"
           staggerDelay={90}
         >
           <div className="min-w-0">

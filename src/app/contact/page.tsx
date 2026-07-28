@@ -22,7 +22,7 @@ const nextSteps = [
 export default function ContactPage() {
   return (
     <PageShell>
-      <section className="relative isolate overflow-hidden bg-[#0B1F3A] px-4 py-14 text-white sm:px-6 sm:py-16 lg:px-8 lg:py-20" aria-labelledby="contact-heading">
+      <section className="relative isolate overflow-hidden bg-[#0B1F3A] px-4 py-12 text-white sm:px-6 sm:py-14 lg:px-8 lg:py-16" aria-labelledby="contact-heading">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_10%,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_85%_20%,rgba(94,224,191,0.10),transparent_30%)]" aria-hidden="true" />
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,0.42fr)] lg:items-center lg:gap-14">
           <Stagger className="max-w-3xl" staggerDelay={90}>
@@ -51,7 +51,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section id="contact-form" className="scroll-mt-24 bg-[#F7F9FC] px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16" aria-labelledby="contact-form-heading">
+      <section id="contact-form" className="scroll-mt-24 bg-[#F7F9FC] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14" aria-labelledby="contact-form-heading">
         <Stagger className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,0.62fr)_minmax(18rem,0.38fr)] lg:gap-10" staggerDelay={100}>
           <div>
             <h2 id="contact-form-heading" className="sr-only">Contact form</h2>
@@ -70,16 +70,16 @@ export default function ContactPage() {
         </Stagger>
       </section>
 
-      <section className="bg-white px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16" aria-labelledby="next-heading">
+      <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:px-8" aria-labelledby="next-heading">
         <div className="mx-auto max-w-6xl">
           <Stagger className="max-w-3xl" staggerDelay={90}>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#10B981]">PROCESS</p>
             <h2 id="next-heading" className="mt-3 text-xl font-bold leading-tight tracking-[-0.04em] text-[#0B1F3A] sm:text-2xl lg:text-[2rem]">What Happens Next</h2>
             <p className="mt-3 text-sm leading-7 text-[#475569] sm:text-[0.9375rem]">A simple and transparent process from enquiry to the right next step.</p>
           </Stagger>
-          <Stagger className="mt-8 grid gap-0 divide-y divide-[#DCE3EA] lg:grid-cols-3 lg:divide-x lg:divide-y-0" staggerDelay={90}>
+          <Stagger className="mt-6 grid gap-0 divide-y divide-[#DCE3EA] lg:grid-cols-3 lg:divide-x lg:divide-y-0" staggerDelay={90}>
             {nextSteps.map(([number, Icon, title, description]) => (
-              <article className="py-6 lg:px-8 lg:first:pl-0 lg:last:pr-0" key={title}>
+              <article className="py-5 lg:px-8 lg:first:pl-0 lg:last:pr-0" key={title}>
                 <div className="flex items-center justify-between gap-4"><span className="text-sm font-bold tracking-[0.18em] text-[#10B981]">{number}</span><Icon aria-hidden="true" className="size-5 text-[#0B1F3A]" /></div>
                 <h3 className="mt-5 text-lg font-bold tracking-[-0.025em] sm:text-[1.1875rem] lg:text-[1.25rem] text-[#0B1F3A]">{title}</h3>
                 <p className="mt-2 text-sm leading-7 text-[#475569] sm:text-[0.9375rem]">{description}</p>
@@ -89,8 +89,8 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="bg-[#0B1F3A] px-4 py-8 text-white sm:px-6 lg:px-8" aria-labelledby="assurance-heading">
-        <div className="mx-auto flex max-w-6xl flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <section className="bg-[#F7F9FC] px-4 py-8 text-white sm:px-6 sm:py-10 lg:px-8" aria-labelledby="assurance-heading">
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 rounded-[24px] bg-[#0B1F3A] p-6 shadow-[0_20px_50px_rgba(2,8,23,0.16)] sm:flex-row sm:items-center sm:justify-between sm:p-8 lg:px-10">
           <Stagger className="max-w-2xl" staggerDelay={90}>
             <h2 id="assurance-heading" className="text-2xl font-bold tracking-[-0.035em] sm:text-[2rem] lg:text-[2.5rem]">Not Ready With Every Detail Yet?</h2>
             <p className="mt-2 text-sm leading-6 text-slate-200 sm:text-[0.9375rem]">That is completely fine. Start with what you know, and we will help you shape the rest.</p>

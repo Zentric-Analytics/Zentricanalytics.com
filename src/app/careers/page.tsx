@@ -107,7 +107,7 @@ export default function Careers() {
         </section>
       </div>
 
-      <section className="bg-[#F7F9FC] px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-[72px]" aria-labelledby="open-roles-heading">
+      <section className="bg-[#F7F9FC] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14" aria-labelledby="open-roles-heading">
         <div className="mx-auto max-w-6xl">
           <Reveal as="header" className="max-w-[720px] text-left">
             <h2 id="open-roles-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">Open Roles</h2>
@@ -120,7 +120,7 @@ export default function Careers() {
             {roles.map(({ Icon, title, description }) => (
               <article
                 key={title}
-                className="group grid min-h-[190px] min-w-0 grid-cols-[3rem_minmax(0,1fr)] gap-x-[18px] rounded-[20px] border border-[#E3EAF1] bg-white p-5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-colors duration-200 ease-out hover:border-[#D4DEE8] lg:p-6"
+                className="group grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] gap-x-[18px] rounded-[20px] border border-[#E3EAF1] bg-white p-5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-colors duration-200 ease-out hover:border-[#D4DEE8] lg:p-6"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#EEF8F5] text-[#0B7F60]">
                   <Icon aria-hidden="true" className="size-[18px] sm:size-5" strokeWidth={1.8} />
@@ -145,8 +145,8 @@ export default function Careers() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20" aria-labelledby="careers-values-heading">
-        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[36fr_64fr] lg:gap-16">
+      <section className="bg-white px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16" aria-labelledby="careers-values-heading">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[36fr_64fr] lg:gap-12">
           <Reveal as="header" className="max-w-[430px] text-left" disabled>
             <h2 id="careers-values-heading" className="text-[34px] font-bold leading-[1.08] tracking-[-0.045em] text-[#0B1F3A] sm:text-[40px] lg:text-[44px]">What We Value</h2>
             <p className="mt-4 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
@@ -156,7 +156,7 @@ export default function Careers() {
 
           <Stagger className="grid grid-cols-1 divide-y divide-[#DCE3EA] md:grid-cols-2 md:divide-x md:divide-y-0 [&>article:nth-child(3)]:md:border-t [&>article:nth-child(3)]:md:border-[#DCE3EA] [&>article:nth-child(odd)]:md:border-l-0" disabled>
             {values.map(({ Icon, title, description }) => (
-              <article className="p-6 transition-colors duration-200 hover:bg-[#F8FAFC]" key={title}>
+              <article className="px-4 py-5 transition-colors duration-200 hover:bg-[#F8FAFC] sm:p-5" key={title}>
                 <Icon aria-hidden="true" className="size-5 text-[#0B7F60]" strokeWidth={1.8} />
                 <h3 className="mt-4 text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A]">{title}</h3>
                 <p className="mt-2 text-[14px] leading-[1.55] text-[#475569]">{description}</p>
@@ -167,10 +167,10 @@ export default function Careers() {
       </section>
 
       <section
-        className="bg-[#0B1F3A] px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-20"
+        className="bg-[#F7F9FC] px-4 py-10 sm:px-6 sm:py-12 lg:px-8"
         aria-labelledby="careers-final-cta-heading"
       >
-        <Stagger className="mx-auto w-full max-w-[70rem]" staggerDelay={90}>
+        <Stagger className="mx-auto w-full max-w-[70rem] rounded-[24px] bg-[#0B1F3A] p-6 shadow-[0_20px_50px_rgba(2,8,23,0.16)] sm:p-8 lg:px-12 lg:py-10" staggerDelay={90}>
           <div className="min-w-0">
             <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-[30px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[36px] lg:text-[40px]">
               Ready to Build Meaningful Technology With Us?

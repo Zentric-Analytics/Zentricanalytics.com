@@ -212,7 +212,7 @@ export default function Home() {
         </ScrollReveal>
       </section>
 
-      <section className="core-capabilities-section border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 pb-2 pt-3 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="core-capabilities-heading">
+      <section className="core-capabilities-section border-t border-[#DCE3EA] bg-[#F3F6F9] px-4 py-8 sm:px-6 sm:py-9 lg:py-10" aria-labelledby="core-capabilities-heading">
         <ScrollReveal>
           <div className="mx-auto max-w-6xl">
             <SectionHeader
@@ -255,7 +255,7 @@ export default function Home() {
 
       <section className="why-choose-section bg-white px-4 py-12 sm:px-4 sm:py-12 md:px-6 lg:py-14" aria-labelledby="why-choose-heading">
         <ScrollReveal>
-          <div className="mx-auto max-w-[1280px] rounded-[28px] bg-[#0B1F3A] px-6 py-12 sm:px-8 sm:py-14 md:px-12 lg:px-16 lg:py-16">
+          <div className="mx-auto max-w-[1280px] rounded-[28px] bg-[#0B1F3A] px-6 py-10 sm:px-8 sm:py-12 md:px-12 lg:px-16 lg:py-14">
             <SectionHeader
               eyebrow="WHY CLIENTS CHOOSE ZENTRIC"
               heading="A disciplined approach to building technology that lasts."
