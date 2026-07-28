@@ -16,11 +16,7 @@ const capabilityLinks = [
   'Emerging Technologies',
 ] as const;
 
-const resourceLinks = [
-  ['/privacy', 'Privacy Policy'],
-  ['/terms', 'Terms & Conditions'],
-  ['/contact', 'Contact Us'],
-] as const;
+const resourceLinks = [['/contact', 'Contact Us']] as const;
 
 const footerLinkClasses =
   'w-fit rounded-sm py-0.5 text-sm font-normal leading-5 text-[#CBD5E1] transition-colors duration-200 hover:text-[#10B981] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]';
@@ -78,8 +74,7 @@ export function SiteFooter() {
               {resourceLinks.map(([href, label]) => (
                 <FooterLink key={href} href={href} label={label} />
               ))}
-              {/* TODO: Update this placeholder email when the official company email is available. */}
-              <a className={footerLinkClasses} href="mailto:hello@example.com">
+              <a className={footerLinkClasses} href="mailto:careers@zentricanalytics.com">
                 Email Us
               </a>
             </div>

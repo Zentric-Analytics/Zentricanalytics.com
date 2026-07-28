@@ -179,8 +179,7 @@ describe('public layout shell', () => {
     expect(footer).toContain('<FooterHeading>Company</FooterHeading>');
     expect(footer).toContain('<FooterHeading>Capabilities</FooterHeading>');
     expect(footer).toContain('<FooterHeading>Resources</FooterHeading>');
-    expect(footer).toContain('mailto:hello@example.com');
-    expect(footer).toContain('official company email');
+    expect(footer).toContain('mailto:careers@zentricanalytics.com');
     expect(footer).toContain('© 2026 Zentric Analytics. All rights reserved.');
     expect(footer).toContain('Software • Web • AI • Data Analytics • Research');
     expect(footer).not.toContain('SocialLink');
