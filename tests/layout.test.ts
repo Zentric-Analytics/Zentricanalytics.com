@@ -149,10 +149,14 @@ describe('public layout shell', () => {
     expect(header).not.toContain('focus:ring-[#10B981]');
     expect(header).not.toContain(`aria-label="Zentric Analytics homepage"
           className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"`);
-    expect(header).toContain("style={{ fontFamily: 'Manrope, sans-serif' }}");
+    expect(header).toContain("style={{ fontFamily: 'var(--font-manrope), sans-serif' }}");
     expect(header).not.toContain('zentric-wordmark text-[#0B1F3A]');
+    const layout = readFileSync('src/app/layout.tsx', 'utf8');
+    expect(layout).toContain("import { Inter, Manrope } from 'next/font/google'");
+    expect(layout).toContain("weight: ['600', '700', '800']");
     const globals = readFileSync('src/app/globals.css', 'utf8');
-    expect(globals).toContain('family=Manrope:wght@600;700;800');
+    expect(globals).not.toContain('fonts.googleapis.com');
+    expect(globals).toContain('font-family:var(--font-manrope)');
     expect(globals).toContain('.site-header a:focus,.site-header button:focus{outline:none;box-shadow:none}');
     expect(globals).toContain('.site-header a:focus-visible,.site-header button:focus-visible{outline:2px solid #0B1F3A;outline-offset:4px;box-shadow:none}');
   });
@@ -163,10 +167,10 @@ describe('public layout shell', () => {
 
     expect(careers).toContain('<Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto" href="/apply">Apply Now</Link>');
     expect(careers).toContain('<Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto" href="/track">Track Application</Link>');
-    expect(careers).toContain('mt-8 grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-3 lg:mt-10');
-    expect(careers).toContain('flex h-[160px] min-w-0 items-center gap-6 rounded-[24px] border border-[#E3EAF1] bg-white p-7');
-    expect(careers).toContain('flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-[#EEF8F5]');
-    expect(careers).toContain('flex w-full max-w-[280px] flex-col items-stretch gap-4 sm:w-auto sm:max-w-none sm:flex-row sm:items-start');
+    expect(careers).toContain('mt-8 grid grid-cols-1 gap-x-5 gap-y-[18px] md:grid-cols-2 lg:mt-10 lg:grid-cols-3');
+    expect(careers).toContain('group flex min-h-[138px] min-w-0 items-start gap-[18px] rounded-[20px] border border-[#E3EAF1] bg-white p-5');
+    expect(careers).toContain('flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#EEF8F5]');
+    expect(careers).toContain('flex w-full max-w-[280px] flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-start');
   });
 
   it('renders the premium corporate footer navigation and contact resources', () => {
