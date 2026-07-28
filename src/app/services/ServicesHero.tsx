@@ -125,10 +125,10 @@ export function ServicesHero() {
       <div className={styles.heroOverlay} aria-hidden="true" />
       <div className={styles.heroInner}>
         <div className={`${styles.content} ${active ? styles.contentActive : ''}`}>
-          <h1 id="services-hero-heading">Custom Software, AI, and Data Solutions Built Around Your Business</h1>
-          <p className={styles.description}>We partner with organizations to design, build, and scale secure digital products—from business applications and AI-powered solutions to analytics platforms and cloud infrastructure.</p>
+          <h1 id="services-hero-heading">Engineering Capabilities for Complex Operational Needs</h1>
+          <p className={styles.description}>Zentric designs, builds, integrates, and supports software, web, AI, data, and cloud systems for organizations improving critical products and operations.</p>
           <div className={styles.actions}>
-            <Link className="btn hero-cta-primary" href="/contact">Start a Project <span aria-hidden="true">→</span></Link>
+            <Link className="btn hero-cta-primary" href="/contact">Start Your Project <span aria-hidden="true">→</span></Link>
             <a className="btn hero-cta-secondary" href="#service-capabilities">Explore Our Capabilities <span aria-hidden="true">↓</span></a>
           </div>
           <ul className={styles.capabilities} aria-label="Core capabilities">

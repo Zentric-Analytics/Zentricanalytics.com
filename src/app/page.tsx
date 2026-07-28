@@ -27,11 +27,11 @@ const capabilities: Array<{ Icon: LucideIcon; title: string }> = [
   },
   {
     Icon: FlaskConical,
-    title: 'Advance Research and Innovation',
+    title: 'Test New Ideas Before Investing',
   },
   {
     Icon: Cpu,
-    title: 'Explore Emerging Technology',
+    title: 'Evaluate Technology With Purpose',
   },
 ];
 
@@ -40,7 +40,7 @@ const philosophyPrinciples: Array<{ Icon: LucideIcon; title: string; description
     Icon: DraftingCompass,
     title: 'Engineering First',
     description:
-      'Every decision begins with architecture, maintainability, scalability, and long-term reliability.',
+      'Architecture, maintainability, testing, and operational needs guide decisions from the start.',
   },
   {
     Icon: Target,
@@ -52,13 +52,13 @@ const philosophyPrinciples: Array<{ Icon: LucideIcon; title: string; description
     Icon: ShieldCheck,
     title: 'Built For Longevity',
     description:
-      'Solutions are designed to evolve with changing business needs instead of becoming short-term implementations.',
+      'Clear architecture and documented decisions help systems adapt as requirements and teams change.',
   },
   {
     Icon: FlaskConical,
     title: 'Continuous Innovation',
     description:
-      'Research, experimentation, and emerging technologies are explored with discipline, practicality, and measurable outcomes.',
+      'Focused prototypes test assumptions and value before an organization commits to a larger investment.',
   },
 ];
 
@@ -130,20 +130,19 @@ export default function Home() {
         <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:max-w-[90rem] lg:grid-cols-[minmax(0,56rem)_minmax(0,1fr)] lg:py-16 lg:gap-8">
           <div className="min-w-0 lg:max-w-[56rem]">
             <h1 className="hero-reveal hero-reveal-1 max-w-[21rem] text-[36px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:max-w-2xl sm:text-[40px] lg:max-w-[56rem] lg:text-[42px]">
-              <span className="lg:hidden">Engineering reliable software, data, and AI systems for serious work.</span>
-              <span className="hidden lg:block">Engineering reliable software,</span>
-              <span className="hidden lg:block">data, and AI systems</span>
-              <span className="hidden lg:block">for serious work.</span>
+              <span className="lg:hidden">Zentric Analytics is a technology consultancy that helps organizations improve how they operate.</span>
+              <span className="hidden lg:block">A technology consultancy helping</span>
+              <span className="hidden lg:block">organizations improve how they operate.</span>
             </h1>
             <p className="hero-reveal hero-reveal-2 mt-4 max-w-[520px] text-[15px] font-normal leading-[1.65] text-slate-200 lg:text-[16px]">
-              Zentric Analytics engineers reliable software, AI, and data platforms that help organizations build secure, scalable, and future-ready technology.
+              We design and build dependable software, data, and AI systems around real operational needs, from initial decisions through long-term support.
             </p>
             <div className="hero-reveal hero-reveal-3 mt-5 flex flex-col gap-2.5 md:gap-3 md:flex-row md:flex-wrap md:items-center">
-              <Link className="btn hero-cta-primary h-[48px] text-[15px] font-bold leading-none min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/services">
-                Explore Services
+              <Link className="btn hero-cta-primary h-[48px] text-[15px] font-bold leading-none min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/contact">
+                Start a Project
               </Link>
-              <Link className="btn hero-cta-secondary h-[48px] text-[15px] font-bold leading-none min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/contact">
-                <span>Let&apos;s Talk</span>
+              <Link className="btn hero-cta-secondary h-[48px] text-[15px] font-bold leading-none min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/services">
+                <span>Explore Services</span>
                 <span className="zentric-primary-cta__arrow" aria-hidden="true">
                   →
                 </span>
@@ -182,9 +181,9 @@ export default function Home() {
             <SectionHeader
               className="industries-child-reveal md:sticky md:top-24 [&_h2]:max-w-[29rem] [&_h2]:!text-[28px] sm:[&_h2]:!text-[30px] lg:[&_h2]:!text-[32px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:mt-3 [&_p:last-child]:max-w-[28rem] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.65] sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[15px]"
               eyebrow="HOW WE THINK"
-              heading={<>Engineering isn&apos;t just what we build. It&apos;s how we solve problems.</>}
+              heading={<>Clear decisions before technology choices.</>}
               headingId="how-we-think-heading"
-              description="Every organization faces unique technology challenges. At Zentric Analytics, we approach each engagement with disciplined engineering, structured thinking, and a commitment to building solutions that remain reliable, secure, and valuable long after deployment."
+              description="We clarify the problem, users, constraints, and measures of success before recommending an approach. This keeps delivery focused and gives teams a maintainable foundation."
             />
 
             <div className="grid auto-rows-fr border-y border-[#DCE3EA] sm:grid-cols-2 md:auto-rows-auto">
@@ -217,14 +216,14 @@ export default function Home() {
           <div className="mx-auto max-w-6xl">
             <SectionHeader
               className="industries-child-reveal [&_h2]:mt-2.5 [&_h2]:!text-[28px] sm:[&_h2]:!text-[30px] lg:[&_h2]:!text-[32px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:mt-2 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.65] sm:[&_p:last-child]:mt-3.5 sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[15px]"
-              heading="A broad foundation for your next technology decision."
+              heading="Explore what better technology operations can enable."
               headingId="core-capabilities-heading"
-              description="Explore the outcomes our engineering, AI, data, infrastructure, and research capabilities can support—then visit Services for the detailed catalogue."
+              description="These previews show the outcomes our capabilities support. Explore Services for what we build, who it serves, and how each engagement creates value."
             />
 
             <div className="mt-4 grid gap-x-12 sm:mt-6 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-3 lg:gap-x-16">
               {capabilities.map((capability, index) => (
-                <div
+                <Link href="/services"
                   className="industries-child-reveal group flex items-center gap-3.5 border-b border-[#DCE3EA] py-2.5 text-left transition-colors duration-200 ease-out last:border-b-0 sm:py-3 sm:[&:nth-child(3)]:border-b-0 sm:[&:nth-last-child(-n+1)]:border-b-0"
                   key={capability.title}
                   style={{ '--industries-reveal-delay': `${80 + index * 100}ms` } as CSSProperties}
@@ -237,7 +236,7 @@ export default function Home() {
                   <h3 className="text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]">
                     {capability.title}
                   </h3>
-                </div>
+                </Link>
               ))}
             </div>
 
@@ -260,7 +259,7 @@ export default function Home() {
               eyebrow="WHY CLIENTS CHOOSE ZENTRIC"
               heading="A disciplined approach to building technology that lasts."
               headingId="why-choose-heading"
-              description="Every successful partnership begins with understanding your business, designing the right solution, building with quality, deploying with confidence, and supporting long-term growth."
+              description="We work in visible stages, make decisions with your team, test before release, and plan for ownership and support after launch."
               tone="dark"
               className="industries-child-reveal engineering-process-header why-choose-header [&_h2]:!text-[28px] sm:[&_h2]:!text-[30px] lg:[&_h2]:!text-[32px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.65] sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[15px]"
             />
@@ -316,16 +315,16 @@ export default function Home() {
             <SectionHeader
               className="industries-child-reveal [&_h2]:!text-[30px] sm:[&_h2]:!text-[36px] lg:[&_h2]:!text-[40px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] max-md:[&_p:last-child]:mt-3 [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.6] sm:[&_p:last-child]:!text-[15px] max-md:[&_p:last-child]:font-normal"
               align="center"
-              heading={<>Let&apos;s build technology that creates lasting impact.</>}
+              heading={<>Turn an operational priority into a practical project.</>}
               headingId="final-cta-heading"
-              description="Bring us the goal, constraint, or opportunity. We will help you identify a practical path forward and build technology designed for lasting value."
+              description="Tell us what needs to improve, who it affects, and the constraints involved. We will help define a responsible next step."
             />
             <div className="industries-child-reveal mt-5 flex w-full flex-col items-center sm:mt-7 sm:w-auto max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] [&_.btn]:text-[15px] [&_.btn]:font-bold [&_.btn]:leading-none" style={{ '--industries-reveal-delay': '100ms' } as CSSProperties}>
               <Link
                 className="btn btn-primary w-full min-w-[12rem] text-[15px] font-bold leading-none sm:w-auto"
                 href="/contact"
               >
-                Start a Conversation
+                Start a Project
               </Link>
             </div>
           </div>

@@ -16,12 +16,12 @@ type Service = {
 };
 
 const services: Service[] = [
-  { title: 'Software Development', description: 'Custom applications, internal tools, APIs, integrations, and maintainable product engineering.', technologies: ['React', 'Next.js', 'Node.js'], Icon: Code2 },
-  { title: 'Web Development', description: 'Responsive websites, portals, dashboards, and content systems with accessible user experiences.', technologies: ['TypeScript', 'Next.js', 'Tailwind'], Icon: Globe },
-  { title: 'Artificial Intelligence Solutions', description: 'AI-assisted workflows, model integration, retrieval systems, automation, and governance-aware implementation.', technologies: ['OpenAI', 'Python', 'LangChain'], Icon: BrainCircuit },
-  { title: 'Data Analytics', description: 'Data modeling, reporting, KPI workflows, data quality checks, and decision-support dashboards.', technologies: ['Power BI', 'PostgreSQL', 'Python'], Icon: BarChart3 },
-  { title: 'Research & Development', description: 'Computer science research, prototypes, technical feasibility studies, and experimental system design.', technologies: ['Python', 'TensorFlow', 'Jupyter'], Icon: FlaskConical },
-  { title: 'Emerging Technology Solutions', description: 'Practical evaluation and implementation of new technology where it creates measurable operational value.', technologies: ['IoT', 'Automation', 'Cloud'], Icon: Sparkles },
+  { title: 'Software Development', description: 'Applications, internal tools, APIs, and integrations for teams replacing manual work or extending critical systems—built to improve control and maintainability.', technologies: ['React', 'Next.js', 'Node.js'], Icon: Code2 },
+  { title: 'Web Development', description: 'Websites, portals, dashboards, and content systems for organizations serving customers, staff, or partners—designed to make essential tasks easier to complete.', technologies: ['TypeScript', 'Next.js', 'Tailwind'], Icon: Globe },
+  { title: 'Artificial Intelligence Solutions', description: 'AI-assisted workflows, retrieval systems, and model integrations for teams with a defined use case—implemented with evaluation, oversight, and responsible data boundaries.', technologies: ['OpenAI', 'Python', 'LangChain'], Icon: BrainCircuit },
+  { title: 'Data Analytics', description: 'Data models, pipelines, quality controls, reports, and dashboards for decision-makers who need consistent measures and faster access to useful information.', technologies: ['Power BI', 'PostgreSQL', 'Python'], Icon: BarChart3 },
+  { title: 'Research & Development', description: 'Prototypes, feasibility studies, and experimental systems for leaders evaluating an uncertain technical investment before committing to full delivery.', technologies: ['Python', 'TensorFlow', 'Jupyter'], Icon: FlaskConical },
+  { title: 'Emerging Technology Solutions', description: 'Focused evaluation and implementation for organizations considering automation, connected devices, or new platforms—reducing uncertainty before adoption.', technologies: ['IoT', 'Automation', 'Cloud'], Icon: Sparkles },
 ];
 
 const topRowTechnologies = [
@@ -94,7 +94,7 @@ export default function Services() {
               <span className={styles.icon} aria-hidden="true">
                 <Icon size={20} strokeWidth={2} />
               </span>
-              <h2 className={styles.title}>{title}</h2>
+              <h3 className={styles.title}>{title}</h3>
               <p className={styles.description}>{description}</p>
               <ul className={styles.technologies} aria-label={`${title} technologies`}>
                 {technologies.map((technology) => <li key={technology}>{technology}</li>)}
@@ -109,9 +109,9 @@ export default function Services() {
           <Reveal disabled>
             <SectionHeader
               eyebrow="TECHNOLOGIES"
-              heading="Technologies We Build With"
+              heading="Technology Choices That Fit the Work"
               headingId="technologies-heading"
-              description="We use modern software, cloud, data, and artificial intelligence technologies to build reliable and maintainable solutions."
+              description="We select technologies for the required security boundaries, integration needs, performance, maintainability, and the team that will operate the system—not for novelty."
               className="technologies-header"
             />
           </Reveal>
@@ -142,9 +142,9 @@ export default function Services() {
             </p>
           </div>
 
-          <div className="flex min-w-0 md:justify-end">
+          <div className="flex min-w-0 flex-col items-start md:items-end">
             <MotionLink className="btn hero-cta-primary group w-full text-[16px] sm:w-auto" href="/contact">
-              Start a Project
+              Start Your Project
               <span
                 aria-hidden="true"
                 className="transition-transform duration-200 ease-out group-hover:translate-x-[3px] motion-reduce:transition-none"
@@ -152,6 +152,7 @@ export default function Services() {
                 →
               </span>
             </MotionLink>
+            <MotionLink className="mt-4 inline-flex text-sm font-bold text-[#5EE0BF] underline-offset-4 hover:underline" href="/industries">Explore how we adapt by industry</MotionLink>
           </div>
         </Stagger>
       </section>

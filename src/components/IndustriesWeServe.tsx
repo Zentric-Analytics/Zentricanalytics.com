@@ -26,18 +26,18 @@ type Industry = {
 };
 
 const industries: Industry[] = [
-  { Icon: Banknote, title: 'Financial Services', description: 'Secure, data-driven solutions that support digital banking, operations, compliance, and customer experiences.' },
-  { Icon: HeartPulse, title: 'Healthcare', description: 'Technology that improves operations, information access, service delivery, and patient experiences.' },
-  { Icon: ShoppingBag, title: 'Retail & E-commerce', description: 'Digital platforms and insights that improve sales, customer engagement, and business performance.' },
-  { Icon: Factory, title: 'Manufacturing', description: 'Connected systems, automation, and analytics designed to improve productivity and operational visibility.' },
-  { Icon: GraduationCap, title: 'Education', description: 'Accessible digital solutions that support learning, administration, communication, and institutional growth.' },
-  { Icon: Landmark, title: 'Government & Public Sector', description: 'Secure and scalable technology that improves public services, internal operations, and citizen engagement.' },
-  { Icon: MonitorCog, title: 'Technology & SaaS', description: 'Product engineering, cloud infrastructure, data solutions, and technical support for digital businesses.' },
-  { Icon: House, title: 'Real Estate', description: 'Digital tools that simplify property operations, customer management, marketing, and decision-making.' },
-  { Icon: Bolt, title: 'Energy & Utilities', description: 'Reliable technology and data solutions that support operations, infrastructure, monitoring, and efficiency.' },
-  { Icon: Truck, title: 'Logistics & Transportation', description: 'Systems that improve coordination, tracking, delivery operations, and supply-chain visibility.' },
-  { Icon: Building2, title: 'Media, Creators & Personal Brands', description: 'Digital platforms, content systems, analytics, and brand experiences built for audience growth.' },
-  { Icon: BriefcaseBusiness, title: 'Professional Services', description: 'Technology that helps service-based organizations manage clients, workflows, data, and business growth.' },
+  { Icon: Banknote, title: 'Financial Services', description: 'High-volume transactions, sensitive records, auditability, and regulatory review require controlled access and traceable decisions. We prioritize resilient workflows, governance, and accurate reporting.' },
+  { Icon: HeartPulse, title: 'Healthcare', description: 'Clinical and administrative users need timely information without weakening privacy or continuity of care. We design around role-based access, interoperability, and dependable service delivery.' },
+  { Icon: ShoppingBag, title: 'Retail & E-commerce', description: 'Customers expect simple purchasing while operators need accurate inventory, fulfilment, and performance data. We connect these workflows to reduce friction and improve visibility.' },
+  { Icon: Factory, title: 'Manufacturing', description: 'Production environments depend on uptime, safety, equipment constraints, and usable shop-floor workflows. We introduce changes in stages and measure throughput, quality, and disruption.' },
+  { Icon: GraduationCap, title: 'Education', description: 'Learners, educators, administrators, and guardians have different access and accessibility needs. We simplify learning and administrative tasks while respecting institutional governance.' },
+  { Icon: Landmark, title: 'Government & Public Sector', description: 'Public services require accessibility, accountability, procurement discipline, and continuity across varied users. We emphasize transparent workflows, maintainable delivery, and responsible data handling.' },
+  { Icon: MonitorCog, title: 'Technology & SaaS', description: 'Digital product teams balance release speed with reliability, tenant boundaries, and operating cost. We strengthen product delivery, platform observability, and maintainable growth.' },
+  { Icon: House, title: 'Real Estate', description: 'Property teams coordinate listings, documents, payments, maintenance, and many stakeholders. We create clearer workflows and a dependable view of operational information.' },
+  { Icon: Bolt, title: 'Energy & Utilities', description: 'Asset-heavy operations require continuity, field usability, monitoring, and careful change control. We design for dependable information flow and decisions that improve efficiency and resilience.' },
+  { Icon: Truck, title: 'Logistics & Transportation', description: 'Time-sensitive movement involves dispatchers, drivers, partners, and customers working across changing conditions. We improve coordination, exception handling, and shipment visibility.' },
+  { Icon: Building2, title: 'Media, Creators & Personal Brands', description: 'Publishing teams need accessible experiences, efficient content operations, ownership of audience data, and sustainable performance. We build around those workflows rather than vanity metrics.' },
+  { Icon: BriefcaseBusiness, title: 'Professional Services', description: 'Client work depends on clear handoffs, permissions, deadlines, and trusted records. We streamline delivery and reporting while keeping professional judgment and accountability visible.' },
 ];
 
 export function IndustriesWeServe() {
@@ -52,7 +52,7 @@ export function IndustriesWeServe() {
             Industries We Serve
           </h2>
           <p className="mt-3 text-[14px] leading-[1.65] text-[#475569] sm:text-[15px] lg:text-[15px]">
-            We partner with organizations across a wide range of sectors, adapting our technology, data, and digital solutions to the unique needs of each business, institution, and personal brand.
+            Select a sector to see why its constraints differ, how our delivery approach adapts, and which operational results matter.
           </p>
         </Stagger>
 
@@ -105,7 +105,7 @@ export function IndustriesWeServe() {
 
         <aside className="mt-3.5 rounded-2xl border border-[#D8E8E3] bg-[#F2F8F6] px-4 py-3 text-[14px] leading-[1.65] text-[#294A43] sm:mt-4 sm:px-5 sm:py-3.5 sm:text-[14px] lg:text-[15px]">
           <span className="text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:text-[20px]">Don&apos;t see your industry?</span>{' '}
-          That&apos;s not a limitation. Zentric Analytics delivers tailored technology solutions for organizations, businesses, institutions, and professionals across every sector.
+          We can still begin with your users, operating constraints, decision-makers, and required outcomes to determine whether we are a good fit.
         </aside>
       </div>
       </section>

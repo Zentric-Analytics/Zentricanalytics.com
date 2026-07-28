@@ -14,8 +14,11 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: 'Zentric Analytics',
-  description: 'Technology company website and hiring enrollment portal.',
+  metadataBase: new URL('https://zentricanalytics.com'),
+  title: { default: 'Technology Consultancy for Software, Data & AI', template: '%s | Zentric Analytics' },
+  description: 'Zentric Analytics helps organizations improve operations through dependable software, data, AI, and cloud engineering.',
+  alternates: { canonical: '/' },
+  openGraph: { title: 'Zentric Analytics | Technology Consultancy', description: 'Zentric Analytics helps organizations improve operations through dependable software, data, AI, and cloud engineering.', url: '/', siteName: 'Zentric Analytics', type: 'website' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

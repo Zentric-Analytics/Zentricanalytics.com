@@ -51,13 +51,13 @@ export default function Industries() {
         <div className="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-center px-4 pb-[40px] pt-[56px] sm:px-6 lg:px-8">
           <div className="max-w-[44rem]">
             <Reveal as="h1" id="industries-page-heading" delay={40} className="max-w-[21rem] text-[36px] font-bold leading-[1.1] tracking-[-0.04em] sm:max-w-2xl sm:text-[40px] sm:leading-[1.08] lg:max-w-3xl lg:text-[42px]">
-              Technology Solutions for Every Industry, Organization, and Ambition
+              Technology Shaped by Your Sector’s Operating Reality
             </Reveal>
             <Reveal delay={120}>
               <IndustriesHeroTyping />
             </Reveal>
             <Reveal as="p" delay={200} className="mt-3 max-w-[43rem] text-[15px] leading-[1.65] text-slate-100 sm:mt-4 sm:text-[15px] sm:leading-[1.65] lg:text-[16px]">
-              From enterprises and startups to public institutions and personal brands, Zentric Analytics delivers tailored technology solutions around your unique goals, challenges, and opportunities.
+              We adapt delivery to the people, regulations, workflows, risk, and governance that define your organization—because similar technology decisions can carry different consequences across sectors.
             </Reveal>
             <Reveal delay={280} className="mt-6 flex flex-col gap-3.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-4">
               <MotionLink className="btn hero-cta-primary w-full text-[16px] sm:w-auto" href="/contact">Discuss Your Needs</MotionLink>
@@ -78,10 +78,10 @@ export default function Industries() {
               How We Help Organizations Succeed
             </h2>
             <p className="mt-2.5 text-[14px] leading-[1.65] text-[#475569] sm:text-[15px] lg:text-[15px]">
-              Every organization has unique goals, processes, and challenges. We combine technology, strategy, and innovation to design solutions that improve efficiency, strengthen security, accelerate growth, and create measurable business value.
+              We begin with the people who use and approve a system, the rules they operate under, and the decisions the system must support. Those factors shape architecture, access, delivery stages, and measures of success.
             </p>
             <p className="mt-3 text-[14px] leading-[1.65] text-[#294A43] sm:text-[15px] lg:text-[15px]">
-              Whether the goal is modernization, growth, stronger security, better customer experiences, or improved operations, our solutions are shaped around the organization, not a fixed industry template.
+              A useful outcome may be faster service delivery, clearer oversight, fewer manual handoffs, or more dependable access to information. We define it with stakeholders before selecting technology.
             </p>
           </Stagger>
 
@@ -96,10 +96,10 @@ export default function Industries() {
               id="organization-values-heading"
               className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[30px] lg:text-[32px]"
             >
-              Why Organizations Choose Zentric
+              Governed Delivery Beyond Launch
             </h2>
             <p className="mt-2.5 max-w-[45rem] text-[14px] leading-[1.65] text-slate-100 sm:text-[15px]">
-              We do not apply the same solution to every client. Our work begins with understanding your goals, operations, audience, challenges, and opportunities before designing the right technology approach.
+              We establish decision owners, review points, security boundaries, and support responsibilities with your team. Architecture and documentation are planned so the system can evolve without losing operational control.
             </p>
           </Stagger>
 
@@ -150,6 +150,7 @@ export default function Industries() {
 
             <Stagger className="flex min-w-0 flex-col items-stretch lg:items-start" delay={160} staggerDelay={80}>
               <MotionLink className="btn hero-cta-primary w-full text-[16px] sm:w-fit" href="/contact">Discuss Your Needs</MotionLink>
+              <MotionLink className="mt-4 text-[14px] font-bold text-[#0B7F60] underline-offset-4 hover:underline" href="/services">Explore relevant service capabilities</MotionLink>
               <p className="mt-5 max-w-[22rem] text-[14px] leading-[1.65] text-[#475569] sm:mt-6 sm:text-[15px]">
                 Tell us what you are trying to achieve, and we will help you identify the right next step.
               </p>
