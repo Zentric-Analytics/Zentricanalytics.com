@@ -20,18 +20,13 @@ export function IndustriesHeroTyping() {
     return () => window.clearInterval(interval);
   }, []);
 
-  const sector = INDUSTRY_CONTENT[currentIndex];
+  const sectorName = INDUSTRY_CONTENT[currentIndex].title;
 
   return (
-    <div className="industries-hero-typing" aria-live="polite" aria-atomic="true">
-      <div className="industries-hero-typing__entry" key={sector.title}>
-        <p className="industries-hero-typing__line">
-          <span className="industries-hero-typing__text">{sector.title}</span>
-        </p>
-        <p className="mt-3 max-w-[43rem] text-[15px] leading-[1.65] text-slate-100 sm:mt-4 sm:text-[15px] sm:leading-[1.65] lg:text-[16px]">
-          {sector.description}
-        </p>
-      </div>
-    </div>
+    <p className="industries-hero-typing__line" aria-live="polite" aria-atomic="true">
+      <span className="industries-hero-typing__entry" key={sectorName}>
+        <span className="industries-hero-typing__text">{sectorName}</span>
+      </span>
+    </p>
   );
 }
