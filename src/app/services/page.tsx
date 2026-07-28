@@ -1,6 +1,6 @@
 'use client';
 
-import { Reveal, Stagger } from '@/components/Motion';
+import { MotionLink, Reveal, Stagger } from '@/components/Motion';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { FeaturedSolutions } from './FeaturedSolutions';
@@ -104,6 +104,40 @@ export default function Services() {
       </section>
 
       <FeaturedSolutions />
+
+      <section
+        className="bg-[#0B1F3A] px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16"
+        aria-labelledby="services-final-cta-heading"
+      >
+        <Stagger
+          className="mx-auto grid w-full max-w-6xl gap-7 rounded-[20px] border border-white/10 bg-white/[0.035] p-6 shadow-[0_20px_50px_rgba(2,8,23,0.18)] sm:p-8 md:grid-cols-[minmax(0,68fr)_minmax(14rem,32fr)] md:items-center md:gap-10 lg:px-12 lg:py-11"
+          staggerDelay={90}
+        >
+          <div className="min-w-0">
+            <h2
+              id="services-final-cta-heading"
+              className="max-w-[42rem] text-[30px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[36px] lg:text-[40px]"
+            >
+              Ready to Build a Solution Around Your Business?
+            </h2>
+            <p className="mt-3 max-w-[44rem] text-[15px] leading-[1.65] text-white/90 sm:mt-4 lg:text-[16px] lg:leading-[1.7]">
+              Tell us what you are planning, what is slowing your team down, or what you want to improve. Zentric Analytics can help you identify the right software, AI, data, or cloud approach.
+            </p>
+          </div>
+
+          <div className="flex min-w-0 md:justify-end">
+            <MotionLink className="btn hero-cta-primary group w-full text-[16px] sm:w-auto" href="/contact">
+              Start a Project
+              <span
+                aria-hidden="true"
+                className="transition-transform duration-200 ease-out group-hover:translate-x-[3px] motion-reduce:transition-none"
+              >
+                →
+              </span>
+            </MotionLink>
+          </div>
+        </Stagger>
+      </section>
     </PageShell>
   );
 }
