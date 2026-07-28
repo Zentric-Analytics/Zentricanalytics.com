@@ -48,7 +48,8 @@ describe('public layout shell', () => {
     const shell = readFileSync('src/components/PageShell.tsx', 'utf8');
 
     expect(shell).toContain('<SiteHeader />');
-    expect(shell).toContain('<main>{children}</main>');
+    expect(shell).toContain('<main id="main-content" tabIndex={-1}>{children}</main>');
+    expect(shell).toContain('href="#main-content"');
     expect(shell).not.toContain('pt-[4.5rem]');
   });
 
@@ -61,7 +62,7 @@ describe('public layout shell', () => {
     expect(header).toContain('aria-expanded={isMobileMenuOpen}');
     expect(header).toContain('aria-controls={mobileMenuId}');
     expect(header).toContain("isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'");
-    expect(header).toContain('md:hidden');
+    expect(header).toContain('lg:hidden');
     expect(header).toContain('setIsMobileMenuOpen((open) => !open)');
   });
 
@@ -78,7 +79,7 @@ describe('public layout shell', () => {
     expect(header).toContain('h-screen min-h-dvh');
     expect(header).toContain('overflow-hidden bg-white');
     expect(header).toContain('overflow-y-auto overscroll-contain');
-    expect(header).toContain('md:hidden');
+    expect(header).toContain('lg:hidden');
     expect(header).toContain('onClick={() => setIsMobileMenuOpen(false)}');
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
 
@@ -199,7 +200,7 @@ describe('public layout shell', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
 
     expect(header).toContain('fixed inset-0 z-50');
-    expect(header).toContain('md:hidden');
+    expect(header).toContain('lg:hidden');
     expect(header).not.toContain('fixed inset-x-0 top-0 z-50');
   });
 

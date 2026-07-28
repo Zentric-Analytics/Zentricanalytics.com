@@ -106,7 +106,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <div className="hidden min-w-0 flex-1 translate-y-px items-center justify-center gap-7 md:flex lg:gap-9">
+        <div className="hidden min-w-0 flex-1 translate-y-px items-center justify-center gap-7 lg:flex lg:gap-9">
           {visibleNavigationLinks.map(([href, label]) => {
             const isActive = isActiveLink(href);
 
@@ -127,7 +127,7 @@ export function SiteHeader() {
           })}
         </div>
 
-        <div className="hidden shrink-0 items-center md:flex">
+        <div className="hidden shrink-0 items-center lg:flex">
           <Link
             href={contactLink[0]}
             className="btn zentric-primary-cta site-header__desktop-cta"
@@ -139,14 +139,14 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        <div className="flex shrink-0 items-center md:hidden">
+        <div className="flex shrink-0 items-center lg:hidden">
           <button
             type="button"
             ref={menuButtonRef}
             aria-expanded={isMobileMenuOpen}
             aria-controls={mobileMenuId}
             aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-            className="btn btn-secondary btn-compact h-11 w-11 p-0 md:hidden"
+            className="btn btn-secondary btn-compact h-11 w-11 p-0 lg:hidden"
             onClick={() => setIsMobileMenuOpen((open) => !open)}
           >
             <span className="sr-only">{isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}</span>
@@ -165,7 +165,7 @@ export function SiteHeader() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="mobile-menu-title"
-          className="fixed inset-0 z-50 flex h-screen min-h-dvh w-full flex-col overflow-hidden bg-white md:hidden"
+          className="fixed inset-0 z-50 flex h-screen min-h-dvh w-full flex-col overflow-hidden bg-white lg:hidden"
         >
           <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-[#0B1F3A]/10 px-4 py-4 sm:px-8">
             <h2 id="mobile-menu-title" className="text-2xl font-semibold tracking-[-0.03em] text-[#0B1F3A]">
