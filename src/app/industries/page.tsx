@@ -141,10 +141,10 @@ export default function Industries() {
                 id="industries-final-cta-heading"
                 className="max-w-[38rem] text-[34px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[38px] lg:text-[40px]"
               >
-                Whatever Your Industry, We&apos;re Ready to Build With You
+              Your Context Should Shape the Solution
               </h2>
               <p className="mt-3 max-w-[42rem] text-[14px] leading-[1.65] text-[#475569] sm:mt-4 sm:text-[15px]">
-                Whether you are an established organization, a growing startup, a public institution, a professional, a creator, or a personal brand, Zentric Analytics can design a technology solution around your goals.
+                Whatever your sector, scale, or operating model, we begin with your users, constraints, governance needs, and goals—not a fixed technology package.
               </p>
             </Stagger>
 

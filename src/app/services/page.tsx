@@ -82,7 +82,11 @@ export default function Services() {
     <PageShell>
       <ServicesHero />
 
-      <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-10" aria-label="Service offerings">
+      <section id="service-capabilities" className="mx-auto w-full max-w-6xl min-w-0 scroll-mt-20 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-10" aria-labelledby="service-capabilities-heading">
+        <Reveal as="header" className="mb-7 max-w-[46rem] text-left sm:mb-8" disabled>
+          <h2 id="service-capabilities-heading" className="text-[28px] font-bold leading-[1.12] tracking-[-0.04em] text-[#0B1F3A] sm:text-[30px] lg:text-[32px]">Core Service Capabilities</h2>
+          <p className="mt-3 text-[14px] leading-[1.65] text-[#475569] sm:text-[15px]">A detailed view of the software, web, AI, data, research, and emerging-technology work we can design, integrate, and support.</p>
+        </Reveal>
         <Stagger className={`${styles.grid} grid min-w-0 break-words text-slate-700 md:grid-cols-2`} staggerDelay={90}>
           {services.map(({ title, description, technologies, Icon }) => (
             <article className={styles.card} key={title}>

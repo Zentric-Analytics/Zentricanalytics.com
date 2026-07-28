@@ -120,15 +120,18 @@ export default function Careers() {
             {roles.map(({ Icon, title, description }) => (
               <article
                 key={title}
-                className="group flex min-h-[138px] min-w-0 items-start gap-[18px] rounded-[20px] border border-[#E3EAF1] bg-white p-5 text-left shadow-[0_18px_42px_rgba(15,23,42,0.06)] transition duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:border-[#D4DEE8] hover:shadow-[0_20px_46px_rgba(15,23,42,0.08)] lg:h-[148px] lg:p-6"
+                className="group grid min-h-[190px] min-w-0 grid-cols-[3rem_minmax(0,1fr)] gap-x-[18px] rounded-[20px] border border-[#E3EAF1] bg-white p-5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-colors duration-200 ease-out hover:border-[#D4DEE8] lg:p-6"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#EEF8F5] text-[#0B7F60]">
                   <Icon aria-hidden="true" className="size-[18px] sm:size-5" strokeWidth={1.8} />
                 </span>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0">
                   <h3 className="mb-2 text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A]">{title}</h3>
                   <p className="m-0 text-[14px] font-normal leading-[1.5] text-[#475569]">{description}</p>
                 </div>
+                <Link className="col-start-2 mt-4 inline-flex min-h-11 w-fit items-center text-[14px] font-bold text-[#0B7F60] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B7F60]" href="/apply">
+                  Apply for this role <span className="ml-1.5" aria-hidden="true">→</span>
+                </Link>
               </article>
             ))}
           </Stagger>
@@ -167,7 +170,7 @@ export default function Careers() {
         className="bg-[#0B1F3A] px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-20"
         aria-labelledby="careers-final-cta-heading"
       >
-        <Stagger className="mx-auto grid w-full max-w-[70rem] gap-8 lg:grid-cols-[minmax(0,62fr)_minmax(18rem,38fr)] lg:items-center" staggerDelay={90}>
+        <Stagger className="mx-auto w-full max-w-[70rem]" staggerDelay={90}>
           <div className="min-w-0">
             <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-[30px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[36px] lg:text-[40px]">
               Ready to Build Meaningful Technology With Us?
@@ -175,7 +178,10 @@ export default function Careers() {
             <p className="mt-3 max-w-[43rem] text-[14px] leading-[1.6] text-[#C8D7E5] sm:mt-4 sm:text-[15px]">
               Join a team that values practical engineering, continuous learning, thoughtful collaboration, and building technology that creates lasting impact.
             </p>
-            <Link className="mt-7 inline-flex h-14 w-full max-w-[280px] items-center justify-center rounded-2xl border border-white bg-white px-7 text-base font-bold text-[#0B1F3A] opacity-100 visible hover:border-[#E8EEF5] hover:bg-[#E8EEF5] hover:text-[#0B1F3A] hover:opacity-100 sm:w-auto" href="/apply">Apply Now</Link>
+            <div className="mt-7 flex w-full max-w-[280px] flex-col gap-3 sm:max-w-none sm:flex-row">
+              <Link className="btn hero-cta-primary w-full sm:w-auto" href="/apply">Apply Now</Link>
+              <Link className="btn hero-cta-secondary w-full sm:w-auto" href="/track">Track Application</Link>
+            </div>
           </div>
         </Stagger>
       </section>
