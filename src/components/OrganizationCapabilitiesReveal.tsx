@@ -1,131 +1,61 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { BrainCircuit, ChevronDown, CloudCog, Code2, Handshake, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react';
+import { ChartNoAxesCombined, HeartHandshake, RefreshCcw, ShieldCheck, TrendingUp, Workflow, type LucideIcon } from 'lucide-react';
 import { Stagger } from '@/components/Motion';
 
 const organizationCapabilities: Array<{ Icon: LucideIcon; title: string; description: string }> = [
   {
-    Icon: Sparkles,
-    title: 'Digital Transformation',
+    Icon: RefreshCcw,
+    title: 'Modernize Legacy Operations',
     description:
-      'Modernize business processes with scalable digital solutions that improve efficiency and prepare your organization for future growth.',
+      'Replace fragile processes in practical stages while protecting continuity, institutional knowledge, and essential services.',
   },
   {
-    Icon: Code2,
-    title: 'Custom Software Development',
+    Icon: HeartHandshake,
+    title: 'Improve Service Delivery',
     description:
-      'Design and build secure, scalable software tailored to your organization\'s unique workflows and objectives.',
+      'Reduce friction for customers, staff, citizens, or members by shaping tools around the people who rely on them.',
   },
   {
-    Icon: CloudCog,
-    title: 'Cloud & Infrastructure',
+    Icon: ChartNoAxesCombined,
+    title: 'Strengthen Decision-Making',
     description:
-      'Deploy reliable cloud solutions that improve performance, scalability, collaboration, and operational resilience.',
-  },
-  {
-    Icon: BrainCircuit,
-    title: 'Data & AI Solutions',
-    description:
-      'Transform business data into actionable insights through analytics, automation, and intelligent AI-powered solutions.',
+      'Make trusted information easier to access and interpret so teams can act with greater clarity and confidence.',
   },
   {
     Icon: ShieldCheck,
-    title: 'Cybersecurity',
+    title: 'Protect Sensitive Information',
     description:
-      "Protect critical systems, data, and operations using modern security practices designed for today's digital landscape.",
+      'Build security, privacy, governance, and responsible data handling into decisions from the outset.',
   },
   {
-    Icon: Handshake,
-    title: 'IT Consulting & Support',
+    Icon: TrendingUp,
+    title: 'Support Sustainable Growth',
     description:
-      'Partner with experienced technology consultants who help align technology investments with long-term business goals.',
+      'Create foundations that can adapt as demand, teams, services, and organizational priorities change.',
+  },
+  {
+    Icon: Workflow,
+    title: 'Increase Operational Resilience',
+    description:
+      'Reduce avoidable disruption through maintainable systems, clearer workflows, and dependable support practices.',
   },
 ];
 
 export function OrganizationCapabilitiesReveal() {
-  const [expandedCapability, setExpandedCapability] = useState<string | null>(null);
-  const [supportsHover, setSupportsHover] = useState(false);
-
-  useEffect(() => {
-    const hoverQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
-    const updateHoverSupport = () => setSupportsHover(hoverQuery.matches);
-
-    updateHoverSupport();
-    hoverQuery.addEventListener('change', updateHoverSupport);
-
-    return () => hoverQuery.removeEventListener('change', updateHoverSupport);
-  }, []);
-
   return (
     <Stagger className="border-y border-[#DCE3EA]" delay={120} staggerDelay={75}>
-      {organizationCapabilities.map(({ Icon, title, description }, index) => {
-        const descriptionId = `organization-capability-${index}-description`;
-        const isExpanded = expandedCapability === title;
-
-        return (
-          <article
-            className="group -mx-2 px-2 py-3.5 first:pt-3.5 last:pb-3.5 not-last:border-b not-last:border-[#DCE3EA] transition-colors duration-200 ease-out hover:bg-[#EAF7F2]/40 focus-within:bg-[#EAF7F2]/40 sm:-mx-3 sm:px-3 sm:py-3.5"
-            key={title}
-            onPointerEnter={() => {
-              if (supportsHover) {
-                setExpandedCapability(title);
-              }
-            }}
-            onPointerLeave={() => {
-              if (supportsHover) {
-                setExpandedCapability(null);
-              }
-            }}
-          >
-            <button
-              type="button"
-              className="grid min-h-12 w-full grid-cols-[3rem_minmax(0,1fr)_1.25rem] items-start gap-x-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] sm:grid-cols-[3rem_minmax(0,1fr)_1.5rem] sm:gap-x-3"
-              aria-expanded={isExpanded}
-              aria-controls={descriptionId}
-              onClick={() => {
-                if (!supportsHover) {
-                  setExpandedCapability(isExpanded ? null : title);
-                }
-              }}
-              onFocus={() => {
-                if (supportsHover) {
-                  setExpandedCapability(title);
-                }
-              }}
-              onBlur={() => {
-                if (supportsHover) {
-                  setExpandedCapability(null);
-                }
-              }}
-            >
-              <span className="flex size-10 items-center justify-center text-[#0B7F60] transition-transform duration-200 ease-out motion-safe:group-hover:translate-x-0.5">
+      {organizationCapabilities.map(({ Icon, title, description }) => (
+          <article className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 py-4 not-last:border-b not-last:border-[#DCE3EA] sm:py-[18px]" key={title}>
+              <span className="flex size-10 items-center justify-center text-[#0B7F60]">
                 <Icon aria-hidden="true" className="size-[1.375rem]" strokeWidth={1.8} />
               </span>
-              <span className="min-w-0">
-                <span className="block text-[18px] font-semibold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] transition-colors duration-[275ms] ease-out sm:text-[19px] group-hover:text-[#0B7F60] group-focus-within:text-[#0B7F60] lg:text-[20px]">
+              <div className="min-w-0 pt-1">
+                <h3 className="text-[18px] font-semibold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:text-[20px]">
                   {title}
-                </span>
-                <span
-                  id={descriptionId}
-                  className="block max-h-0 overflow-hidden opacity-0 transition-[max-height,opacity] duration-[275ms] ease-out group-hover:max-h-28 group-hover:opacity-100 group-focus-within:max-h-28 group-focus-within:opacity-100 data-[expanded=true]:max-h-28 data-[expanded=true]:opacity-100"
-                  data-expanded={isExpanded}
-                >
-                  <span className="mt-1.5 block text-[14px] leading-[1.6] text-[#475569] sm:text-[14px] lg:text-[15px]">
-                    {description}
-                  </span>
-                </span>
-              </span>
-              <ChevronDown
-                aria-hidden="true"
-                className="mt-1.5 size-4 justify-self-end text-[#0B7F60] transition-transform duration-[275ms] ease-out group-hover:rotate-180 group-focus-within:rotate-180 data-[expanded=true]:rotate-180 sm:mt-2 sm:size-[1.125rem]"
-                data-expanded={isExpanded}
-                strokeWidth={1.8}
-              />
-            </button>
+                </h3>
+                <p className="mt-1.5 text-[14px] leading-[1.6] text-[#475569] lg:text-[15px]">{description}</p>
+              </div>
           </article>
-        );
-      })}
+      ))}
     </Stagger>
   );
 }

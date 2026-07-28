@@ -129,7 +129,7 @@ export function ServicesHero() {
           <p className={styles.description}>We partner with organizations to design, build, and scale secure digital products—from business applications and AI-powered solutions to analytics platforms and cloud infrastructure.</p>
           <div className={styles.actions}>
             <Link className="btn hero-cta-primary" href="/contact">Start a Project <span aria-hidden="true">→</span></Link>
-            <a className="btn hero-cta-secondary" href="#technologies-heading">Explore Our Capabilities <span aria-hidden="true">↓</span></a>
+            <a className="btn hero-cta-secondary" href="#service-capabilities">Explore Our Capabilities <span aria-hidden="true">↓</span></a>
           </div>
           <ul className={styles.capabilities} aria-label="Core capabilities">
             {capabilities.map(({ label, Icon }) => (

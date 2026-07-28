@@ -8,39 +8,30 @@ import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { ScrollReveal } from '@/components/ScrollReveal';
 
-const finalCtaMarqueeKeywords = [
-  'Software Engineering',
-  'Artificial Intelligence',
-  'Data & Analytics',
-  'Cloud & Infrastructure',
-  'Research & Innovation',
-  'Emerging Technologies',
-] as const;
-
 const capabilities: Array<{ Icon: LucideIcon; title: string }> = [
   {
     Icon: CodeXml,
-    title: 'Software Engineering',
+    title: 'Build Reliable Digital Products',
   },
   {
     Icon: BrainCircuit,
-    title: 'Artificial Intelligence',
+    title: 'Apply AI Responsibly',
   },
   {
     Icon: ChartColumn,
-    title: 'Data & Analytics',
+    title: 'Turn Data Into Decisions',
   },
   {
     Icon: CloudCog,
-    title: 'Cloud & Infrastructure',
+    title: 'Modernize Infrastructure',
   },
   {
     Icon: FlaskConical,
-    title: 'Research & Innovation',
+    title: 'Advance Research and Innovation',
   },
   {
     Icon: Cpu,
-    title: 'Emerging Technologies',
+    title: 'Explore Emerging Technology',
   },
 ];
 
@@ -226,9 +217,9 @@ export default function Home() {
           <div className="mx-auto max-w-6xl">
             <SectionHeader
               className="industries-child-reveal [&_h2]:mt-2.5 [&_h2]:!text-[28px] sm:[&_h2]:!text-[30px] lg:[&_h2]:!text-[32px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:mt-2 [&_p:last-child]:max-w-[46rem] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.65] sm:[&_p:last-child]:mt-3.5 sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[15px]"
-              heading="Engineering expertise across software, AI, data, infrastructure, and research."
+              heading="A broad foundation for your next technology decision."
               headingId="core-capabilities-heading"
-              description="Zentric Analytics brings together disciplined software engineering, artificial intelligence, data platforms, cloud infrastructure, and research-led innovation to help organizations build technology that is reliable, scalable, and future-ready."
+              description="Explore the outcomes our engineering, AI, data, infrastructure, and research capabilities can support—then visit Services for the detailed catalogue."
             />
 
             <div className="mt-4 grid gap-x-12 sm:mt-6 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-3 lg:gap-x-16">
@@ -327,45 +318,14 @@ export default function Home() {
               align="center"
               heading={<>Let&apos;s build technology that creates lasting impact.</>}
               headingId="final-cta-heading"
-              description="Whether you're looking for a trusted technology partner or exploring career opportunities, Zentric Analytics is committed to solving meaningful challenges through engineering, AI, data, cloud, and research-driven innovation."
+              description="Bring us the goal, constraint, or opportunity. We will help you identify a practical path forward and build technology designed for lasting value."
             />
-            <div
-              className="final-cta-marquee industries-child-reveal mt-4 w-full max-w-3xl overflow-hidden sm:mt-6"
-              aria-label={finalCtaMarqueeKeywords.join(' • ')}
-              style={{ '--industries-reveal-delay': '100ms' } as CSSProperties}
-            >
-              <p className="sr-only">{finalCtaMarqueeKeywords.join(' • ')}</p>
-              <div className="final-cta-marquee__track" aria-hidden="true">
-                {[0, 1].map((group) => (
-                  <div className="final-cta-marquee__group" key={group}>
-                    {[0, 1].map((set) => (
-                      <span className="final-cta-marquee__sequence" key={set}>
-                        {finalCtaMarqueeKeywords.map((keyword, index) => (
-                          <span className="final-cta-marquee__item" key={keyword}>
-                            <span>{keyword}</span>
-                            {index < finalCtaMarqueeKeywords.length - 1 ? (
-                              <span className="final-cta-marquee__separator">•</span>
-                            ) : null}
-                          </span>
-                        ))}
-                      </span>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="industries-child-reveal mt-4 flex w-full flex-col items-center gap-3 sm:mt-6 sm:w-auto sm:flex-row sm:justify-center max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] [&_.btn]:text-[15px] [&_.btn]:font-bold [&_.btn]:leading-none" style={{ '--industries-reveal-delay': '200ms' } as CSSProperties}>
+            <div className="industries-child-reveal mt-5 flex w-full flex-col items-center sm:mt-7 sm:w-auto max-md:[&_.btn]:h-[48px] max-md:[&_.btn]:min-h-[48px] [&_.btn]:text-[15px] [&_.btn]:font-bold [&_.btn]:leading-none" style={{ '--industries-reveal-delay': '100ms' } as CSSProperties}>
               <Link
                 className="btn btn-primary w-full min-w-[12rem] text-[15px] font-bold leading-none sm:w-auto"
                 href="/contact"
               >
                 Start a Conversation
-              </Link>
-              <Link
-                className="btn btn-secondary w-full min-w-[12rem] text-[15px] font-bold leading-none sm:w-auto"
-                href="/careers"
-              >
-                Explore Careers
               </Link>
             </div>
           </div>
