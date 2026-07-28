@@ -118,6 +118,7 @@ export function ServicesHero() {
         alt=""
         fill
         priority
+        quality={75}
         sizes="100vw"
         aria-hidden="true"
       />

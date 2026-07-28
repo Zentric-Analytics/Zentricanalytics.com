@@ -131,7 +131,6 @@ export default function Home() {
 
   return (
     <PageShell>
-      <link rel="preload" as="image" href="/images/hero/hero-engineering-team-v2.webp" fetchPriority="high" />
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:max-w-[90rem] lg:grid-cols-[minmax(0,56rem)_minmax(0,1fr)] lg:py-16 lg:gap-8">
           <div className="min-w-0 lg:max-w-[56rem]">
@@ -164,8 +163,8 @@ export default function Home() {
                 alt="Software engineers collaborating on code and system architecture in a modern office"
                 fill
                 priority
-                fetchPriority="high"
                 decoding="async"
+                quality={75}
                 sizes="(min-width: 1180px) 50vw, (min-width: 768px) 50vw, calc(100vw - 2rem)"
                 className="object-cover object-[62%_center] sm:object-[60%_center] lg:object-[58%_48%] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.18)_12%,rgba(0,0,0,0.82)_32%,#000_43%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
               />
@@ -311,7 +310,7 @@ export default function Home() {
       >
         <Image
           src="/images/careers/careers-team-collaboration.webp"
-          sizes="100vw"
+          sizes="(min-width: 1280px) 1280px, 100vw"
           alt=""
           width={1536}
           height={1024}
