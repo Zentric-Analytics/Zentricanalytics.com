@@ -107,23 +107,27 @@ const clientChoiceProcess: Array<{ Icon: LucideIcon; title: string; description:
 export default function Home() {
   const [isClientChoiceExpanded, setIsClientChoiceExpanded] = useState(false);
   const clientChoiceDetailsId = useId();
-  const renderClientChoiceStep = (step: (typeof clientChoiceProcess)[number], index: number) => (
+  const renderClientChoiceStep = (
+    step: (typeof clientChoiceProcess)[number],
+    index: number,
+    isMobileDetail = false,
+  ) => (
     <article
-      className="industries-child-reveal group relative flex min-h-[46px] w-full flex-col items-center text-center md:min-h-[52px] lg:flex-1"
+      className={`industries-child-reveal group relative min-h-[56px] w-full flex-col items-start text-left md:min-h-[52px] md:items-center md:text-center lg:flex-1 ${isMobileDetail && !isClientChoiceExpanded ? 'hidden md:flex' : 'flex'}`}
       key={step.title}
       style={{ '--industries-reveal-delay': `${120 + index * 100}ms` } as CSSProperties}
     >
-      <div className="absolute -left-[62px] top-0 flex size-[46px] shrink-0 items-center justify-center rounded-full border border-white/70 bg-[#F8FAFC] shadow-[0_10px_24px_rgba(2,8,23,0.18)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#10B981]/70 group-hover:shadow-[0_12px_26px_rgba(2,8,23,0.22)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto md:size-[52px]">
+      <div className="absolute -left-20 top-0 flex size-14 shrink-0 items-center justify-center rounded-full border border-white/70 bg-[#F8FAFC] shadow-[0_10px_24px_rgba(2,8,23,0.18)] transition-[border-color,transform,box-shadow] duration-200 ease-out group-hover:border-[#10B981]/70 group-hover:shadow-[0_12px_26px_rgba(2,8,23,0.22)] motion-safe:group-hover:-translate-y-0.5 md:relative md:left-auto md:top-auto md:size-[52px]">
         <step.Icon
           aria-hidden="true"
           className="size-[22px] shrink-0 text-[#0B1F3A] transition-colors duration-200 ease-out group-hover:text-[#10B981]"
           strokeWidth={1.75}
         />
       </div>
-      <h3 className="mt-0 flex w-full items-start justify-center text-center text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-white md:mt-3 lg:min-h-0">
+      <h3 className="mt-0 w-full text-left text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-white md:mt-3 md:text-center lg:min-h-0">
         {step.title}
       </h3>
-      <p className="mt-1.5 w-full max-w-[24rem] text-[14px] font-normal leading-[1.5] text-slate-300 md:max-w-[13rem] md:text-center">
+      <p className="mt-1.5 w-full max-w-[24rem] text-left text-[14px] font-normal leading-[1.5] text-slate-300 md:max-w-[13rem] md:text-center">
         {step.description}
       </p>
     </article>
@@ -271,34 +275,31 @@ export default function Home() {
               className="industries-child-reveal engineering-process-header why-choose-header [&_h2]:!text-[28px] sm:[&_h2]:!text-[30px] lg:[&_h2]:!text-[32px] [&_h2]:!font-bold [&_h2]:!leading-[1.12] [&_h2]:!tracking-[-0.04em] [&_p:last-child]:!text-[14px] [&_p:last-child]:!leading-[1.65] sm:[&_p:last-child]:!text-[15px] lg:[&_p:last-child]:!text-[15px]"
             />
 
-            <div className="relative mt-4 lg:mt-5">
-              <div
-                aria-hidden="true"
-                className="absolute left-[23px] top-[23px] h-[calc(100%-46px)] w-px bg-slate-200/30 md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
-              />
-              <div className="relative grid items-stretch gap-y-5 pl-[62px] md:grid-cols-3 md:gap-x-7 md:gap-y-5 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
-                {clientChoiceProcess.slice(0, 3).map(renderClientChoiceStep)}
-                <button
-                  aria-controls={clientChoiceDetailsId}
-                  aria-expanded={isClientChoiceExpanded}
-                  className="inline-flex min-h-11 items-center gap-1.5 justify-self-start border-0 bg-transparent px-0 py-2 text-left text-[14px] font-bold leading-none text-[#10B981] transition-colors duration-200 ease-out hover:text-[#34D399] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] md:hidden"
-                  type="button"
-                  onClick={() => setIsClientChoiceExpanded((current) => !current)}
-                >
-                  <span>{isClientChoiceExpanded ? 'Show Less' : 'Show More'}</span>
-                  <ChevronDown
-                    aria-hidden="true"
-                    className={`size-4 transition-transform duration-300 ease-out ${isClientChoiceExpanded ? 'rotate-180' : ''}`}
-                    strokeWidth={2.25}
-                  />
-                </button>
+            <div className="relative mt-5 px-4 md:mt-4 md:px-0 lg:mt-5">
+              <div className="relative grid items-stretch gap-y-8 pl-20 md:grid-cols-3 md:gap-x-7 md:gap-y-5 md:pl-0 lg:flex lg:flex-row lg:items-stretch lg:gap-x-7">
                 <div
-                  className={`grid gap-y-5 overflow-hidden transition-[max-height,opacity] duration-300 ease-out md:contents md:overflow-visible md:opacity-100 ${isClientChoiceExpanded ? 'max-h-[34rem] opacity-100' : 'max-h-0 opacity-0'}`}
-                  id={clientChoiceDetailsId}
-                >
-                  {clientChoiceProcess.slice(3).map((step, detailIndex) => renderClientChoiceStep(step, detailIndex + 3))}
+                  aria-hidden="true"
+                  className="absolute left-7 top-7 bottom-7 w-px bg-slate-200/30 md:left-[calc((100%-4rem)/6)] md:right-[calc((100%-4rem)/6)] md:top-[26px] md:bottom-auto md:h-0.5 md:w-auto lg:left-[calc((100%-7rem)/10)] lg:right-[calc((100%-7rem)/10)]"
+                />
+                {clientChoiceProcess.slice(0, 3).map((step, index) => renderClientChoiceStep(step, index))}
+                <div className="contents" id={clientChoiceDetailsId}>
+                  {clientChoiceProcess.slice(3).map((step, detailIndex) => renderClientChoiceStep(step, detailIndex + 3, true))}
                 </div>
               </div>
+              <button
+                aria-controls={clientChoiceDetailsId}
+                aria-expanded={isClientChoiceExpanded}
+                className="ml-20 mt-5 inline-flex min-h-11 items-center gap-1.5 border-0 bg-transparent px-0 py-2 text-left text-[14px] font-bold leading-none text-[#10B981] transition-colors duration-200 ease-out hover:text-[#34D399] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981] md:hidden"
+                type="button"
+                onClick={() => setIsClientChoiceExpanded((current) => !current)}
+              >
+                <span>{isClientChoiceExpanded ? 'Show Less' : 'Show More'}</span>
+                <ChevronDown
+                  aria-hidden="true"
+                  className={`size-4 transition-transform duration-300 ease-out motion-reduce:transition-none ${isClientChoiceExpanded ? 'rotate-180' : ''}`}
+                  strokeWidth={2.25}
+                />
+              </button>
             </div>
           </div>
         </ScrollReveal>
