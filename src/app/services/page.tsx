@@ -11,18 +11,17 @@ import styles from './ServicesCapabilities.module.css';
 type Service = {
   title: string;
   description: string;
-  category: string;
   technologies: string[];
   Icon: LucideIcon;
 };
 
 const services: Service[] = [
-  { title: 'Software Development', description: 'Custom applications, internal tools, APIs, integrations, and maintainable product engineering.', category: 'ENGINEERING', technologies: ['React', 'Next.js', 'Node.js'], Icon: Code2 },
-  { title: 'Web Development', description: 'Responsive websites, portals, dashboards, and content systems with accessible user experiences.', category: 'WEB', technologies: ['TypeScript', 'Next.js', 'Tailwind'], Icon: Globe },
-  { title: 'Artificial Intelligence Solutions', description: 'AI-assisted workflows, model integration, retrieval systems, automation, and governance-aware implementation.', category: 'AI', technologies: ['OpenAI', 'Python', 'LangChain'], Icon: BrainCircuit },
-  { title: 'Data Analytics', description: 'Data modeling, reporting, KPI workflows, data quality checks, and decision-support dashboards.', category: 'DATA', technologies: ['Power BI', 'PostgreSQL', 'Python'], Icon: BarChart3 },
-  { title: 'Research & Development', description: 'Computer science research, prototypes, technical feasibility studies, and experimental system design.', category: 'RESEARCH', technologies: ['Python', 'TensorFlow', 'Jupyter'], Icon: FlaskConical },
-  { title: 'Emerging Technology Solutions', description: 'Practical evaluation and implementation of new technology where it creates measurable operational value.', category: 'INNOVATION', technologies: ['IoT', 'Automation', 'Cloud'], Icon: Sparkles },
+  { title: 'Software Development', description: 'Custom applications, internal tools, APIs, integrations, and maintainable product engineering.', technologies: ['React', 'Next.js', 'Node.js'], Icon: Code2 },
+  { title: 'Web Development', description: 'Responsive websites, portals, dashboards, and content systems with accessible user experiences.', technologies: ['TypeScript', 'Next.js', 'Tailwind'], Icon: Globe },
+  { title: 'Artificial Intelligence Solutions', description: 'AI-assisted workflows, model integration, retrieval systems, automation, and governance-aware implementation.', technologies: ['OpenAI', 'Python', 'LangChain'], Icon: BrainCircuit },
+  { title: 'Data Analytics', description: 'Data modeling, reporting, KPI workflows, data quality checks, and decision-support dashboards.', technologies: ['Power BI', 'PostgreSQL', 'Python'], Icon: BarChart3 },
+  { title: 'Research & Development', description: 'Computer science research, prototypes, technical feasibility studies, and experimental system design.', technologies: ['Python', 'TensorFlow', 'Jupyter'], Icon: FlaskConical },
+  { title: 'Emerging Technology Solutions', description: 'Practical evaluation and implementation of new technology where it creates measurable operational value.', technologies: ['IoT', 'Automation', 'Cloud'], Icon: Sparkles },
 ];
 
 const topRowTechnologies = [
@@ -85,13 +84,12 @@ export default function Services() {
 
       <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-10" aria-label="Service offerings">
         <Stagger className={`${styles.grid} grid min-w-0 break-words text-slate-700 md:grid-cols-2`} staggerDelay={90}>
-          {services.map(({ title, description, category, technologies, Icon }) => (
+          {services.map(({ title, description, technologies, Icon }) => (
             <article className={styles.card} key={title}>
               <span className={styles.accent} aria-hidden="true" />
               <span className={styles.icon} aria-hidden="true">
                 <Icon size={20} strokeWidth={2} />
               </span>
-              <p className={styles.category}>{category}</p>
               <h2 className={styles.title}>{title}</h2>
               <p className={styles.description}>{description}</p>
               <ul className={styles.technologies} aria-label={`${title} technologies`}>
