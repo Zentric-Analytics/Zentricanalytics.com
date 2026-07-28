@@ -131,6 +131,8 @@ describe('public layout shell', () => {
     expect(header).toContain('setIsMobileMenuOpen(false)');
     expect(header).toContain("window.addEventListener('keydown', handleKeyDown)");
     expect(header).toContain("window.removeEventListener('keydown', handleKeyDown)");
+    expect(header).toContain("event.key === 'Tab'");
+    expect(header).toContain('previouslyFocusedElement?.focus()');
   });
 
   it('uses the shared primary navigation without recruitment shortcuts in the header', () => {
@@ -143,16 +145,19 @@ describe('public layout shell', () => {
     expect(header).not.toContain('Track Application');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
-    expect(header).toContain('className="whitespace-nowrap text-[30px] font-extrabold leading-[1] tracking-[-0.04em] text-[#0B1F3A]"');
+    expect(header).toContain('whitespace-nowrap text-[30px] font-extrabold leading-[1] tracking-[-0.04em] text-[#0B1F3A]');
     expect(header).toContain('focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B1F3A]');
     expect(header).not.toContain('focus-visible:ring-[#10B981]');
     expect(header).not.toContain('focus:ring-[#10B981]');
     expect(header).not.toContain(`aria-label="Zentric Analytics homepage"
           className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-4"`);
-    expect(header).toContain("style={{ fontFamily: 'Manrope, sans-serif' }}");
+    expect(header).toContain('[font-family:Manrope,sans-serif]');
     expect(header).not.toContain('zentric-wordmark text-[#0B1F3A]');
     const globals = readFileSync('src/app/globals.css', 'utf8');
-    expect(globals).toContain('family=Manrope:wght@600;700;800');
+    const layout = readFileSync('src/app/layout.tsx', 'utf8');
+    expect(layout).toContain('rel="preload" as="style"');
+    expect(layout).toContain('media="print"');
+    expect(layout).toContain('strategy="beforeInteractive"');
     expect(globals).toContain('.site-header a:focus,.site-header button:focus{outline:none;box-shadow:none}');
     expect(globals).toContain('.site-header a:focus-visible,.site-header button:focus-visible{outline:2px solid #0B1F3A;outline-offset:4px;box-shadow:none}');
   });
@@ -163,10 +168,10 @@ describe('public layout shell', () => {
 
     expect(careers).toContain('<Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto" href="/apply">Apply Now</Link>');
     expect(careers).toContain('<Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto" href="/track">Track Application</Link>');
-    expect(careers).toContain('mt-8 grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-3 lg:mt-10');
-    expect(careers).toContain('flex h-[160px] min-w-0 items-center gap-6 rounded-[24px] border border-[#E3EAF1] bg-white p-7');
-    expect(careers).toContain('flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-[#EEF8F5]');
-    expect(careers).toContain('flex w-full max-w-[280px] flex-col items-stretch gap-4 sm:w-auto sm:max-w-none sm:flex-row sm:items-start');
+    expect(careers).toContain('roles.map(({ Icon, title, description })');
+    expect(careers).toContain('aria-labelledby="open-roles-heading"');
+    expect(careers).toContain('grid-cols-1');
+    expect(careers).toContain('lg:grid-cols-3');
   });
 
   it('renders the premium corporate footer navigation and contact resources', () => {
@@ -179,13 +184,27 @@ describe('public layout shell', () => {
     expect(footer).toContain('<FooterHeading>Company</FooterHeading>');
     expect(footer).toContain('<FooterHeading>Capabilities</FooterHeading>');
     expect(footer).toContain('<FooterHeading>Resources</FooterHeading>');
-    expect(footer).toContain('mailto:hello@example.com');
-    expect(footer).toContain('official company email');
+    expect(footer).toContain('href="/contact#contact-form"');
+    expect(footer).toContain('official general company email');
     expect(footer).toContain('© 2026 Zentric Analytics. All rights reserved.');
     expect(footer).toContain('Software • Web • AI • Data Analytics • Research');
     expect(footer).not.toContain('SocialLink');
     expect(footer).not.toContain('Newsletter');
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
+  });
+
+  it('publishes linked legal pages and includes them in the sitemap', () => {
+    const footer = readFileSync('src/components/SiteFooter.tsx', 'utf8');
+    const privacy = readFileSync('src/app/privacy/page.tsx', 'utf8');
+    const terms = readFileSync('src/app/terms/page.tsx', 'utf8');
+    const sitemap = readFileSync('src/app/sitemap.ts', 'utf8');
+
+    expect(footer).toContain("['/privacy', 'Privacy Policy']");
+    expect(footer).toContain("['/terms', 'Terms & Conditions']");
+    expect(privacy).toContain('placeholder privacy policy');
+    expect(terms).toContain('placeholder terms');
+    expect(sitemap).toContain("'/privacy'");
+    expect(sitemap).toContain("'/terms'");
   });
 
   it('keeps the mobile drawer hidden on desktop breakpoints', () => {

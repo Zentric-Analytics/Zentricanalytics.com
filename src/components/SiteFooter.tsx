@@ -78,10 +78,10 @@ export function SiteFooter() {
               {resourceLinks.map(([href, label]) => (
                 <FooterLink key={href} href={href} label={label} />
               ))}
-              {/* TODO: Update this placeholder email when the official company email is available. */}
-              <a className={footerLinkClasses} href="mailto:hello@example.com">
+              {/* TODO: Replace this contact-page fallback when an official general company email is confirmed. */}
+              <Link className={footerLinkClasses} href="/contact#contact-form">
                 Email Us
-              </a>
+              </Link>
             </div>
           </nav>
         </div>

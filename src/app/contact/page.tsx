@@ -4,8 +4,6 @@ import { Reveal, Stagger } from '@/components/Motion';
 import { PageShell } from '@/components/PageShell';
 import { ContactForm } from './ContactForm';
 
-const directEmail = 'careers@zentricanalytics.com';
-
 const trustItems = [
   ['No obligation', CheckCircle2],
   ['Clear next steps', Route],
@@ -61,7 +59,7 @@ export default function ContactPage() {
           <aside className="rounded-[22px] border border-[#DCE3EA] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:p-8">
             <h2 className="text-xl font-bold leading-tight tracking-[-0.035em] sm:text-2xl lg:text-[2rem] text-[#0B1F3A]">Prefer to Contact Us Directly?</h2>
             <Stagger className="mt-6 space-y-5 text-sm text-[#475569] sm:text-[0.9375rem]" staggerDelay={80}>
-              <div className="group flex gap-3"><Mail aria-hidden="true" className="mt-1 size-5 text-[#10B981]" /><div><p className="text-sm font-bold text-[#0B1F3A]">Email</p><a className="mt-1 block break-all text-sm font-semibold text-[#173B67] sm:text-[0.9375rem] transition-colors duration-200 ease-out hover:text-[#10B981]" href={`mailto:${directEmail}`}>{directEmail}</a></div></div>
+              <div className="group flex gap-3"><Mail aria-hidden="true" className="mt-1 size-5 text-[#10B981]" /><div><p className="text-sm font-bold text-[#0B1F3A]">Email</p>{/* TODO: Replace this form fallback when an official general company email is confirmed. */}<a className="mt-1 block text-sm font-semibold text-[#173B67] sm:text-[0.9375rem] transition-colors duration-200 ease-out hover:text-[#10B981]" href="#contact-form">Use our secure contact form</a></div></div>
               <div className="flex gap-3"><Clock3 aria-hidden="true" className="mt-1 size-5 text-[#10B981]" /><div><p className="text-sm font-bold text-[#0B1F3A]">Response Time</p><p className="mt-1 leading-6">We typically respond within one business day.</p></div></div>
               <div className="flex gap-3"><BriefcaseBusiness aria-hidden="true" className="mt-1 size-5 text-[#10B981]" /><div><p className="text-sm font-bold text-[#0B1F3A]">Project Discussions</p><p className="mt-1 leading-6">Share as much detail as possible so we can prepare for the conversation.</p></div></div>
               <div className="flex gap-3"><Handshake aria-hidden="true" className="mt-1 size-5 text-[#10B981]" /><div><p className="text-sm font-bold text-[#0B1F3A]">Partnerships</p><p className="mt-1 leading-6">We welcome discussions with organizations, founders, institutions, and strategic partners.</p></div></div>

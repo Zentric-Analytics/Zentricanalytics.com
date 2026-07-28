@@ -170,7 +170,7 @@ export default function Home() {
                 decoding="async"
                 quality={75}
                 sizes="(min-width: 1180px) 50vw, (min-width: 768px) 50vw, calc(100vw - 2rem)"
-                className="object-cover object-[62%_center] sm:object-[60%_center] lg:object-[58%_48%] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.18)_12%,rgba(0,0,0,0.82)_32%,#000_43%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
+                className="hero-premium-image object-cover object-[62%_center] sm:object-[60%_center] lg:object-[58%_48%]"
               />
             </div>
           </div>

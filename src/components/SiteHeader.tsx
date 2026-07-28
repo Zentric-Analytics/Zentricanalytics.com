@@ -12,6 +12,8 @@ export function SiteHeader() {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollYRef = useRef(0);
+  const mobileDialogRef = useRef<HTMLDivElement>(null);
+  const mobileCloseButtonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const mobileMenuId = 'site-header-mobile-menu';
   const isHomepage = pathname === '/';
@@ -55,16 +57,35 @@ export function SiteHeader() {
     const previousBodyTop = document.body.style.top;
     const previousBodyWidth = document.body.style.width;
     const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previouslyFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
     document.body.style.top = `-${previousScrollY}px`;
     document.body.style.width = '100%';
+    mobileCloseButtonRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsMobileMenuOpen(false);
+        return;
+      }
+
+      if (event.key === 'Tab' && mobileDialogRef.current) {
+        const focusableElements = Array.from(
+          mobileDialogRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements.at(-1);
+
+        if (event.shiftKey && document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement?.focus();
+        } else if (!event.shiftKey && document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement?.focus();
+        }
       }
     };
 
@@ -78,6 +99,7 @@ export function SiteHeader() {
       document.documentElement.style.overflow = previousHtmlOverflow;
       window.scrollTo(0, previousScrollY);
       window.removeEventListener('keydown', handleKeyDown);
+      previouslyFocusedElement?.focus();
     };
   }, [isMobileMenuOpen]);
 
@@ -100,8 +122,7 @@ export function SiteHeader() {
           aria-label="Zentric Analytics homepage"
           className="inline-flex shrink-0 items-center rounded-md focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B1F3A]"
         >
-          <span className="whitespace-nowrap text-[30px] font-extrabold leading-[1] tracking-[-0.04em] text-[#0B1F3A]"
-            style={{ fontFamily: 'Manrope, sans-serif' }}>
+          <span className="whitespace-nowrap text-[30px] font-extrabold leading-[1] tracking-[-0.04em] text-[#0B1F3A] [font-family:Manrope,sans-serif]">
             Zentric Analytics
           </span>
         </Link>
@@ -159,6 +180,7 @@ export function SiteHeader() {
       </nav>
       {isMobileMenuOpen ? (
         <div
+          ref={mobileDialogRef}
           id={mobileMenuId}
           role="dialog"
           aria-modal="true"
@@ -170,6 +192,7 @@ export function SiteHeader() {
               Menu
             </h2>
             <button
+              ref={mobileCloseButtonRef}
               type="button"
               aria-label="Close navigation menu"
               className="btn btn-secondary btn-compact h-11 w-11 p-0"
