@@ -33,3 +33,10 @@
 @media(max-width:519px){.heroBackground{object-position:72% center}.heroOverlay{background:linear-gradient(90deg,rgba(11,31,58,.92) 0%,rgba(11,31,58,.86) 55%,rgba(11,31,58,.7) 100%)}.heroInner{gap:38px}.actions{flex-direction:column}.actions a{width:100%}.healthItems{grid-template-columns:repeat(3,1fr)}.activityCard{display:none}.content h1{text-wrap:pretty}}
 @media(hover:hover) and (pointer:fine){.capabilities li{transition:color .18s ease,transform .18s ease}.capabilities li:hover{color:#fff;transform:translateY(-1px)}.capabilityIcon{transition:color .18s ease,background-color .18s ease}.capabilities li:hover .capabilityIcon{background:rgba(94,224,191,.17);color:#74ebcb}}
 @media(prefers-reduced-motion:reduce){.content,.workspace,.assistantMessage,.activityCard li,.chartArea,.chartPoint{opacity:1;transform:none;animation:none!important}.chartLine{stroke-dasharray:none;stroke-dashoffset:0;animation:none!important}.progressTrack i{transform:scaleX(1);animation:none!important}.online i,.healthy:before,.connected i,.healthItems i{background:#138c8c;animation:none!important}}
+
+/* Phase 6 static baseline: the workspace illustrates a state rather than simulating live data. */
+.content,.workspace,.assistantMessage,.activityCard li,.chartArea,.chartPoint{opacity:1;transform:none}
+.contentActive,.workspaceActive,.workspaceActive .online i,.workspaceActive .healthy:before,.workspaceActive .chartArea,.workspaceActive .chartLine,.workspaceActive .chartPoint,.workspaceActive .assistantMessage,.workspaceActive .connected i,.workspaceActive .progressTrack i,.workspaceActive .healthItems i,.workspaceActive .activityCard li{animation:none}
+.chartLine{stroke-dashoffset:0}
+.progressTrack i{transform:scaleX(1)}
+.online i,.healthy:before,.connected i,.healthItems i{background:#138c8c}

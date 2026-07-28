@@ -23,3 +23,12 @@
 @media(min-width:768px){.workspaceIntro h3{font-size:1.125rem}.previewFrame{font-size:.68rem}}
 @media(min-width:900px){.showcase{grid-template-columns:minmax(190px,23fr) minmax(0,77fr);gap:24px}.navigationShell{max-height:min(480px,calc(100vh - 104px))}.navigation button{min-height:48px}.activeIndicator{height:48px;transform:translateY(calc(var(--active-index) * 48px))}.panel{width:100%}.workspace{padding:18px}.workspaceIntro{margin-bottom:12px}}
 @media(min-width:1024px){.section{padding-top:52px;padding-bottom:52px}.sectionHeader{margin-bottom:28px}.showcase{gap:24px}.workspace{padding:18px}.previewFrame{font-size:.68rem}.analyticsBody,.supportBody,.researchBody{gap:9px;padding:9px}.businessSummary{gap:12px}}
+
+/* Phase 6: previews use stable illustrative states; only tab-panel opacity changes. */
+.panel{animation-duration:var(--za-motion-duration-base)}
+.chartArea,.chartLine,.reportList>div,.messages>div,.supportStatus .connected i,.supportStatus em i,.workflowPath:after,.stageDone i,.barChart i,.healthGrid i,.timeline>div{animation:none!important;opacity:1!important}
+.chartLine{stroke-dashoffset:0!important}
+.barChart i{transform:scaleY(1)!important}
+.workflowPath:after,.supportStatus em i{transform:scaleX(1)!important}
+@media(hover:hover) and (pointer:fine){.navigation button:hover span{transform:translateX(2px)}}
+@media(prefers-reduced-motion:reduce){.panel{animation:none}}

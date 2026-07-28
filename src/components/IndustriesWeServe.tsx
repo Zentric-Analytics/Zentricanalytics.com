@@ -73,13 +73,13 @@ export function IndustriesWeServe() {
                 <h3 className="text-[18px] font-bold leading-[1.3] tracking-[-0.025em] text-[#0B1F3A] sm:text-[19px] lg:text-[20px]">{title}</h3>
                 <ChevronDown
                   aria-hidden="true"
-                  className={`ml-auto size-5 shrink-0 text-[#475569] transition-transform duration-300 ${expandedIndustry === index ? 'rotate-180' : ''}`}
+                  className={`ml-auto size-5 shrink-0 text-[#475569] transition-transform duration-200 motion-reduce:transition-none ${expandedIndustry === index ? 'rotate-180' : ''}`}
                   strokeWidth={1.8}
                 />
               </div>
               <div
                 id={`industry-description-${index}`}
-                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${expandedIndustry === index ? 'mt-2.5 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+                className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${expandedIndustry === index ? 'mt-2.5 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
               >
                 <p className="overflow-hidden text-[14px] leading-[1.6] text-[#475569] sm:text-[14px] lg:text-[15px]">{description}</p>
               </div>

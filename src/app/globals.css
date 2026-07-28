@@ -637,12 +637,12 @@ html{scroll-padding-top:82px}
 
 .za-reveal,
 .za-stagger__item{
-  opacity:0;
+  opacity:1;
   transition-duration:var(--za-motion-duration);
   transition-property:opacity,transform,filter;
   transition-timing-function:var(--za-motion-ease-emphasized);
   transition-delay:var(--za-motion-delay);
-  will-change:opacity,transform;
+  will-change:auto;
 }
 
 .za-reveal--fade{transform:none}
@@ -651,6 +651,13 @@ html{scroll-padding-top:82px}
 .za-reveal--left{transform:translate3d(var(--za-motion-distance),0,0)}
 .za-reveal--right{transform:translate3d(calc(var(--za-motion-distance) * -1),0,0)}
 .za-reveal--scale{transform:scale(var(--za-motion-scale))}
+
+/* Phase 6: ordinary content is progressively enhanced from a readable static baseline. */
+.za-reveal--up,
+.za-reveal--down,
+.za-reveal--left,
+.za-reveal--right,
+.za-reveal--scale{transform:none}
 
 .za-reveal.is-visible,
 .za-stagger.is-visible .za-stagger__item{
@@ -663,10 +670,14 @@ html{scroll-padding-top:82px}
   will-change:transform;
 }
 
-.za-hover-lift:hover{transform:translate3d(0,-3px,0)}
-.za-hover-glow:hover{box-shadow:0 16px 34px rgba(11,31,58,.12),0 0 0 1px rgba(16,185,129,.18)}
-.za-hover-border:hover{border-color:rgba(16,185,129,.58)}
-.za-hover-tilt:hover{transform:perspective(900px) rotateX(1.25deg) rotateY(-1.25deg) translate3d(0,-2px,0)}
+@media (hover:hover) and (pointer:fine){
+  .za-hover-lift:hover{transform:translate3d(0,-2px,0)}
+  .za-hover-glow:hover{box-shadow:0 16px 34px rgba(11,31,58,.12),0 0 0 1px rgba(16,185,129,.18)}
+  .za-hover-border:hover{border-color:rgba(16,185,129,.58)}
+  .za-hover-tilt:hover{transform:translate3d(0,-2px,0)}
+  .za-button-motion:hover{transform:translate3d(0,-1px,0)}
+  .za-button-motion:hover::after{opacity:.06;transform:scale(1)}
+}
 
 .za-button-motion{
   position:relative;
@@ -686,8 +697,6 @@ html{scroll-padding-top:82px}
   transition:opacity var(--za-motion-duration-fast) var(--za-motion-ease-standard),transform var(--za-motion-duration-fast) var(--za-motion-ease-standard);
 }
 
-.za-button-motion:hover{transform:translate3d(0,-1px,0)}
-.za-button-motion:hover::after{opacity:.06;transform:scale(1)}
 .za-button-motion:active{transform:translate3d(0,0,0) scale(.99)}
 .za-button-motion:disabled,
 .za-button-motion[aria-disabled="true"]{transform:none;cursor:not-allowed}
@@ -708,4 +717,30 @@ html{scroll-padding-top:82px}
     transition:none;
     will-change:auto;
   }
+}
+
+/* Phase 6 removes repeated scroll entrances and leaves the Home hero immediately readable. */
+.hero-reveal,
+.editorial-reveal,
+.core-capability-card,
+.trust-principle-card{
+  animation:none;
+  opacity:1;
+  transform:none;
+}
+
+.industries-scroll-reveal,
+.industries-child-reveal{
+  opacity:1;
+  transform:none;
+  transition:none;
+  transition-delay:0ms;
+  will-change:auto;
+}
+
+.technology-ticker__row:focus-visible{outline:2px solid #138c8c;outline-offset:2px}
+.technology-ticker__row:focus-within .technology-ticker__track{animation-play-state:paused}
+
+@media (prefers-reduced-motion:reduce){
+  .animate-spin{animation:none!important}
 }
