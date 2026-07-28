@@ -96,6 +96,9 @@ html,body{width:100%;min-width:0;overflow-x:hidden}
 
 body{margin:0;background:var(--za-color-page);color:var(--za-color-text);font-family:var(--font-inter),system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 
+.skip-link{position:fixed;z-index:100;top:.75rem;left:.75rem;transform:translateY(calc(-100% - 1rem));border-radius:.5rem;background:#fff;padding:.75rem 1rem;color:#0B1F3A;font-weight:700;box-shadow:0 4px 18px rgba(11,31,58,.2)}
+.skip-link:focus{transform:translateY(0)}
+
 /* Container and section roles: 1152px standard, 1280px wide, 768px reading. */
 .za-container,.za-container-wide,.za-container-narrow{width:100%;min-width:0;margin-inline:auto;padding-inline:var(--za-page-padding)}
 .za-container{max-width:72rem}
@@ -117,6 +120,8 @@ body{margin:0;background:var(--za-color-page);color:var(--za-color-text);font-fa
 .za-meta{font-size:var(--za-type-meta);font-weight:500;line-height:1.35}
 
 :where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--za-color-focus);outline-offset:3px}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.skip-link{transition:none}}
 
 
 .zentric-wordmark{font-family:var(--font-manrope);font-size:1.875rem;font-weight:800;letter-spacing:-0.04em;line-height:1;white-space:nowrap}

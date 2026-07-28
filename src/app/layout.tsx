@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   description: 'Zentric Analytics helps organizations improve operations through dependable software, data, AI, and cloud engineering.',
   alternates: { canonical: '/' },
   openGraph: { title: 'Zentric Analytics | Technology Consultancy', description: 'Zentric Analytics helps organizations improve operations through dependable software, data, AI, and cloud engineering.', url: '/', siteName: 'Zentric Analytics', type: 'website' },
+  twitter: { card: 'summary', title: 'Zentric Analytics | Technology Consultancy', description: 'Dependable software, data, AI, and cloud engineering for organizations.' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
