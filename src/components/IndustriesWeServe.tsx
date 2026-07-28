@@ -18,6 +18,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Stagger } from '@/components/Motion';
+import { INDUSTRY_CONTENT } from './industryContent';
 
 type Industry = {
   Icon: LucideIcon;
@@ -25,20 +26,8 @@ type Industry = {
   description: string;
 };
 
-const industries: Industry[] = [
-  { Icon: Banknote, title: 'Financial Services', description: 'High-volume transactions, sensitive records, auditability, and regulatory review require controlled access and traceable decisions. We prioritize resilient workflows, governance, and accurate reporting.' },
-  { Icon: HeartPulse, title: 'Healthcare', description: 'Clinical and administrative users need timely information without weakening privacy or continuity of care. We design around role-based access, interoperability, and dependable service delivery.' },
-  { Icon: ShoppingBag, title: 'Retail & E-commerce', description: 'Customers expect simple purchasing while operators need accurate inventory, fulfilment, and performance data. We connect these workflows to reduce friction and improve visibility.' },
-  { Icon: Factory, title: 'Manufacturing', description: 'Production environments depend on uptime, safety, equipment constraints, and usable shop-floor workflows. We introduce changes in stages and measure throughput, quality, and disruption.' },
-  { Icon: GraduationCap, title: 'Education', description: 'Learners, educators, administrators, and guardians have different access and accessibility needs. We simplify learning and administrative tasks while respecting institutional governance.' },
-  { Icon: Landmark, title: 'Government & Public Sector', description: 'Public services require accessibility, accountability, procurement discipline, and continuity across varied users. We emphasize transparent workflows, maintainable delivery, and responsible data handling.' },
-  { Icon: MonitorCog, title: 'Technology & SaaS', description: 'Digital product teams balance release speed with reliability, tenant boundaries, and operating cost. We strengthen product delivery, platform observability, and maintainable growth.' },
-  { Icon: House, title: 'Real Estate', description: 'Property teams coordinate listings, documents, payments, maintenance, and many stakeholders. We create clearer workflows and a dependable view of operational information.' },
-  { Icon: Bolt, title: 'Energy & Utilities', description: 'Asset-heavy operations require continuity, field usability, monitoring, and careful change control. We design for dependable information flow and decisions that improve efficiency and resilience.' },
-  { Icon: Truck, title: 'Logistics & Transportation', description: 'Time-sensitive movement involves dispatchers, drivers, partners, and customers working across changing conditions. We improve coordination, exception handling, and shipment visibility.' },
-  { Icon: Building2, title: 'Media, Creators & Personal Brands', description: 'Publishing teams need accessible experiences, efficient content operations, ownership of audience data, and sustainable performance. We build around those workflows rather than vanity metrics.' },
-  { Icon: BriefcaseBusiness, title: 'Professional Services', description: 'Client work depends on clear handoffs, permissions, deadlines, and trusted records. We streamline delivery and reporting while keeping professional judgment and accountability visible.' },
-];
+const industryIcons: LucideIcon[] = [Banknote, HeartPulse, ShoppingBag, Factory, GraduationCap, Landmark, MonitorCog, House, Bolt, Truck, Building2, BriefcaseBusiness];
+const industries: Industry[] = INDUSTRY_CONTENT.map((industry, index) => ({ ...industry, Icon: industryIcons[index] }));
 
 export function IndustriesWeServe() {
   const [expandedIndustry, setExpandedIndustry] = useState<number | null>(null);

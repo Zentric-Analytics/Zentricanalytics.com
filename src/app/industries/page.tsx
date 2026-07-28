@@ -53,13 +53,10 @@ export default function Industries() {
             <Reveal as="h1" id="industries-page-heading" delay={40} className="max-w-[21rem] text-[36px] font-bold leading-[1.1] tracking-[-0.04em] sm:max-w-2xl sm:text-[40px] sm:leading-[1.08] lg:max-w-3xl lg:text-[42px]">
               Technology Shaped by Your Sector’s Operating Reality
             </Reveal>
-            <Reveal delay={120}>
+            <Reveal delay={120} duration={400}>
               <IndustriesHeroTyping />
             </Reveal>
-            <Reveal as="p" delay={200} className="mt-3 max-w-[43rem] text-[15px] leading-[1.65] text-slate-100 sm:mt-4 sm:text-[15px] sm:leading-[1.65] lg:text-[16px]">
-              We adapt delivery to the people, regulations, workflows, risk, and governance that define your organization—because similar technology decisions can carry different consequences across sectors.
-            </Reveal>
-            <Reveal delay={280} className="mt-6 flex flex-col gap-3.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-4">
+            <Reveal delay={120} duration={400} className="mt-6 flex flex-col gap-3.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-4">
               <MotionLink className="btn hero-cta-primary w-full text-[16px] sm:w-auto" href="/contact">Discuss Your Needs</MotionLink>
             </Reveal>
           </div>
