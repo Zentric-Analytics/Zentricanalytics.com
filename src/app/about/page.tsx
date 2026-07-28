@@ -23,10 +23,10 @@ const aboutCards = [
 export default function About() {
   return (
     <PageShell>
-      <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
+      <section className="za-container za-section-compact">
         <Stagger className="max-w-3xl" staggerDelay={90}>
-          <p className="mb-3 min-w-0 break-words text-sm font-bold uppercase tracking-[0.18em] text-accent">About</p>
-          <h1 className="mb-5 max-w-3xl break-words text-[1.82rem] font-bold tracking-tight text-ink sm:text-[2.15rem] lg:text-[2.65rem]">
+          <p className="za-eyebrow mb-3 min-w-0 break-words">About</p>
+          <h1 className="za-page-heading mb-5 max-w-3xl break-words text-ink">
             A technology company committed to careful engineering.
           </h1>
         </Stagger>

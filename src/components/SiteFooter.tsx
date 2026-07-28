@@ -23,7 +23,7 @@ const resourceLinks = [
 ] as const;
 
 const footerLinkClasses =
-  'w-fit rounded-sm py-0.5 text-sm font-normal leading-5 text-[#CBD5E1] transition-colors duration-200 hover:text-[#10B981] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#10B981]';
+  'w-fit rounded-sm py-0.5 text-sm font-normal leading-5 text-white/75 transition-colors duration-200 hover:text-accent';
 
 function FooterLink({ href, label }: { href: string; label: string }) {
   return (
@@ -39,8 +39,8 @@ function FooterHeading({ children }: { children: React.ReactNode }) {
 
 export function SiteFooter() {
   return (
-    <footer className="bg-[#0B1F3A] text-white" aria-label="Site footer">
-      <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 sm:py-8 lg:px-8 lg:py-8">
+    <footer className="bg-brand text-white" aria-label="Site footer">
+      <div className="za-container-wide py-7 sm:py-8">
         <div className="grid gap-5 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.7fr)_minmax(0,0.95fr)_minmax(0,0.8fr)] lg:gap-x-10">
           <section aria-labelledby="footer-company-overview" className="min-w-0">
             <h2
@@ -49,7 +49,7 @@ export function SiteFooter() {
             >
               Zentric Analytics
             </h2>
-            <p className="mt-3 max-w-xs text-sm leading-[1.55] text-[#CBD5E1]">
+            <p className="mt-3 max-w-xs text-sm leading-[1.55] text-white/75">
               Engineering reliable software, artificial intelligence, data platforms, and research-driven technology solutions for organizations building the future.
             </p>
           </section>
@@ -86,7 +86,7 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <div className="mt-6 flex flex-col gap-2 border-t border-[#1E3A5F] pt-4 text-[13px] leading-5 text-[#94A3B8] sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-2 border-t border-white/15 pt-4 text-[13px] leading-5 text-white/70 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 Zentric Analytics. All rights reserved.</p>
           <p>Software • Web • AI • Data Analytics • Research</p>
         </div>

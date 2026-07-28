@@ -22,7 +22,7 @@ function fieldWidth(width: Width = 'standard') {
   }[width];
 }
 function inputClass(state: Stage1FormState, field: Stage1Field) {
-  return `input h-11 border-slate-300 bg-white text-[0.95rem] shadow-sm transition placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10 ${errorFor(state, field) ? 'border-red-400 bg-red-50/40 focus:border-red-500 focus:ring-red-100' : ''}`;
+  return `input text-[0.95rem] placeholder:text-slate-400 ${errorFor(state, field) ? 'border-red-400 bg-red-50/40 focus:border-red-500 focus:ring-red-100' : ''}`;
 }
 function FieldError({ state, field }: { state: Stage1FormState; field: Stage1Field }) {
   const error = errorFor(state, field);
