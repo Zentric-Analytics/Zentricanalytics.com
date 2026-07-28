@@ -104,6 +104,7 @@ body{margin:0;background:var(--za-color-page);color:var(--za-color-text);font-fa
 .za-section-compact{padding-block:var(--za-section-compact)}
 .za-section{padding-block:var(--za-section-standard)}
 .za-section-large{padding-block:var(--za-section-large)}
+.za-task-section{padding-top:clamp(2rem,5vw,var(--za-section-compact));padding-bottom:var(--za-section-compact)}
 
 .za-hero-heading,.za-page-heading{font-size:var(--za-type-hero);font-weight:700;line-height:var(--za-leading-heading);letter-spacing:var(--za-tracking-heading)}
 .za-section-heading{font-size:var(--za-type-section);font-weight:700;line-height:1.1;letter-spacing:var(--za-tracking-heading)}

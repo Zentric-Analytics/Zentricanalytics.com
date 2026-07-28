@@ -168,7 +168,7 @@ describe('public layout shell', () => {
     expect(careers).toContain('<Link className="btn btn-primary za-button-motion w-full text-base sm:w-auto" href="/apply">Apply Now</Link>');
     expect(careers).toContain('<Link className="btn btn-secondary za-button-motion w-full text-base sm:w-auto" href="/track">Track Application</Link>');
     expect(careers).toContain('mt-8 grid grid-cols-1 gap-x-5 gap-y-[18px] md:grid-cols-2 lg:mt-10 lg:grid-cols-3');
-    expect(careers).toContain('group grid min-h-[190px] min-w-0 grid-cols-[3rem_minmax(0,1fr)] gap-x-[18px] rounded-[20px] border border-[#E3EAF1] bg-white p-5');
+    expect(careers).toContain('group grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] gap-x-[18px] rounded-[20px] border border-[#E3EAF1] bg-white p-5');
     expect(careers).toContain('flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#EEF8F5]');
     expect(careers).toContain('Apply for this role');
     expect(careers).toContain('flex w-full max-w-[280px] flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-start');
