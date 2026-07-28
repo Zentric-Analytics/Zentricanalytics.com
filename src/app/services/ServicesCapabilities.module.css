@@ -1,0 +1,132 @@
+.grid {
+  gap: 16px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 260px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e3e9ee;
+  border-radius: 22px;
+  background: #fff;
+  padding: 20px 22px 18px;
+  box-shadow: 0 6px 20px rgba(11, 31, 58, 0.045);
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  border-radius: 22px 22px 0 0;
+  background: #138c8c;
+  transition: background-color 220ms ease, box-shadow 220ms ease;
+}
+
+.icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  place-items: center;
+  border: 1px solid rgba(19, 140, 140, 0.14);
+  border-radius: 13px;
+  background: #edf8f7;
+  color: #0f8585;
+  transition: background-color 220ms ease, border-color 220ms ease, transform 220ms ease;
+}
+
+.category {
+  margin: 12px 0 0;
+  color: #0f7f7f;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.11em;
+}
+
+.title {
+  margin: 5px 0 0;
+  color: #0c1222;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.description {
+  max-width: 35rem;
+  margin: 7px 0 14px;
+  color: #526071;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.technologies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.technologies li {
+  border: 1px solid #e5e9ed;
+  border-radius: 999px;
+  background: #f6f8fa;
+  padding: 4px 9px;
+  color: #526071;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    border-color: #d7e4e5;
+    box-shadow: 0 16px 34px rgba(11, 31, 58, 0.1);
+    transform: translateY(-6px);
+  }
+
+  .card:hover .accent {
+    background: #16a3a3;
+    box-shadow: 0 1px 8px rgba(22, 163, 163, 0.2);
+  }
+
+  .card:hover .icon {
+    border-color: rgba(19, 140, 140, 0.2);
+    background: #e1f4f2;
+    transform: scale(1.05);
+  }
+
+  .card:hover .technologies li {
+    border-color: #dce5e6;
+    background: #f0f5f5;
+    color: #3f555b;
+  }
+}
+
+@media (max-width: 639px) {
+  .grid { gap: 14px; }
+  .card { min-height: 250px; padding: 18px 18px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .accent,
+  .icon,
+  .technologies li {
+    transition: none;
+  }
+
+  .card:hover,
+  .card:hover .icon {
+    transform: none;
+  }
+}
