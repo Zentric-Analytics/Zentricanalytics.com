@@ -89,7 +89,7 @@ export default function Services() {
             <article className={styles.card} key={title}>
               <span className={styles.accent} aria-hidden="true" />
               <span className={styles.icon} aria-hidden="true">
-                <Icon size={22} strokeWidth={2} />
+                <Icon size={20} strokeWidth={2} />
               </span>
               <p className={styles.category}>{category}</p>
               <h2 className={styles.title}>{title}</h2>
