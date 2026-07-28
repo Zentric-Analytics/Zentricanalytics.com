@@ -142,16 +142,16 @@ export default function Careers() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24" aria-labelledby="careers-values-heading">
+      <section className="bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20" aria-labelledby="careers-values-heading">
         <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[36fr_64fr] lg:gap-16">
-          <Reveal as="header" className="max-w-[430px] text-left">
+          <Reveal as="header" className="max-w-[430px] text-left" disabled>
             <h2 id="careers-values-heading" className="text-[34px] font-bold leading-[1.08] tracking-[-0.045em] text-[#0B1F3A] sm:text-[40px] lg:text-[44px]">What We Value</h2>
             <p className="mt-4 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
               We value people who approach technology with discipline, curiosity, integrity, and respect for the people affected by their work.
             </p>
           </Reveal>
 
-          <Stagger className="grid grid-cols-1 divide-y divide-[#DCE3EA] md:grid-cols-2 md:divide-x md:divide-y-0 [&>article:nth-child(3)]:md:border-t [&>article:nth-child(3)]:md:border-[#DCE3EA] [&>article:nth-child(odd)]:md:border-l-0" delay={120} staggerDelay={90}>
+          <Stagger className="grid grid-cols-1 divide-y divide-[#DCE3EA] md:grid-cols-2 md:divide-x md:divide-y-0 [&>article:nth-child(3)]:md:border-t [&>article:nth-child(3)]:md:border-[#DCE3EA] [&>article:nth-child(odd)]:md:border-l-0" disabled>
             {values.map(({ Icon, title, description }) => (
               <article className="p-6 transition-colors duration-200 hover:bg-[#F8FAFC]" key={title}>
                 <Icon aria-hidden="true" className="size-5 text-[#0B7F60]" strokeWidth={1.8} />
