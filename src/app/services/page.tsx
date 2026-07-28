@@ -83,7 +83,7 @@ export default function Services() {
     <PageShell>
       <ServicesHero />
 
-      <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14" aria-label="Service offerings">
+      <section className="mx-auto w-full max-w-6xl min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-10" aria-label="Service offerings">
         <Stagger className={`${styles.grid} grid min-w-0 break-words text-slate-700 md:grid-cols-2`} staggerDelay={90}>
           {services.map(({ title, description, category, technologies, Icon }) => (
             <article className={styles.card} key={title}>
