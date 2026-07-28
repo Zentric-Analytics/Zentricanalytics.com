@@ -1,18 +1,22 @@
 .grid {
+  align-items: start;
   column-gap: 16px;
-  row-gap: 18px;
+  row-gap: 16px;
 }
 
 .card {
   position: relative;
   display: flex;
+  height: auto;
+  min-height: 0;
   min-width: 0;
+  align-self: start;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid #e3e9ee;
   border-radius: 22px;
   background: #fff;
-  padding: 16px 18px;
+  padding: 10px 22px;
   box-shadow: 0 6px 20px rgba(11, 31, 58, 0.045);
   transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
 }
@@ -42,7 +46,7 @@
 }
 
 .category {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   color: #0f7f7f;
   font-size: 11px;
   font-weight: 600;
@@ -51,7 +55,7 @@
 }
 
 .title {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: #0c1222;
   font-size: 1.125rem;
   font-weight: 700;
@@ -60,7 +64,7 @@
 
 .description {
   max-width: 35rem;
-  margin: 10px 0 14px;
+  margin: 8px 0 12px;
   color: #526071;
   font-size: 0.875rem;
   line-height: 1.55;
@@ -110,16 +114,6 @@
     background: #f0f5f5;
     color: #3f555b;
   }
-}
-
-@media (min-width: 640px) {
-  .card { padding: 18px 22px; }
-  .icon { width: 41px; height: 41px; margin-top: -2px; }
-}
-
-@media (min-width: 1024px) {
-  .card { padding: 20px 24px; }
-  .icon { width: 42px; height: 42px; margin-top: -4px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
