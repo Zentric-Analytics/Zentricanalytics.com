@@ -1,8 +1,5 @@
-'use client';
-
 import { Children, cloneElement, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type CSSProperties, type ElementType, type HTMLAttributes } from 'react';
 import { cx, getMotionStyle, motionHoverEffects, motionRevealVariants, type MotionHoverEffect, type MotionRevealVariant } from '@/lib/motion';
-import { useScrollReveal } from '@/hooks/useScrollReveal';
 
 type MotionElementProps<T extends HTMLElement> = HTMLAttributes<T> & {
   as?: ElementType;
@@ -32,12 +29,9 @@ export function Reveal<T extends HTMLElement = HTMLDivElement>({
   style,
   ...props
 }: RevealProps<T>) {
-  const { ref, isVisible } = useScrollReveal<T>({ disabled, once, threshold, rootMargin });
-
   return (
     <Component
-      ref={ref}
-      className={cx('za-reveal', motionRevealVariants[variant], (disabled || isVisible) && 'is-visible', className)}
+      className={cx('za-reveal', motionRevealVariants[variant], 'is-visible', className)}
       style={{ ...getMotionStyle({ delay, duration }), ...style } as CSSProperties}
       {...props}
     >
@@ -73,10 +67,8 @@ export function Stagger<T extends HTMLElement = HTMLDivElement>({
   variant = 'up',
   ...props
 }: StaggerProps<T>) {
-  const { ref, isVisible } = useScrollReveal<T>({ disabled, once, threshold, rootMargin });
-
   return (
-    <Component ref={ref} className={cx('za-stagger', (disabled || isVisible) && 'is-visible', className)} {...props}>
+    <Component className={cx('za-stagger', 'is-visible', className)} {...props}>
       {Children.map(children, (child, index) => {
         const style = getMotionStyle({ delay, duration, staggerDelay, staggerIndex: index });
         const itemClassName = cx('za-stagger__item', motionRevealVariants[variant], childClassName);

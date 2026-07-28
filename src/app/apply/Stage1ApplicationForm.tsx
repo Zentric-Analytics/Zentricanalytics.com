@@ -77,6 +77,12 @@ export function Stage1ApplicationForm() {
       setSelectedFile('');
       setFileNeedsReselection(true);
     }
+    const firstInvalidField = Object.keys(state.fieldErrors)[0];
+    if (firstInvalidField) {
+      requestAnimationFrame(() => {
+        document.querySelector<HTMLElement>(`[name="${CSS.escape(firstInvalidField)}"]`)?.focus();
+      });
+    }
   }, [state]);
 
   const clearFieldError = (field: Stage1Field) => {
@@ -94,7 +100,8 @@ export function Stage1ApplicationForm() {
   const [selectedRole, setSelectedRole] = useState(values.role || roleAppliedForOptions[0]);
   const otherRoleIsSelected = selectedRole === 'Other';
 
-  return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8" onSubmit={() => { validateVisibleFileSelection(); }} onChange={(event) => { const name = (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as Stage1Field | undefined; if (name) clearFieldError(name); }}>
+  return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8" aria-busy={pending} onSubmit={() => { validateVisibleFileSelection(); }} onChange={(event) => { const name = (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as Stage1Field | undefined; if (name) clearFieldError(name); }}>
+    <p className="sr-only" aria-live="polite">{pending ? 'Submitting application' : ''}</p>
     {visibleMessage ? <div className="min-w-0 break-words rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{visibleMessage}</div> : null}
 
     <FormSection eyebrow="Step 01" title="Personal details" helper="Use the same contact information you want our hiring team to use for updates.">

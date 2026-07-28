@@ -52,7 +52,7 @@ const bottomRowTechnologies = [
 
 function TechnologyRow({ technologies, variant }: { technologies: string[]; variant: 'top' | 'bottom' }) {
   return (
-    <div className={`technology-ticker__row technology-ticker__row--${variant}`}>
+    <div className={`technology-ticker__row technology-ticker__row--${variant}`} tabIndex={0} aria-label={`${variant === 'top' ? 'First' : 'Second'} technology list; focus to pause movement`}>
       <div className="technology-ticker__track">
         {[0, 1].map((groupIndex) => (
           <div className="technology-ticker__group" aria-hidden={groupIndex === 1} key={groupIndex}>

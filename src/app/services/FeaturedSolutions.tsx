@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import styles from './FeaturedSolutions.module.css';
 
 type PreviewType = 'analytics' | 'support' | 'workflow' | 'research' | 'cloud';
@@ -61,23 +60,7 @@ const solutions: Solution[] = [
 ];
 
 function CountValue({ value, format }: { value: number; format: (value: number) => string }) {
-  const reducedMotion = usePrefersReducedMotion();
-  const [current, setCurrent] = useState(reducedMotion ? value : 0);
-
-  useEffect(() => {
-    if (reducedMotion) { setCurrent(value); return; }
-    let frame = 0;
-    const started = performance.now();
-    const tick = (now: number) => {
-      const progress = Math.min((now - started) / 650, 1);
-      setCurrent(value * (1 - Math.pow(1 - progress, 3)));
-      if (progress < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [reducedMotion, value]);
-
-  return <>{format(current)}</>;
+  return <>{format(value)}</>;
 }
 
 function PreviewFrame({ title, meta, children }: { title: string; meta: string; children: React.ReactNode }) {

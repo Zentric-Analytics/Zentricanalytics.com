@@ -10,8 +10,8 @@ const contactLink = ['/contact', "Let's Talk"] as const;
 export function SiteHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
-  const lastScrollYRef = useRef(0);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const mobileMenuId = 'site-header-mobile-menu';
   const isHomepage = pathname === '/';
@@ -20,24 +20,9 @@ export function SiteHeader() {
     : primaryNavigationLinks;
 
   useEffect(() => {
-    const topThreshold = 40;
-    const hideThreshold = 100;
-    const scrollDelta = 4;
-
     const handleScroll = () => {
       const currentScrollY = Math.max(window.scrollY, 0);
-      const previousScrollY = lastScrollYRef.current;
-      const scrollDifference = currentScrollY - previousScrollY;
-
       setHasScrolled(currentScrollY > 8);
-
-      if (currentScrollY <= topThreshold) {
-        setIsHeaderHidden(false);
-      } else if (Math.abs(scrollDifference) >= scrollDelta) {
-        setIsHeaderHidden(scrollDifference > 0 && currentScrollY > hideThreshold);
-      }
-
-      lastScrollYRef.current = currentScrollY;
     };
 
     handleScroll();
@@ -50,6 +35,7 @@ export function SiteHeader() {
     if (!isMobileMenuOpen) return;
 
     const previousScrollY = window.scrollY;
+    const menuButton = menuButtonRef.current;
     const previousBodyOverflow = document.body.style.overflow;
     const previousBodyPosition = document.body.style.position;
     const previousBodyTop = document.body.style.top;
@@ -65,10 +51,28 @@ export function SiteHeader() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsMobileMenuOpen(false);
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        const focusable = Array.from(
+          mobileMenuRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? [],
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
+    mobileMenuRef.current?.querySelector<HTMLElement>('button')?.focus();
 
     return () => {
       document.body.style.overflow = previousBodyOverflow;
@@ -78,23 +82,20 @@ export function SiteHeader() {
       document.documentElement.style.overflow = previousHtmlOverflow;
       window.scrollTo(0, previousScrollY);
       window.removeEventListener('keydown', handleKeyDown);
+      menuButton?.focus();
     };
   }, [isMobileMenuOpen]);
 
   const isActiveLink = (href: string) => (href === '/' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
-  const shouldHideHeader = isHeaderHidden && !isMobileMenuOpen;
-
   return (
     <header
-      className={`site-header sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 bg-white ease-out will-change-transform ${
-        shouldHideHeader ? 'pointer-events-none -translate-y-full opacity-0' : 'translate-y-0 opacity-100'
-      } ${
-        hasScrolled && !shouldHideHeader
+      className={`site-header sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 bg-white motion-reduce:transition-none ${
+        hasScrolled
           ? 'border-brand/10 shadow-[0_10px_26px_rgba(11,31,58,0.07)]'
           : 'border-transparent'
       }`}
     >
-      <nav className={`za-container-wide flex items-center justify-between gap-5 transition-[height] duration-300 lg:gap-7 ${hasScrolled ? 'h-[56px] sm:h-[60px]' : 'h-[66px] sm:h-[70px] lg:h-[72px]'}`}>
+      <nav className={`za-container-wide flex h-[66px] items-center justify-between gap-5 sm:h-[70px] lg:h-[72px] lg:gap-7`}>
         <Link
           href="/"
           aria-label="Zentric Analytics homepage"
@@ -141,6 +142,7 @@ export function SiteHeader() {
         <div className="flex shrink-0 items-center md:hidden">
           <button
             type="button"
+            ref={menuButtonRef}
             aria-expanded={isMobileMenuOpen}
             aria-controls={mobileMenuId}
             aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
@@ -158,6 +160,7 @@ export function SiteHeader() {
       </nav>
       {isMobileMenuOpen ? (
         <div
+          ref={mobileMenuRef}
           id={mobileMenuId}
           role="dialog"
           aria-modal="true"
