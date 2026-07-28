@@ -124,7 +124,6 @@ export function ServicesHero() {
       <div className={styles.heroOverlay} aria-hidden="true" />
       <div className={styles.heroInner}>
         <div className={`${styles.content} ${active ? styles.contentActive : ''}`}>
-          <p className={styles.eyebrow}>Services</p>
           <h1 id="services-hero-heading">Custom Software, AI, and Data Solutions Built Around Your Business</h1>
           <p className={styles.description}>We partner with organizations to design, build, and scale secure digital products—from business applications and AI-powered solutions to analytics platforms and cloud infrastructure.</p>
           <div className={styles.actions}>
