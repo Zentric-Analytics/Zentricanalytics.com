@@ -3,10 +3,10 @@ import { getNextIndustryIndex, INDUSTRY_DISPLAY_INTERVAL } from '../src/componen
 import { INDUSTRY_CONTENT } from '../src/components/industryContent';
 
 describe('Industries hero rotation', () => {
-  it('uses the approved complete industry entries at a stable interval', () => {
+  it('uses complete sector names at a stable interval', () => {
     expect(INDUSTRY_DISPLAY_INTERVAL).toBe(4000);
     expect(INDUSTRY_CONTENT).toHaveLength(12);
-    expect(INDUSTRY_CONTENT.every(({ title, description }) => title.length > 0 && description.length > 0)).toBe(true);
+    expect(INDUSTRY_CONTENT.every(({ title }) => title.length > 0)).toBe(true);
   });
 
   it('shows every industry and loops twice without skipping or mismatching entries', () => {

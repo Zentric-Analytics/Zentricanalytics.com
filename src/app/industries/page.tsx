@@ -50,15 +50,18 @@ export default function Industries() {
         <div className="absolute inset-0 z-[1] bg-[#0B1F3A]/80" aria-hidden="true" />
         <div className="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-center px-4 pb-[40px] pt-[56px] sm:px-6 lg:px-8">
           <div className="max-w-[44rem]">
-            <Reveal as="h1" id="industries-page-heading" delay={40} className="max-w-[21rem] text-[36px] font-bold leading-[1.1] tracking-[-0.04em] sm:max-w-2xl sm:text-[40px] sm:leading-[1.08] lg:max-w-3xl lg:text-[42px]">
-              Technology Shaped by Your Sector’s Operating Reality
-            </Reveal>
-            <Reveal delay={120} duration={400}>
+            <h1 id="industries-page-heading" className="max-w-[21rem] text-[36px] font-bold leading-[1.1] tracking-[-0.04em] sm:max-w-2xl sm:text-[40px] sm:leading-[1.08] lg:max-w-3xl lg:text-[42px]">
+              Technology Shaped by Your Sector&apos;s Operating Reality
+            </h1>
+            <div className="industries-hero-typing">
               <IndustriesHeroTyping />
-            </Reveal>
-            <Reveal delay={120} duration={400} className="mt-6 flex flex-col gap-3.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-4">
+              <p className="mt-3 max-w-[43rem] text-[15px] leading-[1.65] text-slate-100 sm:mt-4 sm:text-[15px] sm:leading-[1.65] lg:text-[16px]">
+                We adapt delivery to the people, regulations, workflows, risk, and governance that define your organization—because similar technology decisions can carry different consequences across sectors.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-col gap-3.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-4">
               <MotionLink className="btn hero-cta-primary w-full text-[16px] sm:w-auto" href="/contact">Discuss Your Needs</MotionLink>
-            </Reveal>
+            </div>
           </div>
         </div>
       </section>
