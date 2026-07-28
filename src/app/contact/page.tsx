@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { ArrowRight, BriefcaseBusiness, CheckCircle2, Clock3, Handshake, Lightbulb, Mail, MessagesSquare, Route, ShieldCheck } from 'lucide-react';
+import { BriefcaseBusiness, CheckCircle2, Clock3, Handshake, Lightbulb, Mail, MessagesSquare, Route, ShieldCheck } from 'lucide-react';
 import { Reveal, Stagger } from '@/components/Motion';
 import { PageShell } from '@/components/PageShell';
 import { ContactForm } from './ContactForm';
@@ -27,14 +26,11 @@ export default function ContactPage() {
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,0.42fr)] lg:items-center lg:gap-14">
           <Stagger className="max-w-3xl" staggerDelay={90}>
             <h1 id="contact-heading" className="max-w-4xl text-[1.82rem] font-bold leading-[1.1] tracking-[-0.045em] sm:text-[2.15rem] lg:text-[2.65rem]">
-              Let&apos;s Build the Right Technology Solution Together
+              Tell Us What Your Organization Needs to Improve
             </h1>
             <p className="mt-5 max-w-2xl text-sm leading-[1.7] text-slate-200 sm:text-[0.9375rem]">
-              Tell us about your goals, challenges, or upcoming project. Our team will review your needs and help identify the right next step.
+              Contact us if you are planning a digital product, modernizing an operation, evaluating AI or data work, or looking for an engineering partner. Share the users, problem, timing, constraints, and budget range you know.
             </p>
-            <Link href="#contact-form" className="btn hero-cta-primary group mt-7 w-full sm:w-auto">
-              <span>Start Your Enquiry</span><ArrowRight aria-hidden="true" className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
-            </Link>
           </Stagger>
 
           <Reveal as="aside" delay={360} className="rounded-[22px] border border-white/15 bg-white/[0.06] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur sm:p-6" aria-label="Contact conversation assurances">
@@ -75,7 +71,7 @@ export default function ContactPage() {
           <Stagger className="max-w-3xl" staggerDelay={90}>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#10B981]">PROCESS</p>
             <h2 id="next-heading" className="mt-3 text-xl font-bold leading-tight tracking-[-0.04em] text-[#0B1F3A] sm:text-2xl lg:text-[2rem]">What Happens Next</h2>
-            <p className="mt-3 text-sm leading-7 text-[#475569] sm:text-[0.9375rem]">A simple and transparent process from enquiry to the right next step.</p>
+            <p className="mt-3 text-sm leading-7 text-[#475569] sm:text-[0.9375rem]">We review your enquiry and typically respond within one business day with questions or a proposed conversation.</p>
           </Stagger>
           <Stagger className="mt-6 grid gap-0 divide-y divide-[#DCE3EA] lg:grid-cols-3 lg:divide-x lg:divide-y-0" staggerDelay={90}>
             {nextSteps.map(([number, Icon, title, description]) => (
@@ -89,17 +85,6 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="bg-[#F7F9FC] px-4 py-8 text-white sm:px-6 sm:py-10 lg:px-8" aria-labelledby="assurance-heading">
-        <div className="mx-auto flex max-w-6xl flex-col gap-5 rounded-[24px] bg-[#0B1F3A] p-6 shadow-[0_20px_50px_rgba(2,8,23,0.16)] sm:flex-row sm:items-center sm:justify-between sm:p-8 lg:px-10">
-          <Stagger className="max-w-2xl" staggerDelay={90}>
-            <h2 id="assurance-heading" className="text-2xl font-bold tracking-[-0.035em] sm:text-[2rem] lg:text-[2.5rem]">Not Ready With Every Detail Yet?</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-200 sm:text-[0.9375rem]">That is completely fine. Start with what you know, and we will help you shape the rest.</p>
-          </Stagger>
-          <Reveal delay={180}>
-            <Link href="#contact-form" className="btn hero-cta-primary w-full shrink-0 sm:w-auto">Start a Conversation</Link>
-          </Reveal>
-        </div>
-      </section>
     </PageShell>
   );
 }

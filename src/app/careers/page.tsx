@@ -97,10 +97,10 @@ export default function Careers() {
           <div className="relative z-10 mx-auto w-full max-w-7xl">
             <Stagger className="max-w-[53rem] lg:max-w-[64rem]" staggerDelay={90}>
               <h1 id="careers-hero-heading" className="max-w-[21rem] text-[36px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:max-w-2xl sm:text-[40px] lg:max-w-3xl lg:text-[42px]">
-                Build Practical Technology With Care and Accountability
+                Build Useful Technology With a Team That Takes Responsibility
               </h1>
               <p className="mt-6 max-w-[41rem] text-[15px] leading-[1.7] text-white/90 sm:mt-7 lg:mt-8 lg:text-[16px]">
-                Zentric Analytics looks for people who value clear communication, maintainable engineering, responsible data handling, thoughtful problem-solving, and continuous learning. If a specific role is not listed, candidates may submit a general application.
+                Grow your craft while working with teammates who communicate directly, learn continuously, respect different perspectives, and take ownership of engineering quality.
               </p>
             </Stagger>
           </div>
@@ -150,7 +150,7 @@ export default function Careers() {
           <Reveal as="header" className="max-w-[430px] text-left" disabled>
             <h2 id="careers-values-heading" className="text-[34px] font-bold leading-[1.08] tracking-[-0.045em] text-[#0B1F3A] sm:text-[40px] lg:text-[44px]">What We Value</h2>
             <p className="mt-4 text-[14px] leading-[1.6] text-[#475569] sm:text-[15px]">
-              We value people who approach technology with discipline, curiosity, integrity, and respect for the people affected by their work.
+              We expect ownership, continuous learning, clear communication, careful quality, and respect for colleagues, clients, users, and the people affected by our work.
             </p>
           </Reveal>
 
@@ -166,6 +166,20 @@ export default function Careers() {
         </div>
       </section>
 
+      <section className="border-t border-[#DCE3EA] bg-[#F7F9FC] px-4 py-10 sm:px-6 sm:py-12 lg:px-8" aria-labelledby="application-process-heading">
+        <div className="mx-auto max-w-6xl">
+          <Reveal as="header" className="max-w-2xl" disabled>
+            <h2 id="application-process-heading" className="text-[28px] font-bold tracking-[-0.04em] text-[#0B1F3A] sm:text-[32px]">What to expect after you apply</h2>
+            <p className="mt-3 text-[14px] leading-7 text-[#475569] sm:text-[15px]">We use the email on your application for confirmations, requests, and decisions. Keep your application ID to check progress securely.</p>
+          </Reveal>
+          <Stagger className="mt-7 grid divide-y divide-[#DCE3EA] md:grid-cols-3 md:divide-x md:divide-y-0" disabled>
+            <article className="py-5 md:px-6 md:first:pl-0"><h3 className="text-lg font-bold text-[#0B1F3A]">1. Submit your application</h3><p className="mt-2 text-sm leading-6 text-[#475569]">Provide contact details, role preferences, a concise experience summary, your CV, and the required declarations.</p></article>
+            <article className="py-5 md:px-6"><h3 className="text-lg font-bold text-[#0B1F3A]">2. Recruitment review</h3><p className="mt-2 text-sm leading-6 text-[#475569]">The hiring team reviews the information against current role needs. If more detail is required, we will contact you by email.</p></article>
+            <article className="py-5 md:px-6 md:last:pr-0"><h3 className="text-lg font-bold text-[#0B1F3A]">3. Update or next stage</h3><p className="mt-2 text-sm leading-6 text-[#475569]">You receive an email when there is a next step. You can also use your application ID and email on the tracking page.</p></article>
+          </Stagger>
+        </div>
+      </section>
+
       <section
         className="bg-[#F7F9FC] px-4 py-10 sm:px-6 sm:py-12 lg:px-8"
         aria-labelledby="careers-final-cta-heading"
@@ -173,10 +187,10 @@ export default function Careers() {
         <Stagger className="mx-auto w-full max-w-[70rem] rounded-[24px] bg-[#0B1F3A] p-6 shadow-[0_20px_50px_rgba(2,8,23,0.16)] sm:p-8 lg:px-12 lg:py-10" staggerDelay={90}>
           <div className="min-w-0">
             <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-[30px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[36px] lg:text-[40px]">
-              Ready to Build Meaningful Technology With Us?
+              Ready to apply?
             </h2>
             <p className="mt-3 max-w-[43rem] text-[14px] leading-[1.6] text-[#C8D7E5] sm:mt-4 sm:text-[15px]">
-              Join a team that values practical engineering, continuous learning, thoughtful collaboration, and building technology that creates lasting impact.
+              Choose a listed role or submit a general application. You will receive an application ID and email confirmation after a successful submission.
             </p>
             <div className="mt-7 flex w-full max-w-[280px] flex-col gap-3 sm:max-w-none sm:flex-row">
               <Link className="btn hero-cta-primary w-full sm:w-auto" href="/apply">Apply Now</Link>

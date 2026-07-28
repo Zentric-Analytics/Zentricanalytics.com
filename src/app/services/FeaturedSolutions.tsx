@@ -209,7 +209,7 @@ function SolutionWorkspace({ solution }: { solution: Solution }) {
     <article className={styles.workspace} id={`${solution.id}-panel`} role="tabpanel" aria-labelledby={`${solution.id}-tab`} tabIndex={0}>
       <header className={styles.workspaceIntro}><h3>{solution.title}</h3><p>{solution.description}</p></header>
       <SolutionPreview type={solution.previewType}/>
-      <div className={styles.businessSummary}><div><h4>Challenge</h4><p>{solution.challenge}</p></div><div><h4>What We Build</h4><p>{solution.build}</p></div><div><h4>Expected Impact</h4><p>{solution.impact}</p></div></div>
+      <div className={styles.businessSummary}><div><h4>Challenge</h4><p>{solution.challenge}</p></div><div><h4>Approach</h4><p>{solution.build}</p></div><div><h4>Expected Outcome</h4><p>{solution.impact}</p></div></div>
       <div className={styles.technologies} aria-label="Technologies">{solution.technologies.map((technology,index) => <span key={technology}>{technology}{index < solution.technologies.length - 1 && <i aria-hidden="true">·</i>}</span>)}</div>
     </article>
   );
@@ -221,7 +221,7 @@ export function FeaturedSolutions() {
   return (
     <section className={styles.section} aria-labelledby="featured-solutions-heading">
       <div className={styles.container}>
-        <header className={styles.sectionHeader}><h2 id="featured-solutions-heading">Examples of Solutions We Deliver</h2><span>Explore a selection of digital products and platforms we can design and build. These examples illustrate our capabilities, while every solution is tailored to each organization’s unique goals, users, and technical requirements.</span></header>
+        <header className={styles.sectionHeader}><h2 id="featured-solutions-heading">Representative Solution Examples</h2><span>These are examples of challenges we can address, approaches we may take, and expected outcomes. They are not packaged products or a complete catalogue; scope and technology are defined for each organization.</span></header>
         <div className={styles.showcase}><SolutionNavigation active={active} onSelect={setActive} tabRefs={tabRefs}/><div className={styles.panel} key={solutions[active].id}><SolutionWorkspace solution={solutions[active]}/></div></div>
         <p className={styles.scopeStatement}>These are representative examples, not a fixed catalogue. Zentric Analytics designs custom solutions across industries, platforms, and business functions.</p>
       </div>

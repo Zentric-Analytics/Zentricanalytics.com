@@ -9,7 +9,7 @@ export default async function Track({ searchParams }: { searchParams: TrackSearc
 
   return (
     <PageShell>
-      <Section eyebrow="Secure tracking" title="Track your application without creating an account." className="za-task-section">
+      <Section eyebrow="Secure tracking" title="Track your application securely." className="za-task-section">
         <TrackForms
           applicationId={params.applicationId}
           email={params.email}
