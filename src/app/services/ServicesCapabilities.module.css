@@ -45,17 +45,8 @@
   transition: background-color 220ms ease, border-color 220ms ease, transform 220ms ease;
 }
 
-.category {
-  margin: 8px 0 0;
-  color: #0f7f7f;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: 0.11em;
-}
-
 .title {
-  margin: 4px 0 0;
+  margin: 7px 0 0;
   color: #0c1222;
   font-size: 1.125rem;
   font-weight: 700;
