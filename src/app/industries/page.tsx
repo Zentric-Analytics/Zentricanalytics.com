@@ -32,7 +32,6 @@ const organizationValues: Array<{ Icon: LucideIcon; title: string; description: 
 export default function Industries() {
   return (
     <PageShell>
-      <link rel="preload" as="image" href="/images/industries/industries-hero-bg.webp" fetchPriority="high" />
       <section
         className="relative isolate h-auto min-h-[500px] max-h-none overflow-hidden bg-[#0B1F3A] text-white sm:h-[520px] sm:min-h-[520px] sm:max-h-[520px] lg:h-[540px] lg:min-h-[540px] lg:max-h-[540px]"
         aria-labelledby="industries-page-heading"
@@ -41,11 +40,10 @@ export default function Industries() {
           src="/images/industries/industries-hero-bg.webp"
           sizes="100vw"
           alt=""
-          width={1717}
-          height={916}
+          fill
           priority
-          fetchPriority="high"
           decoding="async"
+          quality={75}
           className="absolute inset-0 z-0 size-full object-cover object-[62%_center] sm:object-[60%_center] lg:object-[58%_48%]"
           aria-hidden="true"
         />
@@ -132,6 +130,7 @@ export default function Industries() {
             fill
             loading="lazy"
             decoding="async"
+            quality={70}
             className="absolute inset-0 z-0 object-cover object-center"
             aria-hidden="true"
           />

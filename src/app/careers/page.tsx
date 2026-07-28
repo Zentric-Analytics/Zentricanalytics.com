@@ -87,9 +87,9 @@ export default function Careers() {
             src="/images/careers/careers-team-collaboration.webp"
             sizes="100vw"
             alt=""
-            width={1536}
-            height={1024}
+            fill
             priority
+            quality={75}
             className="absolute inset-0 -z-20 size-full object-cover object-[62%_center] sm:object-[60%_center] lg:object-[58%_48%]"
             aria-hidden="true"
           />
