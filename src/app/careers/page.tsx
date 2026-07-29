@@ -181,8 +181,19 @@ export default function Careers() {
         className="bg-[#F7F9FC] px-4 py-10 sm:px-6 sm:py-12 lg:px-8"
         aria-labelledby="careers-final-cta-heading"
       >
-        <Stagger className="mx-auto w-full max-w-[70rem] rounded-[24px] bg-[#0B1F3A] p-6 shadow-[0_20px_50px_rgba(2,8,23,0.16)] sm:p-8 lg:px-12 lg:py-10" staggerDelay={90}>
-          <div className="min-w-0">
+        <Stagger className="relative isolate mx-auto w-full max-w-[70rem] overflow-hidden rounded-[24px] bg-[#0B1F3A] p-6 shadow-[0_20px_50px_rgba(2,8,23,0.16)] sm:p-8 lg:px-12 lg:py-10" staggerDelay={90}>
+          <div className="pointer-events-none absolute inset-y-0 right-0 -z-10 w-full sm:w-2/3 lg:w-[58%]" aria-hidden="true">
+            <Image
+              src="/images/careers/careers-cta-background.webp"
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 41rem, (min-width: 640px) 67vw, 100vw"
+              quality={75}
+              className="object-cover object-center opacity-[0.06] [mask-image:linear-gradient(to_right,transparent_0%,black_62%)] sm:opacity-[0.09] sm:[mask-image:linear-gradient(to_right,transparent_0%,black_48%)] lg:opacity-[0.12] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_38%)]"
+            />
+            <div className="absolute inset-0 bg-[#0B1F3A]/20" />
+          </div>
+          <div className="relative z-10 min-w-0">
             <h2 id="careers-final-cta-heading" className="max-w-[42rem] text-[30px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:text-[36px] lg:text-[40px]">
               Ready to apply?
             </h2>
