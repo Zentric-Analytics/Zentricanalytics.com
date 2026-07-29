@@ -27,6 +27,18 @@ const publicFacingBrandSourceFiles = [
 
 describe('public layout shell', () => {
 
+  it('uses one consistent, responsively styled home hero heading', () => {
+    const home = readFileSync('src/app/page.tsx', 'utf8');
+    const approvedHeading = 'A technology consultancy helping organizations improve how they operate.';
+    const heroHeading = home.match(/<h1 className="home-hero-heading[^>]*>([\s\S]*?)<\/h1>/);
+
+    expect(heroHeading).not.toBeNull();
+    expect(home.match(/<h1\b/g)).toHaveLength(1);
+    expect(home.match(new RegExp(approvedHeading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'))).toHaveLength(1);
+    expect(heroHeading?.[1].trim()).toBe(approvedHeading);
+    expect(heroHeading?.[1]).not.toMatch(/(?:sm|md|lg|xl):(?:hidden|block)/);
+  });
+
   it.each(publicFacingBrandSourceFiles)('%s uses the public brand name without the legal suffix', (sourcePath) => {
     const source = readFileSync(sourcePath, 'utf8');
 
