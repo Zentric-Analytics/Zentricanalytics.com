@@ -120,18 +120,15 @@ export default function Careers() {
             {roles.map(({ Icon, title, description }) => (
               <article
                 key={title}
-                className="group grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] gap-x-[18px] rounded-[20px] border border-[#E3EAF1] bg-white p-5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-colors duration-200 ease-out hover:border-[#D4DEE8] lg:p-6"
+                className="group flex min-w-0 flex-col rounded-[20px] border border-[#E3EAF1] bg-white p-5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-colors duration-200 ease-out hover:border-[#D4DEE8]"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#EEF8F5] text-[#0B7F60]">
-                  <Icon aria-hidden="true" className="size-[18px] sm:size-5" strokeWidth={1.8} />
-                </span>
-                <div className="min-w-0">
-                  <h3 className="mb-2 text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A]">{title}</h3>
-                  <p className="m-0 text-[14px] font-normal leading-[1.5] text-[#475569]">{description}</p>
+                <div className="flex min-w-0 items-center gap-4">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-[16px] bg-[#EEF8F5] text-[#0B7F60]">
+                    <Icon aria-hidden="true" className="size-[18px] sm:size-5" strokeWidth={1.8} />
+                  </span>
+                  <h3 className="min-w-0 text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A]">{title}</h3>
                 </div>
-                <Link className="col-start-2 mt-4 inline-flex min-h-11 w-fit items-center text-[14px] font-bold text-[#0B7F60] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0B7F60]" href="/apply">
-                  Apply for this role <span className="ml-1.5" aria-hidden="true">→</span>
-                </Link>
+                <p className="mt-3 text-[14px] font-normal leading-[1.5] text-[#475569]">{description}</p>
               </article>
             ))}
           </Stagger>
