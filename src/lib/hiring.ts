@@ -501,7 +501,9 @@ export function toStage2SubmissionPayload(data: Stage2SubmissionInput) {
   );
   return {
     ...safeData,
+    primaryIdNumber,
     primaryIdNumberMasked: maskSensitive(primaryIdNumber),
+    secondaryIdNumber,
     secondaryIdNumberMasked: secondaryIdNumber
       ? maskSensitive(secondaryIdNumber)
       : "",
@@ -773,5 +775,5 @@ export function toStage8ChecklistPayload(data: Stage8AdminFinalDecisionInput) {
 
 export function toStage6SubmissionPayload(data: Stage6CandidateInput) {
   const { session: _session, signatureName: _signatureName, accountNumber, taxIdentificationNumber, pensionAccountNumber, nationalIdentificationNumber, declarationAccuracy, payrollProcessingConsent, employmentAdministrationConsent, finalApprovalAcknowledgement, changeNotificationAgreement, electronicSignatureConsent, ...rest } = data;
-  return { ...rest, accountNumberMasked: maskSensitive(accountNumber), taxIdentificationNumberMasked: taxIdentificationNumber ? maskSensitive(taxIdentificationNumber) : "", pensionAccountNumberMasked: pensionAccountNumber ? maskSensitive(pensionAccountNumber) : "", nationalIdentificationNumberMasked: nationalIdentificationNumber ? maskSensitive(nationalIdentificationNumber) : "", hasTaxIdentificationNumber: Boolean(taxIdentificationNumber), hasPensionAccountNumber: Boolean(pensionAccountNumber), hasNationalIdentificationNumber: Boolean(nationalIdentificationNumber), declarations: { declarationAccuracy: declarationAccuracy === "on", payrollProcessingConsent: payrollProcessingConsent === "on", employmentAdministrationConsent: employmentAdministrationConsent === "on", finalApprovalAcknowledgement: finalApprovalAcknowledgement === "on", changeNotificationAgreement: changeNotificationAgreement === "on", electronicSignatureConsent: electronicSignatureConsent === "on" } };
+  return { ...rest, accountNumber, taxIdentificationNumber, pensionAccountNumber, nationalIdentificationNumber, accountNumberMasked: maskSensitive(accountNumber), taxIdentificationNumberMasked: taxIdentificationNumber ? maskSensitive(taxIdentificationNumber) : "", pensionAccountNumberMasked: pensionAccountNumber ? maskSensitive(pensionAccountNumber) : "", nationalIdentificationNumberMasked: nationalIdentificationNumber ? maskSensitive(nationalIdentificationNumber) : "", hasTaxIdentificationNumber: Boolean(taxIdentificationNumber), hasPensionAccountNumber: Boolean(pensionAccountNumber), hasNationalIdentificationNumber: Boolean(nationalIdentificationNumber), declarations: { declarationAccuracy: declarationAccuracy === "on", payrollProcessingConsent: payrollProcessingConsent === "on", employmentAdministrationConsent: employmentAdministrationConsent === "on", finalApprovalAcknowledgement: finalApprovalAcknowledgement === "on", changeNotificationAgreement: changeNotificationAgreement === "on", electronicSignatureConsent: electronicSignatureConsent === "on" } };
 }

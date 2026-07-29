@@ -12,12 +12,14 @@ const validStage6 = {
 };
 
 describe("Stage 6 onboarding validation", () => {
-  it("accepts a complete onboarding submission and masks sensitive values in payload", () => {
+  it("accepts a complete onboarding submission and preserves full values for the protected HR profile", () => {
     const parsed = stage6CandidateSchema.parse(validStage6);
     const payload = toStage6SubmissionPayload(parsed);
     expect(payload.accountNumberMasked).toBe(maskSensitive(validStage6.accountNumber));
-    expect(JSON.stringify(payload)).not.toContain(validStage6.accountNumber);
-    expect(JSON.stringify(payload)).not.toContain(validStage6.nationalIdentificationNumber);
+    expect(payload.accountNumber).toBe(validStage6.accountNumber);
+    expect(payload.taxIdentificationNumber).toBe(validStage6.taxIdentificationNumber);
+    expect(payload.pensionAccountNumber).toBe(validStage6.pensionAccountNumber);
+    expect(payload.nationalIdentificationNumber).toBe(validStage6.nationalIdentificationNumber);
     expect(payload.declarations).toMatchObject({ declarationAccuracy: true, electronicSignatureConsent: true });
   });
 
