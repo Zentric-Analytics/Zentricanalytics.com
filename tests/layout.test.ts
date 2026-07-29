@@ -158,6 +158,7 @@ describe('public layout shell', () => {
   it('uses the shared primary navigation without recruitment shortcuts in the header', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
     const navigation = readFileSync('src/components/navigation.ts', 'utf8');
+    const css = readFileSync('src/app/globals.css', 'utf8');
 
     expect(header).toContain('primaryNavigationLinks');
     expect(header).toContain("const contactLink = ['/contact', \"Let's Talk\"] as const");
@@ -166,6 +167,8 @@ describe('public layout shell', () => {
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
     expect(header).toContain('className="zentric-wordmark text-brand"');
+    expect(css).toContain('.site-header .zentric-wordmark{font-size:1.625rem}');
+    expect(css).toContain('.site-header .zentric-wordmark{font-size:2rem}');
     expect(header).toContain('className={`za-container-wide');
     expect(header).not.toContain('focus-visible:ring-[#10B981]');
     expect(header).not.toContain('focus:ring-[#10B981]');
