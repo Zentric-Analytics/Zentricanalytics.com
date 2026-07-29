@@ -377,11 +377,14 @@ body{margin:0;background:var(--za-color-page);color:var(--za-color-text);font-fa
 }
 
 .technology-ticker__logo{
+  display:block;
   width:22px;
   height:22px;
   flex:0 0 22px;
+  flex-shrink:0;
   margin-right:11px;
-  object-fit:contain;
+  fill:none;
+  stroke:currentColor;
 }
 
 .technology-ticker__row--top .technology-ticker__name{font-size:18px;font-weight:700}
