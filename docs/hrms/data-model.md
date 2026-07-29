@@ -6,4 +6,4 @@
 
 `HrAuditEvent` is append-only. `HrEmailOutbox` and `HrEmailDeliveryAttempt` separate business commits from delivery. `HrOrganizationSetting` stores non-secret configuration. Critical states use enums; organization/email/time lookup fields are indexed.
 
-Milestone 2 adds employee contacts, departments, positions, employment and effective-dated assignment history. Later migrations add leave, Decimal-based payroll snapshots, documents, assets, workflows, and offboarding without destructive changes to recruitment tables.
+Milestone 2 adds employee contacts, departments, positions, employment and effective-dated assignment history. Milestone 3 adds versioned leave policy, balance, request, approval, attachment, holiday, and immutable ledger records. Milestone 4 adds effective-dated salary/component assignments, payroll periods and versioned runs, immutable calculation line snapshots, approvals, adjustments, payments, payslips, and export history. Later additive migrations introduce documents, assets, workflow/checklist execution, offboarding, and reporting without destructive changes to recruitment tables.

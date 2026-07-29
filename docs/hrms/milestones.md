@@ -1,11 +1,13 @@
 # HRMS milestones
 
-1. Secure foundation: architecture, organization, database identity, RBAC/permissions, invitations, resets, sessions, suspension, layouts, user management, audit, outbox, storage boundary, tests.
-2. Employee core: employee profiles, contacts, departments, positions, employment history, safe numbering, recruitment conversion.
-3. Assignments and onboarding: effective-dated assignments, supervisor workspace, tasks, document checklist.
-4. Leave: policies, balances, requests, reviews, notifications, reporting.
-5. Payroll: salary history, bank records, Decimal calculations, runs, approvals, payslips, exports.
-6. Documents, assets, and offboarding: durable storage, versioning, access logs, asset history, access revocation.
-7. Production hardening: MFA, malware scanning, workers, observability, backup/DR validation, accessibility, load and security testing.
+1. Secure foundation: architecture, organization, database identity, RBAC/permissions, invitations, resets, sessions, suspension, layouts, user management, audit, outbox, storage boundary, and tests.
+2. Core HR: employee records, contacts, departments, positions, effective-dated employment and supervisor assignments, recruitment conversion, organization settings, and user lifecycle.
+3. Leave management: versioned policies, balances and immutable ledger, requests, approvals, calendar, attachments, notifications, accrual, and carry-over.
+4. Payroll: effective-dated salary, configured earnings/benefits/taxes/deductions, Decimal calculations, versioned runs, review, approval, locking, payments, payslips, history, and exports.
+5. Documents and assets: durable private documents, versioning, access logs, expiration, asset inventory, assignment history, returns, and employee self-service.
+6. Onboarding and offboarding: reusable task/checklist execution, provisioning, acknowledgements, asset and access coordination, knowledge transfer, final-payroll coordination, and archival.
+7. Workflow engine: reusable multi-stage approvals, parallel and conditional routing, immutable decisions, delegation-ready assignments, and module adapters.
+8. Reports and analytics: permission-bound dashboards, headcount and turnover, leave/payroll/asset metrics, audit reports, and safe server-side exports.
+9. Production hardening: performance, workers, observability, backups and disaster recovery, security testing, accessibility, load testing, operational documentation, and readiness review.
 
-Each milestone is separately reviewed, migrated, tested, and deployed. Milestone 1 dashboards may be placeholders; authentication and authorization may not be.
+Each milestone is separately committed, reviewed, migrated, tested, and staged. Migrations are additive and financial, audit, approval, and assignment history is never destructively rewritten.

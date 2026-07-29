@@ -31,6 +31,8 @@ export async function runHrPreflight(prisma, env, report = () => undefined) {
     report("PASS Core HR migration tables are queryable");
     await prisma.hrLeaveType.count({ where: organization ? { organizationId: organization.id } : undefined });
     report("PASS Leave Management migration tables are queryable");
+    await prisma.hrPayrollRun.count({ where: organization ? { organizationId: organization.id } : undefined });
+    report("PASS Payroll migration tables are queryable");
   } catch {
     issues.push("Database connectivity or HR migration check failed. Apply migrations before bootstrap.");
   }
