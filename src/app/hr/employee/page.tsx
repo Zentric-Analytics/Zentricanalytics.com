@@ -1,0 +1,2 @@
+import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
+export default async function EmployeeDashboard() { const auth = await requireAuthenticatedUser(); return <><h1 className="text-3xl font-bold">My HR dashboard</h1><p className="mt-2 text-slate-600">Welcome, {auth.user.employee?.preferredName ?? auth.user.email}. Self-service modules will arrive in the employee-core milestones.</p></>; }

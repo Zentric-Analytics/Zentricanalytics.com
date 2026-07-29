@@ -26,34 +26,34 @@ model Applicant {
 }
 
 model JobApplication {
-  id                 String                  @id @default(cuid())
-  applicationId      String                  @unique
-  applicantId        String
-  applicant          Applicant               @relation(fields: [applicantId], references: [id])
-  roleAppliedFor     String
-  workModePreference String?
-  experienceLevel    String?
-  skills             String?
-  portfolioUrl       String?
-  message            String?
-  privacyConsent     Boolean                 @default(false)
-  status             String
-  currentStageOrder  Int                     @default(1)
-  stages             HiringStage[]
-  documents          UploadedDocument[]
-  emails             EmailNotification[]
-  notes              AdminNote[]
-  auditLogs          AuditLog[]
-  accessCodes        ApplicationAccessCode[]
-  offer              Offer?
-  employmentAgreement EmploymentAgreement?
-  deletedAt          DateTime?
-  deletedByAdminEmail String?
-  deleteReason       String?
-  restoredAt         DateTime?
+  id                   String                  @id @default(cuid())
+  applicationId        String                  @unique
+  applicantId          String
+  applicant            Applicant               @relation(fields: [applicantId], references: [id])
+  roleAppliedFor       String
+  workModePreference   String?
+  experienceLevel      String?
+  skills               String?
+  portfolioUrl         String?
+  message              String?
+  privacyConsent       Boolean                 @default(false)
+  status               String
+  currentStageOrder    Int                     @default(1)
+  stages               HiringStage[]
+  documents            UploadedDocument[]
+  emails               EmailNotification[]
+  notes                AdminNote[]
+  auditLogs            AuditLog[]
+  accessCodes          ApplicationAccessCode[]
+  offer                Offer?
+  employmentAgreement  EmploymentAgreement?
+  deletedAt            DateTime?
+  deletedByAdminEmail  String?
+  deleteReason         String?
+  restoredAt           DateTime?
   restoredByAdminEmail String?
-  createdAt          DateTime                @default(now())
-  updatedAt          DateTime                @updatedAt
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
 }
 
 model HiringStage {
@@ -153,24 +153,24 @@ model EmailNotification {
 }
 
 model Offer {
-  id                     String         @id @default(cuid())
-  applicationId          String         @unique
-  application            JobApplication @relation(fields: [applicationId], references: [id])
-  roleOffered            String
-  salary                 String
-  startDate              DateTime
-  workMode               String
-  reportingManager       String?
-  probationPeriod        String?
-  offerExpiryDate        DateTime?
-  specialConditions      String?
-  status                 String         @default("Draft")
-  candidateDecisionAt    DateTime?
-  candidateDecisionNote  String?
-  releasedAt             DateTime?
-  releasedByAdminEmail   String?
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
+  id                    String         @id @default(cuid())
+  applicationId         String         @unique
+  application           JobApplication @relation(fields: [applicationId], references: [id])
+  roleOffered           String
+  salary                String
+  startDate             DateTime
+  workMode              String
+  reportingManager      String?
+  probationPeriod       String?
+  offerExpiryDate       DateTime?
+  specialConditions     String?
+  status                String         @default("Draft")
+  candidateDecisionAt   DateTime?
+  candidateDecisionNote String?
+  releasedAt            DateTime?
+  releasedByAdminEmail  String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 }
 
 model EmploymentAgreement {
@@ -213,7 +213,6 @@ model ApplicationAccessCode {
   createdAt                DateTime       @default(now())
 }
 
-
 model ApplicationSequence {
   year      Int      @id
   nextValue Int      @default(1)
@@ -221,10 +220,336 @@ model ApplicationSequence {
 }
 
 model RateLimitEvent {
-  id         String   @id @default(cuid())
-  scope      String
-  keyHash    String
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  scope     String
+  keyHash   String
+  createdAt DateTime @default(now())
 
   @@index([scope, keyHash, createdAt])
+}
+
+enum HrRoleKey {
+  ADMIN
+  HR_ADMIN
+  PAYROLL_ADMIN
+  EMPLOYEE
+}
+
+enum HrUserStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum HrTokenStatus {
+  ACTIVE
+  USED
+  REVOKED
+}
+
+enum HrAssignmentStatus {
+  ACTIVE
+  SUSPENDED
+  ENDED
+  REVOKED
+}
+
+enum HrSupervisorAssignmentType {
+  DIRECT_REPORT
+  DEPARTMENT
+  TEAM
+  WORKFLOW
+}
+
+enum HrOutboxStatus {
+  PENDING
+  PROCESSING
+  DELIVERED
+  FAILED
+  ABANDONED
+}
+
+model HrOrganization {
+  id                      String                   @id @default(cuid())
+  slug                    String                   @unique
+  name                    String
+  registrationNumber      String?
+  taxIdentificationNumber String?
+  defaultCurrency         String                   @default("NGN")
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  users                   HrUser[]
+  roles                   HrRole[]
+  permissions             HrPermission[]
+  employees               HrEmployee[]
+  supervisorAssignments   HrSupervisorAssignment[]
+  auditEvents             HrAuditEvent[]
+  emailOutbox             HrEmailOutbox[]
+  settings                HrOrganizationSetting[]
+}
+
+model HrUser {
+  id                  String                   @id @default(cuid())
+  organizationId      String
+  organization        HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  email               String
+  passwordHash        String?
+  status              HrUserStatus             @default(INVITED)
+  emailVerifiedAt     DateTime?
+  lastLoginAt         DateTime?
+  suspendedAt         DateTime?
+  mfaEnabled          Boolean                  @default(false)
+  mfaSecretEncrypted  String?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  roles               HrUserRole[]
+  sessions            HrSession[]
+  invitationsCreated  HrAccountInvitation[]    @relation("InvitationCreator")
+  invitationsReceived HrAccountInvitation[]    @relation("InvitationRecipient")
+  passwordResets      HrPasswordResetToken[]
+  loginAttempts       HrLoginAttempt[]
+  employee            HrEmployee?
+  assignmentsGranted  HrSupervisorAssignment[] @relation("SupervisorAssignmentGrantor")
+  assignmentsEnded    HrSupervisorAssignment[] @relation("SupervisorAssignmentEnder")
+  auditEvents         HrAuditEvent[]
+
+  @@unique([organizationId, email])
+  @@index([organizationId, status])
+}
+
+model HrRole {
+  id             String             @id @default(cuid())
+  organizationId String
+  organization   HrOrganization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  key            HrRoleKey
+  name           String
+  description    String?
+  system         Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  users          HrUserRole[]
+  permissions    HrRolePermission[]
+
+  @@unique([organizationId, key])
+}
+
+model HrPermission {
+  id             String             @id @default(cuid())
+  organizationId String
+  organization   HrOrganization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  key            String
+  description    String?
+  createdAt      DateTime           @default(now())
+  roles          HrRolePermission[]
+
+  @@unique([organizationId, key])
+}
+
+model HrUserRole {
+  id           String    @id @default(cuid())
+  userId       String
+  roleId       String
+  assignedById String?
+  assignedAt   DateTime  @default(now())
+  revokedAt    DateTime?
+  user         HrUser    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         HrRole    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([roleId, revokedAt])
+}
+
+model HrRolePermission {
+  id           String       @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime     @default(now())
+  role         HrRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   HrPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model HrSession {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  ipHash     String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  user       HrUser    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt, revokedAt])
+}
+
+model HrAccountInvitation {
+  id             String        @id @default(cuid())
+  organizationId String
+  userId         String
+  tokenHash      String        @unique
+  status         HrTokenStatus @default(ACTIVE)
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdById    String
+  createdAt      DateTime      @default(now())
+  user           HrUser        @relation("InvitationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy      HrUser        @relation("InvitationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, userId, status, expiresAt])
+}
+
+model HrPasswordResetToken {
+  id        String        @id @default(cuid())
+  userId    String
+  tokenHash String        @unique
+  status    HrTokenStatus @default(ACTIVE)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+  user      HrUser        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, expiresAt])
+}
+
+model HrLoginAttempt {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  emailHash      String
+  ipHash         String
+  succeeded      Boolean  @default(false)
+  reason         String?
+  createdAt      DateTime @default(now())
+  user           HrUser?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, emailHash, ipHash, createdAt])
+}
+
+model HrEmployee {
+  id                    String                   @id @default(cuid())
+  organizationId        String
+  userId                String?                  @unique
+  employeeNumber        String
+  legalFirstName        String
+  middleName            String?
+  lastName              String
+  preferredName         String?
+  companyEmail          String?
+  personalEmail         String?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  organization          HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user                  HrUser?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  supervisedAssignments HrSupervisorAssignment[] @relation("SupervisorEmployee")
+  assignedToAssignments HrSupervisorAssignment[] @relation("AssignedEmployee")
+
+  @@unique([organizationId, employeeNumber])
+  @@unique([organizationId, companyEmail])
+  @@index([organizationId, lastName, legalFirstName])
+}
+
+model HrSupervisorAssignment {
+  id                   String                     @id @default(cuid())
+  organizationId       String
+  supervisorEmployeeId String
+  assignedEmployeeId   String?
+  departmentScopeId    String?
+  assignmentType       HrSupervisorAssignmentType
+  status               HrAssignmentStatus         @default(ACTIVE)
+  effectiveFrom        DateTime
+  effectiveTo          DateTime?
+  capabilities         Json
+  assignedByUserId     String
+  endedByUserId        String?
+  reason               String
+  endReason            String?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  endedAt              DateTime?
+  organization         HrOrganization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  supervisorEmployee   HrEmployee                 @relation("SupervisorEmployee", fields: [supervisorEmployeeId], references: [id], onDelete: Restrict)
+  assignedEmployee     HrEmployee?                @relation("AssignedEmployee", fields: [assignedEmployeeId], references: [id], onDelete: Restrict)
+  assignedBy           HrUser                     @relation("SupervisorAssignmentGrantor", fields: [assignedByUserId], references: [id], onDelete: Restrict)
+  endedBy              HrUser?                    @relation("SupervisorAssignmentEnder", fields: [endedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, supervisorEmployeeId, status, effectiveFrom, effectiveTo])
+  @@index([organizationId, assignedEmployeeId, status])
+}
+
+model HrAuditEvent {
+  id             String         @id @default(cuid())
+  organizationId String
+  actorUserId    String?
+  actorRole      String?
+  entityType     String
+  entityId       String?
+  action         String
+  previousValues Json?
+  newValues      Json?
+  reason         String?
+  ipHash         String?
+  userAgent      String?
+  requestId      String?
+  correlationId  String
+  createdAt      DateTime       @default(now())
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor          HrUser?        @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, entityType, entityId, createdAt])
+  @@index([organizationId, actorUserId, createdAt])
+  @@index([correlationId])
+}
+
+model HrEmailOutbox {
+  id                String                   @id @default(cuid())
+  organizationId    String
+  recipient         String
+  template          String
+  subject           String
+  payload           Json
+  status            HrOutboxStatus           @default(PENDING)
+  attemptCount      Int                      @default(0)
+  nextAttemptAt     DateTime                 @default(now())
+  lastAttemptedAt   DateTime?
+  lastError         String?
+  provider          String?
+  providerMessageId String?
+  idempotencyKey    String                   @unique
+  createdAt         DateTime                 @default(now())
+  deliveredAt       DateTime?
+  organization      HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  attempts          HrEmailDeliveryAttempt[]
+
+  @@index([status, nextAttemptAt])
+  @@index([organizationId, createdAt])
+}
+
+model HrEmailDeliveryAttempt {
+  id                String         @id @default(cuid())
+  outboxId          String
+  attemptNumber     Int
+  status            HrOutboxStatus
+  provider          String?
+  providerMessageId String?
+  safeError         String?
+  attemptedAt       DateTime       @default(now())
+  outbox            HrEmailOutbox  @relation(fields: [outboxId], references: [id], onDelete: Cascade)
+
+  @@unique([outboxId, attemptNumber])
+}
+
+model HrOrganizationSetting {
+  id             String         @id @default(cuid())
+  organizationId String
+  key            String
+  value          Json
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, key])
 }

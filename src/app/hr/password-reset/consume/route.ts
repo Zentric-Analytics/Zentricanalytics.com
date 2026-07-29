@@ -1,0 +1,2 @@
+import { NextRequest, NextResponse } from "next/server";
+export function GET(request: NextRequest) { const token = request.nextUrl.searchParams.get("token"); const response = NextResponse.redirect(new URL("/hr/password-reset", request.url)); if (token && token.length <= 256) response.cookies.set("za_hr_reset", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 600, path: "/hr/password-reset" }); return response; }

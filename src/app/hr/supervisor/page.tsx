@@ -1,0 +1,1 @@
+export default function SupervisorDashboard() { return <><h1 className="text-3xl font-bold">Supervisor dashboard</h1><p className="mt-2 text-slate-600">Only active assignment-scoped responsibilities are available here.</p></>; }
