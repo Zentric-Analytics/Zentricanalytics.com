@@ -130,11 +130,7 @@ export default function Home() {
         <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,48fr)_minmax(0,52fr)] md:gap-6 md:px-4 md:pb-16 md:pt-10 lg:max-w-[90rem] lg:gap-6 lg:pb-20 lg:pt-12 xl:pt-14">
           <div className="min-w-0">
             <h1 className="home-hero-heading hero-reveal hero-reveal-1 text-white">
-              <span className="lg:hidden">Zentric Analytics is a technology consultancy that helps organizations improve how they operate.</span>
-              <span className="hidden lg:block xl:hidden">A technology consultancy helping organizations improve how they operate.</span>
-              <span className="hidden xl:block">A technology consultancy</span>
-              <span className="hidden xl:block">helping organizations</span>
-              <span className="hidden xl:block">improve how they operate.</span>
+              A technology consultancy helping organizations improve how they operate.
             </h1>
             <p className="home-hero-description hero-reveal hero-reveal-2 text-slate-200">
               We design and build dependable software, data, and AI systems around real operational needs, from initial decisions through long-term support.
