@@ -377,15 +377,68 @@ enum HrPayrollPaymentStatus {
   FAILED
 }
 
+enum HrDocumentCategory {
+  EMPLOYMENT_AGREEMENT
+  OFFER_LETTER
+  IDENTITY_DOCUMENT
+  TAX_DOCUMENT
+  BANK_DOCUMENT
+  QUALIFICATION_CERTIFICATE
+  POLICY_ACKNOWLEDGEMENT
+  LEAVE_SUPPORT
+  PERFORMANCE
+  DISCIPLINARY
+  EXIT_DOCUMENT
+  OTHER
+}
+
+enum HrDocumentScanStatus {
+  PENDING
+  CLEAN
+  QUARANTINED
+  FAILED
+}
+
+enum HrDocumentRetentionStatus {
+  ACTIVE
+  HOLD
+  EXPIRED
+  PENDING_DELETION
+}
+
+enum HrAssetStatus {
+  AVAILABLE
+  ASSIGNED
+  UNDER_REPAIR
+  LOST
+  RETIRED
+  DISPOSED
+}
+
+enum HrAssetCondition {
+  NEW
+  GOOD
+  FAIR
+  DAMAGED
+  UNUSABLE
+}
+
+enum HrAssetAssignmentStatus {
+  ACTIVE
+  RETURNED
+  CANCELLED
+  LOST
+}
+
 model HrOrganization {
-  id                      String                   @id @default(cuid())
-  slug                    String                   @unique
+  id                      String                      @id @default(cuid())
+  slug                    String                      @unique
   name                    String
   registrationNumber      String?
   taxIdentificationNumber String?
-  defaultCurrency         String                   @default("NGN")
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
+  defaultCurrency         String                      @default("NGN")
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
   users                   HrUser[]
   roles                   HrRole[]
   permissions             HrPermission[]
@@ -405,6 +458,11 @@ model HrOrganization {
   payrollRuns             HrPayrollRun[]
   payrollItems            HrPayrollItem[]
   payrollExports          HrPayrollExport[]
+  employeeDocuments       HrEmployeeDocument[]
+  documentVersions        HrEmployeeDocumentVersion[]
+  documentAccessLogs      HrDocumentAccessLog[]
+  assets                  HrAsset[]
+  assetAssignments        HrAssetAssignment[]
   supervisorAssignments   HrSupervisorAssignment[]
   auditEvents             HrAuditEvent[]
   emailOutbox             HrEmailOutbox[]
@@ -451,6 +509,14 @@ model HrUser {
   payrollComponentsCreated   HrEmployeePayrollComponent[]
   payrollPaymentsMarked      HrPayrollItem[]              @relation("PayrollPaymentMarker")
   payrollExportsCreated      HrPayrollExport[]
+  documentsCreated           HrEmployeeDocument[]         @relation("DocumentCreator")
+  documentVersionsUploaded   HrEmployeeDocumentVersion[]  @relation("DocumentVersionUploader")
+  documentScansRecorded      HrEmployeeDocumentVersion[]  @relation("DocumentScanRecorder")
+  documentsArchived          HrEmployeeDocument[]         @relation("DocumentArchiver")
+  documentAccessLogs         HrDocumentAccessLog[]
+  assetsCreated              HrAsset[]                    @relation("AssetCreator")
+  assetAssignmentsCreated    HrAssetAssignment[]          @relation("AssetAssignmentCreator")
+  assetReturnsRecorded       HrAssetAssignment[]          @relation("AssetReturnRecorder")
   auditEvents                HrAuditEvent[]
 
   @@unique([organizationId, email])
@@ -608,6 +674,8 @@ model HrEmployee {
   payrollComponentAssignments HrEmployeePayrollComponent[]
   payrollItems                HrPayrollItem[]
   payrollAdjustments          HrPayrollAdjustment[]
+  documents                   HrEmployeeDocument[]
+  assetAssignments            HrAssetAssignment[]
 
   @@unique([organizationId, employeeNumber])
   @@unique([organizationId, companyEmail])
@@ -1308,6 +1376,138 @@ model HrPayrollExport {
   createdBy      HrUser         @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
   @@index([organizationId, runId, createdAt])
+}
+
+model HrEmployeeDocument {
+  id              String                      @id @default(cuid())
+  organizationId  String
+  employeeId      String
+  category        HrDocumentCategory
+  title           String
+  restricted      Boolean                     @default(false)
+  retentionStatus HrDocumentRetentionStatus   @default(ACTIVE)
+  expiresAt       DateTime?
+  archivedAt      DateTime?
+  archiveReason   String?
+  createdById     String
+  archivedById    String?
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  organization    HrOrganization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee        HrEmployee                  @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  createdBy       HrUser                      @relation("DocumentCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  archivedBy      HrUser?                     @relation("DocumentArchiver", fields: [archivedById], references: [id], onDelete: Restrict)
+  versions        HrEmployeeDocumentVersion[]
+
+  @@index([organizationId, category, retentionStatus, archivedAt])
+  @@index([employeeId, createdAt])
+  @@index([organizationId, expiresAt])
+}
+
+model HrEmployeeDocumentVersion {
+  id               String                @id @default(cuid())
+  organizationId   String
+  documentId       String
+  version          Int
+  originalFileName String
+  displayFileName  String
+  contentType      String
+  sizeBytes        Int
+  storageProvider  String
+  storageKey       String                @unique
+  checksum         String
+  scanStatus       HrDocumentScanStatus  @default(PENDING)
+  scanProvider     String?
+  scanReference    String?
+  scanReason       String?
+  scanCompletedAt  DateTime?
+  scanRecordedById String?
+  uploadedById     String
+  uploadedAt       DateTime              @default(now())
+  organization     HrOrganization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  document         HrEmployeeDocument    @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  uploadedBy       HrUser                @relation("DocumentVersionUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+  scanRecordedBy   HrUser?               @relation("DocumentScanRecorder", fields: [scanRecordedById], references: [id], onDelete: Restrict)
+  accessLogs       HrDocumentAccessLog[]
+
+  @@unique([documentId, version])
+  @@index([organizationId, scanStatus, uploadedAt])
+  @@index([checksum])
+}
+
+model HrDocumentAccessLog {
+  id                String                    @id @default(cuid())
+  organizationId    String
+  documentVersionId String
+  actorUserId       String
+  action            String
+  purpose           String?
+  ipHash            String?
+  userAgent         String?
+  createdAt         DateTime                  @default(now())
+  organization      HrOrganization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  documentVersion   HrEmployeeDocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+  actor             HrUser                    @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, createdAt])
+  @@index([documentVersionId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model HrAsset {
+  id             String              @id @default(cuid())
+  organizationId String
+  assetTag       String
+  type           String
+  name           String
+  manufacturer   String?
+  model          String?
+  serialNumber   String?
+  purchaseDate   DateTime?
+  purchaseValue  Decimal?            @db.Decimal(18, 2)
+  currency       String              @default("NGN")
+  condition      HrAssetCondition    @default(GOOD)
+  status         HrAssetStatus       @default(AVAILABLE)
+  notes          String?
+  createdById    String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  organization   HrOrganization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdBy      HrUser              @relation("AssetCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  assignments    HrAssetAssignment[]
+
+  @@unique([organizationId, assetTag])
+  @@unique([organizationId, serialNumber])
+  @@index([organizationId, status, type])
+}
+
+model HrAssetAssignment {
+  id                 String                  @id @default(cuid())
+  organizationId     String
+  assetId            String
+  employeeId         String
+  assignedAt         DateTime
+  expectedReturnAt   DateTime?
+  issueCondition     HrAssetCondition
+  issueNotes         String?
+  acknowledgedAt     DateTime?
+  returnedAt         DateTime?
+  returnCondition    HrAssetCondition?
+  returnNotes        String?
+  status             HrAssetAssignmentStatus @default(ACTIVE)
+  assignedById       String
+  returnRecordedById String?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  organization       HrOrganization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  asset              HrAsset                 @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  employee           HrEmployee              @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  assignedBy         HrUser                  @relation("AssetAssignmentCreator", fields: [assignedById], references: [id], onDelete: Restrict)
+  returnRecordedBy   HrUser?                 @relation("AssetReturnRecorder", fields: [returnRecordedById], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, status, expectedReturnAt])
+  @@index([employeeId, status, assignedAt])
+  @@index([assetId, status, assignedAt])
 }
 
 model HrOrganizationSetting {

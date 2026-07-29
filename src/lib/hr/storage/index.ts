@@ -1,10 +1,12 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export type HrObjectStorage = {
   put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
   get(key: string): Promise<Uint8Array>;
+  head(key: string): Promise<{ sizeBytes: number; contentType?: string }>;
+  exists(key: string): Promise<boolean>;
   delete(key: string): Promise<void>;
 };
 
@@ -40,6 +42,8 @@ export class LocalDevelopmentHrStorage implements HrObjectStorage {
   }
   async put(key: string, bytes: Uint8Array) { const target = safeLocalPath(this.root, key); await mkdir(path.dirname(target), { recursive: true }); await writeFile(target, bytes); }
   async get(key: string) { return new Uint8Array(await readFile(safeLocalPath(this.root, key))); }
+  async head(key: string) { const metadata = await stat(safeLocalPath(this.root, key)); return { sizeBytes: metadata.size }; }
+  async exists(key: string) { try { await this.head(key); return true; } catch { return false; } }
   async delete(key: string) { await rm(safeLocalPath(this.root, key), { force: true }); }
 }
 
@@ -71,6 +75,11 @@ export class S3CompatibleHrStorage implements HrObjectStorage {
     if (!response.Body) throw new Error("HR object was not found.");
     return new Uint8Array(await response.Body.transformToByteArray());
   }
+  async head(key: string) {
+    const response = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(key) }));
+    return { sizeBytes: response.ContentLength ?? 0, contentType: response.ContentType };
+  }
+  async exists(key: string) { try { await this.head(key); return true; } catch { return false; } }
   async delete(key: string) {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(key) }));
   }
