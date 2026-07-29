@@ -376,6 +376,14 @@ body{margin:0;background:var(--za-color-page);color:var(--za-color-text);font-fa
   transition:color 225ms ease,opacity 225ms ease,transform 225ms ease,text-shadow 225ms ease,font-weight 225ms ease;
 }
 
+.technology-ticker__logo{
+  width:22px;
+  height:22px;
+  flex:0 0 22px;
+  margin-right:11px;
+  object-fit:contain;
+}
+
 .technology-ticker__row--top .technology-ticker__name{font-size:18px;font-weight:700}
 
 @media (hover:hover) and (pointer:fine){

@@ -1,6 +1,7 @@
 'use client';
 
 import { BarChart3, BrainCircuit, Code2, FlaskConical, Globe, Sparkles, type LucideIcon } from 'lucide-react';
+import Image from 'next/image';
 import { MotionLink, Reveal, Stagger } from '@/components/Motion';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
@@ -50,6 +51,45 @@ const bottomRowTechnologies = [
   'GitHub Actions',
 ];
 
+const technologyLogoSlugs: Record<string, string> = {
+  React: 'react',
+  'Next.js': 'nextdotjs',
+  TypeScript: 'typescript',
+  JavaScript: 'javascript',
+  OpenAI: 'openai',
+  LangChain: 'langchain',
+  'Hugging Face': 'huggingface',
+  'Power BI': 'powerbi',
+  FastAPI: 'fastapi',
+  Django: 'django',
+  'Node.js': 'nodedotjs',
+  Python: 'python',
+  PostgreSQL: 'postgresql',
+  MongoDB: 'mongodb',
+  Redis: 'redis',
+  AWS: 'amazonwebservices',
+  Azure: 'microsoftazure',
+  'Google Cloud': 'googlecloud',
+  Docker: 'docker',
+  'GitHub Actions': 'githubactions',
+};
+
+function TechnologyLogo({ technology }: { technology: string }) {
+  return (
+    <Image
+      className="technology-ticker__logo"
+      src={`https://cdn.simpleicons.org/${technologyLogoSlugs[technology]}/64748b`}
+      width="22"
+      height="22"
+      alt=""
+      aria-hidden="true"
+      loading="eager"
+      decoding="async"
+      unoptimized
+    />
+  );
+}
+
 function TechnologyRow({ technologies, variant }: { technologies: string[]; variant: 'top' | 'bottom' }) {
   return (
     <div className={`technology-ticker__row technology-ticker__row--${variant}`} tabIndex={0} aria-label={`${variant === 'top' ? 'First' : 'Second'} technology list; focus to pause movement`}>
@@ -58,6 +98,7 @@ function TechnologyRow({ technologies, variant }: { technologies: string[]; vari
           <div className="technology-ticker__group" aria-hidden={groupIndex === 1} key={groupIndex}>
             {technologies.map((technology) => (
               <span className="technology-ticker__name" key={`${groupIndex}-${technology}`}>
+                <TechnologyLogo technology={technology} />
                 {technology}
               </span>
             ))}
