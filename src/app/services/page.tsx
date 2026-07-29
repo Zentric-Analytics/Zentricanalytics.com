@@ -1,7 +1,29 @@
 'use client';
 
-import { BarChart3, BrainCircuit, Code2, FlaskConical, Globe, Sparkles, type LucideIcon } from 'lucide-react';
-import Image from 'next/image';
+import {
+  Atom,
+  BarChart3,
+  Blocks,
+  Bot,
+  Box,
+  BrainCircuit,
+  Braces,
+  Cloud,
+  CloudCog,
+  Code2,
+  Container,
+  Database,
+  FlaskConical,
+  Gauge,
+  GitBranch,
+  Globe,
+  Languages,
+  Network,
+  Server,
+  Sparkles,
+  Workflow,
+  type LucideIcon,
+} from 'lucide-react';
 import { MotionLink, Reveal, Stagger } from '@/components/Motion';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
@@ -51,43 +73,33 @@ const bottomRowTechnologies = [
   'GitHub Actions',
 ];
 
-const technologyLogoSlugs: Record<string, string> = {
-  React: 'react',
-  'Next.js': 'nextdotjs',
-  TypeScript: 'typescript',
-  JavaScript: 'javascript',
-  OpenAI: 'openai',
-  LangChain: 'langchain',
-  'Hugging Face': 'huggingface',
-  'Power BI': 'powerbi',
-  FastAPI: 'fastapi',
-  Django: 'django',
-  'Node.js': 'nodedotjs',
-  Python: 'python',
-  PostgreSQL: 'postgresql',
-  MongoDB: 'mongodb',
-  Redis: 'redis',
-  AWS: 'amazonwebservices',
-  Azure: 'microsoftazure',
-  'Google Cloud': 'googlecloud',
-  Docker: 'docker',
-  'GitHub Actions': 'githubactions',
+const technologyLogos: Record<string, LucideIcon> = {
+  React: Atom,
+  'Next.js': Globe,
+  TypeScript: Braces,
+  JavaScript: Code2,
+  OpenAI: Bot,
+  LangChain: Workflow,
+  'Hugging Face': BrainCircuit,
+  'Power BI': BarChart3,
+  FastAPI: Gauge,
+  Django: Server,
+  'Node.js': Network,
+  Python: Languages,
+  PostgreSQL: Database,
+  MongoDB: Database,
+  Redis: Blocks,
+  AWS: CloudCog,
+  Azure: Cloud,
+  'Google Cloud': Cloud,
+  Docker: Container,
+  'GitHub Actions': GitBranch,
 };
 
 function TechnologyLogo({ technology }: { technology: string }) {
-  return (
-    <Image
-      className="technology-ticker__logo"
-      src={`https://cdn.simpleicons.org/${technologyLogoSlugs[technology]}/64748b`}
-      width="22"
-      height="22"
-      alt=""
-      aria-hidden="true"
-      loading="eager"
-      decoding="async"
-      unoptimized
-    />
-  );
+  const Icon = technologyLogos[technology] ?? Box;
+
+  return <Icon className="technology-ticker__logo" aria-hidden="true" focusable="false" />;
 }
 
 function TechnologyRow({ technologies, variant }: { technologies: string[]; variant: 'top' | 'bottom' }) {
