@@ -1,27 +1,13 @@
 'use client';
 
+import Image from 'next/image';
 import {
-  Atom,
   BarChart3,
-  Blocks,
-  Bot,
-  Box,
   BrainCircuit,
-  Braces,
-  Cloud,
-  CloudCog,
   Code2,
-  Container,
-  Database,
   FlaskConical,
-  Gauge,
-  GitBranch,
   Globe,
-  Languages,
-  Network,
-  Server,
   Sparkles,
-  Workflow,
   type LucideIcon,
 } from 'lucide-react';
 import { MotionLink, Reveal, Stagger } from '@/components/Motion';
@@ -73,33 +59,37 @@ const bottomRowTechnologies = [
   'GitHub Actions',
 ];
 
-const technologyLogos: Record<string, LucideIcon> = {
-  React: Atom,
-  'Next.js': Globe,
-  TypeScript: Braces,
-  JavaScript: Code2,
-  OpenAI: Bot,
-  LangChain: Workflow,
-  'Hugging Face': BrainCircuit,
-  'Power BI': BarChart3,
-  FastAPI: Gauge,
-  Django: Server,
-  'Node.js': Network,
-  Python: Languages,
-  PostgreSQL: Database,
-  MongoDB: Database,
-  Redis: Blocks,
-  AWS: CloudCog,
-  Azure: Cloud,
-  'Google Cloud': Cloud,
-  Docker: Container,
-  'GitHub Actions': GitBranch,
+const simpleIconsBaseUrl = 'https://cdn.simpleicons.org';
+
+const technologyLogos: Record<string, string> = {
+  React: `${simpleIconsBaseUrl}/react`,
+  'Next.js': `${simpleIconsBaseUrl}/nextdotjs`,
+  TypeScript: `${simpleIconsBaseUrl}/typescript`,
+  JavaScript: `${simpleIconsBaseUrl}/javascript`,
+  OpenAI: `${simpleIconsBaseUrl}/openai`,
+  LangChain: `${simpleIconsBaseUrl}/langchain`,
+  'Hugging Face': `${simpleIconsBaseUrl}/huggingface`,
+  'Power BI': `${simpleIconsBaseUrl}/powerbi`,
+  FastAPI: `${simpleIconsBaseUrl}/fastapi`,
+  Django: `${simpleIconsBaseUrl}/django`,
+  'Node.js': `${simpleIconsBaseUrl}/nodedotjs`,
+  Python: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg',
+  PostgreSQL: `${simpleIconsBaseUrl}/postgresql`,
+  MongoDB: `${simpleIconsBaseUrl}/mongodb`,
+  Redis: `${simpleIconsBaseUrl}/redis`,
+  AWS: `${simpleIconsBaseUrl}/amazonwebservices`,
+  Azure: `${simpleIconsBaseUrl}/microsoftazure`,
+  'Google Cloud': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/googlecloud/googlecloud-original.svg',
+  Docker: `${simpleIconsBaseUrl}/docker`,
+  'GitHub Actions': `${simpleIconsBaseUrl}/githubactions`,
 };
 
 function TechnologyLogo({ technology }: { technology: string }) {
-  const Icon = technologyLogos[technology] ?? Box;
+  const logo = technologyLogos[technology];
 
-  return <Icon className="technology-ticker__logo" aria-hidden="true" focusable="false" />;
+  if (!logo) return null;
+
+  return <Image className="technology-ticker__logo" src={logo} alt="" width={24} height={24} unoptimized aria-hidden="true" />;
 }
 
 function TechnologyRow({ technologies, variant }: { technologies: string[]; variant: 'top' | 'bottom' }) {
