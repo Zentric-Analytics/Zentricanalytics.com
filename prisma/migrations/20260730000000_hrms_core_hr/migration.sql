@@ -6,6 +6,7 @@ CREATE TYPE "HrAddressType" AS ENUM ('HOME', 'MAILING', 'EMERGENCY');
 CREATE TYPE "HrIdentifierType" AS ENUM ('NATIONAL_ID', 'PASSPORT', 'TAX_ID', 'PENSION_ID', 'WORK_PERMIT', 'OTHER');
 
 ALTER TABLE "HrEmployee"
+  ADD COLUMN "recruitmentApplicationId" TEXT,
   ADD COLUMN "phone" TEXT,
   ADD COLUMN "dateOfBirth" TIMESTAMP(3),
   ADD COLUMN "employmentStatus" "HrEmploymentStatus" NOT NULL DEFAULT 'DRAFT',
@@ -13,6 +14,9 @@ ALTER TABLE "HrEmployee"
   ADD COLUMN "terminationDate" TIMESTAMP(3),
   ADD COLUMN "terminationReason" TEXT,
   ADD COLUMN "archivedAt" TIMESTAMP(3);
+
+CREATE UNIQUE INDEX "HrEmployee_recruitmentApplicationId_key" ON "HrEmployee"("recruitmentApplicationId");
+ALTER TABLE "HrEmployee" ADD CONSTRAINT "HrEmployee_recruitmentApplicationId_fkey" FOREIGN KEY ("recruitmentApplicationId") REFERENCES "JobApplication"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 CREATE TABLE "HrDepartment" (
   "id" TEXT NOT NULL,

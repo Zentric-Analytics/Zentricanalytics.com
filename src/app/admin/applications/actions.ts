@@ -522,6 +522,25 @@ export async function adminStage8Action(formData: FormData) {
         await tx.hiringStage.update({ where: { id: stage8.id }, data: { status: 'Approved', approvedAt: new Date(), submittedAt: stage8.submittedAt ?? new Date() } });
         await tx.stageApproval.create({ data: { stageId: stage8.id, action: 'Approved', adminEmail: adminSession.email, notes: finalHrNotes || null } });
         await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Hired', currentStageOrder: 8 } });
+        const hrOrganization = await tx.hrOrganization.findUnique({ where: { slug: 'zentric-analytics' }, select: { id: true } });
+        if (hrOrganization) {
+          const nameParts = app.applicant.fullName.trim().split(/\s+/);
+          const existingEmployee = await tx.hrEmployee.findUnique({ where: { recruitmentApplicationId: app.id } });
+          const employee = existingEmployee ?? await tx.hrEmployee.create({
+            data: {
+              organizationId: hrOrganization.id,
+              recruitmentApplicationId: app.id,
+              employeeNumber: app.applicationId,
+              legalFirstName: app.applicant.firstName || nameParts[0] || 'Pending',
+              middleName: app.applicant.middleInitial || (nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : null),
+              lastName: app.applicant.lastName || nameParts.at(-1) || 'Pending',
+              personalEmail: app.applicant.email.trim().toLowerCase(),
+              phone: app.applicant.phoneE164 || app.applicant.phone,
+              employmentStatus: 'DRAFT',
+            },
+          });
+          if (!existingEmployee) await tx.hrAuditEvent.create({ data: { organizationId: hrOrganization.id, actorRole: 'LEGACY_RECRUITMENT_ADMIN', entityType: 'HrEmployee', entityId: employee.id, action: 'hr.employee.created_from_recruitment', newValues: { recruitmentApplicationId: app.id, employeeNumber: app.applicationId, status: 'DRAFT' }, reason: 'Final recruitment approval', correlationId: `recruitment:${app.id}` } });
+        }
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin finalized Stage 8', metadata: { checklistConfirmed: true, checklistItemCount: stage8ChecklistKeys.length, finalHrNotesPresent: Boolean(finalHrNotes), candidateFacingNotePresent: Boolean(candidateFacingNote) } } });
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Final HR checklist confirmed', metadata: { checklistVersion: 1, confirmedItemCount: stage8ChecklistKeys.length } } });
         await tx.auditLog.create({ data: { applicationId, actorType: 'system', action: 'Hiring workflow completed', metadata: { finalStageOrder: 8, applicationStatus: 'Hired' } } });

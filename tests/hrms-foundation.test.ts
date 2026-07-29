@@ -51,7 +51,7 @@ describe("HRMS secure foundation", () => {
     expect(permissionsForRole("EMPLOYEE")).toContain("employee.read_self");
   });
   it("masks sensitive audit fields", () => {
-    expect(safeAuditValues({ email: "safe@example.com", password: "secret", accountNumber: "123456" })).toEqual({ email: "safe@example.com", password: "[REDACTED]", accountNumber: "[REDACTED]" });
+    expect(safeAuditValues({ email: "safe@example.com", password: "secret", accountNumber: "123456", taxIdentifier: "TIN-1", pensionIdentifier: "PEN-1", passport: "P-1" })).toEqual({ email: "safe@example.com", password: "[REDACTED]", accountNumber: "[REDACTED]", taxIdentifier: "[REDACTED]", pensionIdentifier: "[REDACTED]", passport: "[REDACTED]" });
   });
   it("rejects sensitive notification payloads", () => {
     expect(() => assertSafeOutboxPayload({ userId: "u1" })).not.toThrow();

@@ -44,6 +44,7 @@ function makeDatabase(initial?: Partial<State>, failAudit = false) {
     hrUser: { findUnique: vi.fn(async ({ where }: { where: { organizationId_email: { email: string } } }) => state.users.find((user) => user.email === where.organizationId_email.email) ?? null) },
     hrRole: { count: vi.fn(async () => state.roles.size) },
     hrPermission: { count: vi.fn(async () => state.permissions.size) },
+    hrDepartment: { count: vi.fn(async () => 0) },
     $transaction: vi.fn(async (operation: (tx: object) => Promise<void>) => {
       const snapshot = { organization: state.organization, users: [...state.users], roles: new Map(state.roles), permissions: new Map(state.permissions), adminUserId: state.adminUserId, auditCount: state.auditCount, writes: state.writes };
       const tx = {

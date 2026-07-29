@@ -27,6 +27,8 @@ export async function runHrPreflight(prisma, env, report = () => undefined) {
     report("PASS database connectivity");
     organization = await prisma.hrOrganization.findUnique({ where: { slug: "zentric-analytics" } });
     report("PASS HR migration tables are queryable");
+    await prisma.hrDepartment.count({ where: organization ? { organizationId: organization.id } : undefined });
+    report("PASS Core HR migration tables are queryable");
   } catch {
     issues.push("Database connectivity or HR migration check failed. Apply migrations before bootstrap.");
   }

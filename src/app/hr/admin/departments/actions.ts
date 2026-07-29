@@ -55,3 +55,16 @@ export async function archiveTeamAction(formData: FormData) {
   });
   revalidatePath("/hr/admin/departments");
 }
+
+const departmentUpdateInput = z.object({ id: z.string().cuid(), name: z.string().trim().min(2).max(120), description: z.string().trim().max(500).optional().transform((value) => value || undefined), headEmployeeId: z.string().cuid().optional().or(z.literal("")).transform((value) => value || undefined), reason: z.string().trim().min(3).max(500) });
+export async function updateDepartmentAction(formData: FormData) {
+  const auth = await requirePermission("department.manage");
+  const input = departmentUpdateInput.parse(Object.fromEntries(formData));
+  const department = await prisma.hrDepartment.findFirstOrThrow({ where: { id: input.id, organizationId: auth.user.organizationId, status: "ACTIVE" } });
+  if (input.headEmployeeId) await prisma.hrEmployee.findFirstOrThrow({ where: { id: input.headEmployeeId, organizationId: auth.user.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } } });
+  await prisma.$transaction(async (tx) => {
+    await tx.hrDepartment.update({ where: { id: department.id }, data: { name: input.name, description: input.description, headEmployeeId: input.headEmployeeId ?? null } });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrDepartment", entityId: department.id, action: "hr.department.updated", previousValues: { name: department.name, description: department.description, headEmployeeId: department.headEmployeeId }, newValues: { name: input.name, description: input.description, headEmployeeId: input.headEmployeeId }, reason: input.reason });
+  });
+  revalidatePath("/hr/admin/departments");
+}

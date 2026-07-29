@@ -54,6 +54,7 @@ model JobApplication {
   restoredByAdminEmail String?
   createdAt            DateTime                @default(now())
   updatedAt            DateTime                @updatedAt
+  hrEmployee           HrEmployee?
 }
 
 model HiringStage {
@@ -473,36 +474,38 @@ model HrLoginAttempt {
 }
 
 model HrEmployee {
-  id                    String                   @id @default(cuid())
-  organizationId        String
-  userId                String?                  @unique
-  employeeNumber        String
-  legalFirstName        String
-  middleName            String?
-  lastName              String
-  preferredName         String?
-  companyEmail          String?
-  personalEmail         String?
-  phone                 String?
-  dateOfBirth           DateTime?
-  employmentStatus      HrEmploymentStatus       @default(DRAFT)
-  hireDate              DateTime?
-  terminationDate       DateTime?
-  terminationReason     String?
-  archivedAt            DateTime?
-  createdAt             DateTime                 @default(now())
-  updatedAt             DateTime                 @updatedAt
-  organization          HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  user                  HrUser?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
-  supervisedAssignments HrSupervisorAssignment[] @relation("SupervisorEmployee")
-  assignedToAssignments HrSupervisorAssignment[] @relation("AssignedEmployee")
-  employmentAssignments HrEmployeeAssignment[]
-  addresses             HrEmployeeAddress[]
-  emergencyContacts     HrEmergencyContact[]
-  identifiers           HrEmployeeIdentifier[]
-  bankAccounts          HrEmployeeBankAccount[]
-  taxProfile            HrEmployeeTaxProfile?
-  departmentsLed        HrDepartment[]           @relation("DepartmentHead")
+  id                       String                   @id @default(cuid())
+  organizationId           String
+  recruitmentApplicationId String?                  @unique
+  userId                   String?                  @unique
+  employeeNumber           String
+  legalFirstName           String
+  middleName               String?
+  lastName                 String
+  preferredName            String?
+  companyEmail             String?
+  personalEmail            String?
+  phone                    String?
+  dateOfBirth              DateTime?
+  employmentStatus         HrEmploymentStatus       @default(DRAFT)
+  hireDate                 DateTime?
+  terminationDate          DateTime?
+  terminationReason        String?
+  archivedAt               DateTime?
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  organization             HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  recruitmentApplication   JobApplication?          @relation(fields: [recruitmentApplicationId], references: [id], onDelete: SetNull)
+  user                     HrUser?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  supervisedAssignments    HrSupervisorAssignment[] @relation("SupervisorEmployee")
+  assignedToAssignments    HrSupervisorAssignment[] @relation("AssignedEmployee")
+  employmentAssignments    HrEmployeeAssignment[]
+  addresses                HrEmployeeAddress[]
+  emergencyContacts        HrEmergencyContact[]
+  identifiers              HrEmployeeIdentifier[]
+  bankAccounts             HrEmployeeBankAccount[]
+  taxProfile               HrEmployeeTaxProfile?
+  departmentsLed           HrDepartment[]           @relation("DepartmentHead")
 
   @@unique([organizationId, employeeNumber])
   @@unique([organizationId, companyEmail])

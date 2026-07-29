@@ -31,3 +31,19 @@ export async function archivePositionAction(formData: FormData) {
   });
   revalidatePath("/hr/admin/positions");
 }
+
+const updatePositionInput = z.intersection(positionInput, z.object({ id: z.string().cuid(), reason: z.string().trim().min(3).max(500) }));
+export async function updatePositionAction(formData: FormData) {
+  const auth = await requirePermission("position.manage");
+  const { id, reason, ...input } = updatePositionInput.parse(Object.fromEntries(formData));
+  const [position, department] = await Promise.all([
+    prisma.hrPosition.findFirstOrThrow({ where: { id, organizationId: auth.user.organizationId, status: "ACTIVE" } }),
+    prisma.hrDepartment.findFirstOrThrow({ where: { id: input.departmentId, organizationId: auth.user.organizationId, status: "ACTIVE" } }),
+  ]);
+  if (input.teamId) await prisma.hrTeam.findFirstOrThrow({ where: { id: input.teamId, departmentId: department.id, organizationId: auth.user.organizationId, status: "ACTIVE" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.hrPosition.update({ where: { id }, data: input });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrPosition", entityId: id, action: "hr.position.updated", previousValues: { title: position.title, departmentId: position.departmentId, teamId: position.teamId, description: position.description, salaryBandMinimum: position.salaryBandMinimum?.toString(), salaryBandMaximum: position.salaryBandMaximum?.toString(), currency: position.currency }, newValues: input, reason });
+  });
+  revalidatePath("/hr/admin/positions");
+}

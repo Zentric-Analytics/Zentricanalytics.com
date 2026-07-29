@@ -44,9 +44,26 @@ describe("HRMS Core HR", () => {
     expect(schema).toContain("model HrEmployeeAssignment");
     expect(schema).toContain("accountNumberEncrypted");
     expect(schema).toContain("valueEncrypted");
+    expect(schema).toContain("recruitmentApplicationId");
     expect(migration).not.toMatch(/DROP\s+(TABLE|COLUMN)/i);
     expect(migration).toContain("HrEmployeeAssignment_dates_check");
     expect(migration).toContain("HrPosition_salary_band_check");
+  });
+
+  it("creates a single draft employee from final recruitment approval", () => {
+    const actions = fs.readFileSync(path.join(process.cwd(), "src/app/admin/applications/actions.ts"), "utf8");
+    expect(actions).toContain("recruitmentApplicationId: app.id");
+    expect(actions).toContain("employmentStatus: 'DRAFT'");
+    expect(actions).toContain("existingEmployee ?? await tx.hrEmployee.create");
+    expect(actions).toContain("hr.employee.created_from_recruitment");
+  });
+
+  it("protects the final ADMIN and supports the full account lifecycle", () => {
+    const actions = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/users/actions.ts"), "utf8");
+    expect(actions).toContain("The final active ADMIN role cannot be revoked.");
+    expect(actions).toContain("reactivateHrUserAction");
+    expect(actions).toContain("resendHrInvitationAction");
+    expect(actions).toContain("linkHrUserEmployeeAction");
   });
 
   it("renders full authorized bank details instead of only the last four digits", () => {
