@@ -308,6 +308,39 @@ enum HrIdentifierType {
   OTHER
 }
 
+enum HrLeaveUnit {
+  DAYS
+  HOURS
+}
+
+enum HrLeaveAccrualFrequency {
+  NONE
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+enum HrLeaveRequestStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  WITHDRAWN
+}
+
+enum HrLeaveLedgerType {
+  OPENING
+  ACCRUAL
+  CARRY_OVER
+  ADJUSTMENT
+  REQUEST_RESERVED
+  REQUEST_RELEASED
+  LEAVE_TAKEN
+  LEAVE_RESTORED
+  EXPIRY
+}
+
 model HrOrganization {
   id                      String                   @id @default(cuid())
   slug                    String                   @unique
@@ -325,6 +358,11 @@ model HrOrganization {
   teams                   HrTeam[]
   positions               HrPosition[]
   employeeAssignments     HrEmployeeAssignment[]
+  leaveTypes              HrLeaveType[]
+  leavePolicies           HrLeavePolicy[]
+  leaveBalances           HrLeaveBalance[]
+  leaveRequests           HrLeaveRequest[]
+  publicHolidays          HrPublicHoliday[]
   supervisorAssignments   HrSupervisorAssignment[]
   auditEvents             HrAuditEvent[]
   emailOutbox             HrEmailOutbox[]
@@ -356,6 +394,13 @@ model HrUser {
   assignmentsEnded           HrSupervisorAssignment[] @relation("SupervisorAssignmentEnder")
   employeeAssignmentsCreated HrEmployeeAssignment[]   @relation("EmployeeAssignmentCreator")
   employeeAssignmentsEnded   HrEmployeeAssignment[]   @relation("EmployeeAssignmentEnder")
+  leaveRequestsCreated       HrLeaveRequest[]         @relation("LeaveRequester")
+  leaveRequestsToReview      HrLeaveRequest[]         @relation("LeaveCurrentReviewer")
+  leaveApprovals             HrLeaveApproval[]        @relation("LeaveReviewer")
+  leavePoliciesAssigned      HrEmployeeLeavePolicy[]  @relation("LeavePolicyAssigner")
+  leavePoliciesEnded         HrEmployeeLeavePolicy[]  @relation("LeavePolicyEnder")
+  leaveLedgerEntries         HrLeaveLedger[]
+  leaveAttachmentsUploaded   HrLeaveAttachment[]
   auditEvents                HrAuditEvent[]
 
   @@unique([organizationId, email])
@@ -506,6 +551,9 @@ model HrEmployee {
   bankAccounts             HrEmployeeBankAccount[]
   taxProfile               HrEmployeeTaxProfile?
   departmentsLed           HrDepartment[]           @relation("DepartmentHead")
+  leavePolicyAssignments   HrEmployeeLeavePolicy[]
+  leaveBalances            HrLeaveBalance[]
+  leaveRequests            HrLeaveRequest[]
 
   @@unique([organizationId, employeeNumber])
   @@unique([organizationId, companyEmail])
@@ -779,6 +827,209 @@ model HrEmailDeliveryAttempt {
   outbox            HrEmailOutbox  @relation(fields: [outboxId], references: [id], onDelete: Cascade)
 
   @@unique([outboxId, attemptNumber])
+}
+
+model HrLeaveType {
+  id                 String           @id @default(cuid())
+  organizationId     String
+  code               String
+  name               String
+  description        String?
+  unit               HrLeaveUnit      @default(DAYS)
+  paid               Boolean          @default(true)
+  requiresAttachment Boolean          @default(false)
+  status             HrRecordStatus   @default(ACTIVE)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  archivedAt         DateTime?
+  organization       HrOrganization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  policies           HrLeavePolicy[]
+  balances           HrLeaveBalance[]
+  requests           HrLeaveRequest[]
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+}
+
+model HrLeavePolicy {
+  id                   String                  @id @default(cuid())
+  organizationId       String
+  leaveTypeId          String
+  name                 String
+  version              Int
+  entitlement          Decimal                 @db.Decimal(10, 2)
+  accrualFrequency     HrLeaveAccrualFrequency @default(ANNUALLY)
+  accrualAmount        Decimal?                @db.Decimal(10, 2)
+  maximumBalance       Decimal?                @db.Decimal(10, 2)
+  carryOverLimit       Decimal?                @db.Decimal(10, 2)
+  carryOverExpiryMonth Int?
+  minimumNoticeDays    Int                     @default(0)
+  maximumConsecutive   Decimal?                @db.Decimal(10, 2)
+  probationMonths      Int                     @default(0)
+  allowNegativeBalance Boolean                 @default(false)
+  requiresApproval     Boolean                 @default(true)
+  effectiveFrom        DateTime
+  effectiveTo          DateTime?
+  status               HrRecordStatus          @default(ACTIVE)
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  organization         HrOrganization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  leaveType            HrLeaveType             @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  employeeAssignments  HrEmployeeLeavePolicy[]
+  balances             HrLeaveBalance[]
+  requests             HrLeaveRequest[]
+
+  @@unique([organizationId, leaveTypeId, version])
+  @@index([organizationId, status, effectiveFrom, effectiveTo])
+}
+
+model HrEmployeeLeavePolicy {
+  id            String             @id @default(cuid())
+  employeeId    String
+  leavePolicyId String
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  status        HrAssignmentStatus @default(ACTIVE)
+  reason        String
+  assignedById  String
+  endedById     String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  employee      HrEmployee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  leavePolicy   HrLeavePolicy      @relation(fields: [leavePolicyId], references: [id], onDelete: Restrict)
+  assignedBy    HrUser             @relation("LeavePolicyAssigner", fields: [assignedById], references: [id], onDelete: Restrict)
+  endedBy       HrUser?            @relation("LeavePolicyEnder", fields: [endedById], references: [id], onDelete: Restrict)
+
+  @@index([employeeId, status, effectiveFrom, effectiveTo])
+  @@index([leavePolicyId, status])
+}
+
+model HrLeaveBalance {
+  id             String           @id @default(cuid())
+  organizationId String
+  employeeId     String
+  leaveTypeId    String
+  leavePolicyId  String
+  periodYear     Int
+  opening        Decimal          @default(0) @db.Decimal(10, 2)
+  accrued        Decimal          @default(0) @db.Decimal(10, 2)
+  carriedOver    Decimal          @default(0) @db.Decimal(10, 2)
+  adjusted       Decimal          @default(0) @db.Decimal(10, 2)
+  reserved       Decimal          @default(0) @db.Decimal(10, 2)
+  used           Decimal          @default(0) @db.Decimal(10, 2)
+  expired        Decimal          @default(0) @db.Decimal(10, 2)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  organization   HrOrganization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee       HrEmployee       @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  leaveType      HrLeaveType      @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  leavePolicy    HrLeavePolicy    @relation(fields: [leavePolicyId], references: [id], onDelete: Restrict)
+  ledgerEntries  HrLeaveLedger[]
+  requests       HrLeaveRequest[]
+
+  @@unique([employeeId, leaveTypeId, periodYear])
+  @@index([organizationId, periodYear])
+}
+
+model HrLeaveLedger {
+  id             String            @id @default(cuid())
+  balanceId      String
+  requestId      String?
+  type           HrLeaveLedgerType
+  amount         Decimal           @db.Decimal(10, 2)
+  effectiveAt    DateTime
+  reason         String
+  actorUserId    String?
+  idempotencyKey String            @unique
+  createdAt      DateTime          @default(now())
+  balance        HrLeaveBalance    @relation(fields: [balanceId], references: [id], onDelete: Restrict)
+  request        HrLeaveRequest?   @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  actor          HrUser?           @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([balanceId, effectiveAt])
+  @@index([requestId])
+}
+
+model HrLeaveRequest {
+  id                String               @id @default(cuid())
+  organizationId    String
+  employeeId        String
+  leaveTypeId       String
+  leavePolicyId     String
+  balanceId         String
+  startDate         DateTime
+  endDate           DateTime
+  amount            Decimal              @db.Decimal(10, 2)
+  reason            String
+  status            HrLeaveRequestStatus @default(DRAFT)
+  submittedAt       DateTime?
+  decidedAt         DateTime?
+  cancelledAt       DateTime?
+  requestedById     String
+  currentReviewerId String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  organization      HrOrganization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee          HrEmployee           @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  leaveType         HrLeaveType          @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  leavePolicy       HrLeavePolicy        @relation(fields: [leavePolicyId], references: [id], onDelete: Restrict)
+  balance           HrLeaveBalance       @relation(fields: [balanceId], references: [id], onDelete: Restrict)
+  requestedBy       HrUser               @relation("LeaveRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  currentReviewer   HrUser?              @relation("LeaveCurrentReviewer", fields: [currentReviewerId], references: [id], onDelete: Restrict)
+  approvals         HrLeaveApproval[]
+  attachments       HrLeaveAttachment[]
+  ledgerEntries     HrLeaveLedger[]
+
+  @@index([organizationId, status, startDate])
+  @@index([employeeId, createdAt])
+  @@index([currentReviewerId, status])
+}
+
+model HrLeaveApproval {
+  id         String               @id @default(cuid())
+  requestId  String
+  reviewerId String
+  fromStatus HrLeaveRequestStatus
+  toStatus   HrLeaveRequestStatus
+  notes      String?
+  createdAt  DateTime             @default(now())
+  request    HrLeaveRequest       @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  reviewer   HrUser               @relation("LeaveReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+
+  @@index([requestId, createdAt])
+  @@index([reviewerId, createdAt])
+}
+
+model HrLeaveAttachment {
+  id           String         @id @default(cuid())
+  requestId    String
+  storageKey   String
+  fileName     String
+  contentType  String
+  sizeBytes    Int
+  checksum     String
+  uploadedById String
+  createdAt    DateTime       @default(now())
+  request      HrLeaveRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  uploadedBy   HrUser         @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([requestId, createdAt])
+}
+
+model HrPublicHoliday {
+  id             String         @id @default(cuid())
+  organizationId String
+  name           String
+  date           DateTime
+  country        String?
+  region         String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, date, name])
+  @@index([organizationId, date])
 }
 
 model HrOrganizationSetting {

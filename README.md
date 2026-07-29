@@ -19,3 +19,5 @@ Generate the hash in a private interactive terminal with `yarn hr:hash-password`
 See [HRMS deployment](docs/hrms/deployment.md) for safe staging recovery, first-time production initialization, verification, secret rotation, and one-off Render execution.
 
 See [Core HR](docs/hrms/core-hr.md) for the normalized employee model, organization structure, effective-dated assignment history, protected-data authorization, and Milestone 2 migration notes.
+
+See [Leave Management](docs/hrms/leave-management.md) for versioned policies, ledger-backed balances, accrual/carry-over, approval workflows, private attachments, and Milestone 3 deployment guidance.

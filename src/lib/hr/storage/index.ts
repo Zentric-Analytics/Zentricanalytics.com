@@ -1,5 +1,6 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export type HrObjectStorage = {
   put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
@@ -21,8 +22,13 @@ export function s3CompatibleStorageConfigured() {
   return Boolean(process.env.OBJECT_STORAGE_ENDPOINT && process.env.OBJECT_STORAGE_BUCKET && process.env.OBJECT_STORAGE_ACCESS_KEY_ID && process.env.OBJECT_STORAGE_SECRET_ACCESS_KEY);
 }
 
-function safeLocalPath(root: string, key: string) {
+function validateStorageKey(key: string) {
   if (!/^[a-zA-Z0-9/_\-.]+$/.test(key) || key.includes("..") || path.isAbsolute(key)) throw new Error("Invalid HR storage key.");
+  return key;
+}
+
+function safeLocalPath(root: string, key: string) {
+  validateStorageKey(key);
   const resolved = path.resolve(root, key);
   if (!resolved.startsWith(`${path.resolve(root)}${path.sep}`)) throw new Error("Invalid HR storage key.");
   return resolved;
@@ -42,4 +48,35 @@ export class S3CompatibleHrStorageConfig {
   constructor() {
     if (!s3CompatibleStorageConfigured()) throw new Error("S3-compatible HR storage configuration is incomplete.");
   }
+}
+
+export class S3CompatibleHrStorage implements HrObjectStorage {
+  private readonly bucket: string;
+  private readonly client: S3Client;
+  constructor() {
+    if (!s3CompatibleStorageConfigured()) throw new Error("S3-compatible HR storage configuration is incomplete.");
+    this.bucket = process.env.OBJECT_STORAGE_BUCKET!;
+    this.client = new S3Client({
+      endpoint: process.env.OBJECT_STORAGE_ENDPOINT,
+      region: process.env.OBJECT_STORAGE_REGION || "auto",
+      forcePathStyle: process.env.OBJECT_STORAGE_FORCE_PATH_STYLE !== "false",
+      credentials: { accessKeyId: process.env.OBJECT_STORAGE_ACCESS_KEY_ID!, secretAccessKey: process.env.OBJECT_STORAGE_SECRET_ACCESS_KEY! },
+    });
+  }
+  async put(key: string, bytes: Uint8Array, contentType: string) {
+    await this.client.send(new PutObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(key), Body: bytes, ContentType: contentType, ServerSideEncryption: process.env.OBJECT_STORAGE_SERVER_SIDE_ENCRYPTION === "AES256" ? "AES256" : undefined }));
+  }
+  async get(key: string) {
+    const response = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(key) }));
+    if (!response.Body) throw new Error("HR object was not found.");
+    return new Uint8Array(await response.Body.transformToByteArray());
+  }
+  async delete(key: string) {
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(key) }));
+  }
+}
+
+export function hrObjectStorage(): HrObjectStorage {
+  assertProductionHrStorage();
+  return hrStorageProvider() === "local" ? new LocalDevelopmentHrStorage() : new S3CompatibleHrStorage();
 }
