@@ -82,7 +82,7 @@ export default function Careers() {
   return (
     <PageShell>
       <div className="bg-[#F3F6F9]">
-        <section className="relative isolate flex h-[470px] flex-col justify-center overflow-hidden bg-[#0B1F3A] px-4 py-8 sm:h-[500px] sm:px-6 sm:py-10 lg:h-[540px] lg:px-8 lg:py-12" aria-labelledby="careers-hero-heading">
+        <section className="relative isolate flex h-[360px] flex-col justify-center overflow-hidden bg-[#0B1F3A] px-4 py-6 sm:h-[390px] sm:px-6 sm:py-8 lg:h-[420px] lg:px-8 lg:py-10" aria-labelledby="careers-hero-heading">
           <Image
             src="/images/careers/careers-team-collaboration.webp"
             sizes="100vw"
