@@ -16,12 +16,12 @@ type Service = {
 };
 
 const services: Service[] = [
-  { title: 'Software Development', description: 'Applications, internal tools, APIs, and integrations for teams replacing manual work or extending critical systems—built to improve control and maintainability.', technologies: ['React', 'Next.js', 'Node.js'], Icon: Code2 },
-  { title: 'Web Development', description: 'Websites, portals, dashboards, and content systems for organizations serving customers, staff, or partners—designed to make essential tasks easier to complete.', technologies: ['TypeScript', 'Next.js', 'Tailwind'], Icon: Globe },
-  { title: 'Artificial Intelligence Solutions', description: 'AI-assisted workflows, retrieval systems, and model integrations for teams with a defined use case—implemented with evaluation, oversight, and responsible data boundaries.', technologies: ['OpenAI', 'Python', 'LangChain'], Icon: BrainCircuit },
+  { title: 'Software Development', description: 'Applications, internal tools, APIs, and integrations for teams replacing manual work or extending critical systems, built to improve control and maintainability.', technologies: ['React', 'Next.js', 'Node.js'], Icon: Code2 },
+  { title: 'Web Development', description: 'Websites, portals, dashboards, and content systems for organizations serving customers, staff, or partners, designed to make essential tasks easier to complete.', technologies: ['TypeScript', 'Next.js', 'Tailwind'], Icon: Globe },
+  { title: 'Artificial Intelligence Solutions', description: 'AI-assisted workflows, retrieval systems, and model integrations for teams with a defined use case, implemented with evaluation, oversight, and responsible data boundaries.', technologies: ['OpenAI', 'Python', 'LangChain'], Icon: BrainCircuit },
   { title: 'Data Analytics', description: 'Data models, pipelines, quality controls, reports, and dashboards for decision-makers who need consistent measures and faster access to useful information.', technologies: ['Power BI', 'PostgreSQL', 'Python'], Icon: BarChart3 },
   { title: 'Research & Development', description: 'Prototypes, feasibility studies, and experimental systems for leaders evaluating an uncertain technical investment before committing to full delivery.', technologies: ['Python', 'TensorFlow', 'Jupyter'], Icon: FlaskConical },
-  { title: 'Emerging Technology Solutions', description: 'Focused evaluation and implementation for organizations considering automation, connected devices, or new platforms—reducing uncertainty before adoption.', technologies: ['IoT', 'Automation', 'Cloud'], Icon: Sparkles },
+  { title: 'Emerging Technology Solutions', description: 'Focused evaluation and implementation for organizations considering automation, connected devices, or new platforms, reducing uncertainty before adoption.', technologies: ['IoT', 'Automation', 'Cloud'], Icon: Sparkles },
 ];
 
 const topRowTechnologies = [
@@ -111,7 +111,7 @@ export default function Services() {
               eyebrow="TECHNOLOGIES"
               heading="Technology Choices That Fit the Work"
               headingId="technologies-heading"
-              description="We select technologies for the required security boundaries, integration needs, performance, maintainability, and the team that will operate the system—not for novelty."
+              description="We select technologies for the required security boundaries, integration needs, performance, maintainability, and the team that will operate the system, not for novelty."
               className="technologies-header"
             />
           </Reveal>

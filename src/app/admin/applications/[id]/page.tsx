@@ -208,7 +208,7 @@ function formatDateTime(value?: Date | null) {
 
 function formatField(value: unknown) {
   if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "Not provided";
   return String(value);
 }
 
@@ -477,11 +477,11 @@ export default async function AdminApplicationDetail({
   const stageSixSignature = stageSixSubmission?.signature;
   const stageSixDocuments = stageSixSubmission?.documents ?? [];
   const stageSevenSubmission = stageSeven?.submissions[0];
-  const stageSevenPayload = (stageSevenSubmission?.payload ?? {}) as Record<string, any>;
+  const stageSevenPayload = (stageSevenSubmission?.payload ?? {}) as Record<string, unknown>;
   const stageSevenSections = (stageSevenPayload.sections ?? {}) as Record<string, boolean>;
   const stageSevenSignature = stageSevenSubmission?.signature;
   const stageEightSubmission = stageEight?.submissions[0];
-  const stageEightPayload = (stageEightSubmission?.payload ?? {}) as Record<string, any>;
+  const stageEightPayload = (stageEightSubmission?.payload ?? {}) as Record<string, unknown>;
   const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
   const stageSixDocumentsWithAvailability = await Promise.all(
     stageSixDocuments.map(async (document: ApplicantDocument) => {
@@ -789,39 +789,39 @@ export default async function AdminApplicationDetail({
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <h3 className="font-semibold">Identity details</h3>
                   <p>
-                    Legal name: {String(stageTwoPayload.fullLegalName ?? "—")}
+                    Legal name: {String(stageTwoPayload.fullLegalName ?? "Not provided")}
                   </p>
-                  <p>DOB: {String(stageTwoPayload.dateOfBirth ?? "—")}</p>
-                  <p>Gender: {String(stageTwoPayload.gender ?? "—")}</p>
+                  <p>DOB: {String(stageTwoPayload.dateOfBirth ?? "Not provided")}</p>
+                  <p>Gender: {String(stageTwoPayload.gender ?? "Not provided")}</p>
                   <p>
-                    Nationality: {String(stageTwoPayload.nationality ?? "—")}
+                    Nationality: {String(stageTwoPayload.nationality ?? "Not provided")}
                   </p>
-                  <p>Residence: {String(stageTwoPayload.currentCity ?? "—")}</p>
+                  <p>Residence: {String(stageTwoPayload.currentCity ?? "Not provided")}</p>
                   <p>
-                    Phone: {String(stageTwoPayload.applicantPhoneE164 ?? "—")}
+                    Phone: {String(stageTwoPayload.applicantPhoneE164 ?? "Not provided")}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <h3 className="font-semibold">Primary ID summary</h3>
                   <p>
                     Primary ID type:{" "}
-                    {String(stageTwoPayload.primaryIdType ?? "—")}
+                    {String(stageTwoPayload.primaryIdType ?? "Not provided")}
                   </p>
                   <p>
                     Primary ID number:{" "}
-                    {String(stageTwoPayload.primaryIdNumberMasked ?? "—")}
+                    {String(stageTwoPayload.primaryIdNumberMasked ?? "Not provided")}
                   </p>
                   <p>
                     Authority:{" "}
-                    {String(stageTwoPayload.primaryIdIssuingAuthority ?? "—")}
+                    {String(stageTwoPayload.primaryIdIssuingAuthority ?? "Not provided")}
                   </p>
                   <p>
                     Issue date:{" "}
-                    {String(stageTwoPayload.primaryIdIssueDate ?? "—")}
+                    {String(stageTwoPayload.primaryIdIssueDate ?? "Not provided")}
                   </p>
                   <p>
                     Expiry date:{" "}
-                    {String(stageTwoPayload.primaryIdExpiryDate ?? "—")}
+                    {String(stageTwoPayload.primaryIdExpiryDate ?? "Not provided")}
                   </p>
                 </div>
                 {stageTwoPayload.hasSecondaryId ? (
@@ -829,46 +829,46 @@ export default async function AdminApplicationDetail({
                     <h3 className="font-semibold">Secondary ID summary</h3>
                     <p>
                       Secondary ID type:{" "}
-                      {String(stageTwoPayload.secondaryIdType ?? "—")}
+                      {String(stageTwoPayload.secondaryIdType ?? "Not provided")}
                     </p>
                     <p>
                       Secondary ID number:{" "}
-                      {String(stageTwoPayload.secondaryIdNumberMasked ?? "—")}
+                      {String(stageTwoPayload.secondaryIdNumberMasked ?? "Not provided")}
                     </p>
                     <p>
                       Authority:{" "}
                       {String(
-                        stageTwoPayload.secondaryIdIssuingAuthority ?? "—",
+                        stageTwoPayload.secondaryIdIssuingAuthority ?? "Not provided",
                       )}
                     </p>
                     <p>
                       Issue date:{" "}
-                      {String(stageTwoPayload.secondaryIdIssueDate ?? "—")}
+                      {String(stageTwoPayload.secondaryIdIssueDate ?? "Not provided")}
                     </p>
                     <p>
                       Expiry date:{" "}
-                      {String(stageTwoPayload.secondaryIdExpiryDate ?? "—")}
+                      {String(stageTwoPayload.secondaryIdExpiryDate ?? "Not provided")}
                     </p>
                   </div>
                 ) : null}
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <h3 className="font-semibold">Emergency contact</h3>
                   <p>
-                    Name: {String(stageTwoPayload.emergencyContactName ?? "—")}
+                    Name: {String(stageTwoPayload.emergencyContactName ?? "Not provided")}
                   </p>
                   <p>
                     Relationship:{" "}
                     {String(
-                      stageTwoPayload.emergencyContactRelationship ?? "—",
+                      stageTwoPayload.emergencyContactRelationship ?? "Not provided",
                     )}
                   </p>
                   <p>
                     Phone:{" "}
-                    {String(stageTwoPayload.emergencyContactPhoneE164 ?? "—")}
+                    {String(stageTwoPayload.emergencyContactPhoneE164 ?? "Not provided")}
                   </p>
                   <p>
                     Address:{" "}
-                    {String(stageTwoPayload.emergencyContactAddress ?? "—")}
+                    {String(stageTwoPayload.emergencyContactAddress ?? "Not provided")}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -884,7 +884,7 @@ export default async function AdminApplicationDetail({
                   <p>
                     Signature:{" "}
                     {stageTwoSignature?.typedName ??
-                      String(stageTwoPayload.signatureName ?? "—")}
+                      String(stageTwoPayload.signatureName ?? "Not provided")}
                   </p>
                   <p>Signed: {formatDateTime(stageTwoSignature?.signedAt)}</p>
                 </div>
@@ -1161,8 +1161,8 @@ export default async function AdminApplicationDetail({
                     "No instructions released yet."}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">
-                  Released: {stageThreeMetadata.releasedAt ?? "—"} · By:{" "}
-                  {stageThreeMetadata.releasedByAdminEmail ?? "—"}
+                  Released: {stageThreeMetadata.releasedAt ?? "Not provided"} · By:{" "}
+                  {stageThreeMetadata.releasedByAdminEmail ?? "Not provided"}
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -1171,11 +1171,11 @@ export default async function AdminApplicationDetail({
                   <div className="mt-2 text-sm">
                     <p>
                       <strong>Availability:</strong>{" "}
-                      {String(stageThreePayload.availability ?? "—")}
+                      {String(stageThreePayload.availability ?? "Not provided")}
                     </p>
                     <p className="whitespace-pre-wrap">
                       <strong>Message:</strong>{" "}
-                      {String(stageThreePayload.responseMessage ?? "—")}
+                      {String(stageThreePayload.responseMessage ?? "Not provided")}
                     </p>
                     <p>
                       <strong>Declared accurate:</strong>{" "}
@@ -1450,7 +1450,7 @@ export default async function AdminApplicationDetail({
               </form>
             ) : <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Stage 5 is {stageFive?.status}; agreement editing is closed.</p>}
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Released agreement summary</h3><p className="mt-2 text-sm">{agreement ? `${agreement.title} · v${agreement.version} · ${agreement.status}` : "No agreement draft yet."}</p><p className="mt-1 text-xs text-slate-500">Released: {formatDateTime(agreement?.releasedAt)} · By: {agreement?.releasedByAdminEmail ?? "—"}</p></div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Released agreement summary</h3><p className="mt-2 text-sm">{agreement ? `${agreement.title} · v${agreement.version} · ${agreement.status}` : "No agreement draft yet."}</p><p className="mt-1 text-xs text-slate-500">Released: {formatDateTime(agreement?.releasedAt)} · By: {agreement?.releasedByAdminEmail ?? "Not provided"}</p></div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Candidate submission and signature</h3>{stageFiveSubmission ? <div className="mt-2 text-sm"><p>Submitted: {formatDateTime(stageFiveSubmission.submittedAt)}</p><p>Version: {stageFiveSubmission.version}</p><p>Signature: {stageFiveSignature?.confirmed ? "Confirmed" : "Missing"} · Signed: {formatDateTime(stageFiveSignature?.signedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 5 submission found.</p>}</div>
             </div>
             <h3 className="mt-5 font-semibold">Stage 5 admin actions</h3>

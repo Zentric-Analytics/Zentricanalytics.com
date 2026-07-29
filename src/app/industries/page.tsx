@@ -56,7 +56,7 @@ export default function Industries() {
             <div className="industries-hero-typing">
               <IndustriesHeroTyping />
               <p className="mt-3 max-w-[43rem] text-[15px] leading-[1.65] text-slate-100 sm:mt-4 sm:text-[15px] sm:leading-[1.65] lg:text-[16px]">
-                We adapt delivery to the people, regulations, workflows, risk, and governance that define your organization—because similar technology decisions can carry different consequences across sectors.
+                We adapt delivery to the people, regulations, workflows, risk, and governance that define your organization because similar technology decisions can carry different consequences across sectors.
               </p>
             </div>
             <div className="mt-6 flex flex-col gap-3.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-4">
@@ -144,7 +144,7 @@ export default function Industries() {
               Your Context Should Shape the Solution
               </h2>
               <p className="mt-3 max-w-[42rem] text-[14px] leading-[1.65] text-[#475569] sm:mt-4 sm:text-[15px]">
-                Whatever your sector, scale, or operating model, we begin with your users, constraints, governance needs, and goals—not a fixed technology package.
+                Whatever your sector, scale, or operating model, we begin with your users, constraints, governance needs, and goals, not a fixed technology package.
               </p>
             </Stagger>
 

@@ -974,11 +974,11 @@ export default async function Portal({
                       </p>
                       <p>
                         <strong>Reporting manager:</strong>{" "}
-                        {offer?.reportingManager ?? "—"}
+                        {offer?.reportingManager ?? "Not provided"}
                       </p>
                       <p>
                         <strong>Probation period:</strong>{" "}
-                        {offer?.probationPeriod ?? "—"}
+                        {offer?.probationPeriod ?? "Not provided"}
                       </p>
                       <p>
                         <strong>Offer expiry:</strong>{" "}
