@@ -104,7 +104,7 @@ export default function Industries() {
           </Stagger>
 
           <Stagger className="mt-6 divide-y divide-white/10 lg:mt-7 lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0" delay={120} staggerDelay={85}>
-            {organizationValues.map(({ Icon, title, description }, index) => (
+            {organizationValues.map(({ Icon, title, description }) => (
               <article className="group py-5 transition-transform duration-[225ms] ease-out lg:px-6 lg:py-0 motion-safe:lg:hover:-translate-y-1 first:lg:pl-0 last:lg:pr-0" key={title}>
                 <div className="min-w-0">
                   <Icon aria-hidden="true" className="size-[1.375rem] text-[#5EE0BF] transition-colors duration-[225ms] ease-out lg:group-hover:text-[#7FEBD0] sm:size-6" strokeWidth={1.8} />

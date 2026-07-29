@@ -555,6 +555,7 @@ model HrUser {
   suspendedAt                DateTime?
   mfaEnabled                 Boolean                      @default(false)
   mfaSecretEncrypted         String?
+  mfaLastUsedStep            BigInt?
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
   roles                      HrUserRole[]
@@ -712,6 +713,7 @@ model HrLoginAttempt {
   user           HrUser?  @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, emailHash, ipHash, createdAt])
+  @@index([succeeded, createdAt])
 }
 
 model HrEmployee {
@@ -1017,6 +1019,7 @@ model HrEmailOutbox {
   attempts          HrEmailDeliveryAttempt[]
 
   @@index([status, nextAttemptAt])
+  @@index([status, createdAt])
   @@index([organizationId, createdAt])
 }
 
@@ -1515,6 +1518,7 @@ model HrEmployeeDocumentVersion {
 
   @@unique([documentId, version])
   @@index([organizationId, scanStatus, uploadedAt])
+  @@index([scanStatus, uploadedAt])
   @@index([checksum])
 }
 

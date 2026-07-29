@@ -14,18 +14,40 @@ export async function createHrSession(userId: string, context?: { ipHash?: strin
   const token = createOpaqueToken();
   const ttl = sessionTtlSeconds();
   await prisma.hrSession.create({ data: { userId, tokenHash: hashOpaqueToken(token), expiresAt: new Date(Date.now() + ttl * 1000), ...context } });
-  (await cookies()).set(HR_SESSION_COOKIE, token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: ttl, path: "/hr" });
+  const jar = await cookies();
+  jar.set(HR_SESSION_COOKIE, "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 0, path: "/hr" });
+  jar.set(HR_SESSION_COOKIE, token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: ttl, path: "/" });
 }
 
 export async function revokeCurrentHrSession() {
   const jar = await cookies();
   const token = jar.get(HR_SESSION_COOKIE)?.value;
   if (token) await prisma.hrSession.updateMany({ where: { tokenHash: hashOpaqueToken(token), revokedAt: null }, data: { revokedAt: new Date() } });
+  jar.set(HR_SESSION_COOKIE, "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 0, path: "/" });
   jar.set(HR_SESSION_COOKIE, "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 0, path: "/hr" });
 }
 
 export async function revokeAllHrSessions(userId: string) {
   await prisma.hrSession.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
+}
+
+export async function rotateCurrentHrSession(context?: { ipHash?: string; userAgent?: string }) {
+  const jar = await cookies();
+  const currentToken = jar.get(HR_SESSION_COOKIE)?.value;
+  if (!currentToken) return false;
+  const token = createOpaqueToken();
+  const now = new Date();
+  const rotated = await prisma.$transaction(async (tx) => {
+    const current = await tx.hrSession.findUnique({ where: { tokenHash: hashOpaqueToken(currentToken) }, include: { user: true } });
+    if (!current || current.revokedAt || current.expiresAt <= now || current.user.status !== "ACTIVE") return null;
+    const revoked = await tx.hrSession.updateMany({ where: { id: current.id, revokedAt: null }, data: { revokedAt: now } });
+    if (!revoked.count) return null;
+    await tx.hrSession.create({ data: { userId: current.userId, tokenHash: hashOpaqueToken(token), expiresAt: current.expiresAt, ...context } });
+    return current.expiresAt;
+  });
+  if (!rotated) return false;
+  jar.set(HR_SESSION_COOKIE, token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: Math.max(1, Math.floor((rotated.getTime() - now.getTime()) / 1000)), path: "/" });
+  return true;
 }
 
 export async function getAuthenticatedHrUser() {

@@ -477,11 +477,11 @@ export default async function AdminApplicationDetail({
   const stageSixSignature = stageSixSubmission?.signature;
   const stageSixDocuments = stageSixSubmission?.documents ?? [];
   const stageSevenSubmission = stageSeven?.submissions[0];
-  const stageSevenPayload = (stageSevenSubmission?.payload ?? {}) as Record<string, any>;
+  const stageSevenPayload = (stageSevenSubmission?.payload ?? {}) as Record<string, unknown>;
   const stageSevenSections = (stageSevenPayload.sections ?? {}) as Record<string, boolean>;
   const stageSevenSignature = stageSevenSubmission?.signature;
   const stageEightSubmission = stageEight?.submissions[0];
-  const stageEightPayload = (stageEightSubmission?.payload ?? {}) as Record<string, any>;
+  const stageEightPayload = (stageEightSubmission?.payload ?? {}) as Record<string, unknown>;
   const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
   const stageSixDocumentsWithAvailability = await Promise.all(
     stageSixDocuments.map(async (document: ApplicantDocument) => {

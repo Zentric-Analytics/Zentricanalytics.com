@@ -31,3 +31,5 @@ See [Onboarding and Offboarding](docs/hrms/onboarding-offboarding.md) for immuta
 See the [Generic Workflow Engine](docs/hrms/workflow-engine.md) for reusable conditional, parallel, quorum and multi-stage approvals.
 
 See [Reports and Analytics](docs/hrms/reports-analytics.md) for tenant-scoped dashboards, HR metrics, hiring, leave, payroll, asset, turnover and audit exports.
+
+See [Production Readiness](docs/hrms/production-readiness.md), [Backup and Disaster Recovery](docs/hrms/backup-disaster-recovery.md), [Monitoring and Incident Response](docs/hrms/monitoring-incident-response.md), and the [Security Test Plan](docs/hrms/security-test-plan.md) before any live release.

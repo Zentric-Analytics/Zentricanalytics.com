@@ -112,3 +112,18 @@ export async function linkHrUserEmployeeAction(formData: FormData) {
   });
   revalidatePath("/hr/admin/users");
 }
+
+const resetMfaSchema = z.object({ userId: z.string().cuid(), reason: z.string().trim().min(3).max(500) });
+export async function resetHrUserMfaAction(formData: FormData) {
+  const auth = await requirePermission("user.update");
+  if (!auth.roles.includes("ADMIN")) throw new Error("Only an ADMIN can reset MFA.");
+  const input = resetMfaSchema.parse(Object.fromEntries(formData));
+  if (input.userId === auth.user.id) throw new Error("Use account security to manage your own MFA.");
+  const target = await prisma.hrUser.findFirstOrThrow({ where: { id: input.userId, organizationId: auth.user.organizationId, mfaEnabled: true } });
+  await prisma.$transaction(async (tx) => {
+    await tx.hrUser.update({ where: { id: target.id }, data: { mfaEnabled: false, mfaSecretEncrypted: null, mfaLastUsedStep: null } });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrUser", entityId: target.id, action: "hr.auth.mfa.admin_reset", reason: input.reason, previousValues: { mfaEnabled: true }, newValues: { mfaEnabled: false } });
+  });
+  await revokeAllHrSessions(target.id);
+  revalidatePath("/hr/admin/users");
+}

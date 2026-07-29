@@ -16,6 +16,6 @@ Employee document uploads:
 - remain unavailable while scan status is `PENDING`, `QUARANTINED`, or `FAILED`;
 - create immutable access logs and audit events for downloads.
 
-Production must connect the scan-result action to an approved malware scanner during hardening. A human-authorized scan result is available for controlled staging validation; it is not a substitute for production malware scanning. Retention hold and archive metadata never delete stored records. Physical deletion requires a separately reviewed retention worker and is intentionally absent.
+Production connects an approved malware scanner to the constant-time-authenticated `POST /api/internal/hr/document-scan` callback using `DOCUMENT_SCANNER_SECRET`. Scan results are terminal and idempotent at the database layer. A human-authorized scan result remains available only for controlled staging validation. Retention hold and archive metadata never delete stored records. Physical deletion requires a separately reviewed retention worker and is intentionally absent.
 
 Required production configuration is documented in `.env.example` and `docs/hrms/deployment.md`.
