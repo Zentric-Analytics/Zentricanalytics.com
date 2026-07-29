@@ -8,6 +8,17 @@ const documentActions = readFileSync('src/app/admin/applications/[id]/AdminDocum
 const candidatePortal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
 
 describe('production admin hiring dashboard source checks', () => {
+  it('keeps all HR profile content fully readable without clipped controls', () => {
+    const styles = readFileSync('src/app/globals.css', 'utf8');
+
+    expect(detailPage).toContain('admin-workspace');
+    expect(listPage).toContain('admin-workspace');
+    expect(detailPage).toContain('[overflow-wrap:anywhere]');
+    expect(styles).toContain('.admin-workspace .btn');
+    expect(styles).toContain('height:auto');
+    expect(styles).toContain('white-space:normal');
+  });
+
   it('active applications page exposes real profile navigation and wired filters', () => {
     expect(listPage).toContain('Hiring admin');
     expect(listPage).toContain('View full profile');

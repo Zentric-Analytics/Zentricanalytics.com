@@ -214,14 +214,14 @@ function formatField(value: unknown) {
 
 function InfoGrid({ rows }: { rows: Array<[string, unknown]> }) {
   return (
-    <dl className="grid gap-3 text-sm md:grid-cols-2">
+    <dl className="grid min-w-0 gap-3 text-sm md:grid-cols-2">
       {rows.map(([label, value]) => (
         <div
-          className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+          className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4"
           key={label}
         >
           <dt className="font-semibold text-slate-500">{label}</dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+          <dd className="mt-1 min-w-0 whitespace-pre-wrap break-words text-slate-950 [overflow-wrap:anywhere]">
             {formatField(value)}
           </dd>
         </div>
@@ -540,7 +540,7 @@ export default async function AdminApplicationDetail({
   });
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="admin-workspace min-h-screen bg-slate-50">
       <div className="mx-auto max-w-6xl px-4 py-8">
         <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>

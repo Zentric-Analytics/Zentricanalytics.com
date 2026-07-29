@@ -42,7 +42,7 @@ export default async function TrackingDiagnosticsPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
+    <main className="admin-workspace mx-auto max-w-6xl px-4 py-10">
       <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Tracking diagnostics</h1>
