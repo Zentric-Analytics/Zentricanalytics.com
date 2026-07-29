@@ -4,6 +4,7 @@ services:
     runtime: node
     plan: starter
     buildCommand: yarn install --frozen-lockfile && yarn build
+    preDeployCommand: yarn prisma migrate deploy
     startCommand: yarn start
     disk:
       name: private-uploads
@@ -12,6 +13,12 @@ services:
     envVars:
       - key: APP_ENV
         value: staging
+      - key: APPLICATION_BASE_URL
+        value: https://staging.zentricanalytics.com
+      - key: AUTH_SECRET
+        sync: false
+      - key: EMAIL_WORKER_SECRET
+        sync: false
       - key: PRIVATE_OBJECT_STORAGE_PROVIDER
         value: local-private
       - key: PRIVATE_UPLOAD_ROOT

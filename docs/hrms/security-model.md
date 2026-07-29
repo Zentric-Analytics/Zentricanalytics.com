@@ -7,3 +7,5 @@ Passwords use bcrypt with a configurable work factor. Invitation and reset token
 Sensitive changes use server actions, origin validation, Zod validation, Prisma transactions, and immutable audit events. Audit payload sanitization masks password, token, bank, salary, and identity fields. URL identifiers never establish authority.
 
 Threat priorities: credential stuffing, session theft, IDOR, privilege escalation, supervisor-scope escape, CSRF, injection, unsafe upload/download, outbox leakage, and audit tampering. Remaining Milestone 1 limitations: MFA, malware scanning, KMS-backed field encryption, distributed rate limiting, and worker infrastructure are production-hardening milestones.
+
+Environment initialization is a guarded one-time operation, not application startup behavior. Non-development bootstrap requires `HR_BOOTSTRAP_CONFIRM_ENV` to match `APP_ENV`, never overwrites an account or password, and refuses to run after an ADMIN assignment exists. HRMS and legacy recruitment credentials remain intentionally separate.

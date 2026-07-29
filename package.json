@@ -6,6 +6,8 @@
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "hr:bootstrap": "node scripts/hr-bootstrap.mjs",
+    "hr:hash-password": "node scripts/hr-hash-password.mjs",
+    "hr:preflight": "node scripts/hr-preflight.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
