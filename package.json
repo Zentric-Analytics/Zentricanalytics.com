@@ -5,17 +5,19 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
+    "hr:bootstrap": "node scripts/hr-bootstrap.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@prisma/client": "6.10.1",
+    "bcryptjs": "3.0.2",
+    "lucide-react": "1.24.0",
+    "nanoid": "5.1.5",
+    "next": "15.5.22",
     "pdf-lib": "1.17.1",
-    "next": "15.3.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "zod": "3.25.67",
-    "nanoid": "5.1.5",
-    "@prisma/client": "6.10.1",
-    "lucide-react": "1.24.0"
+    "zod": "3.25.67"
   },
   "devDependencies": {
     "@types/node": "22.15.32",
@@ -23,12 +25,16 @@
     "@types/react-dom": "19.0.4",
     "autoprefixer": "10.4.21",
     "eslint": "9.29.0",
-    "eslint-config-next": "15.3.4",
+    "eslint-config-next": "15.5.22",
     "postcss": "8.5.6",
+    "prisma": "6.10.1",
     "tailwindcss": "3.4.17",
     "typescript": "5.8.3",
-    "vitest": "3.2.4",
-    "prisma": "6.10.1"
+    "vitest": "3.2.4"
+  },
+  "resolutions": {
+    "postcss": "8.5.18",
+    "sharp": "0.35.0"
   },
   "packageManager": "yarn@1.22.22"
 }

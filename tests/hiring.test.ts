@@ -752,7 +752,7 @@ describe("production hardening helpers", () => {
 
 
   it("saves private bytes before committing uploaded document metadata", () => {
-    const action = readFileSync("src/app/apply/actions.ts", "utf8");
+    const action = readFileSync("src/app/apply/actions.ts", "utf8").replace(/\r\n/g, "\n");
     expect(action.indexOf("await savePrivateUpload(file, applicationPublicId)")).toBeGreaterThan(-1);
     expect(action.indexOf("await savePrivateUpload(file, applicationPublicId)")).toBeLessThan(
       action.indexOf("tx.uploadedDocument.create"),
@@ -762,7 +762,7 @@ describe("production hardening helpers", () => {
   });
 
   it("redirects after the Stage 1 cleanup try/catch so successful uploads are not deleted", () => {
-    const action = readFileSync("src/app/apply/actions.ts", "utf8");
+    const action = readFileSync("src/app/apply/actions.ts", "utf8").replace(/\r\n/g, "\n");
     const catchStart = action.indexOf("} catch (error) {");
     const catchEnd = action.indexOf("\n  }\n\n  redirect(`/apply?submitted=", catchStart);
     const successRedirect = action.indexOf("redirect(`/apply?submitted=", catchStart);
