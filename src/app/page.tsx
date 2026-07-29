@@ -127,17 +127,19 @@ export default function Home() {
   return (
     <PageShell>
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,0.98fr)] md:gap-6 md:px-4 md:py-14 lg:max-w-[90rem] lg:grid-cols-[minmax(0,56rem)_minmax(0,1fr)] lg:py-16 lg:gap-8">
-          <div className="min-w-0 lg:max-w-[56rem]">
-            <h1 className="hero-reveal hero-reveal-1 max-w-[21rem] text-[36px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:max-w-2xl sm:text-[40px] lg:max-w-[56rem] lg:text-[42px]">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,48fr)_minmax(0,52fr)] md:gap-6 md:px-4 md:pb-16 md:pt-10 lg:max-w-[90rem] lg:gap-6 lg:pb-20 lg:pt-12 xl:pt-14">
+          <div className="min-w-0">
+            <h1 className="hero-reveal hero-reveal-1 max-w-[21rem] text-[36px] font-bold leading-[1.12] tracking-[-0.04em] text-white sm:max-w-2xl sm:text-[40px] lg:max-w-[40rem] lg:text-[42px]">
               <span className="lg:hidden">Zentric Analytics is a technology consultancy that helps organizations improve how they operate.</span>
-              <span className="hidden lg:block">A technology consultancy helping</span>
-              <span className="hidden lg:block">organizations improve how they operate.</span>
+              <span className="hidden lg:block xl:hidden">A technology consultancy helping organizations improve how they operate.</span>
+              <span className="hidden xl:block">A technology consultancy</span>
+              <span className="hidden xl:block">helping organizations</span>
+              <span className="hidden xl:block">improve how they operate.</span>
             </h1>
-            <p className="hero-reveal hero-reveal-2 mt-4 max-w-[520px] text-[15px] font-normal leading-[1.65] text-slate-200 lg:text-[16px]">
+            <p className="hero-reveal hero-reveal-2 mt-4 max-w-[520px] text-[15px] font-normal leading-[1.65] text-slate-200 md:mt-6 md:max-w-[30rem] lg:text-[16px]">
               We design and build dependable software, data, and AI systems around real operational needs, from initial decisions through long-term support.
             </p>
-            <div className="hero-reveal hero-reveal-3 mt-5 flex flex-col gap-2.5 md:gap-3 md:flex-row md:flex-wrap md:items-center">
+            <div className="hero-reveal hero-reveal-3 mt-5 flex flex-col gap-2.5 md:mt-8 md:flex-row md:flex-wrap md:items-center md:gap-3">
               <Link className="btn hero-cta-primary h-[48px] text-[15px] font-bold leading-none min-h-[48px] w-full md:h-[50px] md:min-h-[50px] md:w-auto" href="/contact">
                 Start a Project
               </Link>
@@ -150,8 +152,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-reveal hero-reveal-4 -mt-1 w-full max-w-[34rem] justify-self-center md:mt-0 md:-mr-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] md:w-[50vw] md:max-w-none md:justify-self-end lg:w-[49vw]">
-            <div className="relative aspect-[16/10.5] overflow-hidden rounded-r-xl rounded-l-none md:min-h-[25rem] lg:min-h-[27.5rem]">
+          <div className="hero-reveal hero-reveal-4 -mt-1 w-full max-w-[34rem] justify-self-center md:mt-0 md:-mr-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] md:w-[52vw] md:max-w-none md:justify-self-end">
+            <div className="relative aspect-[16/10.5] overflow-hidden rounded-r-xl rounded-l-none md:aspect-auto md:h-[24rem] lg:h-[25rem] xl:h-[26rem]">
               <Image
                 src="/images/hero/hero-engineering-team-v2.webp"
                 alt="Software engineers collaborating on code and system architecture in a modern office"
