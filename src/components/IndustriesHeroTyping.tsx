@@ -9,7 +9,7 @@ export const INDUSTRY_PAUSE_INTERVAL = 2200;
 
 type TypingPhase = 'typing' | 'pause' | 'deleting';
 
-type TypingState = {
+export type TypingState = {
   currentIndex: number;
   phase: TypingPhase;
   text: string;
