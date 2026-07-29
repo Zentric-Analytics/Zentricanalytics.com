@@ -65,6 +65,15 @@ describe('public layout shell', () => {
     expect(shell).not.toContain('pt-[4.5rem]');
   });
 
+  it('keeps the Home hero content group clear of the sticky navigation on mobile', () => {
+    const home = readFileSync('src/app/page.tsx', 'utf8');
+
+    expect(home).toContain('pt-10 min-[375px]:pt-12');
+    expect(home).toContain('md:pt-16');
+    expect(home).toContain('lg:pt-12 xl:pt-14');
+    expect(home).not.toContain('pb-5 pt-0');
+  });
+
   it('uses a client-side mobile navigation menu with accessible controls', () => {
     const header = readFileSync('src/components/SiteHeader.tsx', 'utf8');
 

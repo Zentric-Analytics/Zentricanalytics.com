@@ -127,7 +127,7 @@ export default function Home() {
   return (
     <PageShell>
       <section className="hero-premium relative isolate overflow-hidden bg-[#0B1F3A] text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-0 md:grid-cols-[minmax(0,48fr)_minmax(0,52fr)] md:gap-6 md:px-4 md:pb-16 md:pt-10 lg:max-w-[90rem] lg:gap-6 lg:pb-20 lg:pt-12 xl:pt-14">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-3 px-4 pb-5 pt-10 min-[375px]:pt-12 md:grid-cols-[minmax(0,48fr)_minmax(0,52fr)] md:gap-6 md:px-4 md:pb-16 md:pt-16 lg:max-w-[90rem] lg:gap-6 lg:pb-20 lg:pt-12 xl:pt-14">
           <div className="min-w-0">
             <h1 className="home-hero-heading hero-reveal hero-reveal-1 text-white">
               A technology consultancy helping organizations improve how they operate.
