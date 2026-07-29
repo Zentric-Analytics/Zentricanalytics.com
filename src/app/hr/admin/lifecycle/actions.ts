@@ -38,6 +38,9 @@ export async function startLifecycleAction(formData: FormData) {
     if (template.type === "ONBOARDING" && !["DRAFT", "ACTIVE"].includes(employee.employmentStatus)) throw new Error("Onboarding requires a draft or active employee.");
     if (template.type === "OFFBOARDING" && !["ACTIVE", "ON_LEAVE"].includes(employee.employmentStatus)) throw new Error("Offboarding requires an active employee.");
     if (template.type === "OFFBOARDING" && !input.knowledgeTransferToId) throw new Error("A knowledge-transfer owner is required for offboarding.");
+    if (template.type === "OFFBOARDING" && (!input.reason || !input.payrollStopDate || input.finalPayrollRequired === undefined || !input.leaveReconciliation)) {
+      throw new Error("Offboarding requires a reason, payroll stop date, final payroll decision, and leave reconciliation plan.");
+    }
     if (input.knowledgeTransferToId) {
       if (input.knowledgeTransferToId === employee.id) throw new Error("Knowledge transfer must be assigned to another active employee.");
       await tx.hrEmployee.findFirstOrThrow({ where: { id: input.knowledgeTransferToId, organizationId: auth.user.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] }, archivedAt: null } });
@@ -46,6 +49,8 @@ export async function startLifecycleAction(formData: FormData) {
       organizationId: auth.user.organizationId, templateId: template.id, employeeId: employee.id, type: template.type,
       status: "ACTIVE", effectiveDate: input.effectiveDate, startedAt: new Date(), createdById: auth.user.id,
       knowledgeTransferToId: input.knowledgeTransferToId,
+      reason: input.reason, payrollStopDate: input.payrollStopDate, finalPayrollRequired: input.finalPayrollRequired,
+      leaveReconciliation: input.leaveReconciliation,
       tasks: { create: template.tasks.map((task) => ({
         organizationId: auth.user.organizationId, templateTaskKey: task.key, title: task.title, description: task.description,
         ownerType: task.ownerType, dueAt: dueDate(input.effectiveDate, task.dueOffsetDays), required: task.required,
@@ -93,11 +98,21 @@ export async function completeLifecycleTaskAction(formData: FormData) {
         const activeAssets = await tx.hrAssetAssignment.count({ where: { employeeId: instance.employeeId, status: "ACTIVE" } });
         if (activeAssets) throw new Error("Offboarding cannot complete while the employee has active asset assignments.");
         const employee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: instance.employeeId } });
-        await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: "TERMINATED", terminationDate: instance.effectiveDate, terminationReason: "Completed offboarding workflow", archivedAt: new Date() } });
+        const completedTasks = new Set(tasks.filter((item) => item.status === "COMPLETED" || item.id === task.id).map((item) => item.templateTaskKey));
+        for (const requiredKey of ["final-payroll", "leave-reconciliation", "account-close", "company-email-disable", "exit-documents", "final-communication"]) {
+          if (!completedTasks.has(requiredKey)) throw new Error(`Offboarding cannot complete before ${requiredKey} is completed.`);
+        }
+        if (!instance.payrollStopDate || instance.finalPayrollRequired === null || !instance.leaveReconciliation) throw new Error("Offboarding control fields are incomplete.");
+        const completedAt = new Date();
+        await tx.hrLifecycleInstance.update({ where: { id: instance.id }, data: { companyEmailDisabledAt: completedAt, finalCommunicationSentAt: completedAt } });
+        await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: "TERMINATED", terminationDate: instance.effectiveDate, terminationReason: instance.reason ?? "Completed offboarding workflow", companyEmailStatus: "DISABLED", archivedAt: completedAt } });
+        await tx.hrEmployeeStatusHistory.create({ data: { organizationId: auth.user.organizationId, employeeId: employee.id, previousStatus: employee.employmentStatus, newStatus: "TERMINATED", effectiveAt: instance.effectiveDate, reason: instance.reason ?? "Completed offboarding workflow", changedById: auth.user.id } });
+        await tx.hrSystemAccessAssignment.updateMany({ where: { employeeId: employee.id, status: { in: ["REQUESTED", "ACTIVE", "SUSPENDED"] } }, data: { status: "REVOKED", endedAt: instance.effectiveDate, endedById: auth.user.id, endReason: "Completed offboarding workflow" } });
         if (employee.userId) {
           await tx.hrSession.updateMany({ where: { userId: employee.userId, revokedAt: null }, data: { revokedAt: new Date() } });
           await tx.hrUser.update({ where: { id: employee.userId }, data: { status: "SUSPENDED", suspendedAt: new Date() } });
         }
+        if (employee.personalEmail) await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: employee.personalEmail, template: "hr-employment-exit", subject: "Employment exit information available", payload: { lifecycleInstanceId: instance.id }, idempotencyKey: `hr-employment-exit:${instance.id}` });
       }
       await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrLifecycleInstance", entityId: task.instanceId, action: "hr.lifecycle.completed", newValues: { type: instance.type, employeeId: instance.employeeId } });
     }

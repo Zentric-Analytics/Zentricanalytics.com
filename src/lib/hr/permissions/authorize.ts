@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
 import type { HrPermissionKey } from "./catalog";
+import { supervisedEmployeeIds } from "@/lib/hr/supervisors/scope";
 
 export async function requireAuthenticatedUser() {
   const auth = await getAuthenticatedHrUser();
@@ -40,7 +41,8 @@ export async function canAccessEmployee(userId: string, employeeId: string, now 
   const permissions = new Set(user.roles.flatMap(({ role }) => role.permissions.map(({ permission }) => permission.key)));
   if (permissions.has("employee.read_all") || user.employee?.id === employeeId) return true;
   if (!user.employee || !permissions.has("supervisor.read_team")) return false;
-  return Boolean(await prisma.hrSupervisorAssignment.findFirst({ where: { supervisorEmployeeId: user.employee.id, assignedEmployeeId: employeeId, status: "ACTIVE", effectiveFrom: { lte: now }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }] }, select: { id: true } }));
+  const employeeIds = await supervisedEmployeeIds(prisma, { organizationId: user.organizationId, supervisorEmployeeId: user.employee.id, now });
+  return employeeIds.includes(employeeId);
 }
 
 export const canManageEmployee = canAccessEmployee;

@@ -526,11 +526,18 @@ export async function adminStage8Action(formData: FormData) {
         if (hrOrganization) {
           const nameParts = app.applicant.fullName.trim().split(/\s+/);
           const existingEmployee = await tx.hrEmployee.findUnique({ where: { recruitmentApplicationId: app.id } });
+          const year = new Date().getUTCFullYear();
+          const sequence = existingEmployee ? null : await tx.hrEmployeeNumberSequence.upsert({
+            where: { organizationId_year: { organizationId: hrOrganization.id, year } },
+            update: { lastValue: { increment: 1 } },
+            create: { organizationId: hrOrganization.id, year, lastValue: 1 },
+          });
+          const generatedEmployeeNumber = existingEmployee?.employeeNumber ?? `ZA-EMP-${year}-${String(sequence!.lastValue).padStart(4, '0')}`;
           const employee = existingEmployee ?? await tx.hrEmployee.create({
             data: {
               organizationId: hrOrganization.id,
               recruitmentApplicationId: app.id,
-              employeeNumber: app.applicationId,
+              employeeNumber: generatedEmployeeNumber,
               legalFirstName: app.applicant.firstName || nameParts[0] || 'Pending',
               middleName: app.applicant.middleInitial || (nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : null),
               lastName: app.applicant.lastName || nameParts.at(-1) || 'Pending',
@@ -539,7 +546,7 @@ export async function adminStage8Action(formData: FormData) {
               employmentStatus: 'DRAFT',
             },
           });
-          if (!existingEmployee) await tx.hrAuditEvent.create({ data: { organizationId: hrOrganization.id, actorRole: 'LEGACY_RECRUITMENT_ADMIN', entityType: 'HrEmployee', entityId: employee.id, action: 'hr.employee.created_from_recruitment', newValues: { recruitmentApplicationId: app.id, employeeNumber: app.applicationId, status: 'DRAFT' }, reason: 'Final recruitment approval', correlationId: `recruitment:${app.id}` } });
+          if (!existingEmployee) await tx.hrAuditEvent.create({ data: { organizationId: hrOrganization.id, actorRole: 'LEGACY_RECRUITMENT_ADMIN', entityType: 'HrEmployee', entityId: employee.id, action: 'hr.employee.created_from_recruitment', newValues: { recruitmentApplicationId: app.id, employeeNumber: generatedEmployeeNumber, status: 'DRAFT' }, reason: 'Final recruitment approval', correlationId: `recruitment:${app.id}` } });
         }
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin finalized Stage 8', metadata: { checklistConfirmed: true, checklistItemCount: stage8ChecklistKeys.length, finalHrNotesPresent: Boolean(finalHrNotes), candidateFacingNotePresent: Boolean(candidateFacingNote) } } });
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Final HR checklist confirmed', metadata: { checklistVersion: 1, confirmedItemCount: stage8ChecklistKeys.length } } });

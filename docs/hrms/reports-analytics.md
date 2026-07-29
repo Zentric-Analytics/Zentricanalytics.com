@@ -17,13 +17,13 @@ Payroll totals use Prisma Decimal arithmetic and are never converted through Jav
 
 ## Exports
 
-`/api/hr/reports/[report]` supports `employees`, `headcount`, `turnover`, `recruitment`, `leave`, `payroll`, `assets`, and `audit`. Exports:
+`/api/hr/reports/[report]` supports the employee directory, department roster, supervisor assignments, headcount, turnover, recruitment pipeline, leave balances and history, payroll summary and bank schedule, payslip register, asset register, offboarding register, and audit report. Exports:
 
 - require both `report.export` and the relevant module permission;
 - are limited to 10,000 detail rows (500 payroll runs);
 - use UTF-8 CSV with formula-injection neutralization;
 - return private, no-store and nosniff headers;
-- contain no bank account, credential, identity-document content or raw audit JSON;
+- contain no credential, identity-document content or raw audit JSON; the dedicated bank schedule is the sole exception for account numbers and requires `payroll.read_bank_details`;
 - append an audit event with report name, period and row count.
 
 Recruitment applications now carry an optional organization foreign key. The migration safely backfills existing Zentric applications when the organization already exists, and new applications link during submission. Unlinked applications never appear in HR reports.
