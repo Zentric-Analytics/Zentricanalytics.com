@@ -87,7 +87,7 @@ export default async function AdminApplications({ searchParams }: { searchParams
   const offersPending = applications.filter((app) => app.offer && ['Released', 'Accepted'].includes(app.offer.status)).length;
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="admin-workspace min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 py-8">
         <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
