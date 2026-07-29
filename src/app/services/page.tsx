@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useState } from 'react';
 import {
   BarChart3,
   BrainCircuit,
@@ -86,10 +87,22 @@ const technologyLogos: Record<string, string> = {
 
 function TechnologyLogo({ technology }: { technology: string }) {
   const logo = technologyLogos[technology];
+  const [hasFailed, setHasFailed] = useState(false);
 
-  if (!logo) return null;
+  if (!logo || hasFailed) return null;
 
-  return <Image className="technology-ticker__logo" src={logo} alt="" width={24} height={24} unoptimized aria-hidden="true" />;
+  return (
+    <Image
+      className="technology-ticker__logo"
+      src={logo}
+      alt=""
+      width={24}
+      height={24}
+      unoptimized
+      aria-hidden="true"
+      onError={() => setHasFailed(true)}
+    />
+  );
 }
 
 function TechnologyRow({ technologies, variant }: { technologies: string[]; variant: 'top' | 'bottom' }) {
