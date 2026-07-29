@@ -37,7 +37,7 @@ This inventory records the public-page audit performed before Phase 3 edits. “
 | Dark navy panel | Contact | Hero and assurance strip | `src/app/contact/page.tsx` | Yes: hero plus compact reassurance | Limited | Keep |
 | Full-width photographic CTA | Home | Final CTA | `src/app/page.tsx` | Yes: principal brand conversion moment | No | Keep |
 | Full-width photographic CTA | Industries | Final CTA | `src/app/industries/page.tsx` | Contextual industry conversion | Some image-treatment repetition | Keep split structure; defer image identity to Phase 4/5 |
-| Full-width photographic CTA | Careers | None (CTA is solid navy) | `src/app/careers/page.tsx` | — | — | Keep distinction |
+| Full-width photographic CTA | Careers | None (CTA is solid navy) | `src/app/careers/page.tsx` | None | None | Keep distinction |
 | Two-column card grid | Home | How We Think | `src/app/page.tsx` | Two-column responsive reading is useful | Card surfaces were redundant | Keep columns; restyle as rows/dividers |
 | Two-column card grid | Services | Capability cards | `src/app/services/page.tsx` | Yes: primary service inventory | No | Keep |
 | Two-column card grid | About | Company facts | `src/app/about/page.tsx` | Columns are useful | Card surfaces were redundant | Keep columns; restyle editorially |

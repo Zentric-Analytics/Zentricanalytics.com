@@ -24,10 +24,10 @@ This audit was completed before Phase 4 implementation. It compares the four in-
 
 ## Intended page identities after Phase 4
 
-- **Home — strategic and calm:** broad orientation, editorial philosophy, concise outcome-led capability preview, and one process interaction.
-- **Services — technical and dense:** coded workspace, detailed capability catalogue, technology ticker, and one tabbed examples interaction.
-- **Industries — contextual and navigable:** photographic context, one sector selector, outcome-led organizational support, and partnership trust.
-- **Careers — human and scannable:** people photography, directly actionable roles, editorial values, and candidate-only conversion actions.
+- **Home, strategic and calm:** broad orientation, editorial philosophy, concise outcome-led capability preview, and one process interaction.
+- **Services, technical and dense:** coded workspace, detailed capability catalogue, technology ticker, and one tabbed examples interaction.
+- **Industries, contextual and navigable:** photographic context, one sector selector, outcome-led organizational support, and partnership trust.
+- **Careers, human and scannable:** people photography, directly actionable roles, editorial values, and candidate-only conversion actions.
 
 ## Explicit deferrals
 
