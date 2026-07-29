@@ -66,8 +66,8 @@ export default async function TrackingDiagnosticsPage() {
                 <td className="p-2">{maskGeneric(email.applicationId)}</td>
                 <td className="p-2">{maskEmail(email.toEmail)}</td>
                 <td className="p-2 font-semibold">{email.status}</td>
-                <td className="p-2">{email.providerMessageId ?? '—'}</td>
-                <td className="p-2">{email.failureReason ?? '—'}</td>
+                <td className="p-2">{email.providerMessageId ?? 'Not available'}</td>
+                <td className="p-2">{email.failureReason ?? 'Not available'}</td>
               </tr>
             ))}
           </tbody>
@@ -78,7 +78,7 @@ export default async function TrackingDiagnosticsPage() {
         <h2 className="text-xl font-bold">Recent stage-action emails</h2>
         <table className="mt-4 min-w-full text-left text-sm">
           <thead><tr><th className="p-2">Created</th><th className="p-2">Application</th><th className="p-2">Email</th><th className="p-2">Template</th><th className="p-2">Status</th><th className="p-2">Failure</th></tr></thead>
-          <tbody>{stageEmails.map((email) => (<tr className="border-t" key={email.id}><td className="p-2">{email.createdAt.toISOString()}</td><td className="p-2">{maskGeneric(email.applicationId)}</td><td className="p-2">{maskEmail(email.toEmail)}</td><td className="p-2">{email.template}</td><td className="p-2 font-semibold">{email.status}</td><td className="p-2">{email.failureReason ?? '—'}</td></tr>))}</tbody>
+          <tbody>{stageEmails.map((email) => (<tr className="border-t" key={email.id}><td className="p-2">{email.createdAt.toISOString()}</td><td className="p-2">{maskGeneric(email.applicationId)}</td><td className="p-2">{maskEmail(email.toEmail)}</td><td className="p-2">{email.template}</td><td className="p-2 font-semibold">{email.status}</td><td className="p-2">{email.failureReason ?? 'Not available'}</td></tr>))}</tbody>
         </table>
       </section>
 
@@ -86,7 +86,7 @@ export default async function TrackingDiagnosticsPage() {
         <h2 className="text-xl font-bold">Recent stage-action audit logs</h2>
         <table className="mt-4 min-w-full text-left text-sm">
           <thead><tr><th className="p-2">Created</th><th className="p-2">Application</th><th className="p-2">Actor</th><th className="p-2">Action</th></tr></thead>
-          <tbody>{stageAuditLogs.map((log) => (<tr className="border-t" key={log.id}><td className="p-2">{log.createdAt.toISOString()}</td><td className="p-2">{log.applicationId ? maskGeneric(log.applicationId) : '—'}</td><td className="p-2">{log.actorType}</td><td className="p-2">{log.action}</td></tr>))}</tbody>
+          <tbody>{stageAuditLogs.map((log) => (<tr className="border-t" key={log.id}><td className="p-2">{log.createdAt.toISOString()}</td><td className="p-2">{log.applicationId ? maskGeneric(log.applicationId) : 'Not available'}</td><td className="p-2">{log.actorType}</td><td className="p-2">{log.action}</td></tr>))}</tbody>
         </table>
       </section>
 

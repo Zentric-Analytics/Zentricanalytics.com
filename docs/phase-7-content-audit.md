@@ -52,7 +52,7 @@ Completed before Phase 7 copy edits. This audit treats Home as the preview, Serv
 ## Duplication and trust findings
 
 - **Software, AI, data, cloud, research:** Home should preview outcomes; Services owns build detail and technologies; Industries explains contextual constraints; About explains why and how Zentric makes decisions.
-- **Repeated benefits:** “secure, scalable, reliable” appeared without nearby mechanisms. Revised copy should name practices such as access boundaries, testing, review points, maintainable architecture, staged delivery, and operational handover—or use measured language.
+- **Repeated benefits:** “secure, scalable, reliable” appeared without nearby mechanisms. Revised copy should name practices such as access boundaries, testing, review points, maintainable architecture, staged delivery, and operational handover, or use measured language.
 - **Generic language:** “every industry,” “building the future,” “lasting impact,” “right solution,” “innovation,” and “future-ready” should be removed or grounded in a specific outcome.
 - **Proof:** No certifications, client statistics, named case studies, or leadership biographies are available. Do not invent them. Detailed case studies, verified credentials, and named leadership profiles are **DEFERRED** pending approved source material.
 
