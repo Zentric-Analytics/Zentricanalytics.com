@@ -6,6 +6,7 @@ import {
   INDUSTRY_PAUSE_INTERVAL,
   INDUSTRY_TYPING_INTERVAL,
 } from '../src/components/IndustriesHeroTyping';
+import type { TypingState } from '../src/components/IndustriesHeroTyping';
 import { INDUSTRY_CONTENT } from '../src/components/industryContent';
 
 describe('Industries hero typing', () => {
@@ -16,7 +17,7 @@ describe('Industries hero typing', () => {
   });
 
   it('types, pauses, deletes, and advances to the next sector', () => {
-    let state = { currentIndex: 0, phase: 'typing' as const, text: '' };
+    let state: TypingState = { currentIndex: 0, phase: 'typing', text: '' };
 
     for (const character of INDUSTRY_CONTENT[0].title) {
       state = getNextTypingState(state);
