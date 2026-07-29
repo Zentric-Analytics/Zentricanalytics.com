@@ -144,10 +144,12 @@ export default function Services() {
           {services.map(({ title, description, technologies, Icon }) => (
             <article className={styles.card} key={title}>
               <span className={styles.accent} aria-hidden="true" />
-              <span className={styles.icon} aria-hidden="true">
-                <Icon size={20} strokeWidth={2} />
-              </span>
-              <h3 className={styles.title}>{title}</h3>
+              <div className={styles.header}>
+                <span className={styles.icon} aria-hidden="true">
+                  <Icon size={20} strokeWidth={2} />
+                </span>
+                <h3 className={styles.title}>{title}</h3>
+              </div>
               <p className={styles.description}>{description}</p>
               <ul className={styles.technologies} aria-label={`${title} technologies`}>
                 {technologies.map((technology) => <li key={technology}>{technology}</li>)}
