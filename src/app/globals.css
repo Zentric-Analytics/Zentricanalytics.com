@@ -125,7 +125,7 @@ body{margin:0;background:var(--za-color-page);color:var(--za-color-text);font-fa
 
 
 .zentric-wordmark{font-family:var(--font-manrope);font-size:1.875rem;font-weight:800;letter-spacing:-0.04em;line-height:1;white-space:nowrap}
-.site-header .zentric-wordmark{font-size:1.625rem}
+.site-header .zentric-wordmark{font-size:1.375rem}
 
 @media (min-width:768px){
   .zentric-wordmark{font-size:2rem}

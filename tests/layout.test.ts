@@ -167,7 +167,7 @@ describe('public layout shell', () => {
     primaryNavLinks.forEach((label) => expect(navigation).toContain(label));
     ['About', 'Contact'].forEach((label) => expect(navigation).not.toContain(label));
     expect(header).toContain('className="zentric-wordmark text-brand"');
-    expect(css).toContain('.site-header .zentric-wordmark{font-size:1.625rem}');
+    expect(css).toContain('.site-header .zentric-wordmark{font-size:1.375rem}');
     expect(css).toContain('.site-header .zentric-wordmark{font-size:2rem}');
     expect(header).toContain('className={`za-container-wide');
     expect(header).not.toContain('focus-visible:ring-[#10B981]');
