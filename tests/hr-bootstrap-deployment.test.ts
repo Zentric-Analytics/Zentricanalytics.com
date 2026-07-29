@@ -49,6 +49,7 @@ function makeDatabase(initial?: Partial<State>, failAudit = false) {
     hrPayrollRun: { count: vi.fn(async () => 0) },
     hrEmployeeDocument: { count: vi.fn(async () => 0) },
     hrAsset: { count: vi.fn(async () => 0) },
+    hrLifecycleTemplate: { count: vi.fn(async () => 0) },
     $transaction: vi.fn(async (operation: (tx: object) => Promise<void>) => {
       const snapshot = { organization: state.organization, users: [...state.users], roles: new Map(state.roles), permissions: new Map(state.permissions), adminUserId: state.adminUserId, auditCount: state.auditCount, writes: state.writes };
       const tx = {
