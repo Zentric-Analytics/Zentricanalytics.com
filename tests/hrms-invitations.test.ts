@@ -95,6 +95,12 @@ describe("HR account invitation acceptance", () => {
       .rejects.toMatchObject({ code: "INVALID_TOKEN" });
   });
 
+  it("rejects an administrator-cancelled invitation", async () => {
+    state.invitation = invitation("cancelled-token", { status: "REVOKED" });
+    await expect(consumeHrInvitation("cancelled-token", "StrongPassword123"))
+      .rejects.toMatchObject({ code: "INVALID_TOKEN" });
+  });
+
   it("rejects an invalid token", async () => {
     state.invitation = invitation("real-token");
     await expect(consumeHrInvitation("invalid-token", "StrongPassword123"))

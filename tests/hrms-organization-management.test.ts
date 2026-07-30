@@ -92,4 +92,21 @@ describe("enterprise organization management", () => {
     expect(route).toContain("hr.organization.report_exported");
     for (const protectedField of ["accountNumberEncrypted", "taxIdentifierEncrypted", "salaryRecords"]) expect(route).not.toContain(protectedField);
   });
+  it("reserves destructive invitation and user controls for the primary administrator", () => {
+    const schema = readFileSync("prisma/schema.prisma", "utf8");
+    const actions = readFileSync("src/app/hr/admin/users/actions.ts", "utf8");
+    const page = readFileSync("src/app/hr/admin/users/page.tsx", "utf8");
+    expect(schema).toContain("isPrimaryAdmin");
+    expect(schema).toContain("DELETED");
+    expect(actions).toContain("Only the primary administrator can perform this action.");
+    expect(actions).toContain('action: "hr.invitation.cancelled"');
+    expect(actions).toContain('action: "hr.invitation.deleted"');
+    expect(actions).toContain('action: "hr.user.soft_deleted"');
+    expect(actions).toContain('action: "hr.user.hard_deleted"');
+    expect(actions).toContain('status: "REVOKED"');
+    expect(actions).toContain('status: "DELETED"');
+    expect(page).toContain("Cancel invitation");
+    expect(page).toContain("Soft-delete user");
+    expect(page).toContain("Permanently delete user");
+  });
 });

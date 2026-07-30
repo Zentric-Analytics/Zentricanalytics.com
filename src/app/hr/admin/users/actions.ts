@@ -9,6 +9,12 @@ import { canAssignRole } from "@/lib/hr/permissions/catalog";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { revokeAllHrSessions } from "@/lib/hr/auth/session";
 
+function requirePrimaryAdmin(auth: { roles: string[]; user: { isPrimaryAdmin: boolean } }) {
+  if (!auth.user.isPrimaryAdmin || !auth.roles.includes("ADMIN")) {
+    throw new Error("Only the primary administrator can perform this action.");
+  }
+}
+
 const createSchema = z.object({ email: z.string().email().max(180), role: z.enum(["ADMIN","HR_ADMIN","PAYROLL_ADMIN","EMPLOYEE"]) });
 export async function createHrUserAction(formData: FormData) {
   const auth = await requirePermission("user.create");
@@ -96,6 +102,117 @@ export async function resendHrInvitationAction(formData: FormData) {
   const userId = z.string().cuid().parse(formData.get("userId"));
   const target = await prisma.hrUser.findFirstOrThrow({ where: { id: userId, organizationId: auth.user.organizationId, status: "INVITED" } });
   await createHrInvitation({ organizationId: auth.user.organizationId, userId: target.id, createdById: auth.user.id, recipient: target.email });
+  revalidatePath("/hr/admin/users");
+}
+
+export async function cancelHrInvitationAction(formData: FormData) {
+  const auth = await requirePermission("user.invite");
+  requirePrimaryAdmin(auth);
+  const userId = z.string().cuid().parse(formData.get("userId"));
+  const target = await prisma.hrUser.findFirstOrThrow({ where: { id: userId, organizationId: auth.user.organizationId, status: "INVITED" } });
+  await prisma.$transaction(async (tx) => {
+    const cancelled = await tx.hrAccountInvitation.updateMany({
+      where: { organizationId: auth.user.organizationId, userId: target.id, status: "ACTIVE", usedAt: null },
+      data: { status: "REVOKED" },
+    });
+    if (!cancelled.count) throw new Error("There is no active invitation to cancel.");
+    await appendHrAudit(tx, {
+      organizationId: auth.user.organizationId,
+      actorUserId: auth.user.id,
+      actorRole: auth.roles[0],
+      entityType: "HrAccountInvitation",
+      entityId: target.id,
+      action: "hr.invitation.cancelled",
+      newValues: { userId: target.id, invitationsCancelled: cancelled.count },
+      reason: "Cancelled by primary administrator",
+    });
+  });
+  revalidatePath("/hr/admin/users");
+}
+
+export async function deleteHrInvitationAction(formData: FormData) {
+  const auth = await requirePermission("user.invite");
+  requirePrimaryAdmin(auth);
+  const userId = z.string().cuid().parse(formData.get("userId"));
+  const target = await prisma.hrUser.findFirstOrThrow({ where: { id: userId, organizationId: auth.user.organizationId, status: "INVITED" } });
+  await prisma.$transaction(async (tx) => {
+    const active = await tx.hrAccountInvitation.count({ where: { organizationId: auth.user.organizationId, userId: target.id, status: "ACTIVE", usedAt: null } });
+    if (active) throw new Error("Cancel the active invitation before deleting it.");
+    const deleted = await tx.hrAccountInvitation.deleteMany({ where: { organizationId: auth.user.organizationId, userId: target.id, status: { in: ["REVOKED", "USED"] } } });
+    if (!deleted.count) throw new Error("There is no cancelled invitation to delete.");
+    await appendHrAudit(tx, {
+      organizationId: auth.user.organizationId,
+      actorUserId: auth.user.id,
+      actorRole: auth.roles[0],
+      entityType: "HrAccountInvitation",
+      entityId: target.id,
+      action: "hr.invitation.deleted",
+      previousValues: { userId: target.id, invitationsDeleted: deleted.count },
+      reason: "Deleted by primary administrator after cancellation",
+    });
+  });
+  revalidatePath("/hr/admin/users");
+}
+
+export async function softDeleteHrUserAction(formData: FormData) {
+  const auth = await requirePermission("user.update");
+  requirePrimaryAdmin(auth);
+  const userId = z.string().cuid().parse(formData.get("userId"));
+  const reason = z.string().trim().min(3).max(500).parse(formData.get("reason"));
+  if (userId === auth.user.id) throw new Error("The primary administrator cannot delete their own account.");
+  const target = await prisma.hrUser.findFirstOrThrow({ where: { id: userId, organizationId: auth.user.organizationId, isPrimaryAdmin: false, status: { not: "DELETED" } } });
+  await prisma.$transaction(async (tx) => {
+    await tx.hrAccountInvitation.updateMany({ where: { userId: target.id, status: "ACTIVE" }, data: { status: "REVOKED" } });
+    await tx.hrUserRole.updateMany({ where: { userId: target.id, revokedAt: null }, data: { revokedAt: new Date() } });
+    await tx.hrUser.update({
+      where: { id: target.id },
+      data: { status: "DELETED", deletedAt: new Date(), deletedById: auth.user.id, suspendedAt: new Date() },
+    });
+    await appendHrAudit(tx, {
+      organizationId: auth.user.organizationId,
+      actorUserId: auth.user.id,
+      actorRole: auth.roles[0],
+      entityType: "HrUser",
+      entityId: target.id,
+      action: "hr.user.soft_deleted",
+      previousValues: { status: target.status, email: target.email },
+      newValues: { status: "DELETED" },
+      reason,
+    });
+  }, { isolationLevel: "Serializable" });
+  await revokeAllHrSessions(target.id);
+  revalidatePath("/hr/admin/users");
+}
+
+export async function hardDeleteHrUserAction(formData: FormData) {
+  const auth = await requirePermission("user.update");
+  requirePrimaryAdmin(auth);
+  const userId = z.string().cuid().parse(formData.get("userId"));
+  const reason = z.string().trim().min(3).max(500).parse(formData.get("reason"));
+  const target = await prisma.hrUser.findFirstOrThrow({
+    where: { id: userId, organizationId: auth.user.organizationId, status: "DELETED", isPrimaryAdmin: false },
+    include: { employee: { select: { id: true } }, invitationsCreated: { select: { id: true }, take: 1 } },
+  });
+  if (target.employee) throw new Error("Hard deletion is blocked while the user is linked to an employee record.");
+  if (target.invitationsCreated.length) throw new Error("Hard deletion is blocked because this user created invitation records that must remain attributable.");
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.hrAccountInvitation.deleteMany({ where: { userId: target.id } });
+      await appendHrAudit(tx, {
+        organizationId: auth.user.organizationId,
+        actorUserId: auth.user.id,
+        actorRole: auth.roles[0],
+        entityType: "HrUser",
+        entityId: target.id,
+        action: "hr.user.hard_deleted",
+        previousValues: { status: target.status, email: target.email, deletedAt: target.deletedAt },
+        reason,
+      });
+      await tx.hrUser.delete({ where: { id: target.id } });
+    }, { isolationLevel: "Serializable" });
+  } catch {
+    throw new Error("Hard deletion is blocked because this account still owns retained HR records. Keep it soft-deleted.");
+  }
   revalidatePath("/hr/admin/users");
 }
 

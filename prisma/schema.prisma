@@ -245,6 +245,7 @@ enum HrUserStatus {
   ACTIVE
   SUSPENDED
   DISABLED
+  DELETED
 }
 
 enum HrTokenStatus {
@@ -629,6 +630,9 @@ model HrUser {
   mfaEnabled                     Boolean                       @default(false)
   mfaSecretEncrypted             String?
   mfaLastUsedStep                BigInt?
+  isPrimaryAdmin                 Boolean                       @default(false)
+  deletedAt                      DateTime?
+  deletedById                    String?
   createdAt                      DateTime                      @default(now())
   updatedAt                      DateTime                      @updatedAt
   roles                          HrUserRole[]
