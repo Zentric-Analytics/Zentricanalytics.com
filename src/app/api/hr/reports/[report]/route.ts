@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { unsealHrCredential } from "@/lib/hr/auth/crypto";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
+import { privilegedMfaRequired } from "@/lib/hr/permissions/authorize";
 import { csvCell } from "@/lib/hr/payroll/engine";
 import { reportPeriod, safeReportFileName } from "@/lib/hr/reports/metrics";
 import type { HrPermissionKey } from "@/lib/hr/permissions/catalog";
@@ -33,6 +34,7 @@ function csv(rows: Cell[][]) {
 export async function GET(_request: Request, { params }: { params: Promise<{ report: string }> }) {
   const auth = await getAuthenticatedHrUser();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (privilegedMfaRequired(auth)) return NextResponse.json({ error: "MFA enrollment required" }, { status: 403 });
   const { report } = await params;
   const modulePermission = rules[report];
   if (!modulePermission) return NextResponse.json({ error: "Not found" }, { status: 404 });

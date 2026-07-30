@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
-const money = z.union([z.string().regex(/^\d+(\.\d{1,4})?$/), z.number().positive()]).transform(String).refine((value) => new Prisma.Decimal(value).greaterThan(0), "Amount must be greater than zero.");
+const money = z.string().regex(/^\d+(\.\d{1,4})?$/).refine((value) => new Prisma.Decimal(value).greaterThan(0), "Amount must be greater than zero.");
 export const salaryInput = z.object({
   employeeId: z.string().cuid(),
   amount: money,
@@ -75,6 +75,10 @@ export function assertPayrollTransition(from: string, to: string) {
     LOCKED: ["PAID"],
   };
   if (!allowed[from]?.includes(to)) throw new Error(`Payroll run cannot transition from ${from} to ${to}.`);
+}
+
+export function assertIndependentPayrollActor(actorUserId: string, prohibitedActorIds: Array<string | null | undefined>, action: string) {
+  if (prohibitedActorIds.some((id) => id === actorUserId)) throw new Error(`${action} requires a different authorized user.`);
 }
 
 export function csvCell(value: unknown) {

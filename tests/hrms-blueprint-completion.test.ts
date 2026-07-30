@@ -66,7 +66,8 @@ describe("HRMS blueprint completion audit", () => {
     const employeeLayout = read("src/app/hr/employee/layout.tsx");
     const supervisorLayout = read("src/app/hr/supervisor/layout.tsx");
     expect(employeeLayout).toContain('["My Profile","/hr/employee/profile"]');
-    expect(employeeLayout).toContain('["Notifications","/hr/notifications"]');
+    expect(employeeLayout).toContain('["Notifications","/hr/employee/notifications"]');
+    expect(employeeLayout).toContain('["Security","/hr/employee/security"]');
     expect(supervisorLayout).toContain('["My Team","/hr/supervisor/team"]');
     expect(supervisorLayout).toContain('["Review Tasks","/hr/supervisor/tasks"]');
   });

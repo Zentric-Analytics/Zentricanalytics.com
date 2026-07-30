@@ -46,7 +46,7 @@ describe("generic HR workflow engine", () => {
     expect(actions).toContain("organizationId: auth.user.organizationId");
     expect(actions).toContain("approverUserIds.includes(auth.user.id)");
     expect(actions).toContain('isolationLevel: "Serializable"');
-    expect(actions).toContain("hrSupervisorAssignment.findFirst");
+    expect(actions).toContain("activeSupervisorForEmployee");
     expect(actions).toContain("assigneePermissionKey");
   });
   it("audits and notifies without embedding protected workflow context", () => {

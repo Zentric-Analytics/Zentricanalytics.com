@@ -6,7 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
-import { assertPayrollTransition, calculatePayrollSnapshot } from "@/lib/hr/payroll/engine";
+import { assertIndependentPayrollActor, assertPayrollTransition, calculatePayrollSnapshot } from "@/lib/hr/payroll/engine";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 
 const runIdInput = z.string().cuid();
@@ -106,6 +106,11 @@ async function transitionRun(formData: FormData, permission: "payroll.review" | 
   const input = transitionInput.parse(Object.fromEntries(formData));
   await prisma.$transaction(async (tx) => {
     const run = await tx.hrPayrollRun.findFirstOrThrow({ where: { id: input.runId, organizationId: auth.user.organizationId, status: from } });
+    const reviewedBy = from === "REVIEWED" || from === "APPROVED"
+      ? await tx.hrPayrollApproval.findFirst({ where: { runId: run.id, toStatus: "REVIEWED" }, orderBy: { createdAt: "desc" }, select: { actorUserId: true } })
+      : null;
+    if (to === "REVIEWED") assertIndependentPayrollActor(auth.user.id, [run.createdById], "Payroll review");
+    if (to === "APPROVED") assertIndependentPayrollActor(auth.user.id, [run.createdById, reviewedBy?.actorUserId], "Payroll approval");
     assertPayrollTransition(run.status, to);
     const now = new Date();
     const timestamp = to === "REVIEWED" ? { reviewedAt: now } : to === "APPROVED" ? { approvedAt: now } : { lockedAt: now };

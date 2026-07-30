@@ -13,6 +13,7 @@
     "hr:bootstrap": "node scripts/hr-bootstrap.mjs",
     "hr:hash-password": "node scripts/hr-hash-password.mjs",
     "hr:preflight": "node scripts/hr-preflight.mjs",
+    "hr:release": "node scripts/hr-release.mjs",
     "hr:backup-readiness": "node scripts/hr-backup-readiness.mjs",
     "hr:restore-drill": "node scripts/hr-restore-drill.mjs",
     "hr:smoke": "node scripts/hr-smoke.mjs",

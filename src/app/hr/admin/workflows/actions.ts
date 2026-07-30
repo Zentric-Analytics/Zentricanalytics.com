@@ -7,6 +7,7 @@ import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { assertSafeWorkflowContext, conditionMatches, dueAt, requiredApprovals, workflowCondition, workflowDefinitionInput } from "@/lib/hr/workflow/engine";
+import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
 
 const refresh = () => { revalidatePath("/hr/admin/workflows"); revalidatePath("/hr/supervisor/reviews"); };
 function parseJson(value: FormDataEntryValue | null, label: string) {
@@ -43,7 +44,7 @@ async function resolveApprovers(tx: Prisma.TransactionClient, organizationId: st
   if (stage.assigneeType === "USERS") return stage.assigneeUserIds;
   if (stage.assigneeType === "SUPERVISOR") {
     if (!subjectEmployeeId) throw new Error("Supervisor routing requires a subject employee.");
-    const assignment = await tx.hrSupervisorAssignment.findFirst({ where: { organizationId, assignedEmployeeId: subjectEmployeeId, status: "ACTIVE", effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] }, include: { supervisorEmployee: true }, orderBy: { effectiveFrom: "desc" } });
+    const assignment = await activeSupervisorForEmployee(tx, { organizationId, employeeId: subjectEmployeeId });
     if (!assignment?.supervisorEmployee.userId) throw new Error("The subject employee has no active linked supervisor account.");
     return [assignment.supervisorEmployee.userId];
   }

@@ -6,6 +6,7 @@ import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { completeLifecycleTaskInput, dueDate, lifecycleType, STANDARD_LIFECYCLE_TASKS, startLifecycleInput, taskIsUnblocked } from "@/lib/hr/lifecycle/definitions";
+import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
 
 const paths = ["/hr/admin/lifecycle", "/hr/employee/tasks", "/hr/supervisor/onboarding", "/hr/supervisor/tasks"];
 function refresh() { paths.forEach((path) => revalidatePath(path)); }
@@ -30,11 +31,11 @@ export async function startLifecycleAction(formData: FormData) {
   const auth = await requirePermission("workflow.assign");
   const input = startLifecycleInput.parse(Object.fromEntries(formData));
   await prisma.$transaction(async (tx) => {
-    const [template, employee, supervisor] = await Promise.all([
+    const [template, employee] = await Promise.all([
       tx.hrLifecycleTemplate.findFirstOrThrow({ where: { id: input.templateId, organizationId: auth.user.organizationId, active: true }, include: { tasks: { orderBy: { sortOrder: "asc" } } } }),
       tx.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: auth.user.organizationId }, include: { user: true } }),
-      tx.hrSupervisorAssignment.findFirst({ where: { organizationId: auth.user.organizationId, assignedEmployeeId: input.employeeId, status: "ACTIVE", effectiveFrom: { lte: input.effectiveDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: input.effectiveDate } }] }, include: { supervisorEmployee: { include: { user: true } } } }),
     ]);
+    const supervisor = await activeSupervisorForEmployee(tx, { organizationId: auth.user.organizationId, employeeId: input.employeeId, now: input.effectiveDate });
     if (template.type === "ONBOARDING" && !["DRAFT", "ACTIVE"].includes(employee.employmentStatus)) throw new Error("Onboarding requires a draft or active employee.");
     if (template.type === "OFFBOARDING" && !["ACTIVE", "ON_LEAVE"].includes(employee.employmentStatus)) throw new Error("Offboarding requires an active employee.");
     if (template.type === "OFFBOARDING" && !input.knowledgeTransferToId) throw new Error("A knowledge-transfer owner is required for offboarding.");
@@ -71,7 +72,10 @@ async function actorCanCompleteTask(auth: Awaited<ReturnType<typeof requirePermi
   if (task.ownerType === "HR" || task.ownerType === "IT") return auth.permissions.has("workflow.review");
   if (task.ownerType === "PAYROLL") return auth.permissions.has("payroll.review");
   if (task.ownerType === "SUPERVISOR") {
-    return Boolean(await prisma.hrSupervisorAssignment.findFirst({ where: { organizationId: auth.user.organizationId, assignedEmployeeId: task.instance.employeeId, supervisorEmployee: { userId: auth.user.id }, status: "ACTIVE", effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: new Date() } }] } }));
+    const assignment = await activeSupervisorForEmployee(prisma, { organizationId: auth.user.organizationId, employeeId: task.instance.employeeId });
+    return assignment?.supervisorEmployee.userId === auth.user.id
+      && Array.isArray(assignment.capabilities)
+      && assignment.capabilities.includes("supervisor.review_assigned");
   }
   return false;
 }

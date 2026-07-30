@@ -9,11 +9,15 @@ import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { hrObjectStorage } from "@/lib/hr/storage";
 import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
+import { validateHrDocumentFile } from "@/lib/hr/documents/validation";
 
 export async function createLeaveRequestAction(formData: FormData) {
   const auth = await requirePermission("leave.request");
   if (!auth.user.employee) throw new Error("An employee profile is required.");
   const input = leaveRequestInput.parse(Object.fromEntries(formData));
+  if (input.startDate.getUTCFullYear() !== input.endDate.getUTCFullYear()) {
+    throw new Error("A leave request cannot cross a calendar-year balance boundary; submit one request per year.");
+  }
   const now = new Date();
   const assignment = await prisma.hrEmployeeLeavePolicy.findFirst({
     where: { employeeId: auth.user.employee.id, status: "ACTIVE", effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }], leavePolicy: { leaveTypeId: input.leaveTypeId, status: "ACTIVE", effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }] } },
@@ -26,7 +30,7 @@ export async function createLeaveRequestAction(formData: FormData) {
   const attachment = formData.get("attachment");
   const file = attachment instanceof File && attachment.size > 0 ? attachment : null;
   if (policy.leaveType.requiresAttachment && !file) throw new Error("This leave type requires an attachment.");
-  if (file && (!["application/pdf", "image/jpeg", "image/png"].includes(file.type) || file.size > 10 * 1024 * 1024)) throw new Error("Attachments must be PDF, JPEG, or PNG and no larger than 10 MB.");
+  if (file && file.size > 10 * 1024 * 1024) throw new Error("Attachments must be no larger than 10 MB.");
   const [workingDaysSetting, holidays, supervisor] = await Promise.all([
     prisma.hrOrganizationSetting.findUnique({ where: { organizationId_key: { organizationId: auth.user.organizationId, key: "workingDays" } } }),
     prisma.hrPublicHoliday.findMany({ where: { organizationId: auth.user.organizationId, date: { gte: input.startDate, lte: input.endDate } }, select: { date: true } }),
@@ -36,6 +40,7 @@ export async function createLeaveRequestAction(formData: FormData) {
   const periodYear = input.startDate.getUTCFullYear();
   const reviewer = supervisor?.supervisorEmployee.user ?? null;
   const bytes = file ? new Uint8Array(await file.arrayBuffer()) : null;
+  const validatedFile = file && bytes ? validateHrDocumentFile(file, bytes, 10 * 1024 * 1024) : null;
   const checksum = bytes ? crypto.createHash("sha256").update(bytes).digest("hex") : null;
   const storageKey = bytes ? `leave/${auth.user.organizationId}/${auth.user.employee.id}/${crypto.randomUUID()}` : null;
   const storage = bytes ? hrObjectStorage() : null;
@@ -51,7 +56,7 @@ export async function createLeaveRequestAction(formData: FormData) {
     if (issues.length) throw new Error(issues.join(" "));
     const autoApprove = !policy.requiresApproval;
     const request = await tx.hrLeaveRequest.create({ data: { organizationId: auth.user.organizationId, employeeId: auth.user.employee!.id, leaveTypeId: policy.leaveTypeId, leavePolicyId: policy.id, balanceId: balance.id, startDate: input.startDate, endDate: input.endDate, amount, reason: input.reason, status: autoApprove ? "APPROVED" : "PENDING", submittedAt: now, decidedAt: autoApprove ? now : null, requestedById: auth.user.id, currentReviewerId: autoApprove ? null : reviewer?.id } });
-    if (file && storageKey && checksum) await tx.hrLeaveAttachment.create({ data: { requestId: request.id, storageKey, fileName: file.name.slice(0, 180), contentType: file.type, sizeBytes: file.size, checksum, uploadedById: auth.user.id } });
+    if (file && validatedFile && storageKey && checksum) await tx.hrLeaveAttachment.create({ data: { requestId: request.id, storageKey, fileName: validatedFile.displayFileName, contentType: validatedFile.contentType, sizeBytes: validatedFile.sizeBytes, checksum, uploadedById: auth.user.id } });
     if (autoApprove) {
       await tx.hrLeaveBalance.update({ where: { id: balance.id }, data: { used: { increment: amount } } });
       await tx.hrLeaveLedger.create({ data: { balanceId: balance.id, requestId: request.id, type: "LEAVE_TAKEN", amount, effectiveAt: input.startDate, reason: "Automatically approved under leave policy", actorUserId: auth.user.id, idempotencyKey: `leave-approved:${request.id}` } });

@@ -1,6 +1,6 @@
 import { HR_PERMISSION_KEYS, HR_ROLE_KEYS } from "./hr-bootstrap-lib.mjs";
 
-function environmentChecks(env) {
+export function hrEnvironmentChecks(env) {
   const appEnv = String(env.APP_ENV ?? "").trim().toLowerCase();
   const issues = [];
   if (!env.DATABASE_URL) issues.push("DATABASE_URL is not configured.");
@@ -29,8 +29,8 @@ function environmentChecks(env) {
   return { appEnv, issues, emailMode: env.EMAIL_PROVIDER === "resend" && env.RESEND_API_KEY ? "provider configured" : "delivery intentionally disabled or console-only", workerMode: env.EMAIL_WORKER_SECRET ? "configured" : "missing" };
 }
 
-export async function runHrPreflight(prisma, env, report = () => undefined) {
-  const configuration = environmentChecks(env);
+export async function runHrPreflight(prisma, env, report = () => undefined, options = {}) {
+  const configuration = hrEnvironmentChecks(env);
   const issues = [...configuration.issues];
   report(`HRMS preflight target environment: ${configuration.appEnv || "unknown"}. Database location and secrets are hidden.`);
   let organization = null;
@@ -66,7 +66,8 @@ export async function runHrPreflight(prisma, env, report = () => undefined) {
     if (roleCount !== HR_ROLE_KEYS.length) issues.push("HRMS role initialization is incomplete.");
     if (permissionCount !== HR_PERMISSION_KEYS.length) issues.push("HRMS permission initialization is incomplete.");
     if (!activeAdmin) issues.push("HRMS is not initialized: no active ADMIN account exists. Run the documented one-time bootstrap procedure.");
-    if (["staging", "production"].includes(configuration.appEnv) && privilegedWithoutMfa) issues.push(`${privilegedWithoutMfa} active privileged account(s) do not have MFA enabled.`);
+    if (["staging", "production"].includes(configuration.appEnv) && privilegedWithoutMfa && !options.allowInitialMfaEnrollment) issues.push(`${privilegedWithoutMfa} active privileged account(s) do not have MFA enabled.`);
+    if (privilegedWithoutMfa && options.allowInitialMfaEnrollment) report(`INITIALIZATION ONLY ${privilegedWithoutMfa} privileged account(s) must enroll MFA before the next release.`);
   }
   report(`INFO email delivery: ${configuration.emailMode}`);
   report(`INFO outbox worker: ${configuration.workerMode}`);

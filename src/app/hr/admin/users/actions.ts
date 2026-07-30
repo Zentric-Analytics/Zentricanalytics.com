@@ -69,6 +69,7 @@ export async function assignHrRoleAction(formData: FormData) {
     await tx.hrUserRole.upsert({ where: { userId_roleId: { userId: target.id, roleId: role.id } }, update: { revokedAt: null, assignedById: auth.user.id, assignedAt: new Date() }, create: { userId: target.id, roleId: role.id, assignedById: auth.user.id } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrUserRole", entityId: target.id, action: "hr.user.role.assigned", newValues: { userId: target.id, role: input.role } });
   });
+  await revokeAllHrSessions(target.id);
   revalidatePath("/hr/admin/users");
 }
 
@@ -86,7 +87,7 @@ export async function revokeHrRoleAction(formData: FormData) {
     await tx.hrUserRole.update({ where: { id: assignment.id }, data: { revokedAt: new Date() } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrUserRole", entityId: assignment.id, action: "hr.user.role.revoked", previousValues: { userId: input.userId, role: input.role, revokedAt: null }, newValues: { revoked: true } });
   }, { isolationLevel: "Serializable" });
-  if (input.userId === auth.user.id) await revokeAllHrSessions(input.userId);
+  await revokeAllHrSessions(input.userId);
   revalidatePath("/hr/admin/users");
 }
 

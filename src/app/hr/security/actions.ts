@@ -10,7 +10,7 @@ import { generateTotpSecret, matchingTotpStep, verifyTotp } from "@/lib/hr/auth/
 import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
 
 export async function beginMfaEnrollmentAction() {
-  const auth = await requireAuthenticatedUser();
+  const auth = await requireAuthenticatedUser({ allowMfaEnrollment: true });
   if (auth.user.mfaEnabled) throw new Error("MFA is already enabled.");
   const secret = generateTotpSecret();
   await prisma.$transaction(async (tx) => {
@@ -22,7 +22,7 @@ export async function beginMfaEnrollmentAction() {
 
 const codeSchema = z.string().trim().regex(/^\d{6}$/);
 export async function enableMfaAction(formData: FormData) {
-  const auth = await requireAuthenticatedUser();
+  const auth = await requireAuthenticatedUser({ allowMfaEnrollment: true });
   const code = codeSchema.parse(formData.get("code"));
   const user = await prisma.hrUser.findUniqueOrThrow({ where: { id: auth.user.id }, select: { mfaEnabled: true, mfaSecretEncrypted: true } });
   const step = user.mfaSecretEncrypted ? matchingTotpStep(code, unsealHrCredential(user.mfaSecretEncrypted)) : null;
@@ -36,7 +36,7 @@ export async function enableMfaAction(formData: FormData) {
 
 const disableSchema = z.object({ code: codeSchema, password: z.string().min(1).max(256) });
 export async function disableMfaAction(formData: FormData) {
-  const auth = await requireAuthenticatedUser();
+  const auth = await requireAuthenticatedUser({ allowMfaEnrollment: true });
   const input = disableSchema.parse(Object.fromEntries(formData));
   const user = await prisma.hrUser.findUniqueOrThrow({ where: { id: auth.user.id }, select: { passwordHash: true, mfaEnabled: true, mfaSecretEncrypted: true } });
   const passwordValid = Boolean(user.passwordHash && await verifyHrPassword(input.password, user.passwordHash));

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { payrollComponentInput, payrollPeriodInput, salaryInput } from "@/lib/hr/payroll/engine";
+import { assertIndependentPayrollActor } from "@/lib/hr/payroll/engine";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 
 export async function createSalaryRecordAction(formData: FormData) {
@@ -26,6 +27,7 @@ export async function approveSalaryRecordAction(formData: FormData) {
   const reason = z.string().trim().min(3).max(500).parse(formData.get("reason"));
   await prisma.$transaction(async (tx) => {
     const record = await tx.hrSalaryRecord.findFirstOrThrow({ where: { id, organizationId: auth.user.organizationId, approvedAt: null } });
+    assertIndependentPayrollActor(auth.user.id, [record.createdById], "Salary approval");
     if (await tx.hrSalaryRecord.findFirst({ where: { employeeId: record.employeeId, approvedAt: { not: null }, effectiveFrom: { gte: record.effectiveFrom } }, select: { id: true } })) throw new Error("Approve salary changes in effective-date order.");
     const current = await tx.hrSalaryRecord.findFirst({ where: { employeeId: record.employeeId, approvedAt: { not: null }, effectiveFrom: { lt: record.effectiveFrom }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: record.effectiveFrom } }] }, orderBy: { effectiveFrom: "desc" } });
     if (current) await tx.hrSalaryRecord.update({ where: { id: current.id }, data: { effectiveTo: record.effectiveFrom } });

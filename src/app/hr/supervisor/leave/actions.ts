@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
+import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
 
 const reviewInput = z.object({ requestId: z.string().cuid(), decision: z.enum(["APPROVED", "REJECTED"]), notes: z.string().trim().max(1000).optional().transform((value) => value || undefined) });
 export async function reviewLeaveRequestAction(formData: FormData) {
@@ -14,8 +15,10 @@ export async function reviewLeaveRequestAction(formData: FormData) {
   const privileged = auth.permissions.has("leave.approve") || auth.permissions.has("leave.override");
   let assignmentScoped = request.currentReviewerId === auth.user.id;
   if (!assignmentScoped && auth.user.employee) {
-    const assignment = await prisma.hrSupervisorAssignment.findFirst({ where: { organizationId: auth.user.organizationId, supervisorEmployeeId: auth.user.employee.id, assignedEmployeeId: request.employeeId, status: "ACTIVE", effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] }, select: { capabilities: true } });
-    assignmentScoped = Array.isArray(assignment?.capabilities) && assignment.capabilities.includes("supervisor.review_assigned");
+    const assignment = await activeSupervisorForEmployee(prisma, { organizationId: auth.user.organizationId, employeeId: request.employeeId });
+    assignmentScoped = assignment?.supervisorEmployee.userId === auth.user.id
+      && Array.isArray(assignment.capabilities)
+      && assignment.capabilities.includes("supervisor.review_assigned");
   }
   if (!privileged && !assignmentScoped) throw new Error("You are not authorized to review this leave request.");
   await prisma.$transaction(async (tx) => {

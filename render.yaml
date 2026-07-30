@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: starter
     buildCommand: yarn install --frozen-lockfile && yarn build
-    preDeployCommand: yarn prisma migrate deploy
+    preDeployCommand: yarn hr:release
     startCommand: yarn start
     disk:
       name: private-uploads
@@ -16,6 +16,14 @@ services:
       - key: APPLICATION_BASE_URL
         value: https://staging.zentricanalytics.com
       - key: AUTH_SECRET
+        sync: false
+      - key: HR_BOOTSTRAP_ENABLED
+        sync: false
+      - key: HR_BOOTSTRAP_CONFIRM_ENV
+        sync: false
+      - key: BOOTSTRAP_ADMIN_EMAIL
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD_HASH
         sync: false
       - key: EMAIL_WORKER_SECRET
         sync: false
