@@ -27,3 +27,5 @@ See [Payroll](docs/hrms/payroll-model.md) for effective-dated salary history, De
 See [Documents and Assets](docs/hrms/documents-assets.md) for private versioned records, quarantine/access logging, retention, inventory, custody, acknowledgements, and returns.
 
 See [Onboarding and Offboarding](docs/hrms/onboarding-offboarding.md) for immutable checklist templates, dependency-aware tasks, provisioning, exit controls, reminders, and account closure.
+
+See the [Generic Workflow Engine](docs/hrms/workflow-engine.md) for reusable conditional, parallel, quorum and multi-stage approvals.

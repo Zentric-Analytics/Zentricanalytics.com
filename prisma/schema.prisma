@@ -460,6 +460,39 @@ enum HrLifecycleTaskStatus {
   CANCELLED
 }
 
+enum HrWorkflowApprovalMode {
+  ANY
+  ALL
+  QUORUM
+}
+
+enum HrWorkflowAssigneeType {
+  USERS
+  SUPERVISOR
+  PERMISSION
+}
+
+enum HrWorkflowInstanceStatus {
+  ACTIVE
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum HrWorkflowStageRunStatus {
+  PENDING
+  ACTIVE
+  APPROVED
+  REJECTED
+  SKIPPED
+  CANCELLED
+}
+
+enum HrWorkflowDecision {
+  APPROVED
+  REJECTED
+}
+
 model HrOrganization {
   id                      String                      @id @default(cuid())
   slug                    String                      @unique
@@ -496,6 +529,9 @@ model HrOrganization {
   lifecycleTemplates      HrLifecycleTemplate[]
   lifecycleInstances      HrLifecycleInstance[]
   lifecycleTasks          HrLifecycleTask[]
+  workflowDefinitions     HrWorkflowDefinition[]
+  workflowInstances       HrWorkflowInstance[]
+  workflowStageRuns       HrWorkflowStageRun[]
   supervisorAssignments   HrSupervisorAssignment[]
   auditEvents             HrAuditEvent[]
   emailOutbox             HrEmailOutbox[]
@@ -553,6 +589,9 @@ model HrUser {
   lifecycleInstancesCreated  HrLifecycleInstance[]        @relation("LifecycleInstanceCreator")
   lifecycleTasksAssigned     HrLifecycleTask[]            @relation("LifecycleTaskAssignee")
   lifecycleTasksCompleted    HrLifecycleTask[]            @relation("LifecycleTaskCompleter")
+  workflowDefinitionsCreated HrWorkflowDefinition[]       @relation("WorkflowDefinitionCreator")
+  workflowInstancesStarted   HrWorkflowInstance[]         @relation("WorkflowInstanceStarter")
+  workflowApprovals          HrWorkflowApproval[]
   auditEvents                HrAuditEvent[]
 
   @@unique([organizationId, email])
@@ -714,6 +753,7 @@ model HrEmployee {
   assetAssignments             HrAssetAssignment[]
   lifecycleInstances           HrLifecycleInstance[]
   knowledgeTransferAssignments HrLifecycleInstance[]        @relation("LifecycleKnowledgeTransfer")
+  workflowSubjects             HrWorkflowInstance[]
 
   @@unique([organizationId, employeeNumber])
   @@unique([organizationId, companyEmail])
@@ -1644,6 +1684,113 @@ model HrLifecycleTask {
   @@unique([instanceId, templateTaskKey])
   @@index([organizationId, status, dueAt])
   @@index([assignedUserId, status, dueAt])
+}
+
+model HrWorkflowDefinition {
+  id             String                      @id @default(cuid())
+  organizationId String
+  key            String
+  name           String
+  description    String?
+  module         String
+  subjectType    String
+  version        Int
+  active         Boolean                     @default(true)
+  createdById    String
+  createdAt      DateTime                    @default(now())
+  organization   HrOrganization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdBy      HrUser                      @relation("WorkflowDefinitionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  stages         HrWorkflowDefinitionStage[]
+  instances      HrWorkflowInstance[]
+
+  @@unique([organizationId, key, version])
+  @@index([organizationId, module, subjectType, active])
+}
+
+model HrWorkflowDefinitionStage {
+  id                    String                 @id @default(cuid())
+  definitionId          String
+  key                   String
+  name                  String
+  sortOrder             Int
+  assigneeType          HrWorkflowAssigneeType
+  assigneeUserIds       String[]               @default([])
+  assigneePermissionKey String?
+  approvalMode          HrWorkflowApprovalMode @default(ANY)
+  quorum                Int?
+  routingCondition      Json?
+  dueOffsetHours        Int?
+  createdAt             DateTime               @default(now())
+  definition            HrWorkflowDefinition   @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+  runs                  HrWorkflowStageRun[]
+
+  @@unique([definitionId, key])
+  @@unique([definitionId, sortOrder])
+}
+
+model HrWorkflowInstance {
+  id                 String                   @id @default(cuid())
+  organizationId     String
+  definitionId       String
+  subjectType        String
+  subjectId          String
+  subjectEmployeeId  String?
+  context            Json
+  status             HrWorkflowInstanceStatus @default(ACTIVE)
+  currentStageOrder  Int?
+  startedById        String
+  startedAt          DateTime                 @default(now())
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  organization       HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  definition         HrWorkflowDefinition     @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+  startedBy          HrUser                   @relation("WorkflowInstanceStarter", fields: [startedById], references: [id], onDelete: Restrict)
+  subjectEmployee    HrEmployee?              @relation(fields: [subjectEmployeeId], references: [id], onDelete: Restrict)
+  stageRuns          HrWorkflowStageRun[]
+
+  @@index([organizationId, status, startedAt])
+  @@index([organizationId, subjectType, subjectId])
+  @@index([subjectEmployeeId, status])
+}
+
+model HrWorkflowStageRun {
+  id                String                    @id @default(cuid())
+  organizationId    String
+  instanceId        String
+  definitionStageId String
+  stageKey          String
+  stageName         String
+  sortOrder         Int
+  approvalMode      HrWorkflowApprovalMode
+  requiredApprovals Int
+  approverUserIds   String[]                  @default([])
+  status            HrWorkflowStageRunStatus  @default(PENDING)
+  activatedAt       DateTime?
+  dueAt             DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime                  @default(now())
+  organization      HrOrganization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  instance          HrWorkflowInstance        @relation(fields: [instanceId], references: [id], onDelete: Restrict)
+  definitionStage   HrWorkflowDefinitionStage @relation(fields: [definitionStageId], references: [id], onDelete: Restrict)
+  approvals         HrWorkflowApproval[]
+
+  @@unique([instanceId, sortOrder])
+  @@index([organizationId, status, dueAt])
+}
+
+model HrWorkflowApproval {
+  id         String             @id @default(cuid())
+  stageRunId String
+  approverId String
+  decision   HrWorkflowDecision
+  reason     String
+  createdAt  DateTime           @default(now())
+  stageRun   HrWorkflowStageRun @relation(fields: [stageRunId], references: [id], onDelete: Restrict)
+  approver   HrUser             @relation(fields: [approverId], references: [id], onDelete: Restrict)
+
+  @@unique([stageRunId, approverId])
+  @@index([approverId, createdAt])
 }
 
 model HrOrganizationSetting {
