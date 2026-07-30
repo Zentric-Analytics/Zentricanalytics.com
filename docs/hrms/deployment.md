@@ -1,57 +1,50 @@
 # HRMS deployment and one-time initialization
 
-HRMS database authentication is separate from the legacy recruitment admin login. Never reuse the legacy recruitment password or `ADMIN_PASSWORD_HASH` automatically. There is no public HR registration and no web-based bootstrap route.
+HRMS database authentication is separate from legacy recruitment administration. Never reuse the legacy password or `ADMIN_PASSWORD_HASH`. There is no public HR registration or web bootstrap route.
 
-## Normal deployment sequence
+## Deployment sequence
 
 1. Install locked dependencies: `yarn install --frozen-lockfile`.
-2. Generate Prisma Client: `yarn prisma generate`.
-3. Apply additive migrations: `yarn prisma migrate deploy`.
+2. Run `yarn lint`, `yarn test`, dependency audit and `yarn build`.
+3. Apply additive migrations with `yarn prisma migrate deploy`.
 4. Deploy/start the application.
-5. On the first deployment of an environment only, run the bootstrap procedure below as a one-off job.
-6. Run `yarn hr:preflight`.
-7. Smoke-test HR login and confirm legacy recruitment login still works.
+5. On the first deployment only, run the guarded bootstrap below as a one-off job.
+6. Enable MFA for every privileged account.
+7. Configure and schedule outbox, scanner and monitoring integrations.
+8. Run `yarn hr:preflight` and `yarn hr:smoke`.
 
-Render applies migrations through `preDeployCommand`. Bootstrap is deliberately not a build, start, or recurring command. Use a Render Shell or one-off job connected to the intended service. The preflight is intentionally run after first-time bootstrap; before bootstrap it returns non-zero and clearly reports the missing ADMIN.
+Render applies migrations through `preDeployCommand`. Bootstrap is deliberately absent from build/start and must never recur automatically.
 
-## Recovery when bootstrap was skipped
+## First initialization
 
-The staging symptom is a reachable `/hr/login` with no valid HR account. The login page may show the generic message “HR access has not yet been activated.” This discloses no counts, emails, roles, or database details.
+1. Confirm the environment, private database and HTTPS application URL without printing credentials.
+2. Run `yarn prisma migrate status` and `yarn prisma migrate deploy`.
+3. Generate a strong temporary password in an approved password manager.
+4. Run `yarn hr:hash-password` in a private terminal. It reads without echo; store only the bcrypt result in the secret manager.
+5. Set `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD_HASH`, and `HR_BOOTSTRAP_CONFIRM_ENV` to the exact target environment.
+6. Run `yarn hr:bootstrap` once.
+7. Sign in, enroll authenticator MFA, then run `yarn hr:preflight`.
+8. Remove bootstrap hash/confirmation after success and rotate the initial password under policy.
 
-The current repository workspace has no staging database or Render credentials, so staging initialization must be performed by an authorized deployer:
+The script refuses environment mismatch, plaintext/malformed hashes, fewer than 12 bcrypt rounds, an existing ADMIN assignment and conflicting accounts. An initialized environment returns without changes. Existing-account recovery uses password reset, never bootstrap.
 
-1. In the staging service, verify `APP_ENV=staging`, `APPLICATION_BASE_URL=https://staging.zentricanalytics.com`, and that `DATABASE_URL` is the staging database. Do not print the URL.
-2. Run `yarn prisma migrate status` and `yarn prisma migrate deploy`. Confirm `20260729000000_hrms_secure_foundation` is applied.
-3. Generate a strong temporary password in an approved password manager. Do not place it in shell history or deployment logs.
-4. In a private local terminal run `yarn hr:hash-password`. It reads the password without echo and refuses command arguments. Store only the resulting bcrypt hash in the staging secret manager; do not paste the plaintext into a command or deployment log.
-5. Configure staging-only secrets `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD_HASH`, and `HR_BOOTSTRAP_CONFIRM_ENV=staging`. Ensure `APP_ENV=staging`.
-6. Run the one-off command `yarn hr:bootstrap`.
-7. Expect a safe `created` result. The output shows only the target environment and never the email, password, hash, secrets, or database location.
-8. Run `yarn hr:preflight`; it must return exit code 0.
-9. Sign in at `/hr/login`, confirm the account is active and has ADMIN access, then confirm `/admin/login` still authenticates independently.
-10. Remove `BOOTSTRAP_ADMIN_PASSWORD_HASH` and `HR_BOOTSTRAP_CONFIRM_ENV` after initialization. Retain or rotate the bootstrap email according to operational policy. Store the actual password only in the approved password manager and rotate it after first login if policy requires.
+Production uses separately generated credentials, production-only `AUTH_SECRET`, private S3-compatible storage, Resend, distinct internal endpoint secrets, managed backups/PITR and approved change control. Never copy staging secrets.
 
-Do not execute these staging steps against production.
+## Preflight
 
-## First-time production initialization
+`yarn hr:preflight` is read-only. It checks:
 
-Repeat the same sequence with a separately generated credential, `APP_ENV=production`, `HR_BOOTSTRAP_CONFIRM_ENV=production`, the production service’s private database connection, HTTPS `APPLICATION_BASE_URL`, production `AUTH_SECRET`, private S3-compatible HR storage, email worker secret, and approved change control. Never copy staging bootstrap secrets into production.
+- database connectivity and every milestone table;
+- organization, exact roles/permissions and active ADMIN;
+- environment/base URL and secret minimum lengths;
+- S3-compatible private HR storage;
+- email worker, scanner and monitoring secrets;
+- privileged-account MFA;
+- production email provider;
+- backup retention, PITR and recent restore evidence.
 
-The script refuses a confirmation mismatch, plaintext/malformed bcrypt hashes, hashes below 12 rounds, missing environment/database settings, existing ADMIN assignments, and conflicting existing accounts. If an ADMIN already exists, it returns `already initialized` and changes nothing. It never replaces an existing password hash. Recovery of an existing account uses the password-reset workflow, not bootstrap.
-
-## Read-only preflight
-
-Run `yarn hr:preflight` after migration and initialization and during release verification. It performs no writes and reports:
-
-- database connectivity and HR table availability;
-- organization, role, permission, and active ADMIN initialization;
-- HR authentication configuration;
-- application URL/environment agreement;
-- production storage safety;
-- email delivery mode and outbox-worker configuration.
-
-Exit code 0 means ready. Any blocking issue returns non-zero. Output never includes secrets or database locations.
+Exit code 0 means the declared environment is ready. Output never includes secrets or database locations.
 
 ## Rollback
 
-The HR migration is additive. Roll back application code first and leave HR tables intact. Back up PostgreSQL before migration, validate restore procedures, and never delete audit/session/identity history as a rollback shortcut.
+Back up before migration. Roll back application code first and leave additive tables/history intact. Never delete audit, payroll, workflow, document or identity history as a rollback shortcut. Use the disaster-recovery runbook for data restoration.

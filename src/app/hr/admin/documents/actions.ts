@@ -101,7 +101,7 @@ export async function archiveEmployeeDocumentAction(formData: FormData) {
   const id = z.string().uuid().parse(formData.get("id"));
   const reason = z.string().trim().min(3).max(500).parse(formData.get("reason"));
   await prisma.$transaction(async (tx) => {
-    const document = await tx.hrEmployeeDocument.findFirstOrThrow({ where: { id, organizationId: auth.user.organizationId, archivedAt: null } });
+    await tx.hrEmployeeDocument.findFirstOrThrow({ where: { id, organizationId: auth.user.organizationId, archivedAt: null }, select: { id: true } });
     await tx.hrEmployeeDocument.update({ where: { id }, data: { archivedAt: new Date(), archivedById: auth.user.id, archiveReason: reason } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrEmployeeDocument", entityId: id, action: "hr.document.archived", previousValues: { archived: false }, newValues: { archived: true }, reason });
   });

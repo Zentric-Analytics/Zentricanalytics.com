@@ -15,7 +15,11 @@ export function documentMustBeRestricted(category: string) {
 }
 
 export function safeDocumentFileName(original: string) {
-  const base = path.basename(original).normalize("NFKC").replace(/[\u0000-\u001f\u007f"<>:|?*\\/]+/g, "-").replace(/\s+/g, " ").trim();
+  const normalized = path.basename(original).normalize("NFKC");
+  const base = [...normalized].map((character) => {
+    const code = character.charCodeAt(0);
+    return code < 32 || code === 127 || '"<>:|?*\\/'.includes(character) ? "-" : character;
+  }).join("").replace(/-+/g, "-").replace(/\s+/g, " ").trim();
   const safe = base.replace(/^\.+/, "").slice(0, 180);
   return safe || "document";
 }

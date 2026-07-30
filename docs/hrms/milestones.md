@@ -11,3 +11,9 @@
 9. Production hardening: performance, workers, observability, backups and disaster recovery, security testing, accessibility, load testing, operational documentation, and readiness review.
 
 Each milestone is separately committed, reviewed, migrated, tested, and staged. Migrations are additive and financial, audit, approval, and assignment history is never destructively rewritten.
+
+## Implementation status
+
+Milestones 1 through 9 are implemented in the milestone branch stack. Local verification covers the complete automated test suite, strict linting, Prisma schema validation and generation, the production build, dependency audit, and credential-pattern scan.
+
+Production promotion remains an operator-controlled activity. Before declaring a live environment ready, publish and review the stacked pull requests, configure secrets and private object storage, apply migrations to staging, complete the documented smoke/load/security checks, verify alert routing and scanner/email workers, and record current backup plus restore-drill evidence.

@@ -202,7 +202,7 @@ export async function readPrivateUpload(
 
 export function sanitizeDownloadFilename(name: string) {
   const sanitized = name
-    .replace(/[\/\r\n\0]/g, "_")
+    .replace(/[/\r\n\0]/g, "_")
     .replace(/[^a-zA-Z0-9._ -]/g, "_")
     .trim();
   return sanitized || "document";

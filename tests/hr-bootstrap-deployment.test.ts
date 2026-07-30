@@ -13,9 +13,15 @@ const validEnv = {
   BOOTSTRAP_ADMIN_PASSWORD_HASH: validHash,
   AUTH_SECRET: "test-auth-secret-that-is-longer-than-thirty-two-characters",
   APPLICATION_BASE_URL: "https://staging.example.test",
-  EMAIL_WORKER_SECRET: "configured",
+  EMAIL_WORKER_SECRET: "email-worker-secret-longer-than-thirty-two-characters",
+  DOCUMENT_SCANNER_SECRET: "document-scanner-secret-longer-than-thirty-two-characters",
+  MONITORING_SECRET: "monitoring-secret-longer-than-thirty-two-characters",
   EMAIL_PROVIDER: "console",
-  OBJECT_STORAGE_PROVIDER: "local",
+  OBJECT_STORAGE_PROVIDER: "s3-compatible",
+  OBJECT_STORAGE_ENDPOINT: "https://objects.example.test",
+  OBJECT_STORAGE_BUCKET: "test-private",
+  OBJECT_STORAGE_ACCESS_KEY_ID: "test-access",
+  OBJECT_STORAGE_SECRET_ACCESS_KEY: "test-secret",
 };
 
 type State = {
@@ -41,7 +47,10 @@ function makeDatabase(initial?: Partial<State>, failAudit = false) {
     $queryRawUnsafe: vi.fn(async () => [{ "?column?": 1 }]),
     hrUserRole: { findFirst: vi.fn(userRoleFind) },
     hrOrganization: { findUnique: vi.fn(async () => state.organization) },
-    hrUser: { findUnique: vi.fn(async ({ where }: { where: { organizationId_email: { email: string } } }) => state.users.find((user) => user.email === where.organizationId_email.email) ?? null) },
+    hrUser: {
+      findUnique: vi.fn(async ({ where }: { where: { organizationId_email: { email: string } } }) => state.users.find((user) => user.email === where.organizationId_email.email) ?? null),
+      count: vi.fn(async () => 0),
+    },
     hrRole: { count: vi.fn(async () => state.roles.size) },
     hrPermission: { count: vi.fn(async () => state.permissions.size) },
     hrDepartment: { count: vi.fn(async () => 0) },

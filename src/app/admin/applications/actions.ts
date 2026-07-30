@@ -194,7 +194,7 @@ export async function adminStage2Action(formData: FormData) {
         diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
         destination = redirectPath(applicationId, `?success=${result.alreadyApproved ? 'stage2_already_approved' : 'stage2_approved'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
       } else {
-        const result = await recordAdminStage2Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes);
+        await recordAdminStage2Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes);
         diagnostics.transactionSucceeded = true;
         const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-2-rejected' : 'stage-2-correction-requested', ...(action === 'reject' ? stage2RejectedEmail({ applicationId: app.applicationId }) : stage2CorrectionRequestedEmail({ applicationId: app.applicationId })) });
         diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;

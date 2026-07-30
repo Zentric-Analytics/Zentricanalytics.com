@@ -12,8 +12,20 @@ function environmentChecks(env) {
     if (appEnv === "staging" && !parsed.hostname.toLowerCase().includes("staging")) issues.push("APPLICATION_BASE_URL does not look like a staging URL.");
     if (appEnv === "production" && (parsed.protocol !== "https:" || parsed.hostname.toLowerCase().includes("staging"))) issues.push("APPLICATION_BASE_URL is unsafe for production.");
   } catch { issues.push("APPLICATION_BASE_URL is missing or invalid."); }
-  if (appEnv === "production" && (env.OBJECT_STORAGE_PROVIDER ?? "local") === "local") issues.push("Production HR document storage cannot use the local provider.");
+  if (["staging", "production"].includes(appEnv) && env.OBJECT_STORAGE_PROVIDER !== "s3-compatible") issues.push("Staging and production HR document storage must use the s3-compatible provider.");
+  if (env.OBJECT_STORAGE_PROVIDER === "s3-compatible") for (const key of ["OBJECT_STORAGE_ENDPOINT", "OBJECT_STORAGE_BUCKET", "OBJECT_STORAGE_ACCESS_KEY_ID", "OBJECT_STORAGE_SECRET_ACCESS_KEY"]) if (!env[key]) issues.push(`${key} is required for S3-compatible HR storage.`);
   if (!env.EMAIL_WORKER_SECRET) issues.push("EMAIL_WORKER_SECRET is not configured.");
+  if (!env.DOCUMENT_SCANNER_SECRET) issues.push("DOCUMENT_SCANNER_SECRET is not configured.");
+  if (!env.MONITORING_SECRET) issues.push("MONITORING_SECRET is not configured.");
+  for (const key of ["EMAIL_WORKER_SECRET", "DOCUMENT_SCANNER_SECRET", "MONITORING_SECRET"]) if (env[key] && String(env[key]).length < 32) issues.push(`${key} must contain at least 32 characters.`);
+  if (appEnv === "production") {
+    if (env.EMAIL_PROVIDER !== "resend" || !env.RESEND_API_KEY) issues.push("Production email delivery must use the configured Resend provider.");
+    if (!env.DATABASE_BACKUP_PROVIDER) issues.push("DATABASE_BACKUP_PROVIDER is not configured.");
+    if (Number(env.DATABASE_BACKUP_RETENTION_DAYS) < 30) issues.push("Production database backup retention must be at least 30 days.");
+    if (String(env.DATABASE_PITR_ENABLED).toLowerCase() !== "true") issues.push("Production point-in-time recovery must be enabled.");
+    const restoreTest = Date.parse(String(env.BACKUP_LAST_RESTORE_TEST_AT ?? ""));
+    if (!Number.isFinite(restoreTest) || Date.now() - restoreTest > 90 * 24 * 60 * 60 * 1000) issues.push("A successful backup restore test within the last 90 days is required.");
+  }
   return { appEnv, issues, emailMode: env.EMAIL_PROVIDER === "resend" && env.RESEND_API_KEY ? "provider configured" : "delivery intentionally disabled or console-only", workerMode: env.EMAIL_WORKER_SECRET ? "configured" : "missing" };
 }
 
@@ -45,14 +57,16 @@ export async function runHrPreflight(prisma, env, report = () => undefined) {
   }
   if (!organization) issues.push("HRMS organization is not initialized.");
   if (organization) {
-    const [roleCount, permissionCount, activeAdmin] = await Promise.all([
+    const [roleCount, permissionCount, activeAdmin, privilegedWithoutMfa] = await Promise.all([
       prisma.hrRole.count({ where: { organizationId: organization.id, key: { in: HR_ROLE_KEYS } } }),
       prisma.hrPermission.count({ where: { organizationId: organization.id, key: { in: HR_PERMISSION_KEYS } } }),
       prisma.hrUserRole.findFirst({ where: { revokedAt: null, role: { organizationId: organization.id, key: "ADMIN" }, user: { status: "ACTIVE" } }, select: { id: true } }),
+      prisma.hrUser.count({ where: { organizationId: organization.id, status: "ACTIVE", mfaEnabled: false, roles: { some: { revokedAt: null, role: { key: { in: ["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN"] } } } } } }),
     ]);
     if (roleCount !== HR_ROLE_KEYS.length) issues.push("HRMS role initialization is incomplete.");
     if (permissionCount !== HR_PERMISSION_KEYS.length) issues.push("HRMS permission initialization is incomplete.");
     if (!activeAdmin) issues.push("HRMS is not initialized: no active ADMIN account exists. Run the documented one-time bootstrap procedure.");
+    if (["staging", "production"].includes(configuration.appEnv) && privilegedWithoutMfa) issues.push(`${privilegedWithoutMfa} active privileged account(s) do not have MFA enabled.`);
   }
   report(`INFO email delivery: ${configuration.emailMode}`);
   report(`INFO outbox worker: ${configuration.workerMode}`);
