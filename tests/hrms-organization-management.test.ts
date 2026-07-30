@@ -73,6 +73,10 @@ describe("enterprise organization management", () => {
     expect(migration).toContain('CREATE TABLE "HrOrganizationImportBatch"');
     expect(migration).toContain('CREATE TABLE "HrOrganizationStructureRevision"');
     expect(migration).toContain("HrPosition_headcount_check");
+    const historyRepair = readFileSync("prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql", "utf8");
+    expect(historyRepair).toContain('CREATE TABLE IF NOT EXISTS "HrOrganizationImportBatch"');
+    expect(historyRepair).toContain('CREATE TABLE IF NOT EXISTS "HrOrganizationStructureRevision"');
+    expect(historyRepair).not.toMatch(/\b(DROP|DELETE|TRUNCATE)\b/i);
   });
   it("backfills Unit 2 permissions for existing administrators and keeps bootstrap parity", () => {
     const migration = readFileSync("prisma/migrations/20260730130000_hrms_organization_permissions/migration.sql", "utf8");
