@@ -23,3 +23,5 @@ See [Core HR](docs/hrms/core-hr.md) for the normalized employee model, organizat
 See [Leave Management](docs/hrms/leave-management.md) for versioned policies, ledger-backed balances, accrual/carry-over, approval workflows, private attachments, and Milestone 3 deployment guidance.
 
 See [Payroll](docs/hrms/payroll-model.md) for effective-dated salary history, Decimal calculations, controlled runs, private payslips, corrections, and secure exports.
+
+See [Documents and Assets](docs/hrms/documents-assets.md) for private versioned records, quarantine/access logging, retention, inventory, custody, acknowledgements, and returns.
