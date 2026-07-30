@@ -36,7 +36,8 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
       savedUploads.push(upload);
       return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const applicant = await tx.applicant.create({ data: { fullName: data.fullName, firstName: data.firstName, middleInitial: data.middleInitial || null, lastName: data.lastName, email: data.email.toLowerCase(), phone: data.phoneE164, phoneCountryIso: data.phoneCountryIso, phoneCountryName: data.phoneCountryName, phoneDialCode: data.phoneDialCode, phoneNationalNumber: data.phoneNational, phoneE164: data.phoneE164, location: data.location } });
-        const application = await tx.jobApplication.create({ data: { applicationId: applicationPublicId, applicantId: applicant.id, roleAppliedFor: data.roleAppliedFor, workModePreference: data.workMode, experienceLevel: data.experienceLevel, skills: data.skills, portfolioUrl: data.portfolioUrl || null, message: data.message, privacyConsent: true, status: 'Application Submitted', currentStageOrder: 1 } });
+        const hrOrganization = await tx.hrOrganization.findUnique({ where: { slug: "zentric-analytics" }, select: { id: true } });
+        const application = await tx.jobApplication.create({ data: { organizationId: hrOrganization?.id, applicationId: applicationPublicId, applicantId: applicant.id, roleAppliedFor: data.roleAppliedFor, workModePreference: data.workMode, experienceLevel: data.experienceLevel, skills: data.skills, portfolioUrl: data.portfolioUrl || null, message: data.message, privacyConsent: true, status: 'Application Submitted', currentStageOrder: 1 } });
         await createStageRows(application.id, tx);
         const stage1 = await tx.hiringStage.findFirstOrThrow({ where: { applicationId: application.id, stageOrder: 1 } });
         await tx.hiringStage.update({ where: { id: stage1.id }, data: { submittedAt: new Date(), status: 'Under Review' } });

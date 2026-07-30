@@ -29,3 +29,5 @@ See [Documents and Assets](docs/hrms/documents-assets.md) for private versioned 
 See [Onboarding and Offboarding](docs/hrms/onboarding-offboarding.md) for immutable checklist templates, dependency-aware tasks, provisioning, exit controls, reminders, and account closure.
 
 See the [Generic Workflow Engine](docs/hrms/workflow-engine.md) for reusable conditional, parallel, quorum and multi-stage approvals.
+
+See [Reports and Analytics](docs/hrms/reports-analytics.md) for tenant-scoped dashboards, HR metrics, hiring, leave, payroll, asset, turnover and audit exports.
