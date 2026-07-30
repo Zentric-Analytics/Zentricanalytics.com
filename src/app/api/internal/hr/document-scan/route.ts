@@ -18,8 +18,15 @@ export async function POST(request: Request) {
   const parsed = inputSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid scan result" }, { status: 400 });
   try {
-    await prisma.$transaction(async (tx) => {
-      const version = await tx.hrEmployeeDocumentVersion.findFirstOrThrow({ where: { id: parsed.data.versionId, scanStatus: "PENDING" }, include: { document: { include: { employee: { include: { user: true } } } } } });
+    const recorded = await prisma.$transaction(async (tx) => {
+      const version = await tx.hrEmployeeDocumentVersion.findUniqueOrThrow({ where: { id: parsed.data.versionId }, include: { document: { include: { employee: { include: { user: true } } } } } });
+      if (version.scanStatus !== "PENDING") {
+        const sameResult = version.scanStatus === parsed.data.status
+          && version.scanProvider === parsed.data.provider
+          && (version.scanReference ?? null) === (parsed.data.reference ?? null);
+        if (sameResult) return false;
+        throw new Error("conflicting terminal scan result");
+      }
       await tx.hrEmployeeDocumentVersion.update({ where: { id: version.id }, data: {
         scanStatus: parsed.data.status, scanCompletedAt: new Date(), scanProvider: parsed.data.provider,
         scanReference: parsed.data.reference, scanReason: parsed.data.reason,
@@ -31,9 +38,10 @@ export async function POST(request: Request) {
         idempotencyKey: `hr-document-scan:${version.id}:${parsed.data.status}`,
       });
       await appendHrAudit(tx, { organizationId: version.organizationId, actorRole: "SYSTEM", entityType: "HrEmployeeDocumentVersion", entityId: version.id, action: "hr.document.scan.completed", previousValues: { scanStatus: "PENDING" }, newValues: { scanStatus: parsed.data.status, provider: parsed.data.provider, reference: parsed.data.reference }, reason: parsed.data.reason });
+      return true;
     }, { isolationLevel: "Serializable" });
+    return NextResponse.json({ accepted: true, alreadyRecorded: !recorded }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ error: "Scan result was already recorded or the version does not exist" }, { status: 409 });
+    return NextResponse.json({ error: "Scan result conflicts with a terminal result or the version does not exist" }, { status: 409 });
   }
-  return NextResponse.json({ accepted: true }, { headers: { "Cache-Control": "no-store" } });
 }

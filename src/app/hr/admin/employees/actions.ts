@@ -113,15 +113,19 @@ const lifecycleInput = z.object({ employeeId: z.string().cuid(), reason: z.strin
 export async function terminateEmployeeAction(formData: FormData) {
   const auth = await requirePermission("employee.update");
   const input = lifecycleInput.parse(Object.fromEntries(formData));
-  const employee = await prisma.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: auth.user.organizationId, employmentStatus: { notIn: ["TERMINATED", "ARCHIVED"] } } });
+  const employee = await prisma.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: auth.user.organizationId, employmentStatus: { notIn: ["TERMINATED", "ARCHIVED"] } }, include: { user: true } });
   await prisma.$transaction(async (tx) => {
-    await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: "TERMINATED", terminationDate: input.effectiveDate, terminationReason: input.reason } });
+    await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: "TERMINATED", terminationDate: input.effectiveDate, terminationReason: input.reason, companyEmailStatus: "DISABLED" } });
     await tx.hrEmployeeStatusHistory.create({ data: { organizationId: auth.user.organizationId, employeeId: employee.id, previousStatus: employee.employmentStatus, newStatus: "TERMINATED", effectiveAt: input.effectiveDate, reason: input.reason, changedById: auth.user.id } });
     const employmentAssignments = await tx.hrEmployeeAssignment.findMany({ where: { employeeId: employee.id, status: "ACTIVE" } });
     for (const assignment of employmentAssignments) await tx.hrEmployeeAssignment.update({ where: { id: assignment.id }, data: assignment.effectiveFrom < input.effectiveDate ? { status: "ENDED", effectiveTo: input.effectiveDate, endedAt: new Date(), endedById: auth.user.id } : { status: "REVOKED", endedAt: new Date(), endedById: auth.user.id } });
-    const supervisorAssignments = await tx.hrSupervisorAssignment.findMany({ where: { status: "ACTIVE", OR: [{ supervisorEmployeeId: employee.id }, { assignedEmployeeId: employee.id }] } });
+    const supervisorAssignments = await tx.hrSupervisorAssignment.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE", OR: [{ supervisorEmployeeId: employee.id }, { assignedEmployeeId: employee.id }] } });
     for (const assignment of supervisorAssignments) await tx.hrSupervisorAssignment.update({ where: { id: assignment.id }, data: assignment.effectiveFrom < input.effectiveDate ? { status: "ENDED", effectiveTo: input.effectiveDate, endedAt: new Date(), endedByUserId: auth.user.id, endReason: `Employment ended: ${input.reason}` } : { status: "REVOKED", endedAt: new Date(), endedByUserId: auth.user.id, endReason: `Future assignment revoked: ${input.reason}` } });
     await tx.hrSystemAccessAssignment.updateMany({ where: { employeeId: employee.id, status: { in: ["REQUESTED", "ACTIVE", "SUSPENDED"] } }, data: { status: "REVOKED", endedAt: input.effectiveDate, endedById: auth.user.id, endReason: `Employment ended: ${input.reason}` } });
+    if (employee.userId) {
+      await tx.hrSession.updateMany({ where: { userId: employee.userId, revokedAt: null }, data: { revokedAt: new Date() } });
+      await tx.hrUser.update({ where: { id: employee.userId }, data: { status: "SUSPENDED", suspendedAt: new Date() } });
+    }
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrEmployee", entityId: employee.id, action: "hr.employee.terminated", previousValues: { employmentStatus: employee.employmentStatus }, newValues: { employmentStatus: "TERMINATED", terminationDate: input.effectiveDate }, reason: input.reason });
   });
   revalidatePath(`/hr/admin/employees/${employee.id}`);
@@ -134,6 +138,13 @@ export async function archiveEmployeeAction(formData: FormData) {
   const reason = z.string().trim().min(3).max(500).parse(formData.get("reason"));
   const employee = await prisma.hrEmployee.findFirstOrThrow({ where: { id: employeeId, organizationId: auth.user.organizationId, employmentStatus: "TERMINATED" } });
   await prisma.$transaction(async (tx) => {
+    const [activeAssets, openAccess, activeLifecycle, completedOffboarding] = await Promise.all([
+      tx.hrAssetAssignment.count({ where: { organizationId: auth.user.organizationId, employeeId: employee.id, status: "ACTIVE" } }),
+      tx.hrSystemAccessAssignment.count({ where: { organizationId: auth.user.organizationId, employeeId: employee.id, status: { in: ["REQUESTED", "ACTIVE", "SUSPENDED"] } } }),
+      tx.hrLifecycleInstance.count({ where: { organizationId: auth.user.organizationId, employeeId: employee.id, status: { in: ["DRAFT", "ACTIVE"] } } }),
+      tx.hrLifecycleInstance.count({ where: { organizationId: auth.user.organizationId, employeeId: employee.id, type: "OFFBOARDING", status: "COMPLETED" } }),
+    ]);
+    if (activeAssets || openAccess || activeLifecycle || !completedOffboarding) throw new Error("Complete offboarding, asset return, and access revocation before archival.");
     await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: "ARCHIVED", archivedAt: new Date() } });
     await tx.hrEmployeeStatusHistory.create({ data: { organizationId: auth.user.organizationId, employeeId: employee.id, previousStatus: employee.employmentStatus, newStatus: "ARCHIVED", effectiveAt: new Date(), reason, changedById: auth.user.id } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrEmployee", entityId: employee.id, action: "hr.employee.archived", previousValues: { employmentStatus: employee.employmentStatus }, newValues: { employmentStatus: "ARCHIVED" }, reason });

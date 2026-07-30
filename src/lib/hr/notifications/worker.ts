@@ -1,6 +1,7 @@
 import type { HrEmailOutbox } from "@prisma/client";
 import { prisma } from "../../prisma";
 import { sendHiringEmail } from "../../email";
+import { unsealHrCredential } from "../auth/crypto";
 
 const MAX_ATTEMPTS = 5;
 const PROCESSING_TIMEOUT_MS = 15 * 60 * 1000;
@@ -14,6 +15,19 @@ export function safeWorkerError(value: unknown) {
   const message = value instanceof Error ? value.message : String(value ?? "Unknown delivery error");
   const secrets = [process.env.RESEND_API_KEY, process.env.EMAIL_WORKER_SECRET].filter((item): item is string => Boolean(item));
   return secrets.reduce((safe, secret) => safe.replaceAll(secret, "[redacted]"), message).replace(/Bearer\s+\S+/gi, "Bearer [redacted]").slice(0, 500);
+}
+
+export function hrEmailBody(template: string, payload: unknown, applicationBaseUrl = process.env.APPLICATION_BASE_URL ?? "") {
+  const baseUrl = String(applicationBaseUrl).replace(/\/+$/, "");
+  if (template !== "hr-account-invitation" && template !== "hr-password-reset") {
+    return "You have a new HRMS notification. Sign in to the secure Zentric HR portal to review it. Do not reply with confidential information.";
+  }
+  if (!/^https:\/\//.test(baseUrl)) throw new Error("APPLICATION_BASE_URL must be HTTPS for credential email delivery.");
+  const credentialEnvelope = (payload as { credentialEnvelope?: unknown } | null)?.credentialEnvelope;
+  if (typeof credentialEnvelope !== "string") throw new Error("Credential email payload is invalid.");
+  const token = unsealHrCredential(credentialEnvelope);
+  const destination = template === "hr-account-invitation" ? "invitation" : "password-reset";
+  return `Use the secure one-time link below to ${destination === "invitation" ? "set up your HR account" : "reset your HR password"}.\n\n${baseUrl}/hr/${destination}/redeem#token=${encodeURIComponent(token)}\n\nThis link is time-limited and single-use. Do not forward it.`;
 }
 
 async function claimBatch(limit: number, now: Date) {
@@ -30,12 +44,13 @@ async function claimBatch(limit: number, now: Date) {
 }
 
 async function deliver(item: HrEmailOutbox, now: Date) {
+  const body = hrEmailBody(item.template, item.payload);
   const result = await sendHiringEmail({
     applicationId: item.id,
     to: item.recipient,
     template: item.template,
     subject: item.subject,
-    body: "You have a new HRMS notification. Sign in to the secure Zentric HR portal to review it. Do not reply with confidential information.",
+    body,
   });
   const delivered = result.status === "sent";
   const terminal = !delivered && item.attemptCount >= MAX_ATTEMPTS;

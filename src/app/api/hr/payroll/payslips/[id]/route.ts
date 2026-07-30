@@ -3,10 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
 import { hrObjectStorage } from "@/lib/hr/storage";
+import { privilegedMfaRequired } from "@/lib/hr/permissions/authorize";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await getAuthenticatedHrUser();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (privilegedMfaRequired(auth)) return NextResponse.json({ error: "MFA enrollment required" }, { status: 403 });
   const { id } = await params;
   const item = await prisma.hrPayrollItem.findFirst({ where: { id, organizationId: auth.user.organizationId }, include: { payslip: true } });
   if (!item?.payslip) return NextResponse.json({ error: "Not found" }, { status: 404 });

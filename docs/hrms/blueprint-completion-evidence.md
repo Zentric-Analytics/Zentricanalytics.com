@@ -53,3 +53,34 @@ Complete this section only after explicit staging authorization. Use synthetic d
 | Sign-off | HR, payroll, security, operations | Pending |
 
 Production deployment and automatic merging remain prohibited until the release gate in `docs/hrms/production-readiness.md` is complete.
+
+## Source-level requirement matrix
+
+The classifications below reflect source inspection. `VERIFIED` means locally evidenced implementation, not staging certification.
+
+| Requirement | Classification | Source/model/migration | Permission or ownership | Audit and test | Documentation / staging |
+| --- | --- | --- | --- | --- | --- |
+| Employee records, status/history, generated IDs, archival | VERIFIED | `admin/employees/actions.ts`; `HrEmployee`, `HrEmployeeStatusHistory`, `HrEmployeeNumberSequence`; `20260730080000` | `employee.create/update/read_*` | `hr.employee.*`; `hrms-core-hr`, `hrms-final-remediation` | `core-hr.md`; runbook 13/21 |
+| Contacts, addresses, emergency, identifiers, tax, bank | VERIFIED | employee detail/actions; encrypted credential fields | employee, sensitive-document, payroll-specific permissions | redacted `hr.employee.*`; foundation/core tests | data classification; runbook 13 |
+| Departments, teams, positions, employment/supervisor history | VERIFIED | assignment/department/position actions; effective-dated models | manage/assignment/supervisor permissions | assignment audit; core/scope tests | authorization matrix; runbook 13/14 |
+| Recruitment conversion | VERIFIED | `admin/applications/actions.ts`; `recruitmentApplicationId` unique link | legacy recruitment ADMIN final decision; HR tenant lookup | conversion audit/correlation; Stage 8 and completion tests | core HR docs; runbook 13 |
+| System access lifecycle | VERIFIED | system-access actions/model; termination/offboarding revocation | assignment create/end | access audit; completion tests | lifecycle docs; runbook 21 |
+| Leave policies, balances, accrual/carry-over, ledger | VERIFIED | leave admin/actions/engine; leave models and immutable trigger | leave policy/override | leave audit; `hrms-leave` | leave docs; runbook 15 |
+| Leave request/attachment/decision/withdrawal | VERIFIED | employee/supervisor actions; attachment route; magic-byte validation | own request, scoped reviewer, HR override | request/download audit; leave/final tests | security review; runbook 15 |
+| Cross-year leave | VERIFIED | explicit rejection in employee leave action | own request | adversarial suite | known limitation; runbook 15 |
+| Salary/components/adjustments and Decimal calculation | VERIFIED | payroll setup/actions/engine; Decimal columns | payroll-specific permissions | payroll audit; payroll/final tests | payroll docs; runbook 16 |
+| Payroll maker-checker, version, lock, payment | VERIFIED | payroll actions and immutable approvals | separate create/review/approve actors | approval/audit; final test | authorization matrix; runbook 16 |
+| Payslip and exports | VERIFIED | payslip/export routes, private storage, CSV guard | owner/payroll; distinct bank permission | download/export audit; payroll/report tests | reports docs; runbook 17 |
+| Private documents, versions, scan/quarantine, access | VERIFIED | document actions/routes/storage/validation; immutable access | own/employee/sensitive document permissions | document scan/access audit; document/final tests | storage/security docs; runbook 18 |
+| Scanner authentication/replay | VERIFIED | internal scanner route and constant-time bearer helper | scanner bearer secret | system audit; production/final tests | security review; runbook 18/25 |
+| Asset inventory/custody/return/loss | VERIFIED | asset actions and restrictive history models | asset manage/assign/return; own acknowledge | asset audit; document-assets tests | documents-assets docs; runbook 19 |
+| Onboarding/offboarding tasks and gates | VERIFIED | lifecycle definitions/actions/models | workflow owner/override and assignment scope | lifecycle audit; lifecycle/final tests | lifecycle/data model docs; runbook 20/21 |
+| Workflow versioning/routing/decisions | VERIFIED | workflow engine/actions/models/immutable triggers | create/assign/task/override | complete approval context/audit; workflow tests | workflow docs; runbook 22 |
+| Workflow delegation UI/automation | PARTIALLY_IMPLEMENTED | schema-ready delegation/reassignment fields only | N/A until enabled | no runtime claim | known limitations |
+| Reports and safe exports | VERIFIED | report route/metrics; export records | report view/export; bank distinct | export audit; reports/completion tests | reports docs; runbook 23 |
+| Durable email/in-app notification/preferences | VERIFIED | outbox, worker, notification pages/actions/models | authenticated owner; worker bearer | attempts/audit; foundation/production/final tests | notification docs; runbook 24 |
+| Invitation/reset email redemption | VERIFIED | invitations/reset, worker, fragment redemption pages, POST cookie routes | single-use token ownership | auth audit; foundation/final tests | security review; runbook 11 |
+| Structured append-only audit | VERIFIED | audit sanitizer/model and immutable trigger | audit read only | foundation and module tests | data classification; runbook 23 |
+| Session/MFA/rate limit/security headers | VERIFIED | auth/session/TOTP/authorize, Next config | authenticated/privileged MFA | auth audit; foundation/hardening/final tests | security review; runbook 9/11 |
+| Render release without shell | VERIFIED | `render.yaml`, `hr-release.mjs`, bootstrap/preflight | explicit one-time flag/secrets | bootstrap/final tests | deployment/runbook 3–10 |
+| Live providers, migrations, workers, monitoring, backup, restore, load, penetration | ENVIRONMENT_PENDING | repository adapters/tooling present | authorized staging operator | no local claim | staging runbook 1–30 |

@@ -38,7 +38,7 @@ describe("HRMS onboarding and offboarding", () => {
     const actions = read("src/app/hr/admin/lifecycle/actions.ts");
     expect(actions).toContain("organizationId: auth.user.organizationId");
     expect(actions).toContain("assignedUserId === auth.user.id");
-    expect(actions).toContain("assignedEmployeeId: task.instance.employeeId");
+    expect(actions).toContain("activeSupervisorForEmployee");
     expect(actions).toContain("appendHrAudit");
     expect(actions).toContain("payload: { lifecycleTaskId: task.id }");
   });
