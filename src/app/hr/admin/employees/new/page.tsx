@@ -16,7 +16,7 @@ export default async function NewEmployeePage({ searchParams }: { searchParams: 
   const [departments, teams, positions, managers, templates] = await Promise.all([
     prisma.hrDepartment.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, orderBy: { name: "asc" } }),
     prisma.hrTeam.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, include: { department: true }, orderBy: { name: "asc" } }),
-    prisma.hrPosition.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, include: { department: true }, orderBy: { title: "asc" } }),
+    prisma.hrPosition.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE", lifecycleStatus: { in: ["OPEN", "PARTIALLY_FILLED"] } }, include: { department: true }, orderBy: { title: "asc" } }),
     prisma.hrEmployee.findMany({ where: { organizationId: auth.user.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } }, orderBy: [{ lastName: "asc" }] }),
     prisma.hrLifecycleTemplate.findMany({ where: { organizationId: auth.user.organizationId, type: "ONBOARDING", active: true }, orderBy: [{ name: "asc" }, { version: "desc" }] }),
   ]);

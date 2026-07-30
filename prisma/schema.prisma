@@ -280,6 +280,38 @@ enum HrRecordStatus {
   ARCHIVED
 }
 
+enum HrPositionLifecycleStatus {
+  DRAFT
+  PENDING_APPROVAL
+  REJECTED
+  APPROVED
+  OPEN
+  PARTIALLY_FILLED
+  FILLED
+  FROZEN
+  CLOSED
+  CANCELLED
+}
+
+enum HrOrganizationChangeStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  SCHEDULED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum HrLocationType {
+  HEAD_OFFICE
+  REGIONAL_OFFICE
+  BRANCH
+  CLIENT_SITE
+  REMOTE
+  VIRTUAL
+}
+
 enum HrEmploymentStatus {
   DRAFT
   ONBOARDING
@@ -570,6 +602,16 @@ model HrOrganization {
   employeeStatusHistory      HrEmployeeStatusHistory[]
   systemAccessAssignments    HrSystemAccessAssignment[]
   employeeProvisioningDrafts HrEmployeeProvisioningDraft[]
+  legalEntities              HrLegalEntity[]
+  businessUnits              HrBusinessUnit[]
+  divisions                  HrDivision[]
+  locations                  HrLocation[]
+  costCenters                HrCostCenter[]
+  jobFamilies                HrJobFamily[]
+  jobProfiles                HrJobProfile[]
+  grades                     HrGrade[]
+  positionApprovals          HrPositionApproval[]
+  organizationChanges        HrOrganizationChange[]
 }
 
 model HrUser {
@@ -943,24 +985,44 @@ model HrTeam {
 }
 
 model HrPosition {
-  id                  String                 @id @default(cuid())
+  id                  String                    @id @default(cuid())
   organizationId      String
   departmentId        String
   teamId              String?
   code                String
   title               String
   description         String?
-  salaryBandMinimum   Decimal?               @db.Decimal(18, 2)
-  salaryBandMaximum   Decimal?               @db.Decimal(18, 2)
-  currency            String                 @default("NGN")
-  status              HrRecordStatus         @default(ACTIVE)
-  createdAt           DateTime               @default(now())
-  updatedAt           DateTime               @updatedAt
+  salaryBandMinimum   Decimal?                  @db.Decimal(18, 2)
+  salaryBandMaximum   Decimal?                  @db.Decimal(18, 2)
+  currency            String                    @default("NGN")
+  status              HrRecordStatus            @default(ACTIVE)
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
   archivedAt          DateTime?
-  organization        HrOrganization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  department          HrDepartment           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  team                HrTeam?                @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  legalEntityId       String?
+  businessUnitId      String?
+  divisionId          String?
+  locationId          String?
+  costCenterId        String?
+  jobProfileId        String?
+  gradeId             String?
+  reportsToPositionId String?
+  lifecycleStatus     HrPositionLifecycleStatus @default(DRAFT)
+  headcountLimit      Int                       @default(1)
+  fullTimeEquivalent  Decimal                   @default(1) @db.Decimal(5, 2)
+  budgetedAmount      Decimal?                  @db.Decimal(18, 2)
+  availableFrom       DateTime?
+  effectiveFrom       DateTime                  @default(now())
+  effectiveTo         DateTime?
+  version             Int                       @default(1)
+  requestedById       String?
+  approvedById        String?
+  approvedAt          DateTime?
+  organization        HrOrganization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  department          HrDepartment              @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  team                HrTeam?                   @relation(fields: [teamId], references: [id], onDelete: SetNull)
   employeeAssignments HrEmployeeAssignment[]
+  approvals           HrPositionApproval[]
 
   @@unique([organizationId, code])
   @@index([organizationId, status, title])
@@ -968,30 +1030,39 @@ model HrPosition {
 }
 
 model HrEmployeeAssignment {
-  id             String             @id @default(cuid())
-  organizationId String
-  employeeId     String
-  departmentId   String
-  teamId         String?
-  positionId     String
-  employmentType HrEmploymentType
-  location       String?
-  effectiveFrom  DateTime
-  effectiveTo    DateTime?
-  status         HrAssignmentStatus @default(ACTIVE)
-  reason         String
-  createdById    String
-  endedById      String?
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  endedAt        DateTime?
-  organization   HrOrganization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  employee       HrEmployee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
-  department     HrDepartment       @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  team           HrTeam?            @relation(fields: [teamId], references: [id], onDelete: Restrict)
-  position       HrPosition         @relation(fields: [positionId], references: [id], onDelete: Restrict)
-  createdBy      HrUser             @relation("EmployeeAssignmentCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  endedBy        HrUser?            @relation("EmployeeAssignmentEnder", fields: [endedById], references: [id], onDelete: Restrict)
+  id                String             @id @default(cuid())
+  organizationId    String
+  employeeId        String
+  departmentId      String
+  teamId            String?
+  positionId        String
+  employmentType    HrEmploymentType
+  location          String?
+  effectiveFrom     DateTime
+  effectiveTo       DateTime?
+  status            HrAssignmentStatus @default(ACTIVE)
+  reason            String
+  createdById       String
+  endedById         String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  endedAt           DateTime?
+  legalEntityId     String?
+  businessUnitId    String?
+  divisionId        String?
+  locationId        String?
+  costCenterId      String?
+  isPrimary         Boolean            @default(true)
+  fte               Decimal            @default(1) @db.Decimal(5, 2)
+  placementSnapshot Json?
+  version           Int                @default(1)
+  organization      HrOrganization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee          HrEmployee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  department        HrDepartment       @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  team              HrTeam?            @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  position          HrPosition         @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  createdBy         HrUser             @relation("EmployeeAssignmentCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  endedBy           HrUser?            @relation("EmployeeAssignmentEnder", fields: [endedById], references: [id], onDelete: Restrict)
 
   @@index([organizationId, employeeId, status, effectiveFrom, effectiveTo])
   @@index([departmentId, positionId, status])
@@ -1961,6 +2032,222 @@ model HrOrganizationSetting {
   organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, key])
+}
+
+model HrLegalEntity {
+  id                     String           @id @default(cuid())
+  organizationId         String
+  code                   String
+  name                   String
+  registeredName         String?
+  countryCode            String
+  registrationNumber     String?
+  taxIdentifierEncrypted String?
+  defaultCurrency        String
+  timezone               String
+  status                 HrRecordStatus   @default(ACTIVE)
+  effectiveFrom          DateTime
+  effectiveTo            DateTime?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  organization           HrOrganization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  businessUnits          HrBusinessUnit[]
+  locations              HrLocation[]
+  costCenters            HrCostCenter[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status, effectiveFrom, effectiveTo])
+}
+
+model HrBusinessUnit {
+  id                   String           @id @default(cuid())
+  organizationId       String
+  legalEntityId        String
+  parentBusinessUnitId String?
+  code                 String
+  name                 String
+  description          String?
+  status               HrRecordStatus   @default(ACTIVE)
+  effectiveFrom        DateTime
+  effectiveTo          DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  organization         HrOrganization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity          HrLegalEntity    @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  parent               HrBusinessUnit?  @relation("BusinessUnitHierarchy", fields: [parentBusinessUnitId], references: [id], onDelete: Restrict)
+  children             HrBusinessUnit[] @relation("BusinessUnitHierarchy")
+  divisions            HrDivision[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, legalEntityId, status, effectiveFrom, effectiveTo])
+}
+
+model HrDivision {
+  id               String         @id @default(cuid())
+  organizationId   String
+  businessUnitId   String
+  parentDivisionId String?
+  code             String
+  name             String
+  status           HrRecordStatus @default(ACTIVE)
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  organization     HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  businessUnit     HrBusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  parent           HrDivision?    @relation("DivisionHierarchy", fields: [parentDivisionId], references: [id], onDelete: Restrict)
+  children         HrDivision[]   @relation("DivisionHierarchy")
+
+  @@unique([organizationId, code])
+  @@index([organizationId, businessUnitId, status, effectiveFrom, effectiveTo])
+}
+
+model HrLocation {
+  id               String         @id @default(cuid())
+  organizationId   String
+  legalEntityId    String
+  parentLocationId String?
+  code             String
+  name             String
+  locationType     HrLocationType
+  countryCode      String
+  region           String?
+  city             String?
+  addressProtected Json?
+  timezone         String
+  workMode         HrWorkMode?
+  status           HrRecordStatus @default(ACTIVE)
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  organization     HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity      HrLegalEntity  @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  parent           HrLocation?    @relation("LocationHierarchy", fields: [parentLocationId], references: [id], onDelete: Restrict)
+  children         HrLocation[]   @relation("LocationHierarchy")
+
+  @@unique([organizationId, code])
+  @@index([organizationId, legalEntityId, status, effectiveFrom, effectiveTo])
+}
+
+model HrCostCenter {
+  id                 String         @id @default(cuid())
+  organizationId     String
+  legalEntityId      String
+  parentCostCenterId String?
+  code               String
+  name               String
+  ownerPositionId    String?
+  budgetAmount       Decimal?       @db.Decimal(18, 2)
+  currency           String
+  status             HrRecordStatus @default(ACTIVE)
+  effectiveFrom      DateTime
+  effectiveTo        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  organization       HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  legalEntity        HrLegalEntity  @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
+  parent             HrCostCenter?  @relation("CostCenterHierarchy", fields: [parentCostCenterId], references: [id], onDelete: Restrict)
+  children           HrCostCenter[] @relation("CostCenterHierarchy")
+
+  @@unique([organizationId, code])
+  @@index([organizationId, legalEntityId, status, effectiveFrom, effectiveTo])
+}
+
+model HrJobFamily {
+  id             String         @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  status         HrRecordStatus @default(ACTIVE)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  jobProfiles    HrJobProfile[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status, name])
+}
+
+model HrJobProfile {
+  id                  String         @id @default(cuid())
+  organizationId      String
+  jobFamilyId         String
+  code                String
+  title               String
+  description         String?
+  responsibilities    Json?
+  minimumRequirements Json?
+  standardGradeId     String?
+  status              HrRecordStatus @default(ACTIVE)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  organization        HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  jobFamily           HrJobFamily    @relation(fields: [jobFamilyId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, jobFamilyId, status, title])
+}
+
+model HrGrade {
+  id             String         @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  level          Int
+  currency       String
+  minimumSalary  Decimal?       @db.Decimal(18, 2)
+  midpointSalary Decimal?       @db.Decimal(18, 2)
+  maximumSalary  Decimal?       @db.Decimal(18, 2)
+  status         HrRecordStatus @default(ACTIVE)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, level])
+  @@index([organizationId, status, level])
+}
+
+model HrPositionApproval {
+  id             String              @id @default(cuid())
+  organizationId String
+  positionId     String
+  requestedById  String
+  decidedById    String?
+  decision       HrWorkflowDecision?
+  reason         String
+  decisionReason String?
+  createdAt      DateTime            @default(now())
+  decidedAt      DateTime?
+  organization   HrOrganization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  position       HrPosition          @relation(fields: [positionId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, positionId, createdAt])
+}
+
+model HrOrganizationChange {
+  id             String                     @id @default(cuid())
+  organizationId String
+  entityType     String
+  entityId       String
+  status         HrOrganizationChangeStatus @default(DRAFT)
+  effectiveAt    DateTime
+  payload        Json
+  requestedById  String
+  approvedById   String?
+  approvedAt     DateTime?
+  completedAt    DateTime?
+  failedAt       DateTime?
+  failureCode    String?
+  attempts       Int                        @default(0)
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  organization   HrOrganization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, status, effectiveAt])
 }
 
 model HrNotification {
