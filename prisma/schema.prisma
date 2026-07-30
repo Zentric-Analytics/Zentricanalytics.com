@@ -553,14 +553,14 @@ enum HrWorkflowDecision {
 }
 
 model HrOrganization {
-  id                         String                        @id @default(cuid())
-  slug                       String                        @unique
+  id                         String                            @id @default(cuid())
+  slug                       String                            @unique
   name                       String
   registrationNumber         String?
   taxIdentificationNumber    String?
-  defaultCurrency            String                        @default("NGN")
-  createdAt                  DateTime                      @default(now())
-  updatedAt                  DateTime                      @updatedAt
+  defaultCurrency            String                            @default("NGN")
+  createdAt                  DateTime                          @default(now())
+  updatedAt                  DateTime                          @updatedAt
   users                      HrUser[]
   roles                      HrRole[]
   permissions                HrPermission[]
@@ -612,6 +612,8 @@ model HrOrganization {
   grades                     HrGrade[]
   positionApprovals          HrPositionApproval[]
   organizationChanges        HrOrganizationChange[]
+  organizationImportBatches  HrOrganizationImportBatch[]
+  organizationRevisions      HrOrganizationStructureRevision[]
 }
 
 model HrUser {
@@ -2248,6 +2250,58 @@ model HrOrganizationChange {
   organization   HrOrganization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, status, effectiveAt])
+}
+
+model HrOrganizationImportBatch {
+  id             String                    @id @default(cuid())
+  organizationId String
+  kind           String
+  status         String                    @default("VALIDATED")
+  originalName   String
+  rowCount       Int
+  validCount     Int
+  invalidCount   Int
+  createdById    String
+  committedById  String?
+  committedAt    DateTime?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  organization   HrOrganization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  rows           HrOrganizationImportRow[]
+
+  @@index([organizationId, status, createdAt])
+}
+
+model HrOrganizationImportRow {
+  id          String                    @id @default(cuid())
+  batchId     String
+  rowNumber   Int
+  payload     Json
+  valid       Boolean
+  errors      Json
+  committedId String?
+  createdAt   DateTime                  @default(now())
+  batch       HrOrganizationImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, rowNumber])
+  @@index([batchId, valid])
+}
+
+model HrOrganizationStructureRevision {
+  id             String         @id @default(cuid())
+  organizationId String
+  entityType     String
+  entityId       String
+  version        Int
+  payload        Json
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  createdById    String
+  createdAt      DateTime       @default(now())
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, entityType, entityId, version])
+  @@index([organizationId, entityType, effectiveFrom, effectiveTo])
 }
 
 model HrNotification {

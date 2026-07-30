@@ -7,6 +7,7 @@
 - Production backup and restore point verified.
 - At least two test HR users for separation-of-duties scenarios.
 - Scheduled-activation worker and monitoring configuration available.
+- `ORGANIZATION_WORKER_SECRET` configured with at least 64 random characters.
 
 ## Staged rollout
 

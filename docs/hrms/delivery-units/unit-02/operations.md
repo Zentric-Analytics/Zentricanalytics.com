@@ -4,6 +4,8 @@
 
 An idempotent worker activates approved future-dated organization changes. Each job claims a change once, validates the latest hierarchy and dependencies, applies it transactionally, and records completion or a diagnosable failure. Retries must not duplicate versions, occupancy, audit, or notifications.
 
+Invoke `POST /api/internal/hr/organization-changes` with `Authorization: Bearer <ORGANIZATION_WORKER_SECRET>` at least once per minute. The secret must contain at least 64 random characters. Alert when no successful invocation is observed for five minutes.
+
 ## Metrics
 
 - Organization command latency and failure rate.

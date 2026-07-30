@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { assertEffectiveInterval, assertPositionTransition, positionOccupancyStatus, wouldCreateHierarchyCycle } from "../src/lib/hr/organization/validation";
+import { parseOrganizationCsv } from "../src/lib/hr/organization/import";
 
 describe("enterprise organization management", () => {
   it("blocks direct and indirect hierarchy cycles", () => {
@@ -43,5 +44,34 @@ describe("enterprise organization management", () => {
   it("ships every required organization administration route", () => {
     const workspace = readFileSync("src/app/hr/admin/organization/page.tsx", "utf8");
     for (const route of ["legal-entities", "business-units", "divisions", "departments", "teams", "locations", "cost-centers", "job-families", "jobs", "grades", "positions", "org-chart", "headcount"]) expect(workspace).toContain(`/hr/admin/${route}`);
+  });
+  it("validates imports before any commit", () => {
+    const valid = parseOrganizationCsv("legal-entity", "code,name,countryCode,currency,timezone\nZA,Zentric Analytics,NG,NGN,Africa/Lagos");
+    expect(valid).toMatchObject([{ rowNumber: 2, valid: true }]);
+    const invalid = parseOrganizationCsv("grade", "code,name,level,currency,minimumSalary,midpointSalary,maximumSalary\nG1,Grade 1,1,NGN,200,100,300");
+    expect(invalid[0].valid).toBe(false);
+  });
+  it("provides approval-controlled idempotent restructuring activation", () => {
+    const service = readFileSync("src/lib/hr/organization/restructuring.ts", "utf8");
+    const route = readFileSync("src/app/api/internal/hr/organization-changes/route.ts", "utf8");
+    expect(service).toContain("Organization change requester cannot approve");
+    expect(service).toContain('status: "SCHEDULED"');
+    expect(service).toContain("hrOrganizationStructureRevision.create");
+    expect(service).toContain('isolationLevel: "Serializable"');
+    expect(route).toContain("authorizeInternalRequest");
+    expect(route).toContain("ORGANIZATION_WORKER_SECRET");
+  });
+  it("keeps the migration additive and records import and revision history", () => {
+    const migration = readFileSync("prisma/migrations/20260730110000_hrms_organization_management/migration.sql", "utf8");
+    expect(migration).not.toMatch(/\bDROP\s+(TABLE|COLUMN)\b/i);
+    expect(migration).toContain('CREATE TABLE "HrOrganizationImportBatch"');
+    expect(migration).toContain('CREATE TABLE "HrOrganizationStructureRevision"');
+    expect(migration).toContain("HrPosition_headcount_check");
+  });
+  it("audits exports without exposing protected employee data", () => {
+    const route = readFileSync("src/app/api/hr/organization/export/route.ts", "utf8");
+    expect(route).toContain('requirePermission("organization.report.export")');
+    expect(route).toContain("hr.organization.report_exported");
+    for (const protectedField of ["accountNumberEncrypted", "taxIdentifierEncrypted", "salaryRecords"]) expect(route).not.toContain(protectedField);
   });
 });
