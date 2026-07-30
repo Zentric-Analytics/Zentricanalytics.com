@@ -20,7 +20,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   return <><dt className="font-semibold">{label}</dt><dd className="break-all">{children ?? "—"}</dd></>;
 }
 
-export default async function EmployeeProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EmployeeProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ provisioned?: string }> }) {
   const auth = await requirePermission("employee.read_all");
   const { id } = await params;
   const employee = await prisma.hrEmployee.findFirst({
@@ -34,16 +34,26 @@ export default async function EmployeeProfilePage({ params }: { params: Promise<
       employmentAssignments: { include: { department: true, team: true, position: true }, orderBy: { effectiveFrom: "desc" } },
       statusHistory: { include: { changedBy: { select: { email: true } } }, orderBy: { effectiveAt: "desc" } },
       systemAccessAssignments: { orderBy: { createdAt: "desc" } },
+      user: { include: { roles: { where: { revokedAt: null }, include: { role: true } } } },
+      salaryRecords: { orderBy: { effectiveFrom: "desc" }, take: 5 },
+      lifecycleInstances: { orderBy: { createdAt: "desc" }, take: 5 },
+      assetAssignments: { where: { status: "ACTIVE" } },
+      documents: { where: { retentionStatus: "ACTIVE", archivedAt: null } },
     },
   });
   if (!employee) notFound();
   const mayReadBank = auth.permissions.has("payroll.read_bank_details");
   const mayReadTax = auth.permissions.has("payroll.read_salary");
   const mayReadSensitive = auth.permissions.has("document.read_sensitive");
+  const query = await searchParams;
+  const currentAssignment = employee.employmentAssignments.find(({ status, effectiveTo }) => status === "ACTIVE" && (!effectiveTo || effectiveTo > new Date()));
 
   return <>
+    {query.provisioned ? <p role="status" className="mb-4 rounded-xl bg-teal-50 p-4 text-teal-800">Employee provisioned and activated successfully.</p> : null}
     <h1 className="text-3xl font-bold">{employee.legalFirstName} {employee.middleName} {employee.lastName}</h1>
     <p className="mt-2 font-mono text-slate-600">{employee.employeeNumber}</p>
+    <nav aria-label="Employee profile sections" className="mt-5 flex flex-wrap gap-2 text-sm">{["Overview","Personal","Employment","Assignments","Compensation","Payroll","Leave","Documents","Assets","Onboarding","User access","Audit history"].map(label => <a className="rounded-full border bg-white px-3 py-2" href={`#${label.toLowerCase().replaceAll(" ", "-")}`} key={label}>{label}</a>)}</nav>
+    <section id="overview" className="mt-5 rounded-2xl bg-slate-900 p-5 text-white"><div className="grid gap-4 md:grid-cols-4"><div><p className="text-xs uppercase text-slate-300">Status</p><p className="font-bold">{employee.employmentStatus}</p></div><div><p className="text-xs uppercase text-slate-300">Department / position</p><p>{currentAssignment?.department.name ?? "Unassigned"} · {currentAssignment?.position.title ?? "Unassigned"}</p></div><div><p className="text-xs uppercase text-slate-300">User access</p><p>{employee.user ? `${employee.user.status} · MFA ${employee.user.mfaEnabled ? "enabled" : "not enabled"}` : "No account"}</p></div><div><p className="text-xs uppercase text-slate-300">Outstanding</p><p>{employee.assetAssignments.length} assets · {employee.lifecycleInstances.filter(({ status }) => status === "ACTIVE").length} lifecycle · {employee.documents.length} documents</p></div></div><div className="mt-5 flex flex-wrap gap-2"><a className="btn bg-white text-slate-900" href={`/hr/admin/assignments?employeeId=${employee.id}`}>Assign or transfer</a><a className="btn bg-white text-slate-900" href={`/hr/admin/payroll/setup?employeeId=${employee.id}`}>Change salary</a><a className="btn bg-white text-slate-900" href={`/hr/admin/users?employeeId=${employee.id}`}>Manage access</a><a className="btn bg-white text-slate-900" href={`/hr/admin/lifecycle?employeeId=${employee.id}`}>Start lifecycle</a><a className="btn bg-white text-slate-900" href={`/hr/admin/documents?employeeId=${employee.id}`}>Upload document</a><a className="btn bg-white text-slate-900" href={`/hr/admin/assets?employeeId=${employee.id}`}>Assign asset</a></div></section>
 
     <div className="mt-6 grid gap-5 lg:grid-cols-2">
       <section className="rounded-2xl bg-white p-5">
