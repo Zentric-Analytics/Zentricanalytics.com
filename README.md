@@ -17,3 +17,5 @@ Bootstrap requires `DATABASE_URL`, `APP_ENV`, `BOOTSTRAP_ADMIN_EMAIL`, a bcrypt 
 Generate the hash in a private interactive terminal with `yarn hr:hash-password`; password input is hidden and is never accepted as a command argument.
 
 See [HRMS deployment](docs/hrms/deployment.md) for safe staging recovery, first-time production initialization, verification, secret rotation, and one-off Render execution.
+
+See [Core HR](docs/hrms/core-hr.md) for the normalized employee model, organization structure, effective-dated assignment history, protected-data authorization, and Milestone 2 migration notes.

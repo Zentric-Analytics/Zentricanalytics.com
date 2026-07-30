@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
 
-const sensitivePattern = /password|token|secret|bank|accountnumber|salary|identity|documentcontent/i;
+const sensitivePattern = /password|token|secret|bank|accountnumber|salary|identity|identifier|passport|nationalid|pension|taxid|documentcontent/i;
 
 function sanitize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sanitize);
