@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { hashOpaqueToken } from "../src/lib/hr/auth/crypto";
 
+process.env.AUTH_SECRET = "unit-test-auth-secret-with-at-least-32-characters";
+
 type Invitation = {
   id: string;
   organizationId: string;
@@ -9,7 +11,15 @@ type Invitation = {
   status: "ACTIVE" | "USED" | "REVOKED";
   expiresAt: Date;
   usedAt: Date | null;
-  user: { id: string; status: "INVITED" | "ACTIVE"; passwordHash: string | null; emailVerifiedAt: Date | null };
+  user: {
+    id: string;
+    status: "INVITED" | "ACTIVE";
+    passwordHash: string | null;
+    emailVerifiedAt: Date | null;
+    mfaEnabled: boolean;
+    mfaSecretEncrypted: string | null;
+    mfaLastUsedStep: bigint | null;
+  };
 };
 
 const state = vi.hoisted(() => ({ invitation: null as Invitation | null }));
@@ -26,7 +36,7 @@ const tx = vi.hoisted(() => ({
     }),
   },
   hrUser: {
-    update: vi.fn(async ({ data }: { data: { passwordHash: string; status: "ACTIVE"; emailVerifiedAt: Date } }) => {
+    update: vi.fn(async ({ data }: { data: Partial<Invitation["user"]> }) => {
       Object.assign(state.invitation!.user, data);
       return state.invitation!.user;
     }),
@@ -48,7 +58,7 @@ function invitation(token: string, overrides: Partial<Invitation> = {}): Invitat
     status: "ACTIVE",
     expiresAt: new Date(Date.now() + 60_000),
     usedAt: null,
-    user: { id: "user-1", status: "INVITED", passwordHash: null, emailVerifiedAt: null },
+    user: { id: "user-1", status: "INVITED", passwordHash: null, emailVerifiedAt: null, mfaEnabled: false, mfaSecretEncrypted: null, mfaLastUsedStep: null },
     ...overrides,
   };
 }
@@ -61,12 +71,16 @@ describe("HR account invitation acceptance", () => {
 
   it("accepts a fresh invitation and activates the invited HR administrator", async () => {
     state.invitation = invitation("fresh-token");
-    await consumeHrInvitation("fresh-token", "StrongPassword123");
+    const user = await consumeHrInvitation("fresh-token", "StrongPassword123");
     expect(state.invitation.status).toBe("USED");
     expect(state.invitation.usedAt).toBeInstanceOf(Date);
     expect(state.invitation.user.status).toBe("ACTIVE");
     expect(state.invitation.user.passwordHash).not.toContain("StrongPassword123");
     expect(state.invitation.user.emailVerifiedAt).toBeInstanceOf(Date);
+    expect(user.mfaEnabled).toBe(false);
+    expect(user.mfaSecretEncrypted).toBeTruthy();
+    expect(user.mfaSecretEncrypted).not.toContain("otpauth://");
+    expect(user.mfaLastUsedStep).toBeNull();
   });
 
   it("rejects an expired invitation", async () => {

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { consumeHrInvitation, HrInvitationAcceptanceError } from "@/lib/hr/auth/invitations";
 import { passwordMeetsPolicy } from "@/lib/hr/auth/crypto";
+import { createHrSession } from "@/lib/hr/auth/session";
 
 const schema = z.object({
   password: z.string().min(12).max(256).refine(passwordMeetsPolicy),
@@ -17,7 +18,8 @@ export async function acceptInvitationAction(formData: FormData) {
   if (!token) redirect("/hr/invitation?error=invalid");
   if (!parsed.success) redirect("/hr/invitation?error=password_policy");
   try {
-    await consumeHrInvitation(token, parsed.data.password);
+    const user = await consumeHrInvitation(token, parsed.data.password);
+    await createHrSession(user.id);
   } catch (error) {
     if (error instanceof HrInvitationAcceptanceError && error.code === "PASSWORD_POLICY") {
       redirect("/hr/invitation?error=password_policy");
@@ -25,5 +27,5 @@ export async function acceptInvitationAction(formData: FormData) {
     redirect("/hr/invitation?error=invalid");
   }
   jar.delete("za_hr_invitation");
-  redirect("/hr/login?setup=complete");
+  redirect("/hr/security?onboarding=invitation");
 }

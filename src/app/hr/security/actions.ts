@@ -31,7 +31,7 @@ export async function enableMfaAction(formData: FormData) {
     await tx.hrUser.update({ where: { id: auth.user.id }, data: { mfaEnabled: true, mfaLastUsedStep: step } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrUser", entityId: auth.user.id, action: "hr.auth.mfa.enabled" });
   });
-  revalidatePath("/hr/security");
+  redirect("/hr");
 }
 
 const disableSchema = z.object({ code: codeSchema, password: z.string().min(1).max(256) });

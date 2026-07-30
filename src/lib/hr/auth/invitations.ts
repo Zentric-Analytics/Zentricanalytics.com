@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { createOpaqueToken, hashHrPassword, hashOpaqueToken, passwordMeetsPolicy, sealHrCredential } from "./crypto";
+import { generateTotpSecret } from "./totp";
 import { tokenCanBeConsumed } from "./tokens";
 
 export class HrInvitationAcceptanceError extends Error {
@@ -35,7 +36,19 @@ export async function consumeHrInvitation(rawToken: string, password: string) {
       data: { status: "USED", usedAt: now },
     });
     if (claimed.count !== 1) throw new HrInvitationAcceptanceError("INVALID_TOKEN");
-    await tx.hrUser.update({ where: { id: invitation!.userId }, data: { passwordHash: await hashHrPassword(password), status: "ACTIVE", emailVerifiedAt: new Date() } });
+    const user = await tx.hrUser.update({
+      where: { id: invitation!.userId },
+      data: {
+        passwordHash: await hashHrPassword(password),
+        status: "ACTIVE",
+        emailVerifiedAt: new Date(),
+        mfaEnabled: false,
+        mfaSecretEncrypted: sealHrCredential(generateTotpSecret()),
+        mfaLastUsedStep: null,
+      },
+    });
     await appendHrAudit(tx, { organizationId: invitation!.organizationId, actorUserId: invitation!.userId, entityType: "HrUser", entityId: invitation!.userId, action: "hr.invitation.consumed" });
+    await appendHrAudit(tx, { organizationId: invitation!.organizationId, actorUserId: invitation!.userId, entityType: "HrUser", entityId: invitation!.userId, action: "hr.auth.mfa.enrollment_started" });
+    return user;
   });
 }

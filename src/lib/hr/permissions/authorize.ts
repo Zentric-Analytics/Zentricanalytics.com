@@ -11,7 +11,7 @@ export { privilegedMfaRequired } from "./mfa-policy";
 export async function requireAuthenticatedUser(options: { allowMfaEnrollment?: boolean } = {}) {
   const auth = await getAuthenticatedHrUser();
   if (!auth) redirect("/hr/login");
-  if (!options.allowMfaEnrollment && privilegedMfaRequired(auth)) redirect("/hr/security");
+  if (!options.allowMfaEnrollment && (privilegedMfaRequired(auth) || Boolean(auth.user.mfaSecretEncrypted && !auth.user.mfaEnabled))) redirect("/hr/security");
   return auth;
 }
 
