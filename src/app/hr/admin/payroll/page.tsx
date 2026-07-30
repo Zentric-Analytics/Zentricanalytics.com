@@ -1,0 +1,33 @@
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { addPayrollAdjustmentAction, approvePayrollRunAction, calculatePayrollRunAction, cancelPayrollRunAction, createPayrollRunAction, lockPayrollRunAction, markPayrollItemPaidAction, reviewPayrollRunAction } from "./actions";
+import { generatePayslipAction } from "./payslips/actions";
+
+export default async function PayrollPage() {
+  const auth = await requirePermission("payroll.read");
+  const organizationId = auth.user.organizationId;
+  const [periods, runs, employees] = await Promise.all([
+    prisma.hrPayrollPeriod.findMany({ where: { organizationId }, orderBy: { startsAt: "desc" }, take: 60 }),
+    prisma.hrPayrollRun.findMany({ where: { organizationId }, include: { period: true, approvals: { orderBy: { createdAt: "asc" } }, items: { orderBy: { employeeNumber: "asc" }, include: { components: true, payslip: true } } }, orderBy: { createdAt: "desc" }, take: 24 }),
+    prisma.hrEmployee.findMany({ where: { organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } }, orderBy: { employeeNumber: "asc" } }),
+  ]);
+  return <>
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-3xl font-bold">Payroll</h1><p className="mt-2 text-slate-600">Controlled calculation, review, approval, locking, payment, payslips, and exports.</p></div><Link className="btn btn-secondary" href="/hr/admin/payroll/setup">Salary and policy setup</Link></div>
+    <section className="mt-6 rounded-2xl bg-white p-5"><h2 className="font-bold">Create payroll run</h2><form action={createPayrollRunAction} className="mt-4 flex flex-wrap gap-3"><select className="input min-w-64" name="periodId" required><option value="">Payroll period</option>{periods.map((period) => <option value={period.id} key={period.id}>{period.name} · {period.currency}</option>)}</select><button className="btn btn-primary">Create draft run</button></form></section>
+    {runs.map((run) => <section className="mt-5 rounded-2xl bg-white p-5" key={run.id}>
+      <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-bold">{run.period.name} · version {run.version}</h2><p className="text-sm text-slate-600">{run.status} · {run.items.length} employee snapshots</p></div><div className="flex flex-wrap gap-2"><Link className="btn btn-secondary" href={`/api/hr/payroll/runs/${run.id}/export?type=summary`}>Summary CSV</Link>{auth.permissions.has("payroll.read_bank_details") && <Link className="btn btn-secondary" href={`/api/hr/payroll/runs/${run.id}/export?type=bank`}>Bank schedule CSV</Link>}</div></div>
+      {run.status === "DRAFT" && <><form action={addPayrollAdjustmentAction} className="mt-4 grid gap-2 rounded-xl bg-slate-50 p-4 md:grid-cols-6"><input type="hidden" name="runId" value={run.id} /><select className="input" name="employeeId" required><option value="">Employee</option>{employees.map((employee) => <option value={employee.id} key={employee.id}>{employee.employeeNumber} — {employee.legalFirstName} {employee.lastName}</option>)}</select><select className="input" name="componentType"><option>EARNING</option><option>DEDUCTION</option><option>TAX</option><option>BENEFIT</option></select><input className="input" name="name" placeholder="Adjustment name" required /><input className="input" name="amount" inputMode="decimal" placeholder="Amount" required /><input className="input" name="reason" placeholder="Reason" required /><button className="btn btn-secondary">Add adjustment</button></form><form action={calculatePayrollRunAction} className="mt-3"><input type="hidden" name="runId" value={run.id} /><button className="btn btn-primary">Calculate immutable snapshots</button></form></>}
+      {run.status === "CALCULATED" && <RunDecision action={reviewPayrollRunAction} runId={run.id} label="Complete review" />}
+      {run.status === "REVIEWED" && <RunDecision action={approvePayrollRunAction} runId={run.id} label="Approve payroll" />}
+      {run.status === "APPROVED" && <RunDecision action={lockPayrollRunAction} runId={run.id} label="Lock payroll" />}
+      {["DRAFT", "CALCULATED", "REVIEWED"].includes(run.status) && <RunDecision action={cancelPayrollRunAction} runId={run.id} label="Cancel and supersede" danger />}
+      {run.items.length > 0 && <div className="mt-5 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="py-3">Employee</th><th>Base</th><th>Gross</th><th>Deductions</th><th>Benefits</th><th>Net</th><th>Payment</th><th>Payslip</th></tr></thead><tbody>{run.items.map((item) => <tr className="border-b last:border-0 align-top" key={item.id}><td className="py-3">{item.employeeNumber} — {item.employeeName}</td><td>{item.currency} {item.baseSalary.toFixed(2)}</td><td>{item.grossEarnings.toFixed(2)}</td><td>{item.totalDeductions.toFixed(2)}</td><td>{item.employerBenefits.toFixed(2)}</td><td className="font-semibold">{item.netPay.toFixed(2)}</td><td>{item.paymentStatus === "PAID" ? `Paid ${item.paymentMarkedAt?.toLocaleDateString()}` : run.status === "LOCKED" ? <form action={markPayrollItemPaidAction} className="flex gap-2"><input type="hidden" name="itemId" value={item.id} /><input className="input max-w-40" name="paymentReference" placeholder="Payment reference" required /><button className="font-semibold text-teal-700">Mark paid</button></form> : item.paymentStatus}</td><td>{["LOCKED", "PAID"].includes(run.status) ? item.payslip ? <Link className="font-semibold text-teal-700" href={`/api/hr/payroll/payslips/${item.id}`}>Download</Link> : <form action={generatePayslipAction}><input type="hidden" name="itemId" value={item.id} /><button className="font-semibold text-teal-700">Generate</button></form> : "Available after lock"}</td></tr>)}</tbody></table></div>}
+      {run.approvals.length > 0 && <ol className="mt-4 space-y-1 border-t pt-4 text-xs text-slate-600">{run.approvals.map((approval) => <li key={approval.id}>{approval.createdAt.toLocaleString()} · {approval.fromStatus} → {approval.toStatus} · {approval.comment}</li>)}</ol>}
+    </section>)}
+  </>;
+}
+
+function RunDecision({ action, runId, label, danger = false }: { action: (formData: FormData) => Promise<void>; runId: string; label: string; danger?: boolean }) {
+  return <form action={action} className="mt-3 flex flex-wrap gap-2"><input type="hidden" name="runId" value={runId} /><input className="input max-w-80" name="comment" placeholder="Required decision reason" required /><button className={danger ? "btn border border-red-300 text-red-700" : "btn btn-primary"}>{label}</button></form>;
+}

@@ -341,6 +341,42 @@ enum HrLeaveLedgerType {
   EXPIRY
 }
 
+enum HrPayFrequency {
+  MONTHLY
+  BIWEEKLY
+  WEEKLY
+}
+
+enum HrPayrollComponentType {
+  EARNING
+  DEDUCTION
+  TAX
+  BENEFIT
+}
+
+enum HrPayrollCalculationType {
+  FIXED
+  PERCENTAGE_OF_BASE
+  PERCENTAGE_OF_GROSS
+}
+
+enum HrPayrollRunStatus {
+  DRAFT
+  CALCULATED
+  REVIEWED
+  APPROVED
+  LOCKED
+  PAID
+  CANCELLED
+}
+
+enum HrPayrollPaymentStatus {
+  NOT_PAID
+  PROCESSING
+  PAID
+  FAILED
+}
+
 model HrOrganization {
   id                      String                   @id @default(cuid())
   slug                    String                   @unique
@@ -363,6 +399,12 @@ model HrOrganization {
   leaveBalances           HrLeaveBalance[]
   leaveRequests           HrLeaveRequest[]
   publicHolidays          HrPublicHoliday[]
+  salaryRecords           HrSalaryRecord[]
+  payrollComponents       HrPayrollComponent[]
+  payrollPeriods          HrPayrollPeriod[]
+  payrollRuns             HrPayrollRun[]
+  payrollItems            HrPayrollItem[]
+  payrollExports          HrPayrollExport[]
   supervisorAssignments   HrSupervisorAssignment[]
   auditEvents             HrAuditEvent[]
   emailOutbox             HrEmailOutbox[]
@@ -370,37 +412,45 @@ model HrOrganization {
 }
 
 model HrUser {
-  id                         String                   @id @default(cuid())
+  id                         String                       @id @default(cuid())
   organizationId             String
-  organization               HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization               HrOrganization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   email                      String
   passwordHash               String?
-  status                     HrUserStatus             @default(INVITED)
+  status                     HrUserStatus                 @default(INVITED)
   emailVerifiedAt            DateTime?
   lastLoginAt                DateTime?
   suspendedAt                DateTime?
-  mfaEnabled                 Boolean                  @default(false)
+  mfaEnabled                 Boolean                      @default(false)
   mfaSecretEncrypted         String?
-  createdAt                  DateTime                 @default(now())
-  updatedAt                  DateTime                 @updatedAt
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
   roles                      HrUserRole[]
   sessions                   HrSession[]
-  invitationsCreated         HrAccountInvitation[]    @relation("InvitationCreator")
-  invitationsReceived        HrAccountInvitation[]    @relation("InvitationRecipient")
+  invitationsCreated         HrAccountInvitation[]        @relation("InvitationCreator")
+  invitationsReceived        HrAccountInvitation[]        @relation("InvitationRecipient")
   passwordResets             HrPasswordResetToken[]
   loginAttempts              HrLoginAttempt[]
   employee                   HrEmployee?
-  assignmentsGranted         HrSupervisorAssignment[] @relation("SupervisorAssignmentGrantor")
-  assignmentsEnded           HrSupervisorAssignment[] @relation("SupervisorAssignmentEnder")
-  employeeAssignmentsCreated HrEmployeeAssignment[]   @relation("EmployeeAssignmentCreator")
-  employeeAssignmentsEnded   HrEmployeeAssignment[]   @relation("EmployeeAssignmentEnder")
-  leaveRequestsCreated       HrLeaveRequest[]         @relation("LeaveRequester")
-  leaveRequestsToReview      HrLeaveRequest[]         @relation("LeaveCurrentReviewer")
-  leaveApprovals             HrLeaveApproval[]        @relation("LeaveReviewer")
-  leavePoliciesAssigned      HrEmployeeLeavePolicy[]  @relation("LeavePolicyAssigner")
-  leavePoliciesEnded         HrEmployeeLeavePolicy[]  @relation("LeavePolicyEnder")
+  assignmentsGranted         HrSupervisorAssignment[]     @relation("SupervisorAssignmentGrantor")
+  assignmentsEnded           HrSupervisorAssignment[]     @relation("SupervisorAssignmentEnder")
+  employeeAssignmentsCreated HrEmployeeAssignment[]       @relation("EmployeeAssignmentCreator")
+  employeeAssignmentsEnded   HrEmployeeAssignment[]       @relation("EmployeeAssignmentEnder")
+  leaveRequestsCreated       HrLeaveRequest[]             @relation("LeaveRequester")
+  leaveRequestsToReview      HrLeaveRequest[]             @relation("LeaveCurrentReviewer")
+  leaveApprovals             HrLeaveApproval[]            @relation("LeaveReviewer")
+  leavePoliciesAssigned      HrEmployeeLeavePolicy[]      @relation("LeavePolicyAssigner")
+  leavePoliciesEnded         HrEmployeeLeavePolicy[]      @relation("LeavePolicyEnder")
   leaveLedgerEntries         HrLeaveLedger[]
   leaveAttachmentsUploaded   HrLeaveAttachment[]
+  salaryChangesCreated       HrSalaryRecord[]             @relation("SalaryRecordCreator")
+  salaryChangesApproved      HrSalaryRecord[]             @relation("SalaryRecordApprover")
+  payrollRunsCreated         HrPayrollRun[]               @relation("PayrollRunCreator")
+  payrollApprovals           HrPayrollApproval[]
+  payrollAdjustmentsCreated  HrPayrollAdjustment[]
+  payrollComponentsCreated   HrEmployeePayrollComponent[]
+  payrollPaymentsMarked      HrPayrollItem[]              @relation("PayrollPaymentMarker")
+  payrollExportsCreated      HrPayrollExport[]
   auditEvents                HrAuditEvent[]
 
   @@unique([organizationId, email])
@@ -519,41 +569,45 @@ model HrLoginAttempt {
 }
 
 model HrEmployee {
-  id                       String                   @id @default(cuid())
-  organizationId           String
-  recruitmentApplicationId String?                  @unique
-  userId                   String?                  @unique
-  employeeNumber           String
-  legalFirstName           String
-  middleName               String?
-  lastName                 String
-  preferredName            String?
-  companyEmail             String?
-  personalEmail            String?
-  phone                    String?
-  dateOfBirth              DateTime?
-  employmentStatus         HrEmploymentStatus       @default(DRAFT)
-  hireDate                 DateTime?
-  terminationDate          DateTime?
-  terminationReason        String?
-  archivedAt               DateTime?
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
-  organization             HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  recruitmentApplication   JobApplication?          @relation(fields: [recruitmentApplicationId], references: [id], onDelete: SetNull)
-  user                     HrUser?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
-  supervisedAssignments    HrSupervisorAssignment[] @relation("SupervisorEmployee")
-  assignedToAssignments    HrSupervisorAssignment[] @relation("AssignedEmployee")
-  employmentAssignments    HrEmployeeAssignment[]
-  addresses                HrEmployeeAddress[]
-  emergencyContacts        HrEmergencyContact[]
-  identifiers              HrEmployeeIdentifier[]
-  bankAccounts             HrEmployeeBankAccount[]
-  taxProfile               HrEmployeeTaxProfile?
-  departmentsLed           HrDepartment[]           @relation("DepartmentHead")
-  leavePolicyAssignments   HrEmployeeLeavePolicy[]
-  leaveBalances            HrLeaveBalance[]
-  leaveRequests            HrLeaveRequest[]
+  id                          String                       @id @default(cuid())
+  organizationId              String
+  recruitmentApplicationId    String?                      @unique
+  userId                      String?                      @unique
+  employeeNumber              String
+  legalFirstName              String
+  middleName                  String?
+  lastName                    String
+  preferredName               String?
+  companyEmail                String?
+  personalEmail               String?
+  phone                       String?
+  dateOfBirth                 DateTime?
+  employmentStatus            HrEmploymentStatus           @default(DRAFT)
+  hireDate                    DateTime?
+  terminationDate             DateTime?
+  terminationReason           String?
+  archivedAt                  DateTime?
+  createdAt                   DateTime                     @default(now())
+  updatedAt                   DateTime                     @updatedAt
+  organization                HrOrganization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  recruitmentApplication      JobApplication?              @relation(fields: [recruitmentApplicationId], references: [id], onDelete: SetNull)
+  user                        HrUser?                      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  supervisedAssignments       HrSupervisorAssignment[]     @relation("SupervisorEmployee")
+  assignedToAssignments       HrSupervisorAssignment[]     @relation("AssignedEmployee")
+  employmentAssignments       HrEmployeeAssignment[]
+  addresses                   HrEmployeeAddress[]
+  emergencyContacts           HrEmergencyContact[]
+  identifiers                 HrEmployeeIdentifier[]
+  bankAccounts                HrEmployeeBankAccount[]
+  taxProfile                  HrEmployeeTaxProfile?
+  departmentsLed              HrDepartment[]               @relation("DepartmentHead")
+  leavePolicyAssignments      HrEmployeeLeavePolicy[]
+  leaveBalances               HrLeaveBalance[]
+  leaveRequests               HrLeaveRequest[]
+  salaryRecords               HrSalaryRecord[]
+  payrollComponentAssignments HrEmployeePayrollComponent[]
+  payrollItems                HrPayrollItem[]
+  payrollAdjustments          HrPayrollAdjustment[]
 
   @@unique([organizationId, employeeNumber])
   @@unique([organizationId, companyEmail])
@@ -1030,6 +1084,230 @@ model HrPublicHoliday {
 
   @@unique([organizationId, date, name])
   @@index([organizationId, date])
+}
+
+model HrSalaryRecord {
+  id             String          @id @default(cuid())
+  organizationId String
+  employeeId     String
+  amount         Decimal         @db.Decimal(18, 2)
+  currency       String
+  payFrequency   HrPayFrequency  @default(MONTHLY)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  reason         String
+  createdById    String
+  approvedById   String?
+  approvedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  organization   HrOrganization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee       HrEmployee      @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  createdBy      HrUser          @relation("SalaryRecordCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy     HrUser?         @relation("SalaryRecordApprover", fields: [approvedById], references: [id], onDelete: Restrict)
+  payrollItems   HrPayrollItem[]
+
+  @@unique([employeeId, effectiveFrom])
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+}
+
+model HrPayrollComponent {
+  id              String                       @id @default(cuid())
+  organizationId  String
+  code            String
+  name            String
+  type            HrPayrollComponentType
+  calculationType HrPayrollCalculationType     @default(FIXED)
+  taxable         Boolean                      @default(false)
+  pensionable     Boolean                      @default(false)
+  status          HrRecordStatus               @default(ACTIVE)
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+  archivedAt      DateTime?
+  organization    HrOrganization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  assignments     HrEmployeePayrollComponent[]
+  itemComponents  HrPayrollItemComponent[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status, type])
+}
+
+model HrEmployeePayrollComponent {
+  id            String             @id @default(cuid())
+  employeeId    String
+  componentId   String
+  amount        Decimal            @db.Decimal(18, 4)
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  status        HrAssignmentStatus @default(ACTIVE)
+  reason        String
+  createdById   String
+  createdAt     DateTime           @default(now())
+  employee      HrEmployee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  component     HrPayrollComponent @relation(fields: [componentId], references: [id], onDelete: Restrict)
+  createdBy     HrUser             @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([employeeId, componentId, effectiveFrom])
+  @@index([employeeId, status, effectiveFrom, effectiveTo])
+  @@index([componentId, status])
+}
+
+model HrPayrollPeriod {
+  id             String         @id @default(cuid())
+  organizationId String
+  name           String
+  startsAt       DateTime
+  endsAt         DateTime
+  payDate        DateTime
+  currency       String
+  payFrequency   HrPayFrequency @default(MONTHLY)
+  createdAt      DateTime       @default(now())
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  runs           HrPayrollRun[]
+
+  @@unique([organizationId, startsAt, endsAt])
+  @@index([organizationId, payDate])
+}
+
+model HrPayrollRun {
+  id             String                @id @default(cuid())
+  organizationId String
+  periodId       String
+  version        Int                   @default(1)
+  status         HrPayrollRunStatus    @default(DRAFT)
+  calculationKey String                @unique
+  calculatedAt   DateTime?
+  reviewedAt     DateTime?
+  approvedAt     DateTime?
+  lockedAt       DateTime?
+  paidAt         DateTime?
+  createdById    String
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  organization   HrOrganization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  period         HrPayrollPeriod       @relation(fields: [periodId], references: [id], onDelete: Restrict)
+  createdBy      HrUser                @relation("PayrollRunCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  items          HrPayrollItem[]
+  approvals      HrPayrollApproval[]
+  adjustments    HrPayrollAdjustment[]
+  exports        HrPayrollExport[]
+
+  @@unique([periodId, version])
+  @@index([organizationId, status, createdAt])
+}
+
+model HrPayrollItem {
+  id                String                   @id @default(cuid())
+  organizationId    String
+  runId             String
+  employeeId        String
+  salaryRecordId    String
+  employeeNumber    String
+  employeeName      String
+  currency          String
+  baseSalary        Decimal                  @db.Decimal(18, 2)
+  grossEarnings     Decimal                  @db.Decimal(18, 2)
+  totalDeductions   Decimal                  @db.Decimal(18, 2)
+  employerBenefits  Decimal                  @db.Decimal(18, 2)
+  netPay            Decimal                  @db.Decimal(18, 2)
+  paymentStatus     HrPayrollPaymentStatus   @default(NOT_PAID)
+  paymentReference  String?
+  paymentMarkedAt   DateTime?
+  paymentMarkedById String?
+  snapshot          Json
+  createdAt         DateTime                 @default(now())
+  organization      HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  run               HrPayrollRun             @relation(fields: [runId], references: [id], onDelete: Restrict)
+  employee          HrEmployee               @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  salaryRecord      HrSalaryRecord           @relation(fields: [salaryRecordId], references: [id], onDelete: Restrict)
+  paymentMarkedBy   HrUser?                  @relation("PayrollPaymentMarker", fields: [paymentMarkedById], references: [id], onDelete: Restrict)
+  components        HrPayrollItemComponent[]
+  payslip           HrPayslip?
+
+  @@unique([runId, employeeId])
+  @@index([organizationId, employeeId, createdAt])
+  @@index([runId, paymentStatus])
+}
+
+model HrPayrollItemComponent {
+  id            String                 @id @default(cuid())
+  payrollItemId String
+  componentId   String?
+  code          String
+  name          String
+  type          HrPayrollComponentType
+  amount        Decimal                @db.Decimal(18, 2)
+  sourceAmount  Decimal?               @db.Decimal(18, 4)
+  createdAt     DateTime               @default(now())
+  payrollItem   HrPayrollItem          @relation(fields: [payrollItemId], references: [id], onDelete: Restrict)
+  component     HrPayrollComponent?    @relation(fields: [componentId], references: [id], onDelete: Restrict)
+
+  @@unique([payrollItemId, code])
+  @@index([payrollItemId, type])
+}
+
+model HrPayrollApproval {
+  id            String             @id @default(cuid())
+  runId         String
+  actorUserId   String
+  actorRole     String
+  fromStatus    HrPayrollRunStatus
+  toStatus      HrPayrollRunStatus
+  comment       String?
+  correlationId String
+  createdAt     DateTime           @default(now())
+  run           HrPayrollRun       @relation(fields: [runId], references: [id], onDelete: Restrict)
+  actor         HrUser             @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([runId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model HrPayrollAdjustment {
+  id            String                 @id @default(cuid())
+  runId         String
+  employeeId    String
+  componentType HrPayrollComponentType
+  name          String
+  amount        Decimal                @db.Decimal(18, 2)
+  reason        String
+  createdById   String
+  createdAt     DateTime               @default(now())
+  run           HrPayrollRun           @relation(fields: [runId], references: [id], onDelete: Restrict)
+  employee      HrEmployee             @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  createdBy     HrUser                 @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([runId, employeeId])
+}
+
+model HrPayslip {
+  id            String        @id @default(cuid())
+  payrollItemId String        @unique
+  version       Int           @default(1)
+  storageKey    String
+  fileName      String
+  contentType   String        @default("application/pdf")
+  sizeBytes     Int
+  checksum      String
+  generatedAt   DateTime      @default(now())
+  payrollItem   HrPayrollItem @relation(fields: [payrollItemId], references: [id], onDelete: Restrict)
+}
+
+model HrPayrollExport {
+  id             String         @id @default(cuid())
+  organizationId String
+  runId          String
+  type           String
+  storageKey     String?
+  fileName       String
+  checksum       String?
+  rowCount       Int
+  createdById    String
+  createdAt      DateTime       @default(now())
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  run            HrPayrollRun   @relation(fields: [runId], references: [id], onDelete: Restrict)
+  createdBy      HrUser         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, runId, createdAt])
 }
 
 model HrOrganizationSetting {
