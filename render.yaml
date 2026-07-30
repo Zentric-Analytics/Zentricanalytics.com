@@ -27,6 +27,8 @@ services:
         sync: false
       - key: EMAIL_WORKER_SECRET
         sync: false
+      - key: ORGANIZATION_WORKER_SECRET
+        sync: false
       - key: DOCUMENT_SCANNER_SECRET
         sync: false
       - key: MONITORING_SECRET

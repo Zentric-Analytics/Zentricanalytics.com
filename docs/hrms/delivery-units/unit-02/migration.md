@@ -27,14 +27,12 @@ New models:
 - `HrJobProfile`
 - `HrGrade`
 - `HrPositionApproval`
-- `HrPositionOccupancy`
 - `HrOrganizationChange`
 - `HrOrganizationImportBatch` and row/error records
 
 Expanded models:
 
-- Department: division, parent department, manager position, cost center, effective interval.
-- Team: parent team, manager position, effective interval.
+- Department and team history: captured through `HrOrganizationStructureRevision` while stable department/team identifiers remain compatible with existing assignments.
 - Position: all organization dimensions, job profile, grade, reporting position, state, headcount/FTE/budget, effective interval, optimistic version.
 - Employee assignment: organization dimensions, primary flag, FTE, immutable placement snapshot, optimistic version.
 
