@@ -72,6 +72,20 @@ describe("enterprise organization management", () => {
     expect(migration).toContain('CREATE TABLE "HrOrganizationStructureRevision"');
     expect(migration).toContain("HrPosition_headcount_check");
   });
+  it("backfills Unit 2 permissions for existing administrators and keeps bootstrap parity", () => {
+    const migration = readFileSync("prisma/migrations/20260730130000_hrms_organization_permissions/migration.sql", "utf8");
+    const bootstrap = readFileSync("scripts/hr-bootstrap-lib.mjs", "utf8");
+    for (const permission of [
+      "organization.structure.manage", "organization.structure.import", "organization.position.create",
+      "organization.position.approve", "organization.position.manage_state", "organization.position.fill",
+      "organization.assignment.transfer", "organization.report.read", "organization.report.export",
+    ]) {
+      expect(migration).toContain(permission);
+      expect(bootstrap).toContain(permission);
+    }
+    expect(migration).not.toMatch(/\b(DROP|DELETE|TRUNCATE)\b/i);
+    expect(migration).toContain("ON CONFLICT");
+  });
   it("audits exports without exposing protected employee data", () => {
     const route = readFileSync("src/app/api/hr/organization/export/route.ts", "utf8");
     expect(route).toContain('requirePermission("organization.report.export")');
