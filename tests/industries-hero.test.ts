@@ -7,7 +7,6 @@ import {
   INDUSTRY_TYPING_INTERVAL,
   type TypingState,
 } from '../src/components/IndustriesHeroTyping';
-import type { TypingState } from '../src/components/IndustriesHeroTyping';
 import { INDUSTRY_CONTENT } from '../src/components/industryContent';
 
 describe('Industries hero typing', () => {
