@@ -63,7 +63,11 @@ describe("enterprise organization management", () => {
   });
   it("keeps the migration additive and records import and revision history", () => {
     const migration = readFileSync("prisma/migrations/20260730110000_hrms_organization_management/migration.sql", "utf8");
+    const reconciliation = readFileSync("prisma/migrations/20260730120000_hrms_organization_default_backfill/migration.sql", "utf8");
     expect(migration).not.toMatch(/\bDROP\s+(TABLE|COLUMN)\b/i);
+    expect(reconciliation).not.toMatch(/\b(DROP|DELETE|TRUNCATE)\b/i);
+    expect(reconciliation).toContain('ON CONFLICT ("organizationId","code") DO NOTHING');
+    expect(reconciliation).toContain('"placementSnapshot" = jsonb_build_object');
     expect(migration).toContain('CREATE TABLE "HrOrganizationImportBatch"');
     expect(migration).toContain('CREATE TABLE "HrOrganizationStructureRevision"');
     expect(migration).toContain("HrPosition_headcount_check");
