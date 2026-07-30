@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { positionInput } from "@/lib/hr/core/invariants";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { changePositionState, decidePosition, submitPosition } from "@/lib/hr/organization/position-commands";
 
 export async function createPositionAction(formData: FormData) {
   const auth = await requirePermission("position.manage");
@@ -15,6 +16,35 @@ export async function createPositionAction(formData: FormData) {
     const position = await tx.hrPosition.create({ data: { ...input, organizationId: auth.user.organizationId } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrPosition", entityId: position.id, action: "hr.position.created", newValues: input });
   });
+  revalidatePath("/hr/admin/positions");
+}
+
+const positionDecisionInput = z.object({ id: z.string().cuid(), reason: z.string().trim().min(3).max(500) });
+export async function submitPositionAction(formData: FormData) {
+  const auth = await requirePermission("organization.position.create");
+  const input = positionDecisionInput.parse(Object.fromEntries(formData));
+  await prisma.$transaction(tx => submitPosition(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, { positionId: input.id, reason: input.reason }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/positions");
+}
+
+export async function approvePositionAction(formData: FormData) {
+  const auth = await requirePermission("organization.position.approve");
+  const input = positionDecisionInput.parse(Object.fromEntries(formData));
+  await prisma.$transaction(tx => decidePosition(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, { positionId: input.id, approve: true, reason: input.reason }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/positions");
+}
+
+export async function rejectPositionAction(formData: FormData) {
+  const auth = await requirePermission("organization.position.approve");
+  const input = positionDecisionInput.parse(Object.fromEntries(formData));
+  await prisma.$transaction(tx => decidePosition(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, { positionId: input.id, approve: false, reason: input.reason }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/positions");
+}
+
+export async function openPositionAction(formData: FormData) {
+  const auth = await requirePermission("organization.position.manage_state");
+  const input = positionDecisionInput.parse(Object.fromEntries(formData));
+  await prisma.$transaction(tx => changePositionState(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, { positionId: input.id, target: "OPEN", reason: input.reason }), { isolationLevel: "Serializable" });
   revalidatePath("/hr/admin/positions");
 }
 

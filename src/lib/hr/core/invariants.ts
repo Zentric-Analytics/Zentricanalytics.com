@@ -55,6 +55,8 @@ export const assignmentInput = z.object({
   positionId: z.string().cuid(),
   employmentType: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT", "INTERN", "TEMPORARY"]),
   location: z.string().trim().max(120).optional().transform((value) => value || undefined),
+  fte: z.coerce.number().positive().max(2).default(1),
+  isPrimary: z.enum(["true", "false"]).optional().default("true").transform(value => value === "true"),
   effectiveFrom: z.coerce.date(),
   reason: z.string().trim().min(3).max(500),
 });

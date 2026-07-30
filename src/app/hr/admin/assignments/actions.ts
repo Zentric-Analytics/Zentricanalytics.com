@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { assignmentInput, wouldCreateSupervisorCycle } from "@/lib/hr/core/invariants";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { reconcilePositionOccupancy } from "@/lib/hr/organization/position-commands";
 
 export async function createEmployeeAssignmentAction(formData: FormData) {
   const auth = await requirePermission("assignment.create");
@@ -12,17 +13,24 @@ export async function createEmployeeAssignmentAction(formData: FormData) {
   const [employee, department, position] = await Promise.all([
     prisma.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: auth.user.organizationId, employmentStatus: { notIn: ["TERMINATED", "ARCHIVED"] } } }),
     prisma.hrDepartment.findFirstOrThrow({ where: { id: input.departmentId, organizationId: auth.user.organizationId, status: "ACTIVE" } }),
-    prisma.hrPosition.findFirstOrThrow({ where: { id: input.positionId, organizationId: auth.user.organizationId, status: "ACTIVE" } }),
+    prisma.hrPosition.findFirstOrThrow({ where: { id: input.positionId, organizationId: auth.user.organizationId, status: "ACTIVE", lifecycleStatus: { in: ["OPEN", "PARTIALLY_FILLED"] } } }),
   ]);
   if (position.departmentId !== department.id) throw new Error("The selected position does not belong to the selected department.");
   if ((position.teamId ?? undefined) !== input.teamId) throw new Error("The selected team must match the position’s team.");
   const current = await prisma.hrEmployeeAssignment.findFirst({ where: { organizationId: auth.user.organizationId, employeeId: employee.id, status: "ACTIVE", OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.effectiveFrom } }] }, orderBy: { effectiveFrom: "desc" } });
   if (current && current.effectiveFrom >= input.effectiveFrom) throw new Error("The new assignment must begin after the current assignment began.");
   await prisma.$transaction(async (tx) => {
+    const occupied = await tx.hrEmployeeAssignment.aggregate({ where: { organizationId: auth.user.organizationId, positionId: position.id, status: "ACTIVE", OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.effectiveFrom } }] }, _count: true, _sum: { fte: true } });
+    const replacingCurrentPosition = current?.positionId === position.id;
+    const occupiedCount = occupied._count - (replacingCurrentPosition ? 1 : 0);
+    const occupiedFte = Number(occupied._sum.fte ?? 0) - (replacingCurrentPosition ? Number(current?.fte ?? 0) : 0);
+    if (occupiedCount + 1 > position.headcountLimit || occupiedFte + input.fte > position.fullTimeEquivalent.toNumber()) throw new Error("This assignment would exceed the approved position capacity.");
     if (current) await tx.hrEmployeeAssignment.update({ where: { id: current.id }, data: { effectiveTo: input.effectiveFrom, status: "ENDED", endedAt: new Date(), endedById: auth.user.id } });
-    const assignment = await tx.hrEmployeeAssignment.create({ data: { ...input, organizationId: auth.user.organizationId, createdById: auth.user.id } });
+    const assignment = await tx.hrEmployeeAssignment.create({ data: { ...input, organizationId: auth.user.organizationId, createdById: auth.user.id, placementSnapshot: { departmentId: department.id, departmentName: department.name, positionId: position.id, positionTitle: position.title } } });
+    await reconcilePositionOccupancy(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, position.id);
+    if (current && current.positionId !== position.id) await reconcilePositionOccupancy(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, current.positionId);
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrEmployeeAssignment", entityId: assignment.id, action: current ? "hr.employee.transferred" : "hr.employee.assignment.created", previousValues: current ? { assignmentId: current.id, departmentId: current.departmentId, positionId: current.positionId } : undefined, newValues: input, reason: input.reason });
-  });
+  }, { isolationLevel: "Serializable" });
   revalidatePath("/hr/admin/assignments");
   revalidatePath(`/hr/admin/employees/${employee.id}`);
 }

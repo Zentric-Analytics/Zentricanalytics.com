@@ -6,6 +6,7 @@ import { lastFour } from "@/lib/hr/core/invariants";
 import { dueDate } from "@/lib/hr/lifecycle/definitions";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { provisioningPayloadSchema, provisioningReadiness } from "./provisioning";
+import { reconcilePositionOccupancy } from "@/lib/hr/organization/position-commands";
 
 export async function finalizeEmployeeProvisioning(
   tx: Prisma.TransactionClient,
@@ -34,7 +35,7 @@ export async function finalizeEmployeeProvisioning(
 
   const [department, position, manager] = await Promise.all([
     tx.hrDepartment.findFirstOrThrow({ where: { id: payload.assignment!.departmentId!, organizationId: input.organizationId, status: "ACTIVE" } }),
-    tx.hrPosition.findFirstOrThrow({ where: { id: payload.assignment!.positionId!, organizationId: input.organizationId, status: "ACTIVE" } }),
+    tx.hrPosition.findFirstOrThrow({ where: { id: payload.assignment!.positionId!, organizationId: input.organizationId, status: "ACTIVE", lifecycleStatus: { in: ["OPEN", "PARTIALLY_FILLED"] } } }),
     tx.hrEmployee.findFirstOrThrow({ where: { id: payload.assignment!.primaryManagerId!, organizationId: input.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } }, include: { user: true } }),
   ]);
   if (position.departmentId !== department.id) throw new Error("The selected position does not belong to the selected department.");
@@ -65,6 +66,7 @@ export async function finalizeEmployeeProvisioning(
     location: payload.employment?.location, effectiveFrom: new Date(payload.assignment!.effectiveFrom!),
     reason: payload.assignment!.reason!, createdById: input.actorUserId,
   } });
+  await reconcilePositionOccupancy(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole }, position.id);
   await tx.hrSupervisorAssignment.create({ data: {
     organizationId: input.organizationId, supervisorEmployeeId: manager.id, assignedEmployeeId: employee.id,
     assignmentType: "DIRECT_REPORT", effectiveFrom: new Date(payload.assignment!.effectiveFrom!), reason: payload.assignment!.reason!,
