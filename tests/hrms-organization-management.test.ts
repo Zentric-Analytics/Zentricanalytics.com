@@ -60,6 +60,8 @@ describe("enterprise organization management", () => {
     expect(service).toContain('isolationLevel: "Serializable"');
     expect(route).toContain("authorizeInternalRequest");
     expect(route).toContain("ORGANIZATION_WORKER_SECRET");
+    expect(service).toContain('status: { in: ["SCHEDULED", "FAILED"] }');
+    expect(service).toContain("attempts: { lt: 3 }");
   });
   it("keeps the migration additive and records import and revision history", () => {
     const migration = readFileSync("prisma/migrations/20260730110000_hrms_organization_management/migration.sql", "utf8");

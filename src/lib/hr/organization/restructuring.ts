@@ -28,7 +28,7 @@ export async function approveOrganizationChange(tx: Prisma.TransactionClient, co
 
 async function activateChange(changeId: string, now: Date) {
   return prisma.$transaction(async tx => {
-    const change = await tx.hrOrganizationChange.findFirstOrThrow({ where: { id: changeId, status: "SCHEDULED", effectiveAt: { lte: now } } });
+    const change = await tx.hrOrganizationChange.findFirstOrThrow({ where: { id: changeId, status: { in: ["SCHEDULED", "FAILED"] }, attempts: { lt: 3 }, effectiveAt: { lte: now } } });
     const entityType = change.entityType as EntityType;
     const current = await loadEntity(tx, change.organizationId, entityType, change.entityId);
     const payload = change.payload as { name: string; reason: string };
@@ -45,13 +45,13 @@ async function activateChange(changeId: string, now: Date) {
 }
 
 export async function activateDueOrganizationChanges(now = new Date(), limit = 25) {
-  const due = await prisma.hrOrganizationChange.findMany({ where: { status: "SCHEDULED", effectiveAt: { lte: now } }, select: { id: true }, orderBy: { effectiveAt: "asc" }, take: limit });
+  const due = await prisma.hrOrganizationChange.findMany({ where: { status: { in: ["SCHEDULED", "FAILED"] }, attempts: { lt: 3 }, effectiveAt: { lte: now } }, select: { id: true }, orderBy: [{ attempts: "asc" }, { effectiveAt: "asc" }], take: limit });
   const outcomes: Array<{ id: string; status: "COMPLETED" | "FAILED" }> = [];
   for (const item of due) {
     try { await activateChange(item.id, now); outcomes.push({ id: item.id, status: "COMPLETED" }); }
     catch (error) {
       const code = error instanceof Error ? error.message.slice(0, 120) : "Unknown activation failure";
-      await prisma.hrOrganizationChange.updateMany({ where: { id: item.id, status: "SCHEDULED" }, data: { status: "FAILED", failedAt: now, failureCode: code, attempts: { increment: 1 } } });
+      await prisma.hrOrganizationChange.updateMany({ where: { id: item.id, status: { in: ["SCHEDULED", "FAILED"] }, attempts: { lt: 3 } }, data: { status: "FAILED", failedAt: now, failureCode: code, attempts: { increment: 1 } } });
       outcomes.push({ id: item.id, status: "FAILED" });
     }
   }
