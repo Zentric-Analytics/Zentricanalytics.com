@@ -6,7 +6,7 @@ export function bearerToken(request: Request) {
 }
 
 export function timingSafeSecret(actual: string, expected: string | undefined) {
-  if (!expected || expected.length < 32 || !actual) return false;
+  if (!expected || expected.length < 64 || !actual) return false;
   const left = crypto.createHash("sha256").update(actual).digest();
   const right = crypto.createHash("sha256").update(expected).digest();
   return crypto.timingSafeEqual(left, right);

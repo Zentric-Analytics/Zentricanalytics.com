@@ -3,6 +3,8 @@ import { HR_PERMISSION_KEYS, HR_ROLE_KEYS } from "./hr-bootstrap-lib.mjs";
 export function hrEnvironmentChecks(env) {
   const appEnv = String(env.APP_ENV ?? "").trim().toLowerCase();
   const issues = [];
+  const protectedEnvironment = ["staging", "production"].includes(appEnv);
+  const storageProvider = String(env.OBJECT_STORAGE_PROVIDER ?? "local-private").trim().toLowerCase();
   if (!env.DATABASE_URL) issues.push("DATABASE_URL is not configured.");
   if (!["development", "test", "staging", "production"].includes(appEnv)) issues.push("APP_ENV is missing or invalid.");
   if (String(env.AUTH_SECRET ?? "").length < 32) issues.push("AUTH_SECRET must contain at least 32 characters.");
@@ -12,12 +14,33 @@ export function hrEnvironmentChecks(env) {
     if (appEnv === "staging" && !parsed.hostname.toLowerCase().includes("staging")) issues.push("APPLICATION_BASE_URL does not look like a staging URL.");
     if (appEnv === "production" && (parsed.protocol !== "https:" || parsed.hostname.toLowerCase().includes("staging"))) issues.push("APPLICATION_BASE_URL is unsafe for production.");
   } catch { issues.push("APPLICATION_BASE_URL is missing or invalid."); }
-  if (["staging", "production"].includes(appEnv) && env.OBJECT_STORAGE_PROVIDER !== "s3-compatible") issues.push("Staging and production HR document storage must use the s3-compatible provider.");
-  if (env.OBJECT_STORAGE_PROVIDER === "s3-compatible") for (const key of ["OBJECT_STORAGE_ENDPOINT", "OBJECT_STORAGE_BUCKET", "OBJECT_STORAGE_ACCESS_KEY_ID", "OBJECT_STORAGE_SECRET_ACCESS_KEY"]) if (!env[key]) issues.push(`${key} is required for S3-compatible HR storage.`);
-  if (!env.EMAIL_WORKER_SECRET) issues.push("EMAIL_WORKER_SECRET is not configured.");
-  if (!env.DOCUMENT_SCANNER_SECRET) issues.push("DOCUMENT_SCANNER_SECRET is not configured.");
-  if (!env.MONITORING_SECRET) issues.push("MONITORING_SECRET is not configured.");
-  for (const key of ["EMAIL_WORKER_SECRET", "DOCUMENT_SCANNER_SECRET", "MONITORING_SECRET"]) if (env[key] && String(env[key]).length < 32) issues.push(`${key} must contain at least 32 characters.`);
+  if (!["local", "local-private", "s3-compatible"].includes(storageProvider)) issues.push("OBJECT_STORAGE_PROVIDER must be local-private or s3-compatible.");
+  if (protectedEnvironment && storageProvider !== "s3-compatible") issues.push("Staging and production HR document storage must use the s3-compatible provider.");
+  if (storageProvider === "s3-compatible") {
+    for (const key of ["OBJECT_STORAGE_ENDPOINT", "OBJECT_STORAGE_BUCKET", "OBJECT_STORAGE_REGION", "OBJECT_STORAGE_ACCESS_KEY_ID", "OBJECT_STORAGE_SECRET_ACCESS_KEY"]) {
+      if (!String(env[key] ?? "").trim()) issues.push(`${key} is required for S3-compatible HR storage.`);
+    }
+    const endpoint = String(env.OBJECT_STORAGE_ENDPOINT ?? "");
+    if (endpoint) {
+      try {
+        const parsed = new URL(endpoint);
+        const localHttp = ["development", "test"].includes(appEnv) && parsed.protocol === "http:" && ["localhost", "127.0.0.1", "::1"].includes(parsed.hostname);
+        if (parsed.protocol !== "https:" && !localHttp) issues.push("OBJECT_STORAGE_ENDPOINT must use HTTPS except for local development or tests.");
+        if (parsed.username || parsed.password || parsed.search || parsed.hash) issues.push("OBJECT_STORAGE_ENDPOINT must not contain credentials, query parameters, or fragments.");
+      } catch {
+        issues.push("OBJECT_STORAGE_ENDPOINT is invalid.");
+      }
+    }
+    const bucket = String(env.OBJECT_STORAGE_BUCKET ?? "");
+    if (bucket && !/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(bucket)) issues.push("OBJECT_STORAGE_BUCKET is invalid.");
+    const forcePathStyle = String(env.OBJECT_STORAGE_FORCE_PATH_STYLE ?? "false").toLowerCase();
+    if (!["true", "false"].includes(forcePathStyle)) issues.push("OBJECT_STORAGE_FORCE_PATH_STYLE must be true or false.");
+  }
+  for (const key of ["EMAIL_WORKER_SECRET", "DOCUMENT_SCANNER_SECRET", "MONITORING_SECRET"]) {
+    const value = String(env[key] ?? "");
+    if (protectedEnvironment && !value) issues.push(`${key} is not configured.`);
+    if (value && value.length < 64) issues.push(`${key} must contain at least 64 characters (for example, 32 random bytes encoded as hexadecimal).`);
+  }
   if (appEnv === "production") {
     if (env.EMAIL_PROVIDER !== "resend" || !env.RESEND_API_KEY) issues.push("Production email delivery must use the configured Resend provider.");
     if (!env.DATABASE_BACKUP_PROVIDER) issues.push("DATABASE_BACKUP_PROVIDER is not configured.");

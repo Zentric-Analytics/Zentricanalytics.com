@@ -43,6 +43,10 @@ services:
         sync: false
       - key: OBJECT_STORAGE_SECRET_ACCESS_KEY
         sync: false
+      - key: OBJECT_STORAGE_FORCE_PATH_STYLE
+        sync: false
+      - key: OBJECT_STORAGE_SERVER_SIDE_ENCRYPTION
+        value: AES256
       - key: PRIVATE_OBJECT_STORAGE_PROVIDER
         value: local-private
       - key: PRIVATE_UPLOAD_ROOT

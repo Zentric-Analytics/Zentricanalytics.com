@@ -30,6 +30,34 @@ The script refuses environment mismatch, plaintext/malformed hashes, fewer than 
 
 Production uses separately generated credentials, production-only `AUTH_SECRET`, private S3-compatible storage, Resend, distinct internal endpoint secrets, managed backups/PITR and approved change control. Never copy staging secrets.
 
+## Render staging environment checklist
+
+Configure these values in the Render secret/environment manager before `yarn hr:release`:
+
+- `OBJECT_STORAGE_PROVIDER=s3-compatible`
+- `OBJECT_STORAGE_ENDPOINT`: an HTTPS AWS S3 or S3-compatible endpoint, without embedded credentials, query parameters, or fragments
+- `OBJECT_STORAGE_BUCKET`: the private HR document bucket
+- `OBJECT_STORAGE_REGION`: the provider region, or `auto` where the provider requires it
+- `OBJECT_STORAGE_ACCESS_KEY_ID`: a credential scoped to the private bucket
+- `OBJECT_STORAGE_SECRET_ACCESS_KEY`: the corresponding secret
+- `OBJECT_STORAGE_FORCE_PATH_STYLE`: exactly `true` or `false`, according to the provider
+- `OBJECT_STORAGE_SERVER_SIDE_ENCRYPTION=AES256` when supported by the provider
+- `EMAIL_WORKER_SECRET`: an independent 64-character hexadecimal value
+- `DOCUMENT_SCANNER_SECRET`: a different independent 64-character hexadecimal value
+- `MONITORING_SECRET`: a third independent 64-character hexadecimal value
+
+Generate each internal secret separately and save each output directly in the secret manager:
+
+```sh
+openssl rand -hex 32
+openssl rand -hex 32
+openssl rand -hex 32
+```
+
+Do not reuse outputs, place them in `render.yaml`, or expose them in logs. The bucket must remain private. HR document access continues through authenticated application routes; the application does not require a public object URL.
+
+`local-private` (and the legacy `local` alias) is accepted only for development/test. Staging and production fail closed unless `s3-compatible` is fully and validly configured. HTTP object endpoints are accepted only for localhost development/test services such as MinIO.
+
 ## Preflight
 
 `yarn hr:preflight` is read-only. It checks:

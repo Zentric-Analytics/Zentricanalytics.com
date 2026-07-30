@@ -18,7 +18,7 @@ describe("HRMS production hardening", () => {
     expect(totpProvisioningUri("admin@example.com", rfcSecret)).toContain("otpauth://totp/");
   });
   it("compares internal secrets in constant time and rejects weak configuration", () => {
-    const secret = "a-secure-internal-secret-that-is-long-enough";
+    const secret = "a".repeat(64);
     expect(timingSafeSecret(secret, secret)).toBe(true);
     expect(timingSafeSecret("wrong", secret)).toBe(false);
     expect(timingSafeSecret("short", "short")).toBe(false);
@@ -27,7 +27,7 @@ describe("HRMS production hardening", () => {
     const now = new Date("2026-08-01T00:00:00.000Z");
     expect(retryAt(1, now).toISOString()).toBe("2026-08-01T00:05:00.000Z");
     expect(retryAt(5, now).toISOString()).toBe("2026-08-01T01:20:00.000Z");
-    process.env.EMAIL_WORKER_SECRET = "super-secret-worker-value-that-is-long";
+    process.env.EMAIL_WORKER_SECRET = "b".repeat(64);
     expect(safeWorkerError(`Bearer ${process.env.EMAIL_WORKER_SECRET}`)).not.toContain(process.env.EMAIL_WORKER_SECRET);
   });
   it("protects workers, scanner callbacks and metrics with distinct bearer secrets", () => {
