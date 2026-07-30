@@ -10,10 +10,30 @@ import { changePositionState, decidePosition, submitPosition } from "@/lib/hr/or
 export async function createPositionAction(formData: FormData) {
   const auth = await requirePermission("position.manage");
   const input = positionInput.parse(Object.fromEntries(formData));
-  const department = await prisma.hrDepartment.findFirstOrThrow({ where: { id: input.departmentId, organizationId: auth.user.organizationId, status: "ACTIVE" } });
+  const organizationId = auth.user.organizationId;
+  const [department, legalEntity, businessUnit, division, location, costCenter, jobProfile, grade] = await Promise.all([
+    prisma.hrDepartment.findFirstOrThrow({ where: { id: input.departmentId, organizationId, status: "ACTIVE" } }),
+    prisma.hrLegalEntity.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrBusinessUnit.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrDivision.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrLocation.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrCostCenter.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrJobProfile.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrGrade.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+  ]);
   if (input.teamId) await prisma.hrTeam.findFirstOrThrow({ where: { id: input.teamId, departmentId: department.id, organizationId: auth.user.organizationId, status: "ACTIVE" } });
   await prisma.$transaction(async (tx) => {
-    const position = await tx.hrPosition.create({ data: { ...input, organizationId: auth.user.organizationId } });
+    const position = await tx.hrPosition.create({ data: {
+      ...input,
+      organizationId,
+      legalEntityId: legalEntity.id,
+      businessUnitId: businessUnit.id,
+      divisionId: division.id,
+      locationId: location.id,
+      costCenterId: costCenter.id,
+      jobProfileId: jobProfile.id,
+      gradeId: grade.id,
+    } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrPosition", entityId: position.id, action: "hr.position.created", newValues: input });
   });
   revalidatePath("/hr/admin/positions");

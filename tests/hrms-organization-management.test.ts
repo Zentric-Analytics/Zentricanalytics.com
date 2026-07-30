@@ -35,11 +35,13 @@ describe("enterprise organization management", () => {
   });
   it("integrates position capacity with assignments and provisioning", () => {
     const assignments = readFileSync("src/app/hr/admin/assignments/actions.ts", "utf8");
+    const positions = readFileSync("src/app/hr/admin/positions/actions.ts", "utf8");
     const provisioning = readFileSync("src/lib/hr/employees/finalize-provisioning.ts", "utf8");
     expect(assignments).toContain("exceed the approved position capacity");
     expect(assignments).toContain("reconcilePositionOccupancy");
     expect(provisioning).toContain("reconcilePositionOccupancy");
     expect(provisioning).toContain('lifecycleStatus: { in: ["OPEN", "PARTIALLY_FILLED"] }');
+    for (const dimension of ["legalEntityId", "businessUnitId", "divisionId", "locationId", "costCenterId", "jobProfileId", "gradeId"]) expect(positions).toContain(dimension);
   });
   it("ships every required organization administration route", () => {
     const workspace = readFileSync("src/app/hr/admin/organization/page.tsx", "utf8");
