@@ -66,6 +66,36 @@ export async function createSupervisorAssignmentAction(formData: FormData) {
   revalidatePath("/hr/admin/assignments");
 }
 
+const scopedSupervisorInput = z.object({
+  supervisorEmployeeId: z.string().cuid(),
+  assignmentType: z.enum(["DEPARTMENT", "TEAM"]),
+  departmentScopeId: z.string().cuid(),
+  teamScopeId: z.string().cuid().optional().or(z.literal("")).transform((value) => value || undefined),
+  effectiveFrom: z.coerce.date(),
+  reason: z.string().trim().min(3).max(500),
+}).superRefine((input, context) => {
+  if (input.assignmentType === "TEAM" && !input.teamScopeId) context.addIssue({ code: "custom", path: ["teamScopeId"], message: "A team is required for team scope." });
+  if (input.assignmentType === "DEPARTMENT" && input.teamScopeId) context.addIssue({ code: "custom", path: ["teamScopeId"], message: "A department scope cannot include a team." });
+});
+
+export async function createScopedSupervisorAssignmentAction(formData: FormData) {
+  const auth = await requirePermission("supervisor.assign");
+  const input = scopedSupervisorInput.parse(Object.fromEntries(formData));
+  const [supervisor, department, team] = await Promise.all([
+    prisma.hrEmployee.findFirstOrThrow({ where: { id: input.supervisorEmployeeId, organizationId: auth.user.organizationId, employmentStatus: { notIn: ["TERMINATED", "ARCHIVED"] } } }),
+    prisma.hrDepartment.findFirstOrThrow({ where: { id: input.departmentScopeId, organizationId: auth.user.organizationId, status: "ACTIVE" } }),
+    input.teamScopeId ? prisma.hrTeam.findFirstOrThrow({ where: { id: input.teamScopeId, organizationId: auth.user.organizationId, status: "ACTIVE" } }) : null,
+  ]);
+  if (team && team.departmentId !== department.id) throw new Error("The selected team does not belong to the selected department.");
+  const duplicate = await prisma.hrSupervisorAssignment.findFirst({ where: { organizationId: auth.user.organizationId, supervisorEmployeeId: supervisor.id, assignmentType: input.assignmentType, departmentScopeId: department.id, teamScopeId: team?.id ?? null, status: "ACTIVE", OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.effectiveFrom } }] } });
+  if (duplicate) throw new Error("An overlapping supervisor scope already exists.");
+  await prisma.$transaction(async (tx) => {
+    const assignment = await tx.hrSupervisorAssignment.create({ data: { organizationId: auth.user.organizationId, supervisorEmployeeId: supervisor.id, assignmentType: input.assignmentType, departmentScopeId: department.id, teamScopeId: team?.id, effectiveFrom: input.effectiveFrom, capabilities: ["supervisor.read_team", "supervisor.review_assigned"], assignedByUserId: auth.user.id, reason: input.reason } });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrSupervisorAssignment", entityId: assignment.id, action: "hr.supervisor.scope.assigned", newValues: input, reason: input.reason });
+  });
+  revalidatePath("/hr/admin/assignments");
+}
+
 export async function endSupervisorAssignmentAction(formData: FormData) {
   const auth = await requirePermission("supervisor.revoke");
   const id = z.string().cuid().parse(formData.get("id"));

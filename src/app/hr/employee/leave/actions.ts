@@ -8,6 +8,7 @@ import { availableLeaveBalance, countWorkingDays, leaveRequestInput, validateLea
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { hrObjectStorage } from "@/lib/hr/storage";
+import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
 
 export async function createLeaveRequestAction(formData: FormData) {
   const auth = await requirePermission("leave.request");
@@ -29,7 +30,7 @@ export async function createLeaveRequestAction(formData: FormData) {
   const [workingDaysSetting, holidays, supervisor] = await Promise.all([
     prisma.hrOrganizationSetting.findUnique({ where: { organizationId_key: { organizationId: auth.user.organizationId, key: "workingDays" } } }),
     prisma.hrPublicHoliday.findMany({ where: { organizationId: auth.user.organizationId, date: { gte: input.startDate, lte: input.endDate } }, select: { date: true } }),
-    prisma.hrSupervisorAssignment.findFirst({ where: { organizationId: auth.user.organizationId, assignedEmployeeId: auth.user.employee.id, assignmentType: "DIRECT_REPORT", status: "ACTIVE", effectiveFrom: { lte: now }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }] }, include: { supervisorEmployee: { include: { user: true } } }, orderBy: { effectiveFrom: "desc" } }),
+    activeSupervisorForEmployee(prisma, { organizationId: auth.user.organizationId, employeeId: auth.user.employee.id, now }),
   ]);
   const amount = policy.leaveType.unit === "HOURS" ? input.hours! : countWorkingDays(input.startDate, input.endDate, workingDayNumbers(workingDaysSetting?.value), holidays.map(({ date }) => date));
   const periodYear = input.startDate.getUTCFullYear();

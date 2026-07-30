@@ -31,9 +31,21 @@ export const employeeInput = z.object({
   preferredName: z.string().trim().max(80).optional().transform((value) => value || undefined),
   companyEmail: z.string().trim().email().max(180).optional().or(z.literal("")).transform((value) => value ? value.toLowerCase() : undefined),
   personalEmail: z.string().trim().email().max(180).optional().or(z.literal("")).transform((value) => value ? value.toLowerCase() : undefined),
+  preferredNotificationEmail: z.string().trim().email().max(180).optional().or(z.literal("")).transform((value) => value ? value.toLowerCase() : undefined),
+  companyEmailStatus: z.enum(["PENDING", "ACTIVE", "SUSPENDED", "DISABLED"]).default("PENDING"),
   phone: z.string().trim().max(40).optional().transform((value) => value || undefined),
   hireDate: z.coerce.date(),
-  employmentStatus: z.enum(["DRAFT", "ACTIVE", "ON_LEAVE", "SUSPENDED", "TERMINATED"]),
+  startDate: z.coerce.date().optional().or(z.literal("")).transform((value) => value === "" ? undefined : value),
+  workMode: z.enum(["ONSITE", "HYBRID", "REMOTE"]).optional().or(z.literal("")).transform((value) => value || undefined),
+  probationEndDate: z.coerce.date().optional().or(z.literal("")).transform((value) => value === "" ? undefined : value),
+  confirmationDate: z.coerce.date().optional().or(z.literal("")).transform((value) => value === "" ? undefined : value),
+  noticePeriodStartDate: z.coerce.date().optional().or(z.literal("")).transform((value) => value === "" ? undefined : value),
+  notes: z.string().trim().max(2000).optional().transform((value) => value || undefined),
+  employmentStatus: z.enum(["DRAFT", "ONBOARDING", "ACTIVE", "ON_LEAVE", "SUSPENDED", "NOTICE_PERIOD", "TERMINATED", "RESIGNED"]),
+});
+
+export const employeeCreateInput = employeeInput.extend({
+  employeeNumber: z.union([code, z.literal("")]).optional().transform((value) => value || undefined),
 });
 
 export const assignmentInput = z.object({

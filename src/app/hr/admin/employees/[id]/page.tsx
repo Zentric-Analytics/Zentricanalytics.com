@@ -2,10 +2,13 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { unsealHrCredential } from "@/lib/hr/auth/crypto";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import {
   addEmergencyContactAction,
   addEmployeeAddressAction,
   archiveEmployeeAction,
+  createSystemAccessAssignmentAction,
+  revokeSystemAccessAssignmentAction,
   saveEmployeeBankAccountAction,
   saveEmployeeIdentifierAction,
   saveEmployeeTaxProfileAction,
@@ -29,6 +32,8 @@ export default async function EmployeeProfilePage({ params }: { params: Promise<
       bankAccounts: { orderBy: [{ isPrimary: "desc" }, { createdAt: "desc" }] },
       taxProfile: true,
       employmentAssignments: { include: { department: true, team: true, position: true }, orderBy: { effectiveFrom: "desc" } },
+      statusHistory: { include: { changedBy: { select: { email: true } } }, orderBy: { effectiveAt: "desc" } },
+      systemAccessAssignments: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!employee) notFound();
@@ -46,9 +51,15 @@ export default async function EmployeeProfilePage({ params }: { params: Promise<
         <dl className="mt-4 grid grid-cols-[minmax(9rem,auto)_1fr] gap-x-4 gap-y-3 text-sm">
           <Row label="Preferred name">{employee.preferredName}</Row>
           <Row label="Company email">{employee.companyEmail}</Row>
+          <Row label="Company email status">{employee.companyEmailStatus}</Row>
           <Row label="Personal email">{employee.personalEmail}</Row>
+          <Row label="Preferred notification email">{employee.preferredNotificationEmail}</Row>
           <Row label="Phone">{employee.phone}</Row>
           <Row label="Hire date">{employee.hireDate?.toLocaleDateString()}</Row>
+          <Row label="Start date">{employee.startDate?.toLocaleDateString()}</Row>
+          <Row label="Work mode">{employee.workMode}</Row>
+          <Row label="Probation ends">{employee.probationEndDate?.toLocaleDateString()}</Row>
+          <Row label="Confirmation date">{employee.confirmationDate?.toLocaleDateString()}</Row>
           <Row label="Status">{employee.employmentStatus}</Row>
           <Row label="Recruitment link">{employee.recruitmentApplicationId ? "Linked to approved candidate history" : "Direct employee record"}</Row>
         </dl>
@@ -62,11 +73,19 @@ export default async function EmployeeProfilePage({ params }: { params: Promise<
             <input className="input" name="lastName" defaultValue={employee.lastName} required />
             <input className="input" name="preferredName" defaultValue={employee.preferredName ?? ""} />
             <input className="input" name="companyEmail" type="email" defaultValue={employee.companyEmail ?? ""} />
+            <select className="input" name="companyEmailStatus" defaultValue={employee.companyEmailStatus}><option>PENDING</option><option>ACTIVE</option><option>SUSPENDED</option><option>DISABLED</option></select>
             <input className="input" name="personalEmail" type="email" defaultValue={employee.personalEmail ?? ""} />
+            <input className="input" name="preferredNotificationEmail" type="email" defaultValue={employee.preferredNotificationEmail ?? ""} />
             <input className="input" name="phone" defaultValue={employee.phone ?? ""} />
             <input className="input" name="hireDate" type="date" defaultValue={employee.hireDate?.toISOString().slice(0, 10) ?? ""} required />
+            <input className="input" name="startDate" type="date" defaultValue={employee.startDate?.toISOString().slice(0, 10) ?? ""} />
+            <select className="input" name="workMode" defaultValue={employee.workMode ?? ""}><option value="">Work mode</option><option>ONSITE</option><option>HYBRID</option><option>REMOTE</option></select>
+            <input className="input" name="probationEndDate" type="date" defaultValue={employee.probationEndDate?.toISOString().slice(0, 10) ?? ""} />
+            <input className="input" name="confirmationDate" type="date" defaultValue={employee.confirmationDate?.toISOString().slice(0, 10) ?? ""} />
+            <input className="input" name="noticePeriodStartDate" type="date" defaultValue={employee.noticePeriodStartDate?.toISOString().slice(0, 10) ?? ""} />
+            <textarea className="input" name="notes" defaultValue={employee.notes ?? ""} placeholder="Employment notes" />
             <select className="input" name="employmentStatus" defaultValue={employee.employmentStatus}>
-              <option>DRAFT</option><option>ACTIVE</option><option>ON_LEAVE</option><option>SUSPENDED</option>
+              <option>DRAFT</option><option>ONBOARDING</option><option>ACTIVE</option><option>ON_LEAVE</option><option>SUSPENDED</option><option>NOTICE_PERIOD</option><option>RESIGNED</option>
             </select>
             <input className="input" name="reason" placeholder="Reason for change" required />
             <button className="btn btn-primary">Save profile</button>
@@ -93,6 +112,8 @@ export default async function EmployeeProfilePage({ params }: { params: Promise<
         </> : <p className="mt-3 text-sm text-slate-600">Bank details require payroll banking permission.</p>}
       </section>
     </div>
+
+    <section className="mt-5 overflow-x-auto rounded-2xl bg-white p-5"><h2 className="text-lg font-bold">Employment status history</h2><table className="mt-4 w-full text-left text-sm"><thead><tr className="border-b"><th className="py-3">Effective</th><th>Previous</th><th>New status</th><th>Changed by</th><th>Reason</th></tr></thead><tbody>{employee.statusHistory.map((item) => <tr className="border-b last:border-0" key={item.id}><td className="py-3">{item.effectiveAt.toLocaleString()}</td><td>{item.previousStatus ?? "Initial"}</td><td>{item.newStatus}</td><td>{item.changedBy.email}</td><td>{item.reason}</td></tr>)}</tbody></table>{!employee.statusHistory.length && <p className="mt-3 text-sm text-slate-500">No status transitions recorded.</p>}</section>
 
     <div className="mt-5 grid gap-5 lg:grid-cols-2">
       <section className="rounded-2xl bg-white p-5">
@@ -163,10 +184,12 @@ export default async function EmployeeProfilePage({ params }: { params: Promise<
       {!employee.employmentAssignments.length ? <p className="mt-3 text-slate-500">No assignment history yet.</p> : null}
     </section>
 
+    <section className="mt-5 rounded-2xl bg-white p-5"><h2 className="text-lg font-bold">System access assignments</h2>{auth.permissions.has("assignment.create") && <form action={createSystemAccessAssignmentAction} className="mt-4 grid gap-3 md:grid-cols-3"><input type="hidden" name="employeeId" value={employee.id} /><input className="input" name="systemKey" placeholder="System key, e.g. google-workspace" required /><input className="input" name="displayName" placeholder="System name" required /><input className="input" name="accountRef" placeholder="Non-secret account reference" /><select className="input" name="status"><option>REQUESTED</option><option>ACTIVE</option></select><input className="input" name="expectedEndAt" type="date" /><input className="input md:col-span-2" name="reason" placeholder="Assignment reason" required /><button className="btn btn-primary">Assign access</button></form>}<div className="mt-4 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="py-3">System</th><th>Account reference</th><th>Status</th><th>Assigned</th><th>Expected end</th><th>Action</th></tr></thead><tbody>{employee.systemAccessAssignments.map((item) => <tr className="border-b last:border-0" key={item.id}><td className="py-3">{item.displayName}<span className="block font-mono text-xs text-slate-500">{item.systemKey}</span></td><td>{item.accountRef ?? "—"}</td><td>{item.status}</td><td>{item.assignedAt?.toLocaleString() ?? "Requested"}</td><td>{item.expectedEndAt?.toLocaleDateString() ?? "—"}</td><td>{item.status !== "REVOKED" && auth.permissions.has("assignment.end") ? <form action={revokeSystemAccessAssignmentAction} className="flex gap-2"><input type="hidden" name="id" value={item.id} /><input className="input max-w-48" name="reason" placeholder="Revocation reason" required /><ConfirmSubmitButton className="font-semibold text-red-700" message={`Revoke ${item.displayName} access for this employee?`}>Revoke</ConfirmSubmitButton></form> : item.endReason ?? "—"}</td></tr>)}</tbody></table>{!employee.systemAccessAssignments.length && <p className="py-4 text-sm text-slate-500">No system access assignments.</p>}</div></section>
+
     <section className="mt-5 rounded-2xl border border-red-200 bg-white p-5">
       <h2 className="text-lg font-bold">Employment lifecycle</h2>
-      {!["TERMINATED", "ARCHIVED"].includes(employee.employmentStatus) ? <form action={terminateEmployeeAction} className="mt-4 grid gap-3 md:grid-cols-[220px_1fr_auto]"><input type="hidden" name="employeeId" value={employee.id} /><input className="input" name="effectiveDate" type="date" required /><input className="input" name="reason" placeholder="Termination reason" required /><button className="btn btn-secondary text-red-700">Terminate employment</button></form> : null}
-      {employee.employmentStatus === "TERMINATED" ? <form action={archiveEmployeeAction} className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]"><input type="hidden" name="employeeId" value={employee.id} /><input className="input" name="reason" placeholder="Archive reason" required /><button className="btn btn-secondary text-red-700">Archive employee</button></form> : null}
+      {!["TERMINATED", "ARCHIVED"].includes(employee.employmentStatus) ? <form action={terminateEmployeeAction} className="mt-4 grid gap-3 md:grid-cols-[220px_1fr_auto]"><input type="hidden" name="employeeId" value={employee.id} /><input className="input" name="effectiveDate" type="date" required /><input className="input" name="reason" placeholder="Termination reason" required /><ConfirmSubmitButton className="btn btn-secondary text-red-700" message="Terminate this employee and end active assignments? Historical records will be retained.">Terminate employment</ConfirmSubmitButton></form> : null}
+      {employee.employmentStatus === "TERMINATED" ? <form action={archiveEmployeeAction} className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]"><input type="hidden" name="employeeId" value={employee.id} /><input className="input" name="reason" placeholder="Archive reason" required /><ConfirmSubmitButton className="btn btn-secondary text-red-700" message="Archive this terminated employee? Payroll, documents, assignments, and audit history will remain retained.">Archive employee</ConfirmSubmitButton></form> : null}
       {employee.employmentStatus === "ARCHIVED" ? <p className="mt-3 text-sm text-slate-600">This employee is archived. All history remains available.</p> : null}
     </section>
   </>;

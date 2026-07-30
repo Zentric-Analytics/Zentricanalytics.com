@@ -92,7 +92,13 @@ export async function decideWorkflowStageAction(formData: FormData) {
   await prisma.$transaction(async (tx) => {
     const run = await tx.hrWorkflowStageRun.findFirstOrThrow({ where: { id: input.stageRunId, organizationId: auth.user.organizationId, status: "ACTIVE", instance: { status: "ACTIVE" } }, include: { instance: true } });
     if (!run.approverUserIds.includes(auth.user.id) && !auth.permissions.has("workflow.override")) throw new Error("You are not an approver for this stage.");
-    await tx.hrWorkflowApproval.create({ data: { stageRunId: run.id, approverId: auth.user.id, decision: input.decision, reason: input.reason } });
+    const correlationId = `workflow:${run.instanceId}:${run.id}:${auth.user.id}`;
+    await tx.hrWorkflowApproval.create({ data: {
+      stageRunId: run.id, approverId: auth.user.id, actorRole: auth.roles[0] ?? "UNKNOWN",
+      requestType: run.instance.subjectType, requestId: run.instance.subjectId,
+      previousStatus: run.status, newStatus: input.decision, decision: input.decision,
+      reason: input.reason, correlationId,
+    } });
     const decisions = await tx.hrWorkflowApproval.findMany({ where: { stageRunId: run.id } });
     const rejected = decisions.some(({ decision }) => decision === "REJECTED");
     const approved = decisions.filter(({ decision }) => decision === "APPROVED").length;
@@ -113,7 +119,7 @@ export async function decideWorkflowStageAction(formData: FormData) {
         for (const recipient of recipients) await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: recipient.email, template: "hr-workflow-approval", subject: "Workflow approval requested", payload: { workflowInstanceId: run.instanceId, workflowStageKey: next.stageKey }, idempotencyKey: `hr-workflow-stage:${run.instanceId}:${next.stageKey}:${recipient.id}` });
       }
     }
-    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrWorkflowApproval", entityId: run.id, action: `hr.workflow.${input.decision.toLowerCase()}`, reason: input.reason, newValues: { stageKey: run.stageKey, decision: input.decision } });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrWorkflowApproval", entityId: run.id, action: `hr.workflow.${input.decision.toLowerCase()}`, reason: input.reason, correlationId, previousValues: { status: run.status }, newValues: { stageKey: run.stageKey, status: input.decision, requestType: run.instance.subjectType, requestId: run.instance.subjectId } });
   }, { isolationLevel: "Serializable" });
   refresh();
 }
