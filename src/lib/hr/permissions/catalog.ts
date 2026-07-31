@@ -12,6 +12,9 @@ export const HR_PERMISSIONS = [
   "payroll.read", "payroll.create", "payroll.calculate", "payroll.review", "payroll.approve", "payroll.mark_paid", "payroll.export", "payroll.read_salary", "payroll.read_bank_details",
   "document.upload", "document.read_self", "document.read_employee", "document.read_sensitive", "document.update", "document.archive",
   "asset.manage", "asset.assign", "asset.return", "asset.read_self", "workflow.create", "workflow.assign", "workflow.review", "workflow.task.complete", "workflow.override",
+  "hiring_team.manage", "vacancy.create", "vacancy.edit", "vacancy.submit", "vacancy.approve", "vacancy.publish", "vacancy.close",
+  "application.view", "application.review", "application.shortlist", "interview.schedule", "interview.feedback.submit",
+  "offer.create", "offer.approve", "offer.issue", "handover.review", "handover.approve", "employee.prehire.create", "employee.activate", "onboarding.manage",
   "report.read", "report.export", "audit.read", "settings.manage",
 ] as const;
 
