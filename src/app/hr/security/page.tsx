@@ -4,6 +4,7 @@ import { unsealHrCredential } from "@/lib/hr/auth/crypto";
 import { totpProvisioningUri } from "@/lib/hr/auth/totp";
 import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
 import { beginMfaEnrollmentAction, disableMfaAction, enableMfaAction } from "./actions";
+import { CopyAuthenticatorValue } from "./CopyAuthenticatorValue";
 
 export default async function HrSecurityPage({ searchParams }: { searchParams: Promise<{ onboarding?: string }> }) {
   const auth = await requireAuthenticatedUser({ allowMfaEnrollment: true });
@@ -41,10 +42,16 @@ export default async function HrSecurityPage({ searchParams }: { searchParams: P
           <div>
             <p className="font-semibold">Can&apos;t scan it?</p>
             <p className="mt-1 text-sm text-slate-600">Copy this setup key into your authenticator app manually:</p>
-            <code className="mt-3 block select-all break-all rounded-xl bg-slate-950 p-4 text-sm tracking-wider text-white">{pendingSecret}</code>
+            <div className="mt-3 flex items-start gap-3 rounded-xl bg-slate-950 p-4">
+              <code className="min-w-0 flex-1 select-all break-all text-sm tracking-wider text-white">{pendingSecret}</code>
+              <CopyAuthenticatorValue value={pendingSecret} />
+            </div>
             <details className="mt-3 text-sm">
               <summary className="cursor-pointer font-semibold">Copy authenticator setup link</summary>
               <textarea className="input mt-2 min-h-24 w-full font-mono text-xs" readOnly value={provisioningUri} aria-label="Authenticator setup link" />
+              <div className="mt-2">
+                <CopyAuthenticatorValue value={provisioningUri} label="Copy authenticator setup link" />
+              </div>
             </details>
           </div>
           <form action={enableMfaAction} className="space-y-3">
