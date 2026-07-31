@@ -12,9 +12,15 @@ export const HR_PERMISSIONS = [
   "payroll.read", "payroll.create", "payroll.calculate", "payroll.review", "payroll.approve", "payroll.mark_paid", "payroll.export", "payroll.read_salary", "payroll.read_bank_details",
   "document.upload", "document.read_self", "document.read_employee", "document.read_sensitive", "document.update", "document.archive",
   "asset.manage", "asset.assign", "asset.return", "asset.read_self", "workflow.create", "workflow.assign", "workflow.review", "workflow.task.complete", "workflow.override",
-  "hiring_team.manage", "vacancy.create", "vacancy.edit", "vacancy.submit", "vacancy.approve", "vacancy.publish", "vacancy.close",
-  "application.view", "application.review", "application.shortlist", "interview.schedule", "interview.feedback.submit",
-  "offer.create", "offer.approve", "offer.issue", "handover.review", "handover.approve", "employee.prehire.create", "employee.activate", "onboarding.manage",
+  "hiring_team.manage", "hiring_team.create", "hiring_team.view", "hiring_team.update", "hiring_team.manage_members", "hiring_team.manage_permissions", "hiring_team.deactivate",
+  "vacancy.create", "vacancy.view", "vacancy.edit", "vacancy.submit", "vacancy.approve", "vacancy.publish", "vacancy.pause", "vacancy.close", "vacancy.cancel", "vacancy.fill", "vacancy.reassign",
+  "application.view", "application.review", "application.request_information", "application.shortlist", "application.reject", "application.hold",
+  "interview.schedule", "interview.reschedule", "interview.cancel", "interview.feedback.submit", "interview.feedback.view",
+  "assessment.create", "assessment.evaluate",
+  "offer.create", "offer.edit", "offer.submit", "offer.approve", "offer.issue", "offer.cancel",
+  "handover.view", "handover.review", "handover.request_information", "handover.return", "handover.approve", "handover.cancel",
+  "document.verify", "document.reject", "document.request_replacement",
+  "employee.prehire.create", "employee.activate", "onboarding.view", "onboarding.manage", "onboarding.complete_task", "onboarding.override", "recruitment.admin",
   "report.read", "report.export", "audit.read", "settings.manage",
 ] as const;
 

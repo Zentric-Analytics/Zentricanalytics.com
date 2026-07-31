@@ -553,6 +553,21 @@ enum HrWorkflowDecision {
   REJECTED
 }
 
+enum HrHiringTeamStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum HrHiringTeamMembershipStatus {
+  ACTIVE
+  ENDED
+}
+
+enum HrRecruitmentQueueStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model HrOrganization {
   id                         String                            @id @default(cuid())
   slug                       String                            @unique
@@ -615,75 +630,88 @@ model HrOrganization {
   organizationChanges        HrOrganizationChange[]
   organizationImportBatches  HrOrganizationImportBatch[]
   organizationRevisions      HrOrganizationStructureRevision[]
+  hiringTeams                HrHiringTeam[]
+  hiringTeamDefaults         HrDepartmentHiringTeamDefault[]
+  recruitmentRoutingRules    HrRecruitmentRoutingRule[]
+  recruitmentFallbackQueues  HrRecruitmentFallbackQueue[]
 }
 
 model HrUser {
-  id                             String                        @id @default(cuid())
-  organizationId                 String
-  organization                   HrOrganization                @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  email                          String
-  passwordHash                   String?
-  status                         HrUserStatus                  @default(INVITED)
-  emailVerifiedAt                DateTime?
-  lastLoginAt                    DateTime?
-  suspendedAt                    DateTime?
-  mfaEnabled                     Boolean                       @default(false)
-  mfaSecretEncrypted             String?
-  mfaLastUsedStep                BigInt?
-  isPrimaryAdmin                 Boolean                       @default(false)
-  deletedAt                      DateTime?
-  deletedById                    String?
-  createdAt                      DateTime                      @default(now())
-  updatedAt                      DateTime                      @updatedAt
-  roles                          HrUserRole[]
-  sessions                       HrSession[]
-  invitationsCreated             HrAccountInvitation[]         @relation("InvitationCreator")
-  invitationsReceived            HrAccountInvitation[]         @relation("InvitationRecipient")
-  passwordResets                 HrPasswordResetToken[]
-  loginAttempts                  HrLoginAttempt[]
-  employee                       HrEmployee?
-  assignmentsGranted             HrSupervisorAssignment[]      @relation("SupervisorAssignmentGrantor")
-  assignmentsEnded               HrSupervisorAssignment[]      @relation("SupervisorAssignmentEnder")
-  employeeAssignmentsCreated     HrEmployeeAssignment[]        @relation("EmployeeAssignmentCreator")
-  employeeAssignmentsEnded       HrEmployeeAssignment[]        @relation("EmployeeAssignmentEnder")
-  leaveRequestsCreated           HrLeaveRequest[]              @relation("LeaveRequester")
-  leaveRequestsToReview          HrLeaveRequest[]              @relation("LeaveCurrentReviewer")
-  leaveApprovals                 HrLeaveApproval[]             @relation("LeaveReviewer")
-  leavePoliciesAssigned          HrEmployeeLeavePolicy[]       @relation("LeavePolicyAssigner")
-  leavePoliciesEnded             HrEmployeeLeavePolicy[]       @relation("LeavePolicyEnder")
-  leaveLedgerEntries             HrLeaveLedger[]
-  leaveAttachmentsUploaded       HrLeaveAttachment[]
-  salaryChangesCreated           HrSalaryRecord[]              @relation("SalaryRecordCreator")
-  salaryChangesApproved          HrSalaryRecord[]              @relation("SalaryRecordApprover")
-  payrollRunsCreated             HrPayrollRun[]                @relation("PayrollRunCreator")
-  payrollApprovals               HrPayrollApproval[]
-  payrollAdjustmentsCreated      HrPayrollAdjustment[]
-  payrollComponentsCreated       HrEmployeePayrollComponent[]
-  payrollPaymentsMarked          HrPayrollItem[]               @relation("PayrollPaymentMarker")
-  payrollExportsCreated          HrPayrollExport[]
-  documentsCreated               HrEmployeeDocument[]          @relation("DocumentCreator")
-  documentVersionsUploaded       HrEmployeeDocumentVersion[]   @relation("DocumentVersionUploader")
-  documentScansRecorded          HrEmployeeDocumentVersion[]   @relation("DocumentScanRecorder")
-  documentsArchived              HrEmployeeDocument[]          @relation("DocumentArchiver")
-  documentAccessLogs             HrDocumentAccessLog[]
-  assetsCreated                  HrAsset[]                     @relation("AssetCreator")
-  assetAssignmentsCreated        HrAssetAssignment[]           @relation("AssetAssignmentCreator")
-  assetReturnsRecorded           HrAssetAssignment[]           @relation("AssetReturnRecorder")
-  lifecycleInstancesCreated      HrLifecycleInstance[]         @relation("LifecycleInstanceCreator")
-  lifecycleTasksAssigned         HrLifecycleTask[]             @relation("LifecycleTaskAssignee")
-  lifecycleTasksCompleted        HrLifecycleTask[]             @relation("LifecycleTaskCompleter")
-  workflowDefinitionsCreated     HrWorkflowDefinition[]        @relation("WorkflowDefinitionCreator")
-  workflowInstancesStarted       HrWorkflowInstance[]          @relation("WorkflowInstanceStarter")
-  workflowApprovals              HrWorkflowApproval[]
-  auditEvents                    HrAuditEvent[]
-  notifications                  HrNotification[]
-  notificationPreferences        HrNotificationPreference[]
-  employeeStatusChanges          HrEmployeeStatusHistory[]
-  systemAccessAssignmentsCreated HrSystemAccessAssignment[]    @relation("SystemAccessCreator")
-  systemAccessAssignmentsEnded   HrSystemAccessAssignment[]    @relation("SystemAccessEnder")
-  provisioningDraftsCreated      HrEmployeeProvisioningDraft[] @relation("ProvisioningDraftCreator")
-  provisioningDraftsUpdated      HrEmployeeProvisioningDraft[] @relation("ProvisioningDraftUpdater")
-  provisioningDraftsFinalized    HrEmployeeProvisioningDraft[] @relation("ProvisioningDraftFinalizer")
+  id                               String                          @id @default(cuid())
+  organizationId                   String
+  organization                     HrOrganization                  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  email                            String
+  passwordHash                     String?
+  status                           HrUserStatus                    @default(INVITED)
+  emailVerifiedAt                  DateTime?
+  lastLoginAt                      DateTime?
+  suspendedAt                      DateTime?
+  mfaEnabled                       Boolean                         @default(false)
+  mfaSecretEncrypted               String?
+  mfaLastUsedStep                  BigInt?
+  isPrimaryAdmin                   Boolean                         @default(false)
+  deletedAt                        DateTime?
+  deletedById                      String?
+  createdAt                        DateTime                        @default(now())
+  updatedAt                        DateTime                        @updatedAt
+  roles                            HrUserRole[]
+  sessions                         HrSession[]
+  invitationsCreated               HrAccountInvitation[]           @relation("InvitationCreator")
+  invitationsReceived              HrAccountInvitation[]           @relation("InvitationRecipient")
+  passwordResets                   HrPasswordResetToken[]
+  loginAttempts                    HrLoginAttempt[]
+  employee                         HrEmployee?
+  assignmentsGranted               HrSupervisorAssignment[]        @relation("SupervisorAssignmentGrantor")
+  assignmentsEnded                 HrSupervisorAssignment[]        @relation("SupervisorAssignmentEnder")
+  employeeAssignmentsCreated       HrEmployeeAssignment[]          @relation("EmployeeAssignmentCreator")
+  employeeAssignmentsEnded         HrEmployeeAssignment[]          @relation("EmployeeAssignmentEnder")
+  leaveRequestsCreated             HrLeaveRequest[]                @relation("LeaveRequester")
+  leaveRequestsToReview            HrLeaveRequest[]                @relation("LeaveCurrentReviewer")
+  leaveApprovals                   HrLeaveApproval[]               @relation("LeaveReviewer")
+  leavePoliciesAssigned            HrEmployeeLeavePolicy[]         @relation("LeavePolicyAssigner")
+  leavePoliciesEnded               HrEmployeeLeavePolicy[]         @relation("LeavePolicyEnder")
+  leaveLedgerEntries               HrLeaveLedger[]
+  leaveAttachmentsUploaded         HrLeaveAttachment[]
+  salaryChangesCreated             HrSalaryRecord[]                @relation("SalaryRecordCreator")
+  salaryChangesApproved            HrSalaryRecord[]                @relation("SalaryRecordApprover")
+  payrollRunsCreated               HrPayrollRun[]                  @relation("PayrollRunCreator")
+  payrollApprovals                 HrPayrollApproval[]
+  payrollAdjustmentsCreated        HrPayrollAdjustment[]
+  payrollComponentsCreated         HrEmployeePayrollComponent[]
+  payrollPaymentsMarked            HrPayrollItem[]                 @relation("PayrollPaymentMarker")
+  payrollExportsCreated            HrPayrollExport[]
+  documentsCreated                 HrEmployeeDocument[]            @relation("DocumentCreator")
+  documentVersionsUploaded         HrEmployeeDocumentVersion[]     @relation("DocumentVersionUploader")
+  documentScansRecorded            HrEmployeeDocumentVersion[]     @relation("DocumentScanRecorder")
+  documentsArchived                HrEmployeeDocument[]            @relation("DocumentArchiver")
+  documentAccessLogs               HrDocumentAccessLog[]
+  assetsCreated                    HrAsset[]                       @relation("AssetCreator")
+  assetAssignmentsCreated          HrAssetAssignment[]             @relation("AssetAssignmentCreator")
+  assetReturnsRecorded             HrAssetAssignment[]             @relation("AssetReturnRecorder")
+  lifecycleInstancesCreated        HrLifecycleInstance[]           @relation("LifecycleInstanceCreator")
+  lifecycleTasksAssigned           HrLifecycleTask[]               @relation("LifecycleTaskAssignee")
+  lifecycleTasksCompleted          HrLifecycleTask[]               @relation("LifecycleTaskCompleter")
+  workflowDefinitionsCreated       HrWorkflowDefinition[]          @relation("WorkflowDefinitionCreator")
+  workflowInstancesStarted         HrWorkflowInstance[]            @relation("WorkflowInstanceStarter")
+  workflowApprovals                HrWorkflowApproval[]
+  auditEvents                      HrAuditEvent[]
+  notifications                    HrNotification[]
+  notificationPreferences          HrNotificationPreference[]
+  employeeStatusChanges            HrEmployeeStatusHistory[]
+  systemAccessAssignmentsCreated   HrSystemAccessAssignment[]      @relation("SystemAccessCreator")
+  systemAccessAssignmentsEnded     HrSystemAccessAssignment[]      @relation("SystemAccessEnder")
+  provisioningDraftsCreated        HrEmployeeProvisioningDraft[]   @relation("ProvisioningDraftCreator")
+  provisioningDraftsUpdated        HrEmployeeProvisioningDraft[]   @relation("ProvisioningDraftUpdater")
+  provisioningDraftsFinalized      HrEmployeeProvisioningDraft[]   @relation("ProvisioningDraftFinalizer")
+  hiringTeamsCreated               HrHiringTeam[]                  @relation("HiringTeamCreator")
+  hiringTeamMemberships            HrHiringTeamMember[]            @relation("HiringTeamMemberUser")
+  hiringTeamMembersAdded           HrHiringTeamMember[]            @relation("HiringTeamMemberAdder")
+  hiringTeamPermissionsGranted     HrHiringTeamMemberPermission[]  @relation("HiringTeamPermissionGrantor")
+  hiringTeamDefaultsConfigured     HrDepartmentHiringTeamDefault[] @relation("HiringTeamDefaultConfigurator")
+  recruitmentRoutingRulesCreated   HrRecruitmentRoutingRule[]      @relation("RecruitmentRoutingRuleCreator")
+  recruitmentRoutingAssignments    HrRecruitmentRoutingRule[]      @relation("RecruitmentRoutingOwner")
+  recruitmentFallbackQueuesCreated HrRecruitmentFallbackQueue[]    @relation("RecruitmentFallbackQueueCreator")
+  recruitmentFallbackAssignments   HrRecruitmentFallbackQueue[]    @relation("RecruitmentFallbackOwner")
 
   @@unique([organizationId, email])
   @@index([organizationId, status])
@@ -946,22 +974,25 @@ model HrSystemAccessAssignment {
 }
 
 model HrDepartment {
-  id                    String                   @id @default(cuid())
-  organizationId        String
-  code                  String
-  name                  String
-  description           String?
-  status                HrRecordStatus           @default(ACTIVE)
-  headEmployeeId        String?
-  createdAt             DateTime                 @default(now())
-  updatedAt             DateTime                 @updatedAt
-  archivedAt            DateTime?
-  organization          HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  headEmployee          HrEmployee?              @relation("DepartmentHead", fields: [headEmployeeId], references: [id], onDelete: SetNull)
-  teams                 HrTeam[]
-  positions             HrPosition[]
-  employeeAssignments   HrEmployeeAssignment[]
-  supervisorAssignments HrSupervisorAssignment[]
+  id                      String                         @id @default(cuid())
+  organizationId          String
+  code                    String
+  name                    String
+  description             String?
+  status                  HrRecordStatus                 @default(ACTIVE)
+  headEmployeeId          String?
+  createdAt               DateTime                       @default(now())
+  updatedAt               DateTime                       @updatedAt
+  archivedAt              DateTime?
+  organization            HrOrganization                 @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  headEmployee            HrEmployee?                    @relation("DepartmentHead", fields: [headEmployeeId], references: [id], onDelete: SetNull)
+  teams                   HrTeam[]
+  positions               HrPosition[]
+  employeeAssignments     HrEmployeeAssignment[]
+  supervisorAssignments   HrSupervisorAssignment[]
+  hiringTeams             HrHiringTeam[]
+  hiringTeamDefault       HrDepartmentHiringTeamDefault?
+  recruitmentRoutingRules HrRecruitmentRoutingRule[]
 
   @@unique([organizationId, code])
   @@unique([organizationId, name])
@@ -2340,4 +2371,132 @@ model HrNotificationPreference {
 
   @@unique([userId, category])
   @@index([organizationId, category])
+}
+
+model HrHiringTeam {
+  id                         String                          @id @default(cuid())
+  organizationId             String
+  departmentId               String?
+  name                       String
+  description                String?
+  status                     HrHiringTeamStatus              @default(ACTIVE)
+  defaultResponsibleHrTeamId String?
+  createdById                String
+  version                    Int                             @default(1)
+  createdAt                  DateTime                        @default(now())
+  updatedAt                  DateTime                        @updatedAt
+  deactivatedAt              DateTime?
+  organization               HrOrganization                  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  department                 HrDepartment?                   @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  createdBy                  HrUser                          @relation("HiringTeamCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  defaultResponsibleHrTeam   HrHiringTeam?                   @relation("HiringTeamResponsibleHr", fields: [defaultResponsibleHrTeamId], references: [id], onDelete: Restrict)
+  supportedHiringTeams       HrHiringTeam[]                  @relation("HiringTeamResponsibleHr")
+  members                    HrHiringTeamMember[]
+  departmentDefaults         HrDepartmentHiringTeamDefault[] @relation("DepartmentDefaultHiringTeam")
+  responsibleDefaults        HrDepartmentHiringTeamDefault[] @relation("DepartmentDefaultResponsibleHrTeam")
+  routingRules               HrRecruitmentRoutingRule[]      @relation("RoutingOwnerTeam")
+  fallbackQueues             HrRecruitmentFallbackQueue[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status, name])
+  @@index([departmentId, status])
+}
+
+model HrHiringTeamMember {
+  id            String                         @id @default(cuid())
+  hiringTeamId  String
+  userId        String
+  status        HrHiringTeamMembershipStatus   @default(ACTIVE)
+  effectiveFrom DateTime                       @default(now())
+  effectiveTo   DateTime?
+  addedById     String
+  version       Int                            @default(1)
+  addedAt       DateTime                       @default(now())
+  updatedAt     DateTime                       @updatedAt
+  hiringTeam    HrHiringTeam                   @relation(fields: [hiringTeamId], references: [id], onDelete: Cascade)
+  user          HrUser                         @relation("HiringTeamMemberUser", fields: [userId], references: [id], onDelete: Restrict)
+  addedBy       HrUser                         @relation("HiringTeamMemberAdder", fields: [addedById], references: [id], onDelete: Restrict)
+  permissions   HrHiringTeamMemberPermission[]
+
+  @@unique([hiringTeamId, userId])
+  @@index([userId, status])
+  @@index([hiringTeamId, status])
+}
+
+model HrHiringTeamMemberPermission {
+  id          String             @id @default(cuid())
+  memberId    String
+  permission  String
+  grantedById String
+  grantedAt   DateTime           @default(now())
+  revokedAt   DateTime?
+  member      HrHiringTeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  grantedBy   HrUser             @relation("HiringTeamPermissionGrantor", fields: [grantedById], references: [id], onDelete: Restrict)
+
+  @@unique([memberId, permission])
+  @@index([permission, revokedAt])
+}
+
+model HrDepartmentHiringTeamDefault {
+  id                  String         @id @default(cuid())
+  organizationId      String
+  departmentId        String         @unique
+  hiringTeamId        String
+  responsibleHrTeamId String
+  configuredById      String
+  version             Int            @default(1)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  organization        HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  department          HrDepartment   @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  hiringTeam          HrHiringTeam   @relation("DepartmentDefaultHiringTeam", fields: [hiringTeamId], references: [id], onDelete: Restrict)
+  responsibleHrTeam   HrHiringTeam   @relation("DepartmentDefaultResponsibleHrTeam", fields: [responsibleHrTeamId], references: [id], onDelete: Restrict)
+  configuredBy        HrUser         @relation("HiringTeamDefaultConfigurator", fields: [configuredById], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, departmentId])
+}
+
+model HrRecruitmentRoutingRule {
+  id             String            @id @default(cuid())
+  organizationId String
+  departmentId   String?
+  legalEntityId  String?
+  locationId     String?
+  employmentType HrEmploymentType?
+  ownerTeamId    String?
+  ownerUserId    String?
+  priority       Int               @default(100)
+  active         Boolean           @default(true)
+  createdById    String
+  version        Int               @default(1)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  organization   HrOrganization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  department     HrDepartment?     @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  ownerTeam      HrHiringTeam?     @relation("RoutingOwnerTeam", fields: [ownerTeamId], references: [id], onDelete: Restrict)
+  ownerUser      HrUser?           @relation("RecruitmentRoutingOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  createdBy      HrUser            @relation("RecruitmentRoutingRuleCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, active, priority])
+  @@index([departmentId, employmentType, active])
+}
+
+model HrRecruitmentFallbackQueue {
+  id             String                   @id @default(cuid())
+  organizationId String
+  name           String
+  ownerTeamId    String
+  ownerUserId    String?
+  status         HrRecruitmentQueueStatus @default(ACTIVE)
+  createdById    String
+  version        Int                      @default(1)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  organization   HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  ownerTeam      HrHiringTeam             @relation(fields: [ownerTeamId], references: [id], onDelete: Restrict)
+  ownerUser      HrUser?                  @relation("RecruitmentFallbackOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  createdBy      HrUser                   @relation("RecruitmentFallbackQueueCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
 }
