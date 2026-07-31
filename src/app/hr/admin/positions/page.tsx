@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
-import { approvePositionAction, createPositionAction, openPositionAction, rejectPositionAction, submitPositionAction } from "./actions";
+import { createPositionAction, openPositionAction, submitPositionAction } from "./actions";
+import { PositionDecisionForm } from "./PositionDecisionForm";
 
 export default async function PositionsPage() {
   const auth = await requirePermission("position.manage");
@@ -24,7 +25,7 @@ export default async function PositionsPage() {
       <p className="mt-3 text-sm">Capacity: {position.headcountLimit} people / {position.fullTimeEquivalent.toString()} FTE</p>
       <div className="mt-4 flex flex-wrap gap-3">
         {position.lifecycleStatus === "DRAFT" && <DecisionForm action={submitPositionAction} id={position.id} label="Submit for approval" />}
-        {position.lifecycleStatus === "PENDING_APPROVAL" && <><DecisionForm action={approvePositionAction} id={position.id} label="Approve" /><DecisionForm action={rejectPositionAction} id={position.id} label="Reject" secondary /></>}
+        {position.lifecycleStatus === "PENDING_APPROVAL" && <><PositionDecisionForm decision="approve" id={position.id} /><PositionDecisionForm decision="reject" id={position.id} /></>}
         {position.lifecycleStatus === "APPROVED" && <DecisionForm action={openPositionAction} id={position.id} label="Open position" />}
       </div>
     </article>)}{!positions.length && <p className="rounded-2xl bg-white p-6 text-slate-500">No positions yet.</p>}</div>
