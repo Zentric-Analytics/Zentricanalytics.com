@@ -8,6 +8,12 @@ import { normalizeHrEmail } from "@/lib/hr/auth/crypto";
 import { canAssignRole } from "@/lib/hr/permissions/catalog";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { revokeAllHrSessions } from "@/lib/hr/auth/session";
+import { userDeletionErrorMessage } from "@/lib/hr/users/deletion-errors";
+
+export type HrUserDeletionState = {
+  status: "idle" | "error" | "success";
+  message?: string;
+};
 
 function requirePrimaryAdmin(auth: { roles: string[]; user: { isPrimaryAdmin: boolean } }) {
   if (!auth.user.isPrimaryAdmin || !auth.roles.includes("ADMIN")) {
@@ -184,6 +190,18 @@ export async function softDeleteHrUserAction(formData: FormData) {
   revalidatePath("/hr/admin/users");
 }
 
+export async function softDeleteHrUserWithStateAction(
+  _previousState: HrUserDeletionState,
+  formData: FormData,
+): Promise<HrUserDeletionState> {
+  try {
+    await softDeleteHrUserAction(formData);
+    return { status: "success", message: "The user was soft-deleted." };
+  } catch (error) {
+    return { status: "error", message: userDeletionErrorMessage(error) };
+  }
+}
+
 export async function hardDeleteHrUserAction(formData: FormData) {
   const auth = await requirePermission("user.update");
   requirePrimaryAdmin(auth);
@@ -214,6 +232,18 @@ export async function hardDeleteHrUserAction(formData: FormData) {
     throw new Error("Hard deletion is blocked because this account still owns retained HR records. Keep it soft-deleted.");
   }
   revalidatePath("/hr/admin/users");
+}
+
+export async function hardDeleteHrUserWithStateAction(
+  _previousState: HrUserDeletionState,
+  formData: FormData,
+): Promise<HrUserDeletionState> {
+  try {
+    await hardDeleteHrUserAction(formData);
+    return { status: "success", message: "The eligible user was permanently deleted." };
+  } catch (error) {
+    return { status: "error", message: userDeletionErrorMessage(error) };
+  }
 }
 
 const employeeLinkSchema = z.object({ userId: z.string().cuid(), employeeId: z.string().cuid().optional().or(z.literal("")).transform((value) => value || undefined) });

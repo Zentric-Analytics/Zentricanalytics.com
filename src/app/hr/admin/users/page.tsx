@@ -5,14 +5,13 @@ import {
   cancelHrInvitationAction,
   createHrUserAction,
   deleteHrInvitationAction,
-  hardDeleteHrUserAction,
   linkHrUserEmployeeAction,
   reactivateHrUserAction,
   resendHrInvitationAction,
   revokeHrRoleAction,
-  softDeleteHrUserAction,
   suspendHrUserAction,
 } from "./actions";
+import { UserDeletionForm } from "./UserDeletionForm";
 
 const roleKeys = ["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN", "EMPLOYEE"] as const;
 
@@ -75,8 +74,8 @@ export default async function UsersPage() {
         {auth.user.isPrimaryAdmin && !user.isPrimaryAdmin && user.id !== auth.user.id ? <section className="mt-4 border-t border-slate-200 pt-4">
           <h2 className="text-sm font-bold text-red-800">Deletion controls</h2>
           {user.status !== "DELETED"
-            ? <form action={softDeleteHrUserAction} className="mt-2 flex flex-wrap gap-2"><input type="hidden" name="userId" value={user.id} /><input className="input min-w-64" name="reason" placeholder="Required deletion reason" required /><button className="btn btn-secondary text-red-700">Soft-delete user</button></form>
-            : <form action={hardDeleteHrUserAction} className="mt-2 flex flex-wrap gap-2"><input type="hidden" name="userId" value={user.id} /><input className="input min-w-64" name="reason" placeholder="Required permanent deletion reason" required /><button className="btn bg-red-700 text-white">Permanently delete user</button></form>}
+            ? <UserDeletionForm hard={false} userId={user.id} />
+            : <UserDeletionForm hard userId={user.id} />}
         </section> : null}
       </article>;
     })}</div>
