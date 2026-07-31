@@ -568,6 +568,24 @@ enum HrRecruitmentQueueStatus {
   INACTIVE
 }
 
+enum HrVacancyStatus {
+  DRAFT
+  PENDING_APPROVAL
+  RETURNED_FOR_CORRECTION
+  APPROVED
+  SCHEDULED
+  OPEN
+  PAUSED
+  CLOSED
+  FILLED
+  CANCELLED
+}
+
+enum HrVacancyApprovalDecision {
+  APPROVED
+  RETURNED
+}
+
 model HrOrganization {
   id                         String                            @id @default(cuid())
   slug                       String                            @unique
@@ -634,6 +652,8 @@ model HrOrganization {
   hiringTeamDefaults         HrDepartmentHiringTeamDefault[]
   recruitmentRoutingRules    HrRecruitmentRoutingRule[]
   recruitmentFallbackQueues  HrRecruitmentFallbackQueue[]
+  vacancies                  HrVacancy[]
+  vacancyNumberSequences     HrVacancyNumberSequence[]
 }
 
 model HrUser {
@@ -712,6 +732,12 @@ model HrUser {
   recruitmentRoutingAssignments    HrRecruitmentRoutingRule[]      @relation("RecruitmentRoutingOwner")
   recruitmentFallbackQueuesCreated HrRecruitmentFallbackQueue[]    @relation("RecruitmentFallbackQueueCreator")
   recruitmentFallbackAssignments   HrRecruitmentFallbackQueue[]    @relation("RecruitmentFallbackOwner")
+  vacanciesCreated                 HrVacancy[]                     @relation("VacancyCreator")
+  vacanciesUpdated                 HrVacancy[]                     @relation("VacancyUpdater")
+  vacanciesOwned                   HrVacancy[]                     @relation("VacancyOwner")
+  vacanciesManaged                 HrVacancy[]                     @relation("VacancyHiringManager")
+  vacancyApprovals                 HrVacancyApproval[]
+  vacancyHistoryEvents             HrVacancyHistory[]
 
   @@unique([organizationId, email])
   @@index([organizationId, status])
@@ -993,6 +1019,7 @@ model HrDepartment {
   hiringTeams             HrHiringTeam[]
   hiringTeamDefault       HrDepartmentHiringTeamDefault?
   recruitmentRoutingRules HrRecruitmentRoutingRule[]
+  vacancies               HrVacancy[]
 
   @@unique([organizationId, code])
   @@unique([organizationId, name])
@@ -2396,6 +2423,8 @@ model HrHiringTeam {
   responsibleDefaults        HrDepartmentHiringTeamDefault[] @relation("DepartmentDefaultResponsibleHrTeam")
   routingRules               HrRecruitmentRoutingRule[]      @relation("RoutingOwnerTeam")
   fallbackQueues             HrRecruitmentFallbackQueue[]
+  vacancies                  HrVacancy[]                     @relation("VacancyHiringTeam")
+  responsibleVacancies       HrVacancy[]                     @relation("VacancyResponsibleHrTeam")
 
   @@unique([organizationId, name])
   @@index([organizationId, status, name])
@@ -2499,4 +2528,108 @@ model HrRecruitmentFallbackQueue {
 
   @@unique([organizationId, name])
   @@index([organizationId, status])
+}
+
+model HrVacancy {
+  id                      String              @id @default(cuid())
+  organizationId          String
+  vacancyNumber           String              @unique
+  publicSlug              String              @unique
+  title                   String
+  departmentId            String
+  hiringTeamId            String
+  vacancyOwnerId          String
+  hiringManagerId         String?
+  responsibleHrTeamId     String
+  legalEntityId           String?
+  locationId              String?
+  gradeId                 String?
+  employmentType          HrEmploymentType
+  workMode                HrWorkMode
+  numberOfOpenings        Int
+  filledOpenings          Int                 @default(0)
+  description             String
+  responsibilities        Json
+  minimumQualifications   Json
+  preferredQualifications Json
+  requiredDocuments       Json
+  screeningQuestions      Json
+  salaryMinimum           Decimal?            @db.Decimal(18, 2)
+  salaryMaximum           Decimal?            @db.Decimal(18, 2)
+  currency                String              @default("NGN")
+  publicSalary            Boolean             @default(false)
+  locationLabel           String?
+  opensAt                 DateTime?
+  applicationDeadline     DateTime?
+  scheduledPublishAt      DateTime?
+  publishedAt             DateTime?
+  closedAt                DateTime?
+  careersVisible          Boolean             @default(false)
+  status                  HrVacancyStatus     @default(DRAFT)
+  version                 Int                 @default(1)
+  approvedVersion         Int?
+  approvalInvalidatedAt   DateTime?
+  createdById             String
+  updatedById             String
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  organization            HrOrganization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  department              HrDepartment        @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  hiringTeam              HrHiringTeam        @relation("VacancyHiringTeam", fields: [hiringTeamId], references: [id], onDelete: Restrict)
+  responsibleHrTeam       HrHiringTeam        @relation("VacancyResponsibleHrTeam", fields: [responsibleHrTeamId], references: [id], onDelete: Restrict)
+  vacancyOwner            HrUser              @relation("VacancyOwner", fields: [vacancyOwnerId], references: [id], onDelete: Restrict)
+  hiringManager           HrUser?             @relation("VacancyHiringManager", fields: [hiringManagerId], references: [id], onDelete: Restrict)
+  createdBy               HrUser              @relation("VacancyCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy               HrUser              @relation("VacancyUpdater", fields: [updatedById], references: [id], onDelete: Restrict)
+  approvals               HrVacancyApproval[]
+  history                 HrVacancyHistory[]
+
+  @@index([organizationId, status, updatedAt])
+  @@index([hiringTeamId, status])
+  @@index([departmentId, status])
+  @@index([status, careersVisible, publishedAt, applicationDeadline])
+}
+
+model HrVacancyNumberSequence {
+  organizationId String
+  year           Int
+  lastValue      Int            @default(0)
+  updatedAt      DateTime       @updatedAt
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@id([organizationId, year])
+}
+
+model HrVacancyApproval {
+  id             String                    @id @default(cuid())
+  vacancyId      String
+  vacancyVersion Int
+  step           Int
+  decision       HrVacancyApprovalDecision
+  comments       String?
+  approverId     String
+  decidedAt      DateTime                  @default(now())
+  vacancy        HrVacancy                 @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+  approver       HrUser                    @relation(fields: [approverId], references: [id], onDelete: Restrict)
+
+  @@unique([vacancyId, vacancyVersion, step])
+  @@index([approverId, decidedAt])
+}
+
+model HrVacancyHistory {
+  id            String           @id @default(cuid())
+  vacancyId     String
+  previousState HrVacancyStatus?
+  newState      HrVacancyStatus
+  actorId       String?
+  reason        String
+  source        String
+  correlationId String
+  metadata      Json?
+  createdAt     DateTime         @default(now())
+  vacancy       HrVacancy        @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+  actor         HrUser?          @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([vacancyId, createdAt])
+  @@index([correlationId])
 }
