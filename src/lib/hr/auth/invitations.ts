@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
+import { processHrOutboxItem } from "@/lib/hr/notifications/worker";
 import { createOpaqueToken, hashHrPassword, hashOpaqueToken, passwordMeetsPolicy, sealHrCredential } from "./crypto";
 import { generateTotpSecret } from "./totp";
 import { tokenCanBeConsumed } from "./tokens";
@@ -17,11 +18,18 @@ export async function createHrInvitation(input: { organizationId: string; userId
   const invitation = await prisma.$transaction(async (tx) => {
     await tx.hrAccountInvitation.updateMany({ where: { userId: input.userId, status: "ACTIVE" }, data: { status: "REVOKED" } });
     const created = await tx.hrAccountInvitation.create({ data: { organizationId: input.organizationId, userId: input.userId, createdById: input.createdById, tokenHash: hashOpaqueToken(rawToken), expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) } });
-    await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: input.recipient, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: created.id, credentialEnvelope: sealHrCredential(rawToken) }, idempotencyKey: `hr-invitation:${created.id}` });
+    const outbox = await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: input.recipient, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: created.id, credentialEnvelope: sealHrCredential(rawToken) }, idempotencyKey: `hr-invitation:${created.id}` });
     await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.createdById, entityType: "HrUser", entityId: input.userId, action: "hr.user.invited" });
-    return created;
+    return { created, outboxId: outbox?.id };
   });
-  return { invitation, rawToken };
+  if (invitation.outboxId) {
+    try {
+      await processHrOutboxItem(invitation.outboxId);
+    } catch {
+      // The durable cron worker remains the fallback for infrastructure errors.
+    }
+  }
+  return { invitation: invitation.created, rawToken };
 }
 
 export async function consumeHrInvitation(rawToken: string, password: string) {

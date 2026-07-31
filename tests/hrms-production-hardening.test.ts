@@ -30,6 +30,14 @@ describe("HRMS production hardening", () => {
     process.env.EMAIL_WORKER_SECRET = "b".repeat(64);
     expect(safeWorkerError(`Bearer ${process.env.EMAIL_WORKER_SECRET}`)).not.toContain(process.env.EMAIL_WORKER_SECRET);
   });
+
+  it("supports immediate single-message delivery with durable retry fallback", () => {
+    const worker = read("src/lib/hr/notifications/worker.ts");
+    const invitations = read("src/lib/hr/auth/invitations.ts");
+    expect(worker).toContain("export async function processHrOutboxItem");
+    expect(invitations).toContain("await processHrOutboxItem(invitation.outboxId)");
+    expect(invitations).toContain("durable cron worker remains the fallback");
+  });
   it("protects workers, scanner callbacks and metrics with distinct bearer secrets", () => {
     for (const file of ["src/app/api/internal/hr/outbox/route.ts", "src/app/api/internal/hr/document-scan/route.ts", "src/app/api/internal/hr/metrics/route.ts"]) {
       const source = read(file);

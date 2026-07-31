@@ -46,6 +46,7 @@ const tx = vi.hoisted(() => ({
 vi.mock("@/lib/prisma", () => ({ prisma: { $transaction: vi.fn((callback) => callback(tx)) } }));
 vi.mock("@/lib/hr/audit", () => ({ appendHrAudit: vi.fn() }));
 vi.mock("@/lib/hr/notifications/outbox", () => ({ enqueueHrEmail: vi.fn() }));
+vi.mock("@/lib/hr/notifications/worker", () => ({ processHrOutboxItem: vi.fn() }));
 
 import { consumeHrInvitation, HrInvitationAcceptanceError } from "../src/lib/hr/auth/invitations";
 

@@ -87,3 +87,66 @@ export async function processHrOutbox(limit = 25, now = new Date()) {
   }
   return outcomes;
 }
+
+export async function processHrOutboxItem(outboxId: string, now = new Date()) {
+  const candidate = await prisma.hrEmailOutbox.findFirst({
+    where: {
+      id: outboxId,
+      status: { in: ["PENDING", "FAILED"] },
+      nextAttemptAt: { lte: now },
+      attemptCount: { lt: MAX_ATTEMPTS },
+    },
+  });
+  if (!candidate) return { claimed: 0, delivered: 0, failed: 0, abandoned: 0 };
+
+  const claimed = await prisma.hrEmailOutbox.updateMany({
+    where: {
+      id: candidate.id,
+      status: candidate.status,
+      attemptCount: candidate.attemptCount,
+    },
+    data: {
+      status: "PROCESSING",
+      attemptCount: { increment: 1 },
+      lastAttemptedAt: now,
+    },
+  });
+  if (claimed.count !== 1) return { claimed: 0, delivered: 0, failed: 0, abandoned: 0 };
+
+  const item = {
+    ...candidate,
+    status: "PROCESSING" as const,
+    attemptCount: candidate.attemptCount + 1,
+    lastAttemptedAt: now,
+  };
+  const outcomes = { claimed: 1, delivered: 0, failed: 0, abandoned: 0 };
+  try {
+    const status = await deliver(item, now);
+    if (status === "DELIVERED") outcomes.delivered = 1;
+    else if (status === "ABANDONED") outcomes.abandoned = 1;
+    else outcomes.failed = 1;
+  } catch (error) {
+    const terminal = item.attemptCount >= MAX_ATTEMPTS;
+    await prisma.$transaction(async (tx) => {
+      await tx.hrEmailOutbox.update({
+        where: { id: item.id },
+        data: {
+          status: terminal ? "ABANDONED" : "FAILED",
+          nextAttemptAt: terminal ? now : retryAt(item.attemptCount, now),
+          lastError: safeWorkerError(error),
+        },
+      });
+      await tx.hrEmailDeliveryAttempt.create({
+        data: {
+          outboxId: item.id,
+          attemptNumber: item.attemptCount,
+          status: terminal ? "ABANDONED" : "FAILED",
+          safeError: safeWorkerError(error),
+        },
+      });
+    });
+    if (terminal) outcomes.abandoned = 1;
+    else outcomes.failed = 1;
+  }
+  return outcomes;
+}
