@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { sealHrCredential } from "../src/lib/hr/auth/crypto";
 import { validateHrDocumentFile } from "../src/lib/hr/documents/validation";
 import { assertIndependentPayrollActor } from "../src/lib/hr/payroll/engine";
-import { hrEmailBody } from "../src/lib/hr/notifications/worker";
+import { hrEmailBody, hrEmailContent } from "../src/lib/hr/notifications/worker";
 import { privilegedMfaRequired } from "../src/lib/hr/permissions/mfa-policy";
 import { activeSupervisorForEmployee, supervisedEmployeeIds } from "../src/lib/hr/supervisors/scope";
 
@@ -43,6 +43,7 @@ describe("final HRMS remediation security behavior", () => {
     );
     expect(offer).toContain("exact approved offer");
     expect(offer).toContain("https://staging.zentricanalytics.com/careers/offers/offer-123");
+    expect(hrEmailContent("hr-offer-issued", { href: "/careers/offers/offer-123" }, "https://staging.zentricanalytics.com").html).toContain("Review &amp; Accept Offer");
     expect(() => hrEmailBody("hr-offer-issued", { href: "//untrusted.example" }, "https://staging.zentricanalytics.com")).toThrow("safe relative link");
     expect(() => hrEmailBody("hr-handover-created", { href: "/hr/admin/handovers/handover-123" }, "http://staging.example.test")).toThrow("HTTPS");
   });
