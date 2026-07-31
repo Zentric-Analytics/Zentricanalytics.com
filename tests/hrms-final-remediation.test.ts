@@ -35,6 +35,18 @@ describe("final HRMS remediation security behavior", () => {
     expect(() => hrEmailBody("hr-password-reset", { credentialEnvelope: sealHrCredential(rawToken) }, "http://insecure.example.test")).toThrow("HTTPS");
   });
 
+  it("renders offer and handover emails with scoped HTTPS links", () => {
+    const offer = hrEmailBody(
+      "hr-offer-issued",
+      { href: "/careers/offers/offer-123" },
+      "https://staging.zentricanalytics.com/",
+    );
+    expect(offer).toContain("exact approved offer");
+    expect(offer).toContain("https://staging.zentricanalytics.com/careers/offers/offer-123");
+    expect(() => hrEmailBody("hr-offer-issued", { href: "//untrusted.example" }, "https://staging.zentricanalytics.com")).toThrow("safe relative link");
+    expect(() => hrEmailBody("hr-handover-created", { href: "/hr/admin/handovers/handover-123" }, "http://staging.example.test")).toThrow("HTTPS");
+  });
+
   it("requires MFA for privileged staging and production accounts only", () => {
     vi.stubEnv("APP_ENV", "staging");
     expect(privilegedMfaRequired({ roles: ["ADMIN"], user: { mfaEnabled: false } })).toBe(true);
