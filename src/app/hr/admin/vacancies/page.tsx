@@ -29,7 +29,7 @@ export default async function VacanciesPage() {
       <select className="input" name="responsibleHrTeamId" required><option value="">Responsible HR team</option>{hiringTeams.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select>
       <select className="input" name="vacancyOwnerId" required><option value="">Vacancy owner</option>{users.map((item) => <option value={item.id} key={item.id}>{item.email}</option>)}</select>
       <select className="input" name="hiringManagerId"><option value="">Hiring manager (optional)</option>{users.map((item) => <option value={item.id} key={item.id}>{item.email}</option>)}</select>
-      <select className="input" name="employmentType" required>{["FULL_TIME","PART_TIME","CONTRACT","INTERN","TEMPORARY"].map((item) => <option key={item}>{item.replaceAll("_", " ")}</option>)}</select>
+      <select className="input" name="employmentType" required>{["FULL_TIME","PART_TIME","CONTRACT","INTERN","TEMPORARY"].map((item) => <option value={item} key={item}>{item.replaceAll("_", " ")}</option>)}</select>
       <select className="input" name="workMode" required>{["ONSITE","HYBRID","REMOTE"].map((item) => <option key={item}>{item}</option>)}</select>
       <input className="input" name="numberOfOpenings" type="number" min={1} defaultValue={1} required />
       <input className="input" name="locationLabel" placeholder="Public location" />

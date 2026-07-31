@@ -24,9 +24,17 @@ const valid = {
 
 describe("governed vacancy input", () => {
   it("normalizes structured public fields", () => {
-    const result = vacancyInput.parse(valid);
+    const result = vacancyInput.parse({
+      ...valid,
+      opensAt: "",
+      applicationDeadline: "",
+      scheduledPublishAt: "",
+    });
     expect(result.currency).toBe("NGN");
     expect(result.responsibilities).toEqual(["Build pipelines", "Review architecture"]);
+    expect(result.opensAt).toBeUndefined();
+    expect(result.applicationDeadline).toBeUndefined();
+    expect(result.scheduledPublishAt).toBeUndefined();
   });
 
   it("rejects invalid date and salary ranges", () => {
@@ -41,6 +49,11 @@ describe("governed vacancy input", () => {
 });
 
 describe("public vacancy projection", () => {
+  it("submits the enum value while presenting a readable employment-type label", () => {
+    const source = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/vacancies/page.tsx"), "utf8");
+    expect(source).toContain("<option value={item} key={item}>{item.replaceAll");
+  });
+
   it("uses an explicit safe select and does not expose internal routing or approval records", () => {
     const source = fs.readFileSync(path.join(process.cwd(), "src/app/careers/page.tsx"), "utf8");
     expect(source).toContain("select: {");

@@ -6,6 +6,10 @@ import { enqueueHrEmail } from "../notifications/outbox";
 import { assertVacancyTransition, canPublishVacancy } from "./states";
 
 const listInput = z.string().trim().transform((value) => value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean));
+const optionalDateInput = z.preprocess(
+  (value) => value === "" || value === null ? undefined : value,
+  z.coerce.date().optional(),
+);
 
 export const vacancyInput = z.object({
   title: z.string().trim().min(2).max(160),
@@ -24,9 +28,9 @@ export const vacancyInput = z.object({
   requiredDocuments: listInput,
   screeningQuestions: listInput,
   locationLabel: z.string().trim().max(160).optional().transform((value) => value || undefined),
-  opensAt: z.coerce.date().optional(),
-  applicationDeadline: z.coerce.date().optional(),
-  scheduledPublishAt: z.coerce.date().optional(),
+  opensAt: optionalDateInput,
+  applicationDeadline: optionalDateInput,
+  scheduledPublishAt: optionalDateInput,
   salaryMinimum: z.coerce.number().nonnegative().optional(),
   salaryMaximum: z.coerce.number().nonnegative().optional(),
   currency: z.string().trim().length(3).transform((value) => value.toUpperCase()).default("NGN"),
