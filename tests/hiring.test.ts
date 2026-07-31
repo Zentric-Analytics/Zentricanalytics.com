@@ -791,6 +791,39 @@ describe("production hardening helpers", () => {
     }
   });
 
+  it("accepts complete S3-compatible configuration for applicant uploads", () => {
+    const keys = [
+      "PRIVATE_OBJECT_STORAGE_PROVIDER",
+      "OBJECT_STORAGE_ENDPOINT",
+      "OBJECT_STORAGE_BUCKET",
+      "OBJECT_STORAGE_REGION",
+      "OBJECT_STORAGE_ACCESS_KEY_ID",
+      "OBJECT_STORAGE_SECRET_ACCESS_KEY",
+    ] as const;
+    const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+    Object.assign(process.env, {
+      PRIVATE_OBJECT_STORAGE_PROVIDER: "s3-compatible",
+      OBJECT_STORAGE_ENDPOINT: "https://storage.staging.example",
+      OBJECT_STORAGE_BUCKET: "unit3-staging",
+      OBJECT_STORAGE_REGION: "auto",
+      OBJECT_STORAGE_ACCESS_KEY_ID: "staging-key",
+      OBJECT_STORAGE_SECRET_ACCESS_KEY: "staging-secret",
+    });
+    try {
+      expect(selectedStorageProvider()).toBe("s3-compatible");
+      expect(() => assertPrivateUploadStorageConfigured()).not.toThrow();
+      const source = readFileSync("src/lib/storage.ts", "utf8");
+      expect(source).toContain("await storage.put(key, bytes");
+      expect(source).toContain("return hrObjectStorage().exists(storageKey)");
+      expect(source).toContain("await hrObjectStorage().delete(storageKey)");
+    } finally {
+      for (const key of keys) {
+        if (previous[key] === undefined) delete process.env[key];
+        else process.env[key] = previous[key];
+      }
+    }
+  });
+
   it("returns a safe application form error when stage 1 upload storage is not configured", () => {
     const action = readFileSync("src/app/apply/actions.ts", "utf8");
     expect(action).toContain("error instanceof PrivateUploadStorageConfigurationError");
