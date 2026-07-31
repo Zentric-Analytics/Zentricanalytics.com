@@ -17,17 +17,56 @@ export function safeWorkerError(value: unknown) {
   return secrets.reduce((safe, secret) => safe.replaceAll(secret, "[redacted]"), message).replace(/Bearer\s+\S+/gi, "Bearer [redacted]").slice(0, 500);
 }
 
+type HrEmailPayload = { credentialEnvelope?: unknown; href?: unknown } | null;
+
+function secureHrEmailLink(payload: HrEmailPayload, baseUrl: string) {
+  const href = payload?.href;
+  if (typeof href !== "string" || !href.startsWith("/") || href.startsWith("//")) {
+    throw new Error("HR email payload must contain a safe relative link.");
+  }
+  if (!/^https:\/\//.test(baseUrl)) throw new Error("APPLICATION_BASE_URL must be HTTPS for HR email delivery.");
+  return `${baseUrl}${href}`;
+}
+
 export function hrEmailBody(template: string, payload: unknown, applicationBaseUrl = process.env.APPLICATION_BASE_URL ?? "") {
   const baseUrl = String(applicationBaseUrl).replace(/\/+$/, "");
-  if (template !== "hr-account-invitation" && template !== "hr-password-reset") {
-    return "You have a new HRMS notification. Sign in to the secure Zentric HR portal to review it. Do not reply with confidential information.";
+  const emailPayload = (payload && typeof payload === "object" ? payload : null) as HrEmailPayload;
+  if (template === "hr-account-invitation" || template === "hr-password-reset") {
+    if (!/^https:\/\//.test(baseUrl)) throw new Error("APPLICATION_BASE_URL must be HTTPS for credential email delivery.");
+    const credentialEnvelope = emailPayload?.credentialEnvelope;
+    if (typeof credentialEnvelope !== "string") throw new Error("Credential email payload is invalid.");
+    const token = unsealHrCredential(credentialEnvelope);
+    const destination = template === "hr-account-invitation" ? "invitation" : "password-reset";
+    return `Use the secure one-time link below to ${destination === "invitation" ? "set up your HR account" : "reset your HR password"}.
+
+${baseUrl}/hr/${destination}/redeem#token=${encodeURIComponent(token)}
+
+This link is time-limited and single-use. Do not forward it.`;
   }
-  if (!/^https:\/\//.test(baseUrl)) throw new Error("APPLICATION_BASE_URL must be HTTPS for credential email delivery.");
-  const credentialEnvelope = (payload as { credentialEnvelope?: unknown } | null)?.credentialEnvelope;
-  if (typeof credentialEnvelope !== "string") throw new Error("Credential email payload is invalid.");
-  const token = unsealHrCredential(credentialEnvelope);
-  const destination = template === "hr-account-invitation" ? "invitation" : "password-reset";
-  return `Use the secure one-time link below to ${destination === "invitation" ? "set up your HR account" : "reset your HR password"}.\n\n${baseUrl}/hr/${destination}/redeem#token=${encodeURIComponent(token)}\n\nThis link is time-limited and single-use. Do not forward it.`;
+
+  if (template === "hr-offer-issued") {
+    const link = secureHrEmailLink(emailPayload, baseUrl);
+    return `Your employment offer is ready for review.
+
+Review the exact approved offer and accept or decline it securely:
+
+${link}
+
+Do not reply with confidential information.`;
+  }
+
+  if (template === "hr-handover-created") {
+    const link = secureHrEmailLink(emailPayload, baseUrl);
+    return `A candidate has accepted an employment offer and requires HR review.
+
+Open the secure handover record:
+
+${link}
+
+Do not reply with confidential information.`;
+  }
+
+  return "You have a new HRMS notification. Sign in to the secure Zentric HR portal to review it. Do not reply with confidential information.";
 }
 
 async function claimBatch(limit: number, now: Date) {
