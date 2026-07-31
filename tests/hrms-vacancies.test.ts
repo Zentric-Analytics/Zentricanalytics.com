@@ -54,6 +54,16 @@ describe("public vacancy projection", () => {
     expect(source).toContain("<option value={item} key={item}>{item.replaceAll");
   });
 
+  it("renders vacancy authorization failures inline", () => {
+    const form = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/vacancies/VacancyTransitionForm.tsx"), "utf8");
+    const actions = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/vacancies/actions.ts"), "utf8");
+    const domain = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/recruitment/vacancies.ts"), "utf8");
+    expect(form).toContain("useActionState");
+    expect(form).toContain('role={state.status === "error" ? "alert" : "status"}');
+    expect(actions).toContain("transitionVacancyWithStateAction");
+    expect(domain).toContain("Vacancy creators cannot approve their own vacancy.");
+  });
+
   it("uses an explicit safe select and does not expose internal routing or approval records", () => {
     const source = fs.readFileSync(path.join(process.cwd(), "src/app/careers/page.tsx"), "utf8");
     expect(source).toContain("select: {");

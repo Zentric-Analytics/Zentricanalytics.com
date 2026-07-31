@@ -45,3 +45,23 @@ export async function transitionVacancyAction(formData: FormData) {
   revalidatePath("/hr/admin/vacancies");
   revalidatePath("/careers");
 }
+
+export type VacancyTransitionState = {
+  status: "idle" | "error" | "success";
+  message?: string;
+};
+
+export async function transitionVacancyWithStateAction(
+  _previousState: VacancyTransitionState,
+  formData: FormData,
+): Promise<VacancyTransitionState> {
+  try {
+    await transitionVacancyAction(formData);
+    return { status: "success", message: "Vacancy updated." };
+  } catch (error) {
+    const message = error instanceof Error && error.message
+      ? error.message
+      : "You are not authorized to perform this vacancy action.";
+    return { status: "error", message };
+  }
+}

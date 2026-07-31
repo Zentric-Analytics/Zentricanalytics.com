@@ -1,7 +1,8 @@
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { prisma } from "@/lib/prisma";
 import { recruitmentTransitionMaps } from "@/lib/hr/recruitment/states";
-import { createVacancyAction, transitionVacancyAction } from "./actions";
+import { createVacancyAction } from "./actions";
+import { VacancyTransitionForm } from "./VacancyTransitionForm";
 
 export default async function VacanciesPage() {
   const auth = await requirePermission("vacancy.view");
@@ -54,11 +55,12 @@ export default async function VacanciesPage() {
         <div className="mt-4 flex flex-wrap gap-3">
           {recruitmentTransitionMaps.vacancy[vacancy.status].map((next) => {
             const permission = next === "PENDING_APPROVAL" ? "vacancy.submit" : ["APPROVED","RETURNED_FOR_CORRECTION"].includes(next) ? "vacancy.approve" : ["OPEN","SCHEDULED"].includes(next) ? "vacancy.publish" : next === "PAUSED" ? "vacancy.pause" : next === "FILLED" ? "vacancy.fill" : next === "CANCELLED" ? "vacancy.cancel" : "vacancy.close";
-            return auth.permissions.has(permission) ? <form action={transitionVacancyAction} className="flex gap-2" key={next}>
-              <input type="hidden" name="vacancyId" value={vacancy.id} /><input type="hidden" name="expectedVersion" value={vacancy.version} /><input type="hidden" name="to" value={next} />
-              <input className="input" name="reason" placeholder={`Reason for ${next.toLowerCase()}`} required minLength={3} />
-              <button className="btn btn-secondary">{next.replaceAll("_", " ")}</button>
-            </form> : null;
+            return auth.permissions.has(permission) ? <VacancyTransitionForm
+              vacancyId={vacancy.id}
+              expectedVersion={vacancy.version}
+              to={next}
+              key={next}
+            /> : null;
           })}
         </div>
       </article>)}
