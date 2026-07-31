@@ -51,6 +51,13 @@ function verifyUrl(applicationId: string, email: string) {
   return `/track/verify?${params.toString()}`;
 }
 
+function candidateApplicationLookup(applicationId: string) {
+  return {
+    deletedAt: null,
+    OR: [{ applicationId }, { applicationReference: applicationId }],
+  };
+}
+
 function safeDiagnostics(event: string, diagnostics: Record<string, unknown>) {
   console.info("trackAccessCode", { event, ...diagnostics });
 }
@@ -86,7 +93,7 @@ export async function requestAccessCode(formData: FormData) {
     });
 
     const app = await prisma.jobApplication.findFirst({
-      where: { applicationId, deletedAt: null },
+      where: candidateApplicationLookup(applicationId),
       include: { applicant: true },
     });
     const matchingApplicationFound = Boolean(
@@ -244,7 +251,7 @@ export async function verifyAccessCode(formData: FormData) {
   });
   if (!limit.allowed) redirect(failedUrl);
   const app = await prisma.jobApplication.findFirst({
-    where: { applicationId, deletedAt: null },
+    where: candidateApplicationLookup(applicationId),
     include: { applicant: true },
   });
   if (!app || app.applicant.email.toLowerCase() !== email) redirect(failedUrl);
