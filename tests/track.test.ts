@@ -282,6 +282,21 @@ describe("track access-code flow", () => {
     expect(mocks.sendAndRecordEmail).toHaveBeenCalledOnce();
   });
 
+  it("accepts the applicant-facing recruitment reference displayed after submission", async () => {
+    const { requestAccessCode } = await loadTrackActions();
+    await expect(requestAccessCode(form("APL-2026-000001"))).rejects.toThrow("redirect:");
+    expect(mocks.jobApplicationFindFirst).toHaveBeenCalledWith({
+      where: {
+        deletedAt: null,
+        OR: [
+          { applicationId: "APL-2026-000001" },
+          { applicationReference: "APL-2026-000001" },
+        ],
+      },
+      include: { applicant: true },
+    });
+  });
+
   it("blocks access-code requests over the limit with safe limited status", async () => {
     mocks.rateLimitCount = 5;
     const { requestAccessCode } = await loadTrackActions();
