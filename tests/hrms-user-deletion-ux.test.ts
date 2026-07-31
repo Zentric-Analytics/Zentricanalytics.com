@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { userDeletionErrorMessage } from "../src/lib/hr/users/deletion-errors";
 
 describe("primary-admin user deletion UX", () => {
-  it("explains why a retained account cannot be permanently deleted", () => {
-    const message = "Hard deletion is blocked while the user is linked to an employee record.";
+  it("returns a safe permanent-deletion failure", () => {
+    const message = "The permanent deletion could not be completed.";
     expect(userDeletionErrorMessage(new Error(message))).toBe(message);
   });
 
@@ -19,5 +19,15 @@ describe("primary-admin user deletion UX", () => {
     expect(component).toContain("hardDeleteHrUserWithStateAction");
     expect(component).toContain('role={state.status === "error" ? "alert" : "status"}');
     expect(component).toContain('aria-live="polite"');
+  });
+
+  it("releases restrictive retained references before physical deletion", () => {
+    const action = readFileSync("src/app/hr/admin/users/actions.ts", "utf8");
+    const helper = readFileSync("src/lib/hr/users/hard-delete.ts", "utf8");
+    expect(action).toContain("releaseHrUserReferencesForDeletion");
+    expect(action).toContain("The user was permanently deleted from the database.");
+    expect(helper).toContain('reference.deleteRule === "CASCADE"');
+    expect(helper).toContain('reference.deleteRule === "SET NULL"');
+    expect(helper).toContain("primaryAdminId");
   });
 });

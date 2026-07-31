@@ -1,8 +1,6 @@
 const safeDeletionMessages = new Set([
   "The primary administrator cannot delete their own account.",
-  "Hard deletion is blocked while the user is linked to an employee record.",
-  "Hard deletion is blocked because this user created invitation records that must remain attributable.",
-  "Hard deletion is blocked because this account still owns retained HR records. Keep it soft-deleted.",
+  "The permanent deletion could not be completed.",
 ]);
 
 export function userDeletionErrorMessage(error: unknown) {

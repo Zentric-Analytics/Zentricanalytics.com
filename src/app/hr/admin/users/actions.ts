@@ -9,6 +9,7 @@ import { canAssignRole } from "@/lib/hr/permissions/catalog";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { revokeAllHrSessions } from "@/lib/hr/auth/session";
 import { userDeletionErrorMessage } from "@/lib/hr/users/deletion-errors";
+import { releaseHrUserReferencesForDeletion } from "@/lib/hr/users/hard-delete";
 
 export type HrUserDeletionState = {
   status: "idle" | "error" | "success";
@@ -209,10 +210,7 @@ export async function hardDeleteHrUserAction(formData: FormData) {
   const reason = z.string().trim().min(3).max(500).parse(formData.get("reason"));
   const target = await prisma.hrUser.findFirstOrThrow({
     where: { id: userId, organizationId: auth.user.organizationId, status: "DELETED", isPrimaryAdmin: false },
-    include: { employee: { select: { id: true } }, invitationsCreated: { select: { id: true }, take: 1 } },
   });
-  if (target.employee) throw new Error("Hard deletion is blocked while the user is linked to an employee record.");
-  if (target.invitationsCreated.length) throw new Error("Hard deletion is blocked because this user created invitation records that must remain attributable.");
   try {
     await prisma.$transaction(async (tx) => {
       await tx.hrAccountInvitation.deleteMany({ where: { userId: target.id } });
@@ -224,12 +222,25 @@ export async function hardDeleteHrUserAction(formData: FormData) {
         entityId: target.id,
         action: "hr.user.hard_deleted",
         previousValues: { status: target.status, email: target.email, deletedAt: target.deletedAt },
+        newValues: { status: "PERMANENTLY_DELETED", retainedOwnershipTransferredTo: auth.user.id },
+        reason,
+      });
+      const releasedReferences = await releaseHrUserReferencesForDeletion(tx, target.id, auth.user.id);
+      await appendHrAudit(tx, {
+        organizationId: auth.user.organizationId,
+        actorUserId: auth.user.id,
+        actorRole: auth.roles[0],
+        entityType: "HrUser",
+        entityId: target.id,
+        action: "hr.user.retained_references_released",
+        previousValues: { userId: target.id },
+        newValues: releasedReferences,
         reason,
       });
       await tx.hrUser.delete({ where: { id: target.id } });
     }, { isolationLevel: "Serializable" });
   } catch {
-    throw new Error("Hard deletion is blocked because this account still owns retained HR records. Keep it soft-deleted.");
+    throw new Error("The permanent deletion could not be completed.");
   }
   revalidatePath("/hr/admin/users");
 }
@@ -240,7 +251,7 @@ export async function hardDeleteHrUserWithStateAction(
 ): Promise<HrUserDeletionState> {
   try {
     await hardDeleteHrUserAction(formData);
-    return { status: "success", message: "The eligible user was permanently deleted." };
+    return { status: "success", message: "The user was permanently deleted from the database." };
   } catch (error) {
     return { status: "error", message: userDeletionErrorMessage(error) };
   }
