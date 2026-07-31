@@ -18,6 +18,17 @@ export function safeWorkerError(value: unknown) {
 }
 
 type HrEmailPayload = { credentialEnvelope?: unknown; href?: unknown } | null;
+type HrEmailContent = { body: string; html: string };
+
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function brandedHrEmail(title: string, body: string, cta?: { label: string; href: string }): HrEmailContent {
+  const paragraphs = body.split("\n\n").filter(Boolean);
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title></head><body style="margin:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;color:#0f172a;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:32px 16px;"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:18px;overflow:hidden;"><tr><td style="background:#0f172a;padding:24px 28px;color:#ffffff;font-size:20px;font-weight:700;">Zentric Analytics</td></tr><tr><td style="padding:32px 28px;"><h1 style="margin:0 0 18px;font-size:24px;line-height:1.25;">${escapeHtml(title)}</h1>${paragraphs.map((paragraph) => `<p style="margin:0 0 16px;color:#334155;font-size:16px;line-height:1.6;">${escapeHtml(paragraph)}</p>`).join("")}${cta ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(cta.href)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:999px;padding:12px 18px;font-weight:700;">${escapeHtml(cta.label)}</a></p>` : ""}</td></tr><tr><td style="border-top:1px solid #e2e8f0;padding:18px 28px;color:#64748b;font-size:13px;line-height:1.5;">This message was sent by Zentric Analytics. Do not reply with confidential information.</td></tr></table></td></tr></table></body></html>`;
+  return { body: cta ? `${body}\n\n${cta.label}: ${cta.href}` : body, html };
+}
 
 function secureHrEmailLink(payload: HrEmailPayload, baseUrl: string) {
   const href = payload?.href;
@@ -28,7 +39,7 @@ function secureHrEmailLink(payload: HrEmailPayload, baseUrl: string) {
   return `${baseUrl}${href}`;
 }
 
-export function hrEmailBody(template: string, payload: unknown, applicationBaseUrl = process.env.APPLICATION_BASE_URL ?? "") {
+export function hrEmailContent(template: string, payload: unknown, applicationBaseUrl = process.env.APPLICATION_BASE_URL ?? ""): HrEmailContent {
   const baseUrl = String(applicationBaseUrl).replace(/\/+$/, "");
   const emailPayload = (payload && typeof payload === "object" ? payload : null) as HrEmailPayload;
   if (template === "hr-account-invitation" || template === "hr-password-reset") {
@@ -37,36 +48,26 @@ export function hrEmailBody(template: string, payload: unknown, applicationBaseU
     if (typeof credentialEnvelope !== "string") throw new Error("Credential email payload is invalid.");
     const token = unsealHrCredential(credentialEnvelope);
     const destination = template === "hr-account-invitation" ? "invitation" : "password-reset";
-    return `Use the secure one-time link below to ${destination === "invitation" ? "set up your HR account" : "reset your HR password"}.
-
-${baseUrl}/hr/${destination}/redeem#token=${encodeURIComponent(token)}
-
-This link is time-limited and single-use. Do not forward it.`;
+    const action = destination === "invitation" ? "set up your HR account" : "reset your HR password";
+    const href = `${baseUrl}/hr/${destination}/redeem#token=${encodeURIComponent(token)}`;
+    return brandedHrEmail(`Zentric HR: ${destination === "invitation" ? "Account setup" : "Password reset"}`, `Use the secure one-time link below to ${action}.\n\nThis link is time-limited and single-use. Do not forward it.`, { label: destination === "invitation" ? "Set Up Account" : "Reset Password", href });
   }
 
   if (template === "hr-offer-issued") {
-    const link = secureHrEmailLink(emailPayload, baseUrl);
-    return `Your employment offer is ready for review.
-
-Review the exact approved offer and accept or decline it securely:
-
-${link}
-
-Do not reply with confidential information.`;
+    const href = secureHrEmailLink(emailPayload, baseUrl);
+    return brandedHrEmail("Your employment offer is ready", "Your employment offer is ready for review.\n\nReview the exact approved offer and accept or decline it securely.", { label: "Review & Accept Offer", href });
   }
 
   if (template === "hr-handover-created") {
-    const link = secureHrEmailLink(emailPayload, baseUrl);
-    return `A candidate has accepted an employment offer and requires HR review.
-
-Open the secure handover record:
-
-${link}
-
-Do not reply with confidential information.`;
+    const href = secureHrEmailLink(emailPayload, baseUrl);
+    return brandedHrEmail("HR handover requires review", "A candidate has accepted an employment offer and requires HR review.", { label: "Review HR Handover", href });
   }
 
-  return "You have a new HRMS notification. Sign in to the secure Zentric HR portal to review it. Do not reply with confidential information.";
+  return brandedHrEmail("Zentric HRMS notification", "You have a new HRMS notification. Sign in to the secure Zentric HR portal to review it. Do not reply with confidential information.");
+}
+
+export function hrEmailBody(template: string, payload: unknown, applicationBaseUrl = process.env.APPLICATION_BASE_URL ?? "") {
+  return hrEmailContent(template, payload, applicationBaseUrl).body;
 }
 
 async function claimBatch(limit: number, now: Date) {
@@ -83,13 +84,14 @@ async function claimBatch(limit: number, now: Date) {
 }
 
 async function deliver(item: HrEmailOutbox, now: Date) {
-  const body = hrEmailBody(item.template, item.payload);
+  const content = hrEmailContent(item.template, item.payload);
   const result = await sendHiringEmail({
     applicationId: item.id,
     to: item.recipient,
     template: item.template,
     subject: item.subject,
-    body,
+    body: content.body,
+    html: content.html,
   });
   const delivered = result.status === "sent";
   const terminal = !delivered && item.attemptCount >= MAX_ATTEMPTS;
