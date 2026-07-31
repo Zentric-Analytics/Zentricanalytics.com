@@ -26,8 +26,14 @@ describe("primary-admin user deletion UX", () => {
     const helper = readFileSync("src/lib/hr/users/hard-delete.ts", "utf8");
     expect(action).toContain("releaseHrUserReferencesForDeletion");
     expect(action).toContain("The user was permanently deleted from the database.");
-    expect(helper).toContain('reference.deleteRule === "CASCADE"');
-    expect(helper).toContain('reference.deleteRule === "SET NULL"');
+    expect(helper).toContain("rc.delete_rule NOT IN ('CASCADE', 'SET NULL')");
     expect(helper).toContain("primaryAdminId");
+    expect(action).toContain("timeout: 30_000");
+    expect(action).toContain("zentric.primary_admin_hard_delete");
+    const migration = readFileSync(
+      "prisma/migrations/20260730170000_hrms_primary_admin_physical_deletion/migration.sql",
+      "utf8",
+    );
+    expect(migration).toContain("current_setting('zentric.primary_admin_hard_delete', true) = 'on'");
   });
 });

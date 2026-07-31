@@ -54,14 +54,13 @@ export async function releaseHrUserReferencesForDeletion(
       AND ccu.table_schema = 'public'
       AND ccu.table_name = 'HrUser'
       AND ccu.column_name = 'id'
+      AND rc.delete_rule NOT IN ('CASCADE', 'SET NULL')
   `;
 
   let detached = 0;
   let reassigned = 0;
 
   for (const reference of references) {
-    if (reference.deleteRule === "CASCADE" || reference.deleteRule === "SET NULL") continue;
-
     const table = quoteIdentifier(reference.tableName);
     const column = quoteIdentifier(reference.columnName);
     if (reference.isNullable === "YES") {

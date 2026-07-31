@@ -213,6 +213,7 @@ export async function hardDeleteHrUserAction(formData: FormData) {
   });
   try {
     await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT set_config('zentric.primary_admin_hard_delete', 'on', true)`;
       await tx.hrAccountInvitation.deleteMany({ where: { userId: target.id } });
       await appendHrAudit(tx, {
         organizationId: auth.user.organizationId,
@@ -238,7 +239,7 @@ export async function hardDeleteHrUserAction(formData: FormData) {
         reason,
       });
       await tx.hrUser.delete({ where: { id: target.id } });
-    }, { isolationLevel: "Serializable" });
+    }, { isolationLevel: "Serializable", timeout: 30_000 });
   } catch {
     throw new Error("The permanent deletion could not be completed.");
   }
