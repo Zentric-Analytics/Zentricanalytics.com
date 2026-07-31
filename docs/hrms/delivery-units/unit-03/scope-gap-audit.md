@@ -138,3 +138,23 @@ services, administrator and applicant workflows, worker behavior, migration
 drill, tenant isolation, concurrency suite, browser critical paths, monitoring,
 and business acceptance all pass in staging. A passing unit-test-only milestone
 is a foundation milestone, not production approval.
+
+## Local implementation status
+
+| Phase | Local status | Evidence |
+| --- | --- | --- |
+| Repository validation | Complete | baseline tests, TypeScript, lint, Prisma validation and build recorded at the audit checkpoint |
+| Hiring Teams and routing | Complete | schema, migration, permission intersection, routing service, admin UI and tests |
+| Governed vacancies | Complete | schema, migration, command service, approval separation, public projection and tests |
+| Applicant/application intake | Implemented locally | vacancy-bound public form, private CV, exact eligibility recheck, identifiers, retry key, history, task and notifications |
+| Interviews and assessments | Implemented locally | scheduling, panel isolation, locked feedback and assessment persistence |
+| Versioned offers | Implemented locally | immutable versions, creator/approver separation, active-version issuance and exact-version acceptance |
+| HR handover and requirements | Implemented locally | one acceptance/one handover, separate HR document review, blocking requirement gates |
+| Pre-hire and onboarding | Implemented locally | atomic employee/assignment/link/lifecycle/task conversion with capacity reconciliation |
+| Activation | Implemented locally | separate readiness command and authenticated idempotent scheduled worker |
+| Administrative UI | Implemented locally | connected queue, application detail/history, interview scheduling, handover and readiness dashboards |
+| Staging evidence | Not executed | requires authorized Unit 3 staging migration, real users, workers, mail/storage, browser and recovery environment |
+
+“Implemented locally” is not a production-readiness verdict. The migration and
+all infrastructure-backed quality gates remain subject to the staging release
+process described above.

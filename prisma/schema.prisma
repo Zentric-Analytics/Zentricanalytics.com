@@ -9,6 +9,11 @@ datasource db {
 
 model Applicant {
   id                  String           @id @default(cuid())
+  organizationId      String?
+  applicantNumber     String?          @unique
+  normalizedEmail     String?
+  normalizedPhone     String?
+  version             Int              @default(1)
   fullName            String
   firstName           String?
   middleInitial       String?
@@ -23,11 +28,21 @@ model Applicant {
   location            String?
   createdAt           DateTime         @default(now())
   applications        JobApplication[]
+
+  @@index([organizationId, normalizedEmail])
+  @@index([organizationId, normalizedPhone])
 }
 
 model JobApplication {
   id                   String                  @id @default(cuid())
   organizationId       String?
+  vacancyId            String?
+  applicationReference String?                 @unique
+  submissionKey        String?                 @unique
+  recruitmentStatus    String?
+  assignedHiringTeamId String?
+  applicationOwnerId   String?
+  version              Int                     @default(1)
   applicationId        String                  @unique
   applicantId          String
   applicant            Applicant               @relation(fields: [applicantId], references: [id])
@@ -59,6 +74,9 @@ model JobApplication {
   hrOrganization       HrOrganization?         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, status, createdAt])
+  @@index([organizationId, recruitmentStatus, createdAt])
+  @@index([vacancyId, recruitmentStatus])
+  @@index([assignedHiringTeamId, recruitmentStatus])
 }
 
 model HiringStage {
@@ -315,8 +333,12 @@ enum HrLocationType {
 
 enum HrEmploymentStatus {
   DRAFT
+  PRE_HIRE
+  READY_FOR_START
   ONBOARDING
   ACTIVE
+  ON_HOLD
+  CANCELLED
   ON_LEAVE
   SUSPENDED
   NOTICE_PERIOD
@@ -2632,4 +2654,359 @@ model HrVacancyHistory {
 
   @@index([vacancyId, createdAt])
   @@index([correlationId])
+}
+
+model HrRecruitmentNumberSequence {
+  organizationId String
+  kind           String
+  year           Int
+  lastValue      Int      @default(0)
+  updatedAt      DateTime @updatedAt
+
+  @@id([organizationId, kind, year])
+}
+
+model HrApplicationAnswer {
+  id            String   @id @default(cuid())
+  applicationId String
+  questionKey   String
+  answer        Json
+  createdAt     DateTime @default(now())
+
+  @@unique([applicationId, questionKey])
+  @@index([applicationId])
+}
+
+model HrApplicationStageHistory {
+  id             String   @id @default(cuid())
+  organizationId String
+  applicationId  String
+  previousState  String?
+  newState       String
+  actorId        String?
+  actorType      String
+  reason         String
+  source         String
+  correlationId  String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([applicationId, createdAt])
+  @@index([organizationId, newState, createdAt])
+  @@index([correlationId])
+}
+
+model HrApplicationReviewTask {
+  id             String    @id @default(cuid())
+  organizationId String
+  applicationId  String
+  hiringTeamId   String
+  ownerUserId    String?
+  status         String    @default("OPEN")
+  dueAt          DateTime?
+  completedAt    DateTime?
+  idempotencyKey String    @unique
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([hiringTeamId, status, createdAt])
+  @@index([ownerUserId, status, createdAt])
+}
+
+model HrInterview {
+  id             String                   @id @default(cuid())
+  organizationId String
+  applicationId  String
+  title          String
+  status         String                   @default("SCHEDULED")
+  startsAt       DateTime
+  endsAt         DateTime
+  timeZone       String
+  location       String?
+  meetingUrl     String?
+  version        Int                      @default(1)
+  createdById    String
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  participants   HrInterviewParticipant[]
+  feedback       HrInterviewFeedback[]
+
+  @@index([applicationId, status, startsAt])
+  @@index([organizationId, startsAt])
+}
+
+model HrInterviewParticipant {
+  id          String      @id @default(cuid())
+  interviewId String
+  userId      String
+  role        String
+  invitedAt   DateTime    @default(now())
+  interview   HrInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, userId])
+  @@index([userId, interviewId])
+}
+
+model HrInterviewFeedback {
+  id             String      @id @default(cuid())
+  interviewId    String
+  interviewerId  String
+  status         String      @default("DRAFT")
+  scores         Json
+  recommendation String?
+  comments       String?
+  submittedAt    DateTime?
+  reopenedAt     DateTime?
+  reopenedById   String?
+  version        Int         @default(1)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  interview      HrInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, interviewerId])
+}
+
+model HrAssessment {
+  id             String    @id @default(cuid())
+  organizationId String
+  applicationId  String
+  assessmentType String
+  instructions   String
+  status         String    @default("PENDING")
+  dueAt          DateTime?
+  evaluatorId    String?
+  score          Decimal?  @db.Decimal(8, 2)
+  outcome        String?
+  evidenceKey    String?
+  version        Int       @default(1)
+  createdById    String
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([applicationId, status])
+  @@index([evaluatorId, status, dueAt])
+}
+
+model HrRecruitmentOffer {
+  id                String                        @id @default(cuid())
+  organizationId    String
+  applicationId     String                        @unique
+  status            String                        @default("DRAFT")
+  activeVersionId   String?                       @unique
+  acceptedVersionId String?                       @unique
+  version           Int                           @default(1)
+  createdById       String
+  updatedById       String
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+  versions          HrRecruitmentOfferVersion[]   @relation("OfferVersions")
+  activeVersion     HrRecruitmentOfferVersion?    @relation("ActiveOfferVersion", fields: [activeVersionId], references: [id], onDelete: Restrict)
+  acceptedVersion   HrRecruitmentOfferVersion?    @relation("AcceptedOfferVersion", fields: [acceptedVersionId], references: [id], onDelete: Restrict)
+  approvals         HrRecruitmentOfferApproval[]
+  deliveries        HrRecruitmentOfferDelivery[]
+  acceptance        HrRecruitmentOfferAcceptance?
+  decline           HrRecruitmentOfferDecline?
+
+  @@index([organizationId, status, updatedAt])
+}
+
+model HrRecruitmentOfferVersion {
+  id               String              @id @default(cuid())
+  offerId          String
+  version          Int
+  positionId       String?
+  positionTitle    String
+  departmentId     String
+  managerId        String?
+  legalEntityId    String
+  employmentType   String
+  gradeId          String?
+  salary           Decimal             @db.Decimal(18, 2)
+  currency         String
+  payFrequency     String
+  allowances       Json
+  benefits         Json
+  location         String?
+  workMode         String
+  startDate        DateTime
+  probationPeriod  String?
+  contractType     String
+  expiresAt        DateTime
+  terms            Json
+  createdById      String
+  createdAt        DateTime            @default(now())
+  offer            HrRecruitmentOffer  @relation("OfferVersions", fields: [offerId], references: [id], onDelete: Cascade)
+  activeForOffer   HrRecruitmentOffer? @relation("ActiveOfferVersion")
+  acceptedForOffer HrRecruitmentOffer? @relation("AcceptedOfferVersion")
+
+  @@unique([offerId, version])
+  @@index([offerId, createdAt])
+}
+
+model HrRecruitmentOfferApproval {
+  id             String             @id @default(cuid())
+  offerId        String
+  offerVersionId String
+  step           Int
+  decision       String
+  approverId     String
+  comments       String?
+  decidedAt      DateTime           @default(now())
+  offer          HrRecruitmentOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([offerVersionId, step])
+  @@index([approverId, decidedAt])
+}
+
+model HrRecruitmentOfferDelivery {
+  id             String             @id @default(cuid())
+  offerId        String
+  offerVersionId String
+  channel        String
+  status         String             @default("QUEUED")
+  idempotencyKey String             @unique
+  deliveredAt    DateTime?
+  createdAt      DateTime           @default(now())
+  offer          HrRecruitmentOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+}
+
+model HrRecruitmentOfferAcceptance {
+  id             String                 @id @default(cuid())
+  offerId        String                 @unique
+  offerVersionId String                 @unique
+  applicantId    String
+  method         String
+  evidence       Json?
+  acceptedAt     DateTime               @default(now())
+  offer          HrRecruitmentOffer     @relation(fields: [offerId], references: [id], onDelete: Restrict)
+  handover       HrRecruitmentHandover?
+}
+
+model HrRecruitmentOfferDecline {
+  id             String             @id @default(cuid())
+  offerId        String             @unique
+  offerVersionId String
+  applicantId    String
+  reason         String?
+  declinedAt     DateTime           @default(now())
+  offer          HrRecruitmentOffer @relation(fields: [offerId], references: [id], onDelete: Restrict)
+}
+
+model HrRecruitmentHandover {
+  id                 String                        @id @default(cuid())
+  organizationId     String
+  applicationId      String
+  offerAcceptanceId  String                        @unique
+  assignedHrTeamId   String
+  ownerUserId        String?
+  status             String                        @default("PENDING_HR_REVIEW")
+  version            Int                           @default(1)
+  approvedAt         DateTime?
+  approvedById       String?
+  cancellationReason String?
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @updatedAt
+  offerAcceptance    HrRecruitmentOfferAcceptance  @relation(fields: [offerAcceptanceId], references: [id], onDelete: Restrict)
+  requirements       HrRecruitmentRequirement[]
+  documentReviews    HrRecruitmentDocumentReview[]
+  conversion         HrPreHireConversion?
+
+  @@index([organizationId, status, updatedAt])
+  @@index([assignedHrTeamId, status])
+}
+
+model HrRecruitmentRequirementDefinition {
+  id             String   @id @default(cuid())
+  organizationId String
+  key            String
+  name           String
+  description    String?
+  blocking       Boolean  @default(true)
+  evidenceType   String?
+  active         Boolean  @default(true)
+  version        Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, key])
+}
+
+model HrRecruitmentRequirement {
+  id             String                @id @default(cuid())
+  handoverId     String
+  definitionId   String
+  status         String                @default("NOT_STARTED")
+  blocking       Boolean
+  evidence       Json?
+  evaluatedAt    DateTime?
+  evaluatedById  String?
+  overrideReason String?
+  expiresAt      DateTime?
+  version        Int                   @default(1)
+  handover       HrRecruitmentHandover @relation(fields: [handoverId], references: [id], onDelete: Cascade)
+
+  @@unique([handoverId, definitionId])
+  @@index([handoverId, status, blocking])
+}
+
+model HrRecruitmentDocumentReview {
+  id                 String                @id @default(cuid())
+  handoverId         String
+  uploadedDocumentId String
+  documentVersion    Int                   @default(1)
+  reviewScope        String
+  status             String                @default("PENDING")
+  reviewedById       String?
+  reason             String?
+  reviewedAt         DateTime?
+  replacedById       String?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  handover           HrRecruitmentHandover @relation(fields: [handoverId], references: [id], onDelete: Cascade)
+
+  @@unique([handoverId, uploadedDocumentId, documentVersion, reviewScope])
+  @@index([handoverId, status])
+}
+
+model HrCandidateEmployeeLink {
+  id             String   @id @default(cuid())
+  organizationId String
+  applicantId    String   @unique
+  employeeId     String   @unique
+  applicationId  String
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+}
+
+model HrPreHireConversion {
+  id                  String                @id @default(cuid())
+  organizationId      String
+  handoverId          String                @unique
+  applicantId         String                @unique
+  applicationId       String                @unique
+  employeeId          String                @unique
+  lifecycleInstanceId String                @unique
+  idempotencyKey      String                @unique
+  convertedById       String
+  convertedAt         DateTime              @default(now())
+  handover            HrRecruitmentHandover @relation(fields: [handoverId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, convertedAt])
+}
+
+model HrRecruitmentActivation {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  employeeId          String    @unique
+  employeeActivatedAt DateTime?
+  userActivatedAt     DateTime?
+  activatedById       String?
+  source              String
+  idempotencyKey      String    @unique
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([organizationId, createdAt])
 }
