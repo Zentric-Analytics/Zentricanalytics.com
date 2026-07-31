@@ -104,6 +104,7 @@ describe("enterprise organization management", () => {
     const schema = readFileSync("prisma/schema.prisma", "utf8");
     const actions = readFileSync("src/app/hr/admin/users/actions.ts", "utf8");
     const page = readFileSync("src/app/hr/admin/users/page.tsx", "utf8");
+    const deletionForm = readFileSync("src/app/hr/admin/users/UserDeletionForm.tsx", "utf8");
     expect(schema).toContain("isPrimaryAdmin");
     expect(schema).toContain("DELETED");
     expect(actions).toContain("Only the primary administrator can perform this action.");
@@ -114,7 +115,8 @@ describe("enterprise organization management", () => {
     expect(actions).toContain('status: "REVOKED"');
     expect(actions).toContain('status: "DELETED"');
     expect(page).toContain("Cancel invitation");
-    expect(page).toContain("Soft-delete user");
-    expect(page).toContain("Permanently delete user");
+    expect(page).toContain("UserDeletionForm");
+    expect(deletionForm).toContain("Soft-delete user");
+    expect(deletionForm).toContain("Permanently delete user");
   });
 });
