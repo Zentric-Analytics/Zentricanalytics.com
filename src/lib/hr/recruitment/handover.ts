@@ -6,11 +6,24 @@ import { assertHandoverTransition, evaluatePreHireEligibility, type HandoverStat
 type Client = Prisma.TransactionClient;
 
 export async function initializeHandoverRequirements(tx: Client, organizationId: string, handoverId: string) {
-  const definitions = await tx.hrRecruitmentRequirementDefinition.findMany({
+  let definitions = await tx.hrRecruitmentRequirementDefinition.findMany({
     where: { organizationId, active: true },
     orderBy: { key: "asc" },
   });
-  if (!definitions.length) throw new Error("No active pre-hire requirement definitions are configured.");
+  if (!definitions.length) {
+    await tx.hrRecruitmentRequirementDefinition.createMany({
+      data: [
+        { organizationId, key: "IDENTITY", name: "Identity verification", blocking: true, evidenceType: "DOCUMENT" },
+        { organizationId, key: "RIGHT_TO_WORK", name: "Right-to-work verification", blocking: true, evidenceType: "DOCUMENT" },
+        { organizationId, key: "PAYROLL_DETAILS", name: "Payroll details", blocking: true, evidenceType: "FORM" },
+      ],
+      skipDuplicates: true,
+    });
+    definitions = await tx.hrRecruitmentRequirementDefinition.findMany({
+      where: { organizationId, active: true },
+      orderBy: { key: "asc" },
+    });
+  }
   await tx.hrRecruitmentRequirement.createMany({
     data: definitions.map((definition) => ({
       handoverId,
@@ -42,6 +55,17 @@ export async function reviewRecruitmentDocument(
     where: { id: input.uploadedDocumentId, applicationId: handover.applicationId },
   });
   if (input.decision !== "VERIFIED" && !input.reason?.trim()) throw new Error("A reason is required when a document is not verified.");
+  const existingReview = await tx.hrRecruitmentDocumentReview.findUnique({
+    where: {
+      handoverId_uploadedDocumentId_documentVersion_reviewScope: {
+        handoverId: handover.id,
+        uploadedDocumentId: input.uploadedDocumentId,
+        documentVersion: input.documentVersion,
+        reviewScope: input.reviewScope,
+      },
+    },
+  });
+  if (existingReview?.replacedById) throw new Error("A newer document version was submitted. Review the latest version.");
   const review = await tx.hrRecruitmentDocumentReview.upsert({
     where: {
       handoverId_uploadedDocumentId_documentVersion_reviewScope: {
@@ -93,7 +117,7 @@ export async function evaluateHandoverEligibility(tx: Client, organizationId: st
   });
   const acceptedVersion = handover.offerAcceptance.offer.acceptedVersion;
   const documentBlockers = handover.documentReviews.filter((review) =>
-    review.reviewScope === "HR" && review.status !== "VERIFIED",
+    review.reviewScope === "HR" && review.status !== "VERIFIED" && !review.replacedById,
   );
   const base = evaluatePreHireEligibility({
     handoverStatus: handover.status as HandoverStatus,
@@ -161,4 +185,74 @@ export async function transitionHandover(
     reason: input.reason,
   });
   return { ...handover, status: input.to, version: handover.version + 1 };
+}
+
+export async function updateRecruitmentRequirement(
+  tx: Client,
+  input: {
+    organizationId: string;
+    requirementId: string;
+    actorUserId: string;
+    expectedVersion: number;
+    to: "PENDING_SUBMISSION" | "SUBMITTED" | "UNDER_REVIEW" | "VERIFIED" | "REJECTED" | "WAIVED";
+    reason: string;
+  },
+) {
+  const requirement = await tx.hrRecruitmentRequirement.findFirstOrThrow({
+    where: { id: input.requirementId, handover: { organizationId: input.organizationId } },
+  });
+  if (input.to === "WAIVED" && !input.reason.trim()) throw new Error("A waiver requires a reason.");
+  const result = await tx.hrRecruitmentRequirement.updateMany({
+    where: { id: requirement.id, version: input.expectedVersion },
+    data: {
+      status: input.to,
+      evaluatedAt: new Date(),
+      evaluatedById: input.actorUserId,
+      overrideReason: input.to === "WAIVED" ? input.reason : null,
+      version: { increment: 1 },
+    },
+  });
+  if (result.count !== 1) throw new Error("Requirement changed concurrently. Reload and try again.");
+  await appendHrAudit(tx, {
+    organizationId: input.organizationId,
+    actorUserId: input.actorUserId,
+    entityType: "HrRecruitmentRequirement",
+    entityId: requirement.id,
+    action: `hr.recruitment.requirement.${input.to.toLowerCase()}`,
+    previousValues: { status: requirement.status, version: requirement.version },
+    newValues: { status: input.to, version: requirement.version + 1 },
+    reason: input.reason,
+    correlationId: crypto.randomUUID(),
+  });
+}
+
+export async function reassignHandoverOwner(
+  tx: Client,
+  input: {
+    organizationId: string;
+    handoverId: string;
+    actorUserId: string;
+    ownerUserId: string;
+    expectedVersion: number;
+    reason: string;
+  },
+) {
+  await tx.hrUser.findFirstOrThrow({
+    where: { id: input.ownerUserId, organizationId: input.organizationId, status: "ACTIVE" },
+  });
+  const result = await tx.hrRecruitmentHandover.updateMany({
+    where: { id: input.handoverId, organizationId: input.organizationId, version: input.expectedVersion },
+    data: { ownerUserId: input.ownerUserId, version: { increment: 1 } },
+  });
+  if (result.count !== 1) throw new Error("Handover changed concurrently. Reload and try again.");
+  await appendHrAudit(tx, {
+    organizationId: input.organizationId,
+    actorUserId: input.actorUserId,
+    entityType: "HrRecruitmentHandover",
+    entityId: input.handoverId,
+    action: "hr.recruitment.handover.reassigned",
+    newValues: { ownerUserId: input.ownerUserId },
+    reason: input.reason,
+    correlationId: crypto.randomUUID(),
+  });
 }

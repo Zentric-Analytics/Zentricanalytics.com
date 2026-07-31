@@ -44,6 +44,12 @@ export async function scheduleInterview(
       participants: { create: participants.map((user) => ({ userId: user.id, role: "INTERVIEWER" })) },
     },
   });
+  if (application.recruitmentStatus === "INTERVIEW_PENDING") {
+    await tx.jobApplication.update({
+      where: { id: application.id },
+      data: { recruitmentStatus: "INTERVIEW_SCHEDULED", version: { increment: 1 } },
+    });
+  }
   for (const user of participants) {
     await enqueueHrEmail(tx, {
       organizationId: input.organizationId,
@@ -95,5 +101,93 @@ export async function submitInterviewFeedback(
     where: { interviewId_interviewerId: { interviewId: input.interviewId, interviewerId: input.interviewerId } },
     create: { interviewId: input.interviewId, interviewerId: input.interviewerId, scores: input.scores, recommendation: input.recommendation, comments: input.comments, status: "SUBMITTED", submittedAt: new Date() },
     update: { scores: input.scores, recommendation: input.recommendation, comments: input.comments, status: "SUBMITTED", submittedAt: new Date(), version: { increment: 1 } },
+  });
+}
+
+export async function changeInterview(
+  tx: Client,
+  input: {
+    organizationId: string;
+    interviewId: string;
+    actorUserId: string;
+    actorRole?: string;
+    expectedVersion: number;
+    action: "RESCHEDULE" | "CANCEL" | "COMPLETE";
+    reason: string;
+    startsAt?: Date;
+    endsAt?: Date;
+    timeZone?: string;
+  },
+) {
+  const interview = await tx.hrInterview.findFirstOrThrow({
+    where: { id: input.interviewId, organizationId: input.organizationId },
+    include: { participants: true },
+  });
+  if (interview.status === "CANCELLED") throw new Error("A cancelled interview cannot be changed.");
+  if (interview.status === "COMPLETED") throw new Error("A completed interview is locked.");
+  if (input.action === "RESCHEDULE") {
+    if (!input.startsAt || !input.endsAt || input.endsAt <= input.startsAt) {
+      throw new Error("Rescheduling requires a valid start and end time.");
+    }
+  }
+  const status = input.action === "CANCEL" ? "CANCELLED" : input.action === "COMPLETE" ? "COMPLETED" : interview.status;
+  const result = await tx.hrInterview.updateMany({
+    where: { id: interview.id, organizationId: input.organizationId, version: input.expectedVersion },
+    data: {
+      status,
+      startsAt: input.startsAt ?? interview.startsAt,
+      endsAt: input.endsAt ?? interview.endsAt,
+      timeZone: input.timeZone ?? interview.timeZone,
+      version: { increment: 1 },
+    },
+  });
+  if (result.count !== 1) throw new Error("Interview changed concurrently. Reload and try again.");
+  if (input.action === "COMPLETE") {
+    await tx.jobApplication.updateMany({
+      where: { id: interview.applicationId, organizationId: input.organizationId, recruitmentStatus: "INTERVIEW_SCHEDULED" },
+      data: { recruitmentStatus: "INTERVIEW_COMPLETED", version: { increment: 1 } },
+    });
+  }
+  await appendHrAudit(tx, {
+    organizationId: input.organizationId,
+    actorUserId: input.actorUserId,
+    actorRole: input.actorRole,
+    entityType: "HrInterview",
+    entityId: interview.id,
+    action: `hr.recruitment.interview.${input.action.toLowerCase()}`,
+    previousValues: { status: interview.status, startsAt: interview.startsAt, version: interview.version },
+    newValues: { status, startsAt: input.startsAt ?? interview.startsAt, version: interview.version + 1 },
+    reason: input.reason,
+    correlationId: crypto.randomUUID(),
+  });
+}
+
+export async function saveInterviewFeedback(
+  tx: Client,
+  input: {
+    organizationId: string;
+    interviewId: string;
+    interviewerId: string;
+    scores: Prisma.InputJsonValue;
+    recommendation?: string;
+    comments?: string;
+  },
+) {
+  const assigned = await tx.hrInterviewParticipant.findFirst({
+    where: {
+      interviewId: input.interviewId,
+      userId: input.interviewerId,
+      interview: { organizationId: input.organizationId, status: "SCHEDULED" },
+    },
+  });
+  if (!assigned) throw new Error("You are not assigned to this active interview.");
+  const existing = await tx.hrInterviewFeedback.findUnique({
+    where: { interviewId_interviewerId: { interviewId: input.interviewId, interviewerId: input.interviewerId } },
+  });
+  if (existing?.status === "SUBMITTED") throw new Error("Submitted interview feedback is locked.");
+  return tx.hrInterviewFeedback.upsert({
+    where: { interviewId_interviewerId: { interviewId: input.interviewId, interviewerId: input.interviewerId } },
+    create: { interviewId: input.interviewId, interviewerId: input.interviewerId, scores: input.scores, recommendation: input.recommendation, comments: input.comments, status: "DRAFT" },
+    update: { scores: input.scores, recommendation: input.recommendation, comments: input.comments, version: { increment: 1 } },
   });
 }

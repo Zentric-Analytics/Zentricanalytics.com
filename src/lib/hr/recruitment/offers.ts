@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { appendHrAudit } from "../audit";
 import { enqueueHrEmail } from "../notifications/outbox";
+import { initializeHandoverRequirements } from "./handover";
 
 type Client = Prisma.TransactionClient;
 
@@ -68,6 +69,12 @@ export async function createOffer(
     where: { id: offer.id },
     data: { activeVersionId: version.id, status: "DRAFT", updatedById: input.actorUserId, version: { increment: existing ? 1 : 0 } },
   });
+  if (application.recruitmentStatus !== "OFFER_DRAFT") {
+    await tx.jobApplication.update({
+      where: { id: application.id },
+      data: { recruitmentStatus: "OFFER_DRAFT", version: { increment: 1 } },
+    });
+  }
   await appendHrAudit(tx, {
     organizationId: input.organizationId,
     actorUserId: input.actorUserId,
@@ -84,12 +91,13 @@ export async function createOffer(
 
 export async function approveOffer(
   tx: Client,
-  input: { organizationId: string; offerId: string; actorUserId: string; actorRole?: string; comments?: string },
+  input: { organizationId: string; offerId: string; actorUserId: string; actorRole?: string; comments?: string; expectedVersion?: number },
 ) {
   const offer = await tx.hrRecruitmentOffer.findFirstOrThrow({
     where: { id: input.offerId, organizationId: input.organizationId },
   });
   if (!offer.activeVersionId) throw new Error("Offer has no active version.");
+  if (input.expectedVersion !== undefined && offer.version !== input.expectedVersion) throw new Error("Offer changed concurrently. Reload and try again.");
   if (offer.createdById === input.actorUserId) throw new Error("Offer creators cannot approve their own offer.");
   if (!["DRAFT", "PENDING_APPROVAL"].includes(offer.status)) throw new Error("Offer is not awaiting approval.");
   await tx.hrRecruitmentOfferApproval.upsert({
@@ -97,12 +105,42 @@ export async function approveOffer(
     update: {},
     create: { offerId: offer.id, offerVersionId: offer.activeVersionId, step: 1, decision: "APPROVED", approverId: input.actorUserId, comments: input.comments },
   });
-  return tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "APPROVED", updatedById: input.actorUserId, version: { increment: 1 } } });
+  const approved = await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "APPROVED", updatedById: input.actorUserId, version: { increment: 1 } } });
+  await appendHrAudit(tx, {
+    organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole,
+    entityType: "HrRecruitmentOffer", entityId: offer.id, action: "hr.recruitment.offer.approved",
+    previousValues: { status: offer.status }, newValues: { status: "APPROVED", offerVersionId: offer.activeVersionId },
+    reason: input.comments ?? "Offer approved", correlationId: crypto.randomUUID(),
+  });
+  return approved;
+}
+
+export async function submitOfferForApproval(
+  tx: Client,
+  input: { organizationId: string; offerId: string; actorUserId: string; actorRole?: string; reason: string; expectedVersion: number },
+) {
+  const result = await tx.hrRecruitmentOffer.updateMany({
+    where: { id: input.offerId, organizationId: input.organizationId, status: "DRAFT", version: input.expectedVersion, activeVersionId: { not: null } },
+    data: { status: "PENDING_APPROVAL", updatedById: input.actorUserId, version: { increment: 1 } },
+  });
+  if (result.count !== 1) throw new Error("Offer is not a current draft or changed concurrently.");
+  const offer = await tx.hrRecruitmentOffer.findUniqueOrThrow({ where: { id: input.offerId } });
+  await tx.jobApplication.updateMany({
+    where: { id: offer.applicationId, organizationId: input.organizationId },
+    data: { recruitmentStatus: "OFFER_PENDING_APPROVAL", version: { increment: 1 } },
+  });
+  await appendHrAudit(tx, {
+    organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole,
+    entityType: "HrRecruitmentOffer", entityId: input.offerId, action: "hr.recruitment.offer.submitted",
+    previousValues: { status: "DRAFT", version: input.expectedVersion },
+    newValues: { status: "PENDING_APPROVAL", version: input.expectedVersion + 1 },
+    reason: input.reason, correlationId: crypto.randomUUID(),
+  });
 }
 
 export async function issueOffer(
   tx: Client,
-  input: { organizationId: string; offerId: string; actorUserId: string; recipient: string },
+  input: { organizationId: string; offerId: string; actorUserId: string; actorRole?: string; recipient: string },
 ) {
   const offer = await tx.hrRecruitmentOffer.findFirstOrThrow({
     where: { id: input.offerId, organizationId: input.organizationId, status: "APPROVED" },
@@ -126,7 +164,18 @@ export async function issueOffer(
     payload: { offerId: offer.id, href: `/careers/offers/${offer.id}` },
     idempotencyKey: `offer-issued:${offer.id}:${activeVersionId}`,
   });
-  return tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "ISSUED", updatedById: input.actorUserId, version: { increment: 1 } } });
+  const issued = await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "ISSUED", updatedById: input.actorUserId, version: { increment: 1 } } });
+  await tx.jobApplication.updateMany({
+    where: { id: offer.applicationId, organizationId: input.organizationId },
+    data: { recruitmentStatus: "OFFER_ISSUED", version: { increment: 1 } },
+  });
+  await appendHrAudit(tx, {
+    organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole,
+    entityType: "HrRecruitmentOffer", entityId: offer.id, action: "hr.recruitment.offer.issued",
+    previousValues: { status: "APPROVED" }, newValues: { status: "ISSUED", offerVersionId: activeVersionId },
+    reason: "Approved exact offer version issued", correlationId: crypto.randomUUID(),
+  });
+  return issued;
 }
 
 export async function acceptOffer(
@@ -161,6 +210,7 @@ export async function acceptOffer(
       ownerUserId: application.applicationOwnerId,
     },
   });
+  await initializeHandoverRequirements(tx, input.organizationId, handover.id);
   if (offer.status !== "ACCEPTED") {
     await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "ACCEPTED", acceptedVersionId: input.offerVersionId, version: { increment: 1 } } });
     await tx.jobApplication.update({ where: { id: application.id }, data: { recruitmentStatus: "OFFER_ACCEPTED", version: { increment: 1 } } });
@@ -174,5 +224,19 @@ export async function acceptOffer(
     newValues: { status: "ACCEPTED", handoverId: handover.id },
     reason: "Applicant accepted the active offer version",
   });
+  const hrRecipients = await tx.hrHiringTeamMember.findMany({
+    where: { hiringTeamId: handover.assignedHrTeamId, status: "ACTIVE", user: { status: "ACTIVE" } },
+    include: { user: true },
+  });
+  for (const member of hrRecipients) {
+    await enqueueHrEmail(tx, {
+      organizationId: input.organizationId,
+      recipient: member.user.email,
+      template: "hr-handover-created",
+      subject: "New accepted offer requires HR review",
+      payload: { handoverId: handover.id, href: `/hr/admin/handovers/${handover.id}` },
+      idempotencyKey: `handover-created:${handover.id}:${member.userId}`,
+    });
+  }
   return { ...acceptance, handover };
 }

@@ -640,6 +640,45 @@ export async function submitOfferDecision(formData: FormData) {
   diagnostics.sessionValid = Boolean(access);
   if (!access) redirect("/track?verified=0");
   const application = access.application;
+  const governedOffer = await prisma.hrRecruitmentOffer.findUnique({
+    where: { applicationId: application.id },
+    include: { activeVersion: true },
+  });
+  if (governedOffer?.status === "ISSUED" && governedOffer.activeVersion && application.organizationId) {
+    if (parsed.data.decision === "accept") {
+      const { acceptOffer: acceptGovernedOffer } = await import("@/lib/hr/recruitment/offers");
+      await prisma.$transaction((tx) => acceptGovernedOffer(tx, {
+        organizationId: application.organizationId!,
+        offerId: governedOffer.id,
+        applicantId: application.applicantId,
+        offerVersionId: governedOffer.activeVersionId!,
+        method: "SECURE_CANDIDATE_PORTAL",
+        evidence: { sessionVerified: true, confirmation: true },
+      }), { isolationLevel: "Serializable" });
+      redirect(portalUrl(session, { stage: "4", success: "offer_accepted" }));
+    }
+    await prisma.$transaction(async (tx) => {
+      await tx.hrRecruitmentOfferDecline.upsert({
+        where: { offerId: governedOffer.id },
+        update: {},
+        create: {
+          offerId: governedOffer.id,
+          offerVersionId: governedOffer.activeVersionId!,
+          applicantId: application.applicantId,
+          reason: parsed.data.candidateDecisionNote || null,
+        },
+      });
+      await tx.hrRecruitmentOffer.update({
+        where: { id: governedOffer.id },
+        data: { status: "DECLINED", version: { increment: 1 } },
+      });
+      await tx.jobApplication.update({
+        where: { id: application.id },
+        data: { recruitmentStatus: "OFFER_DECLINED", version: { increment: 1 } },
+      });
+    });
+    redirect(portalUrl(session, { stage: "4", success: "offer_declined" }));
+  }
   const stage4 = application.stages.find((s) => s.stageOrder === 4);
   const offer = application.offer;
   const expired = Boolean(
@@ -740,6 +779,81 @@ export async function submitOfferDecision(formData: FormData) {
     destination ||
       portalUrl(session, { stage: "4", error: "offer_decision_failed" }),
   );
+}
+
+export async function submitGovernedDocumentReplacement(formData: FormData) {
+  const session = String(formData.get("session") ?? "");
+  const reviewId = String(formData.get("reviewId") ?? "");
+  const file = formData.get("replacementFile");
+  if (!(file instanceof File) || !reviewId) redirect(portalUrl(session, { error: "replacement_validation" }));
+  const fileError = validateOnboardingDocumentFile(file);
+  if (fileError) redirect(portalUrl(session, { error: "replacement_file_invalid" }));
+  const access = await prisma.applicationAccessCode.findFirst({
+    where: {
+      verifiedSessionTokenHash: sha256(session),
+      sessionExpiresAt: { gt: new Date() },
+      application: { deletedAt: null },
+    },
+    include: { application: true },
+  });
+  if (!access) redirect("/track?verified=0");
+  const review = await prisma.hrRecruitmentDocumentReview.findFirst({
+    where: {
+      id: reviewId,
+      status: "REPLACEMENT_REQUESTED",
+      handover: { applicationId: access.application.id, organizationId: access.application.organizationId ?? undefined },
+    },
+  });
+  if (!review) redirect(portalUrl(session, { error: "replacement_not_open" }));
+  const previous = await prisma.uploadedDocument.findFirstOrThrow({
+    where: { id: review.uploadedDocumentId, applicationId: access.application.id },
+  });
+  const saved = await savePrivateUpload(file, access.application.applicationId);
+  try {
+    await prisma.$transaction(async (tx) => {
+      const replacement = await tx.uploadedDocument.create({
+        data: {
+          applicationId: access.application.id,
+          kind: previous.kind,
+          fileName: file.name,
+          mimeType: file.type,
+          sizeBytes: file.size,
+          provider: saved.provider,
+          storageKey: saved.storageKey,
+          restricted: true,
+        },
+      });
+      const claimed = await tx.hrRecruitmentDocumentReview.updateMany({
+        where: { id: review.id, status: "REPLACEMENT_REQUESTED", replacedById: null },
+        data: { replacedById: replacement.id },
+      });
+      if (claimed.count !== 1) throw new Error("The replacement request changed while the file was uploading.");
+      await tx.hrRecruitmentDocumentReview.create({
+        data: {
+          handoverId: review.handoverId,
+          uploadedDocumentId: replacement.id,
+          documentVersion: review.documentVersion + 1,
+          reviewScope: review.reviewScope,
+          status: "PENDING",
+        },
+      });
+      await tx.hrAuditEvent.create({
+        data: {
+          organizationId: access.application.organizationId!,
+          entityType: "HrRecruitmentDocumentReview",
+          entityId: review.id,
+          action: "hr.recruitment.document.replacement_submitted",
+          newValues: { replacementDocumentId: replacement.id, priorDocumentId: previous.id },
+          reason: "Applicant submitted a replacement document through the verified portal",
+          correlationId: randomToken(16),
+        },
+      });
+    });
+  } catch (error) {
+    await deletePrivateUpload(saved.storageKey, saved.provider);
+    throw error;
+  }
+  redirect(portalUrl(session, { success: "replacement_submitted" }));
 }
 
 export async function submitStage5(formData: FormData) {

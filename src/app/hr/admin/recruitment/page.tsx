@@ -77,7 +77,7 @@ export default async function RecruitmentWorkspace() {
         {handovers.map((handover) => {
           const blocking = handover.requirements.filter((item) => item.blocking && !["VERIFIED","WAIVED"].includes(item.status)).length;
           const documents = handover.documentReviews.filter((item) => item.reviewScope === "HR" && item.status !== "VERIFIED").length;
-          return <article className="rounded-2xl border bg-white p-4" key={handover.id}><div className="flex justify-between gap-3"><strong>{label(handover.status)}</strong><span>v{handover.version}</span></div><p className="mt-2 text-sm text-slate-600">{blocking} blocking requirements · {documents} document actions</p></article>;
+          return <article className="rounded-2xl border bg-white p-4" key={handover.id}><div className="flex justify-between gap-3"><strong>{label(handover.status)}</strong><span>v{handover.version}</span></div><p className="mt-2 text-sm text-slate-600">{blocking} blocking requirements · {documents} document actions</p><Link className="mt-3 inline-block font-bold text-teal-700" href={`/hr/admin/handovers/${handover.id}`}>Review HR handover</Link></article>;
         })}
         {!handovers.length ? <p className="rounded-2xl border bg-white p-5 text-slate-600">No accepted offers await HR handover.</p> : null}
       </div></div>
@@ -85,7 +85,7 @@ export default async function RecruitmentWorkspace() {
         {preHires.map((employee) => {
           const tasks = employee.lifecycleInstances[0]?.tasks ?? [];
           const complete = tasks.filter((task) => task.status === "COMPLETED").length;
-          return <article className="rounded-2xl border bg-white p-4" key={employee.id}><div className="flex justify-between gap-3"><strong>{employee.legalFirstName} {employee.lastName}</strong><span>{label(employee.employmentStatus)}</span></div><p className="mt-2 text-sm text-slate-600">{employee.employeeNumber} · starts {employee.startDate?.toLocaleDateString() ?? "not set"} · {complete}/{tasks.length} onboarding tasks complete</p></article>;
+          return <article className="rounded-2xl border bg-white p-4" key={employee.id}><div className="flex justify-between gap-3"><strong>{employee.legalFirstName} {employee.lastName}</strong><span>{label(employee.employmentStatus)}</span></div><p className="mt-2 text-sm text-slate-600">{employee.employeeNumber} · starts {employee.startDate?.toLocaleDateString() ?? "not set"} · {complete}/{tasks.length} onboarding tasks complete</p><Link className="mt-3 inline-block font-bold text-teal-700" href={`/hr/admin/onboarding/${employee.id}`}>Manage onboarding and readiness</Link></article>;
         })}
         {!preHires.length ? <p className="rounded-2xl border bg-white p-5 text-slate-600">No pre-hires are awaiting start readiness.</p> : null}
       </div></div>
