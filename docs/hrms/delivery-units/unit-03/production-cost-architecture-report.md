@@ -57,7 +57,7 @@ The presently fixed minimum Render increase is:
 
 **Approved fixed Render increase completed: at least +$14/month.**
 
-The minimum safe ClamAV worker would add **+$85/month**. Private R2 storage is expected to start at $0 within its allowance but remains a new provider configuration and usage-priced service. Neither has been approved or provisioned.
+The continuous ClamAV worker remains **+$85/month**, but the engineering review does not recommend purchasing it. The preferred startup architecture is private Amazon S3 with GuardDuty Malware Protection for S3: its current monthly allowance covers 1,000 objects and 1 GB, with example US East paid scanning rates of $0.09/GB plus $0.215 per 1,000 objects, excluding S3 storage/API usage. The lower-complexity fallback is Cloudmersive Basic at **$19.99/month** after privacy/DPA review. None has been approved or provisioned.
 
 Do not purchase or provision any item until the product owner explicitly approves the net additional cost. Existing Pro workspace, Starter web service, 15 GB database storage, and 1 GB disk must not be purchased again.
 
