@@ -22,12 +22,13 @@ export default async function HandoverPage({ params }: { params: Promise<{ id: s
     },
   });
   if (!handover) notFound();
+  const governedEntityIds = [handover.id, ...handover.requirements.map((item) => item.id), ...handover.documentReviews.map((item) => item.id)];
   const [application, definitions, users, eligibility, audits] = await Promise.all([
     prisma.jobApplication.findFirst({ where: { id: handover.applicationId, organizationId }, include: { applicant: true, documents: true } }),
     prisma.hrRecruitmentRequirementDefinition.findMany({ where: { organizationId } }),
     prisma.hrUser.findMany({ where: { organizationId, status: "ACTIVE" }, orderBy: { email: "asc" } }),
     prisma.$transaction((tx) => evaluateHandoverEligibility(tx, organizationId, handover.id)),
-    prisma.hrAuditEvent.findMany({ where: { organizationId, OR: [{ entityId: handover.id }, { entityType: { in: ["HrRecruitmentRequirement", "HrRecruitmentDocumentReview"] } }] }, orderBy: { createdAt: "desc" }, take: 50 }),
+    prisma.hrAuditEvent.findMany({ where: { organizationId, entityId: { in: governedEntityIds } }, orderBy: { createdAt: "desc" }, take: 50 }),
   ]);
   if (!application) notFound();
   const accepted = handover.offerAcceptance.offer.acceptedVersion;

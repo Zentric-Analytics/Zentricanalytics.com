@@ -238,7 +238,7 @@ export async function activateReadyEmployee(
     recipient: employee.personalEmail!,
     template: "hr-employee-activated",
     subject: "Your employee record is active",
-    payload: { employeeId: employee.id, recipientName: `${employee.preferredName ?? employee.legalFirstName} ${employee.lastName}`, href: userActivated ? "/hr/employee" : "/hr/invitation" },
+    payload: { employeeId: employee.id, recipientName: `${employee.preferredName ?? employee.legalFirstName} ${employee.lastName}`, href: userActivated ? "/hr/employee" : "/hr/login" },
     idempotencyKey: `employee-activated:${employee.id}`,
   });
   const activation = await tx.hrRecruitmentActivation.upsert({

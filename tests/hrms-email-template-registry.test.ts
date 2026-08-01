@@ -51,6 +51,8 @@ describe("HR outbound email template registry", () => {
     expect(activation).toContain('template: "hr-account-invitation"');
     expect(activation).toContain('action: "hr.recruitment.employee_account.provisioned"');
     expect(activation).toContain("userActivatedAt: userActivated ? now : null");
+    expect(activation).toContain('userActivated ? "/hr/employee" : "/hr/login"');
+    expect(activation).not.toContain('userActivated ? "/hr/employee" : "/hr/invitation"');
     const authorization = readFileSync("src/lib/hr/permissions/authorize.ts", "utf8");
     expect(authorization).toContain("forbidden()");
     expect(readFileSync("src/app/forbidden.tsx", "utf8")).toContain("Access denied · 403");

@@ -117,6 +117,15 @@ describe("Unit 3 connected recruitment workspaces", () => {
     ]) expect(actions).toContain(operation);
     expect(page).toContain("Pre-hire eligibility:");
     expect(page).toContain("Approve and create PRE_HIRE");
+    expect(page).toContain("entityId: { in: governedEntityIds }");
+    expect(page).not.toContain('entityType: { in: ["HrRecruitmentRequirement", "HrRecruitmentDocumentReview"] }');
+  });
+
+  it("hides stale legacy stage progress after the governed offer lifecycle begins", () => {
+    const portal = read("src/app/track/portal/page.tsx");
+    expect(portal).toContain("governedLifecycleActive");
+    expect(portal).toContain("Governed lifecycle status");
+    expect(portal).toContain("Legacy stage percentages are hidden once an immutable offer is issued.");
   });
 
   it("enforces onboarding dependencies and readiness before activation", () => {

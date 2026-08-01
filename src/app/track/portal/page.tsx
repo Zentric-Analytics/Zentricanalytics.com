@@ -223,6 +223,14 @@ export default async function Portal({
     include: { documentReviews: true },
   });
   const replacementRequests = governedHandover?.documentReviews.filter((review) => review.status === "REPLACEMENT_REQUESTED") ?? [];
+  const governedLifecycleActive = Boolean(governedOffer?.activeVersion && ["ISSUED", "ACCEPTED", "DECLINED"].includes(governedOffer.status));
+  const governedLifecycleStep = governedOffer?.status === "ISSUED"
+    ? "Offer awaiting your decision"
+    : governedOffer?.status === "DECLINED"
+      ? "Offer declined"
+      : governedHandover?.status === "CONVERTED_TO_PRE_HIRE"
+        ? "Transferred to employee onboarding"
+        : "Accepted offer transferred to HR";
 
   return (
     <PageShell>
@@ -252,7 +260,16 @@ export default async function Portal({
             return <article className="rounded-2xl border p-4" key={review.id}><strong>{document?.kind ?? "Requested document"}</strong><p className="mt-1 text-sm text-slate-600">{review.reason ?? "HR requested a replacement."}</p>{review.replacedById ? <p className="mt-3 font-semibold text-emerald-700">Replacement submitted and awaiting exact-version review.</p> : <form action={submitGovernedDocumentReplacement} className="mt-3 space-y-3"><input type="hidden" name="session" value={session ?? ""} /><input type="hidden" name="reviewId" value={review.id} /><input className="input" name="replacementFile" type="file" required /><button className="btn btn-primary">Submit private replacement</button></form>}</article>;
           })}</div>
         </section> : null}
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] lg:items-start">
+        {governedLifecycleActive ? <section className="card p-5 sm:p-6" aria-labelledby="governed-lifecycle-title">
+          <p className="text-xs font-bold uppercase tracking-widest text-accent">Application ID</p>
+          <h2 id="governed-lifecycle-title" className="mt-2 break-all text-2xl font-bold tracking-tight text-ink sm:text-3xl">{application.applicationId}</h2>
+          <p className="mt-2 text-sm text-slate-600">{application.applicant.fullName} Â· {application.roleAppliedFor}</p>
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Governed lifecycle status</p>
+            <p className="mt-2 text-base font-bold text-ink">{governedLifecycleStep}</p>
+            <p className="mt-2 text-sm text-slate-600">The governed recruitment record above is authoritative. Legacy stage percentages are hidden once an immutable offer is issued.</p>
+          </div>
+        </section> : <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] lg:items-start">
           <section
             className="card overflow-hidden p-0 lg:col-start-1 lg:row-start-1"
             aria-labelledby="portal-overview-title"
@@ -1172,7 +1189,7 @@ export default async function Portal({
               </p>
             )}
           </section>
-        </div>
+        </div>}
       </Section>
     </PageShell>
   );
