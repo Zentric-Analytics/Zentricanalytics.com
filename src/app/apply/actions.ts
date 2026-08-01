@@ -14,6 +14,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { isVacancyAcceptingApplications } from '@/lib/hr/recruitment/states';
 import { appendHrAudit } from '@/lib/hr/audit';
 import { enqueueHrEmail } from '@/lib/hr/notifications/outbox';
+import { applicantIdentityFilter } from '@/lib/hr/recruitment/applicant-identity';
 import type { Stage1Field, Stage1FormState } from './form-state';
 
 function valueOf(formData: FormData, key: string) { const value = formData.get(key); return typeof value === 'string' ? value : ''; }
@@ -56,7 +57,7 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
           throw new Error("This vacancy is no longer accepting applications.");
         }
         const normalizedEmail = data.email.toLowerCase();
-        let applicant = vacancy && hrOrganization ? await tx.applicant.findFirst({ where: { organizationId: hrOrganization.id, OR: [{ normalizedEmail }, { normalizedPhone: data.phoneE164 }] }, orderBy: { createdAt: "asc" } }) : null;
+        let applicant = vacancy && hrOrganization ? await tx.applicant.findFirst({ where: applicantIdentityFilter({ organizationId: hrOrganization.id, normalizedEmail }), orderBy: { createdAt: "asc" } }) : null;
         if (!applicant) {
           let applicantNumber: string | undefined;
           if (vacancy && hrOrganization) {
