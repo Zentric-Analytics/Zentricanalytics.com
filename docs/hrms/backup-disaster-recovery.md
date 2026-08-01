@@ -3,11 +3,12 @@
 ## Policy
 
 - Use provider-managed encrypted PostgreSQL backups with point-in-time recovery.
-- Retain recoverable backups for at least 30 days.
+- Retain point-in-time recovery for at least 30 days.
+- Retain daily backups for at least 90 days, weekly backups for one year, and monthly archives for 15 years. Archive retention must be protected from ordinary application and operator deletion.
 - Keep object storage private, encrypted, versioned and lifecycle-protected.
 - Store database and object-storage credentials only in the platform secret manager.
 - Set target RPO/RTO with the business owner; recommended starting targets are RPO 15 minutes and RTO 4 hours.
-- Run and record an isolated restore drill at least quarterly.
+- Run and record an isolated restore drill at least quarterly and a full disaster-recovery exercise at least annually.
 
 `yarn hr:backup-readiness` validates declared provider, retention, PITR and restore-test evidence without printing credentials.
 
