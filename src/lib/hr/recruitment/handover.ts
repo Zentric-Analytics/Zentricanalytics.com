@@ -67,16 +67,22 @@ export async function reviewRecruitmentDocument(
     },
   });
   if (existingReview?.replacedById) throw new Error("A newer document version was submitted. Review the latest version.");
-  const review = await tx.hrRecruitmentDocumentReview.upsert({
-    where: {
-      handoverId_uploadedDocumentId_documentVersion_reviewScope: {
-        handoverId: handover.id,
-        uploadedDocumentId: input.uploadedDocumentId,
-        documentVersion: input.documentVersion,
-        reviewScope: input.reviewScope,
+  let review;
+  if (existingReview) {
+    const claimed = await tx.hrRecruitmentDocumentReview.updateMany({
+      where: { id: existingReview.id, replacedById: null },
+      data: {
+        status: input.decision,
+        reviewedById: input.actorUserId,
+        reason: input.reason,
+        reviewedAt: new Date(),
       },
-    },
-    create: {
+    });
+    if (claimed.count !== 1) throw new Error("A newer document version was submitted. Review the latest version.");
+    review = await tx.hrRecruitmentDocumentReview.findUniqueOrThrow({ where: { id: existingReview.id } });
+  } else {
+    review = await tx.hrRecruitmentDocumentReview.create({
+      data: {
       handoverId: handover.id,
       uploadedDocumentId: input.uploadedDocumentId,
       documentVersion: input.documentVersion,
@@ -85,14 +91,9 @@ export async function reviewRecruitmentDocument(
       reviewedById: input.actorUserId,
       reason: input.reason,
       reviewedAt: new Date(),
-    },
-    update: {
-      status: input.decision,
-      reviewedById: input.actorUserId,
-      reason: input.reason,
-      reviewedAt: new Date(),
-    },
-  });
+      },
+    });
+  }
   await appendHrAudit(tx, {
     organizationId: input.organizationId,
     actorUserId: input.actorUserId,

@@ -155,5 +155,8 @@ describe("Unit 3 connected recruitment workspaces", () => {
     expect(portalActions).toContain("documentVersion: review.documentVersion + 1");
     expect(portal).toContain("Earlier versions remain preserved for audit history.");
     expect(handover).toContain("A newer document version was submitted. Review the latest version.");
+    expect(handover).toContain("where: { id: existingReview.id, replacedById: null }");
+    expect(handover).toContain("if (claimed.count !== 1)");
+    expect(handover).not.toContain("hrRecruitmentDocumentReview.upsert");
   });
 });

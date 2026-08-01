@@ -18,6 +18,7 @@
     "hr:restore-drill": "node scripts/hr-restore-drill.mjs",
     "hr:smoke": "node scripts/hr-smoke.mjs",
     "hr:load-smoke": "node scripts/hr-load-smoke.mjs",
+    "hr:staging-concurrency": "node scripts/hr-staging-concurrency.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
