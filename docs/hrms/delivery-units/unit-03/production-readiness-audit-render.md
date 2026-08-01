@@ -4,6 +4,8 @@ Audit date: 2026-08-01. Initial scope: read-only Render and repository inspectio
 
 Follow-up remediation: production web-service auto-deploy was disabled on 2026-08-01. This configuration-only guard did not start a deployment; Render still reported deployment `dep-d92r4u3tqb8s73cm9btg` at commit `5aac0c6cc03d693a45699b4f65c3cba2a39cc0f8` as live. No production code, database data, migration or secret changed.
 
+The no-cost remediation candidate was deployed only to staging as `dep-d9n491laeets73b6jh10` from commit `72f3738033da422c2398f7b4747fdedcf8a32970`. Build and governed pre-deploy completed, 29 migrations were present with none pending, staging preflight reported ready, live/ready/login smoke passed, and the 100-request concurrency-10 load smoke had zero failures (`p50=98.0 ms`, `p95=280.8 ms`).
+
 ## Recovery-policy decision
 
 Render is the production platform. The production PITR gate is the maximum supported Render window of seven days. The previous 30-day PITR requirement is retired and must not be used to justify a second database platform.
