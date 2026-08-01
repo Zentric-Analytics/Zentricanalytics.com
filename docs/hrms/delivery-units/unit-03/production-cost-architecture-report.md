@@ -1,97 +1,72 @@
-# Units 1–3 paid infrastructure cost and architecture report
+# Units 1–3 production subscription and cost audit
 
-Prepared 2026-08-01. Prices are published list prices or Render-dashboard observations and exclude tax, data growth, excess bandwidth and provider-negotiated discounts. No component in this report has been purchased or provisioned.
+Prepared 2026-08-01 from read-only inspection of the Production workspace in Render. No plan, service, disk, database, worker, cron job, add-on, or payment setting was changed. Prices exclude tax and variable overage.
 
-## Recommended architecture
+## Current paid baseline
 
-Keep the application, workers and PostgreSQL primary on Render. Use one external S3-compatible object-storage provider only because private, durable HR document storage is an independent security requirement that Render does not supply. If Cloudflare R2 is approved for that requirement, use a separate R2 bucket and separate bucket-scoped token for database archives. This avoids introducing a second provider solely for backup retention.
+| Component | Observed configuration | Recurring price | Units 1–3 classification |
+| --- | --- | ---: | --- |
+| Render workspace | **Pro**, one member; 1,000 included pipeline minutes; 15 included custom domains; 25 GB included bandwidth | **$25/month** | **Already sufficient — no change.** It provides the production workspace controls and the database Recovery page confirms seven-day PITR. |
+| Zentricanalytics.com web service | **Starter**, 0.5 CPU, 512 MB RAM, one instance | **$7/month** | **Already sufficient — no change for initial release.** The same-sized staging service passed the Unit 3 production-like load gate. Reassess from post-release CPU, memory, latency, and restart evidence. |
+| Zentric Analytics PostgreSQL | **Basic-256mb**, 0.1 CPU, 256 MB RAM | **$6/month** | **Upgrade required.** It is below the explicit 1 GB minimum and therefore does not qualify for a keep-current capacity test. |
+| PostgreSQL storage | **15 GB**, autoscaling disabled | **$4.50/month** | **Already sufficient — no immediate capacity increase.** Enable a bounded autoscaling maximum as a no-cost configuration control when the database tier is changed. |
+| PostgreSQL PITR | Restore to any timestamp in the past **7 days**; logical exports retained at least seven days | Included | **Already sufficient — no change** for the adopted Render recovery window. It does not satisfy the separate long-term archive tiers. |
+| Web persistent disk | **1 GB** at `/var/data`; daily snapshots available for seven days | **$0.25/month** at Render's published disk rate | **Already paid, but not suitable for private HR documents or 15-year archives.** Retain only for its existing non-HR purpose unless a later inventory proves it unused. |
+| HRMS cron jobs | **None** in the Zentric Analytics production environment | $0 | **New service required** for scheduled logical backups. The workspace's existing cron job belongs to Kurioticket and must not be reused. |
+| HRMS background workers | **None** in the Zentric Analytics production environment | $0 | **New service required** for malware scanning unless an approved managed scanner is selected. Existing in-process outbox/activation scheduling can remain initially, subject to monitoring. |
+| HRMS paid add-ons | **None observed** | $0 | **No duplicate purchase.** |
 
-### 1. Scheduled backup execution
+The production workspace also contains Kurioticket and PecuniarRemit services and databases, plus one Kurioticket cron job. Render projects **$92.55** for the entire workspace for August; that figure is not the HRMS cost. The currently attributable Zentric Analytics infrastructure is approximately **$17.75/month** (`$7 + $10.50 + $0.25`), plus the already-paid shared **$25/month** Pro workspace subscription.
 
-**Why required:** Render PITR and Render-generated logical exports stop at seven days. A daily portable `pg_dump` is required for the 90-day, one-year and 15-year tiers.
+## Smallest qualifying Render changes
 
-| Option | Monthly cost | Operational/security impact |
-| --- | ---: | --- |
-| Render Cron Job, Starter compute only while running | Minimum **$1/month**, then prorated active compute | Single-run guarantee prevents overlap. Ephemeral filesystem requires immediate upload. Database URL, archive encryption key and bucket-scoped write token remain in Render secrets. Lowest operational burden. |
-| Render background worker, Starter | Approximately **$7/month**, plus disk if used | Continuous process and more monitoring. A persistent disk prevents zero-downtime worker deploys and remains a single-service storage attachment. Unnecessary if archives upload directly to protected object storage. |
-| Run from the production web service | No separate line-item cost | Rejected: backup CPU, memory and credentials would share the user-facing process and could affect availability. |
+### PostgreSQL capacity
 
-**Recommendation:** one daily Render Cron Job executing `yarn hr:database-archive`; expected base charge $1/month at current minimum billing, subject to run duration.
+| Item | Current | Proposed | Increment |
+| --- | ---: | ---: | ---: |
+| Compute | Basic-256mb, $6/month | **Basic-1gb, $19/month** | **+$13/month** |
+| Storage | 15 GB, $4.50/month | 15 GB, $4.50/month | $0 |
+| Database total | $10.50/month | **$23.50/month** | **+$13/month** |
 
-Sources: [Render Cron Jobs](https://render.com/docs/cronjobs), [Render PostgreSQL backups](https://render.com/docs/postgresql-backups).
+Reason: Basic-1gb is the smallest Render PostgreSQL tier meeting the required 1 GB RAM floor. It satisfies the minimum-capacity prerequisite for migration, real concurrency, and production-like load gates. Basic-256mb is cheaper but cannot qualify because it has only 256 MB. Pro-4gb is not required by current evidence. High availability remains an optional improvement and may be deferred if the product owner accepts temporary downtime risk.
 
-### 2. Long-term database archive storage
+After an approved upgrade, rerun migration preflight, database-backed contention/idempotency, connection saturation, memory/CPU, and production-like load tests. Retain Basic-1gb only if every gate passes; otherwise report the evidence and quote the next-smallest tier before another paid change.
 
-**Why required:** Render retains logical exports for seven days. Fifteen-year archives require durable storage, independent credentials and deletion protection.
+### Scheduled backup execution
 
-| Option | Monthly cost | Operational/security impact |
-| --- | ---: | --- |
-| Cloudflare R2 Standard | First 10 GB-month free; then **$0.015/GB-month**; Class A $4.50/million and Class B $0.36/million after free allowances; egress free | Eleven-nines designed durability, AES-256 at rest, TLS, bucket-scoped tokens and bucket locks. Separate locked bucket prevents the HR application from deleting backups. |
-| Cloudflare R2 Infrequent Access | **$0.01/GB-month**, plus retrieval and higher operation charges; 30-day minimum | Cheaper at larger volumes but restore drills incur retrieval charges. The free tier does not apply. |
-| Render persistent disk | **$0.25/GB-month** plus a paid worker | Stays on Render, but is attached to one service, cannot be used by Cron Jobs and lacks the cross-service durability and bucket-lock control expected for 15-year archives. Not recommended as the sole archive. |
-| AWS S3/Glacier classes | Region- and tier-dependent usage pricing | Mature object-lock and archival tiers but adds another provider. No benefit over R2 for the initial HRMS volume unless corporate policy mandates AWS. |
+Add one Zentric Analytics Render Cron Job running `yarn hr:database-archive` daily. Render's minimum cron charge is **$1/month**, with usage above the minimum prorated by runtime. The existing Kurioticket cron job is unrelated and cannot safely share HRMS database/archive credentials.
 
-**Recommendation:** a dedicated locked R2 bucket, reusing the provider selected for HR documents but with distinct credentials. Initial storage is likely within the 10 GB Standard free tier; actual cost is `max(0, stored_GB - 10) × $0.015` plus operations. Retention prefixes must be locked for 90 days, 365 days and 15 years.
+### Long-term archives and private HR documents
 
-Sources: [R2 pricing](https://developers.cloudflare.com/r2/pricing/), [R2 bucket locks](https://developers.cloudflare.com/r2/buckets/bucket-locks/), [R2 durability](https://developers.cloudflare.com/r2/reference/durability/), [Render persistent disks](https://render.com/docs/disks).
+Render's seven-day PITR and seven-day export retention require a separate object store for 90-day daily, one-year weekly, and 15-year monthly retention. The existing web disk is instance-attached, has only seven-day snapshots, and lacks object versioning/bucket-lock controls.
 
-### 3. Private HR document storage
+The lowest-cost option remains private Cloudflare R2 Standard storage: the first 10 GB-month is currently free, then $0.015/GB-month plus operations beyond allowances. Use separate private buckets or prefixes and bucket-scoped credentials for HR documents and database archives; block public access, enable encryption/version controls, and apply retention locks. This is a **new external service**, but it is required by private-document and durable-archive controls, not by the seven-day PITR policy alone. Provider authorization is required before configuration.
 
-**Why required:** resumes, identity documents, contracts and onboarding files must not live on the web service's local or ephemeral filesystem. Production preflight requires private S3-compatible storage with encryption and least-privilege access.
+### Malware scanning
 
-| Option | Monthly cost | Operational/security impact |
-| --- | ---: | --- |
-| Cloudflare R2 Standard | First 10 GB-month free, then **$0.015/GB-month** | S3-compatible with bucket-scoped tokens, encryption at rest, TLS and no egress fee. Use a private bucket without an `r2.dev` public endpoint. Separate application and scanner tokens. |
-| AWS S3 Standard | Usage-based by region; current public pricing must be calculated for the selected region | Strong IAM, versioning, KMS and Object Lock. Higher configuration complexity and introduces AWS solely for documents. |
-| Render persistent disk | **$0.25/GB-month** plus paid service compute | Rejected for HR documents: tied to one instance, prevents zero-downtime deploys and does not provide S3-compatible versioning/access controls. |
+A dedicated scanner is a **new service required** before production HR document upload. The lower-cost Render option is a Starter background worker at **$7/month**, but 512 MB may be insufficient for ClamAV signatures and concurrent scans. Run a non-paid staging memory profile first. Use Starter only if it passes bounded-file, concurrent-scan, signature-update, restart, and failure-recovery gates; otherwise the smallest safe option is Standard at **$25/month**. No worker purchase should be approved until that test fixes the exact tier.
 
-**Recommendation:** private R2 Standard bucket. Expected initial storage charge is $0 while total Standard usage remains within the 10 GB-month allowance; operation charges are also expected to remain within the published free allowance at initial volume. Provider authentication is still required before configuration.
+## Cost decision
 
-Sources: [R2 pricing](https://developers.cloudflare.com/r2/pricing/), [R2 data security](https://developers.cloudflare.com/r2/reference/data-security/), [R2 overview](https://developers.cloudflare.com/r2/).
+No web, workspace, storage-capacity, Pro-4gb, or high-availability upgrade is justified now.
 
-### 4. Malware scanning
+The presently fixed minimum Render increase is:
 
-**Why required:** uploaded files remain unavailable while `PENDING`; a trusted scanner must classify each exact version as `CLEAN`, `QUARANTINED` or `FAILED`. Manual simulation is prohibited in production.
+- Basic-1gb PostgreSQL: **+$13/month**
+- Daily backup Cron Job: **at least +$1/month**
 
-| Option | Monthly cost | Operational/security impact |
-| --- | ---: | --- |
-| Dedicated ClamAV scanner on a Render Starter worker | Approximately **$7/month** compute; no ClamAV license fee | Documents remain between Render and the approved private bucket. Requires signature updates, worker health monitoring, memory validation and secure callback credentials. Starter's 512 MB may prove insufficient; validate in staging before purchase. |
-| ClamAV on Render Standard worker | Approximately **$25/month** | 2 GB RAM provides safer scanning headroom, but still requires signature and engine operations. |
-| Cloudmersive Virus Scan API | **Quote-based** on the currently published pricing page | Lower engine-maintenance burden, but confidential HR files are transmitted to an additional processor; requires privacy, retention, residency, DPA and SLA review. |
-| Enterprise multi-engine scanner | **Quote-based** | Stronger detection/SLA options, highest cost and procurement overhead. |
+**Fixed Render increase awaiting approval: at least +$14/month.**
 
-**Recommendation:** stage a dedicated Render Standard ClamAV worker first, with no public endpoint, read-only document access, quarantined-result callback, signature freshness alerts and strict file/time limits. If operational testing or detection requirements fail, obtain a Cloudmersive or equivalent enterprise quote rather than weakening the gate.
+The malware scanner adds either **+$7/month** if Starter passes staging profiling or **+$25/month** if Standard is required. Private R2 storage is expected to start at $0 within its allowance but remains a new provider configuration and usage-priced service. Therefore the likely minimum total increase is **+$21/month**, subject to scanner evidence and actual checkout confirmation.
 
-Sources: [Render compute plans](https://render.com/docs/compute-plans), [Cloudmersive pricing](https://cloudmersive.com/pricing).
+Do not purchase or provision any item until the product owner explicitly approves the net additional cost. Existing Pro workspace, Starter web service, 15 GB database storage, and 1 GB disk must not be purchased again.
 
-### 5. Production capacity upgrades
+## Sources
 
-**Why required:** the current production database is Basic-256mb (0.1 CPU/256 MB), without HA or pooling. It is below a prudent HRMS production baseline. The current web service is Starter (0.5 CPU/512 MB).
-
-| Component/option | Estimated monthly cost | Impact |
-| --- | ---: | --- |
-| Keep web Starter | Current plan, approximately **$7/month** | Acceptable only after post-release load observation; limited headroom for Next.js plus in-process workers. |
-| Upgrade web to Standard | Approximately **$25/month** | 1 CPU/2 GB; more reliable build/runtime headroom. Recommended initial web tier. |
-| Database Basic-1gb | **$19/month compute + $0.30/GB-month storage**; current 15 GB storage implies about **$23.50/month** | 0.5 CPU/1 GB. Minimum economical baseline, but no HA. Brief downtime when changing instance type. |
-| Database Pro-4gb | **$55/month compute + $0.30/GB-month storage**; 15 GB would total about **$59.50/month** if retained | 1 CPU/4 GB and HA eligibility. Recommended production tier before enabling HA. |
-| High availability | Dashboard quote required; expect an additional standby-resource charge | Protects against instance failure but increases cost and operational complexity. Must be priced in Render before approval. |
-| Render Pro workspace | **$25/month flat** under the 2026 plan | Required for a seven-day PITR window; Hobby receives three days. Also adds audit/compliance capabilities. Confirm whether Production workspace already incurs this charge. |
-
-**Recommendation:** Render Pro workspace, Standard web service, Pro-4gb PostgreSQL, at least 15 GB storage with autoscaling, managed pooling and HA if the final Render quote is approved. A lower-cost conditional option is Standard web plus Basic-1gb database, accepting no HA during the initial monitored period.
-
-Sources: [Render flexible PostgreSQL plans](https://render.com/docs/postgresql-refresh), [Render compute plans](https://render.com/docs/compute-plans), [Render workspace plans](https://render.com/docs/new-workspace-plans).
-
-## Estimated recommended monthly total
-
-Excluding usage growth and HA's still-unquoted standby charge:
-
-- Render Pro workspace: $25
-- Standard web service: about $25
-- Pro-4gb PostgreSQL plus 15 GB storage: about $59.50
-- Daily Render Cron Job: at least $1
-- Standard malware scanner worker: about $25
-- R2 documents and archives: initially $0 if combined Standard usage stays within 10 GB-month; otherwise $0.015/GB-month beyond the allowance
-
-**Estimated base: $135.50/month plus HA, excess storage/operations, bandwidth and tax.** If the workspace fee or current Starter web cost is already being paid, calculate approval on the incremental amount rather than double-counting it.
-
-No purchase or provider configuration should occur until the product owner approves the exact Render checkout quote and external-provider terms.
+- Read-only Render Production workspace Billing, service Plan, database Plan, Recovery, and Disk pages inspected 2026-08-01.
+- [Render Cron Jobs](https://render.com/docs/cronjobs)
+- [Render PostgreSQL backups](https://render.com/docs/postgresql-backups)
+- [Render compute plans](https://render.com/docs/compute-plans)
+- [Render persistent disks](https://render.com/docs/disks)
+- [Cloudflare R2 pricing](https://developers.cloudflare.com/r2/pricing/)
+- [Cloudflare R2 bucket locks](https://developers.cloudflare.com/r2/buckets/bucket-locks/)
