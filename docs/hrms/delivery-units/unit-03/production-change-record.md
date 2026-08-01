@@ -21,6 +21,21 @@ The integration branch was created from the exact production commit and merged t
 
 The candidate adds the HRMS database schema and 22 additive migrations, authentication and MFA, organization management, recruitment-to-activation workflows, protected document storage, email outbox, governed workers, monitoring/health routes, release tooling and regression coverage. It also retains the existing public site, careers, applicant tracking and legacy recruitment configuration compatibility.
 
+## Candidate validation
+
+- Initial immutable integration candidate: `4b62317f14b9eb004c2bdc557b6c6b24c30a32cd`
+- Parents: production `5aac0c6cc03d693a45699b4f65c3cba2a39cc0f8` and frozen release package `558b5217eae01d6009383e4b41f782401fe471dd`
+- Local checks: 430/430 tests passed; TypeScript, ESLint, Prisma validation and optimized production build passed.
+- Staging deployment: `dep-d9n3d7taeets73b4vge0`
+- Staging preflight: ready; all expected migration families queryable; email provider and outbox worker configured.
+- Browser routes: homepage, careers, application, tracking and HR login rendered from the exact candidate.
+- Health/readiness smoke: passed.
+- Load smoke: 100 requests at concurrency 10 with zero failures.
+- Candidate PostgreSQL concurrency evidence: `unit3-concurrency-1785608032527`; one record and one audit per guarded transition, one sequence increment, nine expected onboarding tasks and final employee status `ACTIVE`.
+- Candidate document conflict evidence: `unit3-document-conflict-1785608044006`; stale version rejected, version 1 retained as `REPLACEMENT_REQUESTED`, version 2 independently `VERIFIED`, and the exact version/document ID recorded.
+
+The evidence-record commit that contains this section is documentation-only and must be deployed to staging if it becomes the final production candidate so the tested and promoted SHA remain identical.
+
 ## Product-owner release-time fields
 
 The product owner will record the following before the actual production release. These fields are governance prerequisites, not implementation blockers:
