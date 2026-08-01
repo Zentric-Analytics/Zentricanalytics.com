@@ -70,6 +70,8 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
             applicantNumber = `APP-${year}-${String(sequence.lastValue).padStart(6, "0")}`;
           }
           applicant = await tx.applicant.create({ data: { organizationId: vacancy ? hrOrganization?.id : null, applicantNumber, normalizedEmail, normalizedPhone: data.phoneE164, fullName: data.fullName, firstName: data.firstName, middleInitial: data.middleInitial || null, lastName: data.lastName, email: normalizedEmail, phone: data.phoneE164, phoneCountryIso: data.phoneCountryIso, phoneCountryName: data.phoneCountryName, phoneDialCode: data.phoneDialCode, phoneNationalNumber: data.phoneNational, phoneE164: data.phoneE164, location: data.location } });
+        } else {
+          applicant = await tx.applicant.update({ where: { id: applicant.id }, data: { normalizedPhone: data.phoneE164, fullName: data.fullName, firstName: data.firstName, middleInitial: data.middleInitial || null, lastName: data.lastName, email: normalizedEmail, phone: data.phoneE164, phoneCountryIso: data.phoneCountryIso, phoneCountryName: data.phoneCountryName, phoneDialCode: data.phoneDialCode, phoneNationalNumber: data.phoneNational, phoneE164: data.phoneE164, location: data.location } });
         }
         let applicationReference: string | undefined;
         if (vacancy && hrOrganization) {

@@ -99,6 +99,21 @@ export async function submitApplication(
         location: input.location,
       },
     });
+  } else {
+    applicant = await tx.applicant.update({
+      where: { id: applicant.id },
+      data: {
+        normalizedEmail: input.email,
+        normalizedPhone,
+        fullName: `${input.firstName} ${input.lastName}`,
+        firstName: input.firstName,
+        middleInitial: input.middleInitial,
+        lastName: input.lastName,
+        email: input.email,
+        phone: input.phone,
+        location: input.location,
+      },
+    });
   }
 
   const applicationReference = await nextPublicNumber(tx, input.organizationId, "APPLICATION", "APL", now);

@@ -98,6 +98,16 @@ describe("hiring workflow helpers", () => {
     expect(applicantIdentityFilter({ organizationId: "org-1", normalizedEmail: "  GeneralDeveloper2@ZentricAnalytics.com " })).toEqual({ organizationId: "org-1", normalizedEmail: "generaldeveloper2@zentricanalytics.com" });
   });
 
+  it("refreshes the reusable applicant profile from the latest signed submission", () => {
+    const action = readFileSync(path.join(process.cwd(), "src/app/apply/actions.ts"), "utf8");
+    const recruitment = readFileSync(path.join(process.cwd(), "src/lib/hr/recruitment/applications.ts"), "utf8");
+    for (const source of [action, recruitment]) {
+      expect(source).toContain("applicant = await tx.applicant.update");
+      expect(source).toContain("fullName:");
+      expect(source).toContain("location:");
+    }
+  });
+
   it("generates formatted application ids", () => {
     expect(generateApplicationId(41, new Date("2026-06-21T00:00:00Z"))).toBe(
       "ZA-APP-2026-00041",
