@@ -19,6 +19,13 @@ describe("Unit 3 connected recruitment workspaces", () => {
     expect(parsed.dueAt).toBeInstanceOf(Date);
   });
 
+  it("recovers assessment progression only when a completed interview exists", () => {
+    const assessments = read("src/lib/hr/recruitment/assessments.ts");
+    expect(assessments).toContain('application.recruitmentStatus === "INTERVIEW_PENDING"');
+    expect(assessments).toContain('status: "COMPLETED"');
+    expect(assessments).toContain("if (!completedInterview) throw new Error");
+  });
+
   it("rejects incomplete assessment configuration", () => {
     expect(() => assessmentInput.parse({
       organizationId: "bad",

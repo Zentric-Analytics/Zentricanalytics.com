@@ -25,13 +25,21 @@ export async function createAssessment(
       where: {
         id: input.applicationId,
         organizationId: input.organizationId,
-        recruitmentStatus: { in: ["SHORTLISTED", "INTERVIEW_COMPLETED", "ASSESSMENT_PENDING"] },
       },
     }),
     tx.hrUser.findFirstOrThrow({
       where: { id: input.evaluatorId, organizationId: input.organizationId, status: "ACTIVE" },
     }),
   ]);
+  const allowedStatuses = ["SHORTLISTED", "INTERVIEW_COMPLETED", "ASSESSMENT_PENDING"];
+  if (!allowedStatuses.includes(application.recruitmentStatus ?? "")) {
+    const completedInterview = application.recruitmentStatus === "INTERVIEW_PENDING"
+      ? await tx.hrInterview.count({
+        where: { applicationId: application.id, organizationId: input.organizationId, status: "COMPLETED" },
+      })
+      : 0;
+    if (!completedInterview) throw new Error("Assessment creation requires a shortlisted applicant or completed interview.");
+  }
   const assessment = await tx.hrAssessment.create({
     data: {
       organizationId: input.organizationId,
