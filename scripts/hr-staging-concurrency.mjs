@@ -72,10 +72,12 @@ try {
   outcomes.handoverCreation.records = await prisma.hrRecruitmentHandover.count({ where: { offerAcceptanceId: acceptance.id } });
   outcomes.handoverCreation.audits = await prisma.hrAuditEvent.count({ where: { correlationId: run, action: "hr.validation.handover.created" } });
 
+  const preHireEmployee = await prisma.hrEmployee.create({ data: { organizationId: organization.id, employeeNumber: `VALIDATION-PRE-${Date.now()}`, legalFirstName: "PreHire", lastName: "Race", personalEmail: `${run}-prehire@example.invalid`, employmentStatus: "PRE_HIRE", startDate: now } });
+  const preHireLifecycle = await prisma.hrLifecycleInstance.create({ data: { organizationId: organization.id, templateId: template.id, employeeId: preHireEmployee.id, type: "ONBOARDING", status: "ACTIVE", effectiveDate: now, startedAt: now, reason: `${run}-prehire`, createdById: actor.id } });
   await race("preHireConversion", (label) => prisma.$transaction(async (tx) => {
     const conversion = await tx.hrPreHireConversion.create({ data: {
       organizationId: organization.id, handoverId: handover.id, applicantId: applicant.id, applicationId: application.id,
-      employeeId: id(`conversion-employee-${label}`), lifecycleInstanceId: id(`conversion-lifecycle-${label}`), idempotencyKey: id(`conversion-key-${label}`), convertedById: actor.id,
+      employeeId: preHireEmployee.id, lifecycleInstanceId: preHireLifecycle.id, idempotencyKey: id(`conversion-key-${label}`), convertedById: actor.id,
     } });
     await audit(tx, organization.id, actor.id, "HrPreHireConversion", conversion.id, "hr.validation.prehire.converted");
     return conversion.id;
