@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "node scripts/start-with-hr-workers.mjs",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "hr:bootstrap": "node scripts/hr-bootstrap.mjs",
