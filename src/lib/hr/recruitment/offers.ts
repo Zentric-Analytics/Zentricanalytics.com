@@ -153,7 +153,7 @@ export async function issueOffer(
   if (offer.activeVersion.expiresAt <= new Date()) throw new Error("The offer has expired.");
   const application = await tx.jobApplication.findFirstOrThrow({
     where: { id: offer.applicationId, organizationId: input.organizationId },
-    select: { applicationId: true },
+    select: { applicationId: true, applicant: { select: { fullName: true } } },
   });
   const reviewHref = `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(input.recipient)}`;
   await tx.hrRecruitmentOfferDelivery.upsert({
@@ -166,7 +166,7 @@ export async function issueOffer(
     recipient: input.recipient,
     template: "hr-offer-issued",
     subject: `Your employment offer: ${offer.activeVersion.positionTitle}`,
-    payload: { offerId: offer.id, href: reviewHref },
+    payload: { offerId: offer.id, href: reviewHref, recipientName: application.applicant.fullName },
     idempotencyKey: `offer-issued:${offer.id}:${activeVersionId}`,
   });
   const issued = await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "ISSUED", updatedById: input.actorUserId, version: { increment: 1 } } });
