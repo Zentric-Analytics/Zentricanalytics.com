@@ -38,12 +38,12 @@ describe("final HRMS remediation security behavior", () => {
   it("renders offer and handover emails with scoped HTTPS links", () => {
     const offer = hrEmailBody(
       "hr-offer-issued",
-      { href: "/careers/offers/offer-123" },
+      { href: "/track?applicationId=APL-2026-000006&email=applicant%40example.test" },
       "https://staging.zentricanalytics.com/",
     );
     expect(offer).toContain("exact approved offer");
-    expect(offer).toContain("https://staging.zentricanalytics.com/careers/offers/offer-123");
-    expect(hrEmailContent("hr-offer-issued", { href: "/careers/offers/offer-123" }, "https://staging.zentricanalytics.com").html).toContain("Review &amp; Accept Offer");
+    expect(offer).toContain("https://staging.zentricanalytics.com/track?applicationId=APL-2026-000006&email=applicant%40example.test");
+    expect(hrEmailContent("hr-offer-issued", { href: "/track?applicationId=APL-2026-000006&email=applicant%40example.test" }, "https://staging.zentricanalytics.com").html).toContain("Review &amp; Accept Offer");
     expect(() => hrEmailBody("hr-offer-issued", { href: "//untrusted.example" }, "https://staging.zentricanalytics.com")).toThrow("safe relative link");
     expect(() => hrEmailBody("hr-handover-created", { href: "/hr/admin/handovers/handover-123" }, "http://staging.example.test")).toThrow("HTTPS");
   });
@@ -110,3 +110,4 @@ describe("final HRMS remediation security behavior", () => {
     expect(scanner).toContain("conflicting terminal scan result");
   });
 });
+

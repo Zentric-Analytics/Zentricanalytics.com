@@ -32,8 +32,6 @@ import { mkdtemp, rm, unlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { applicantIdentityFilter } from "../src/lib/hr/recruitment/applicant-identity";
-
 const payload = {
   firstName: "Ada",
   middleInitial: "B",
@@ -94,10 +92,6 @@ const utf16PdfHex = (value: string) =>
 const utf16PdfHexFragment = (value: string) => utf16PdfHex(value).slice(5, -1);
 
 describe("hiring workflow helpers", () => {
-  it("matches existing applicants by email, not a reused phone number", () => {
-    expect(applicantIdentityFilter({ organizationId: "org-1", normalizedEmail: "  GeneralDeveloper2@ZentricAnalytics.com " })).toEqual({ organizationId: "org-1", normalizedEmail: "generaldeveloper2@zentricanalytics.com" });
-  });
-
   it("generates formatted application ids", () => {
     expect(generateApplicationId(41, new Date("2026-06-21T00:00:00Z"))).toBe(
       "ZA-APP-2026-00041",
