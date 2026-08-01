@@ -8,7 +8,7 @@ import { initializeHandoverRequirements } from "./handover";
 type Client = Prisma.TransactionClient;
 
 export const offerVersionInput = z.object({
-  positionId: z.string().cuid().optional(),
+  positionId: z.string().cuid(),
   positionTitle: z.string().trim().min(2).max(160),
   departmentId: z.string().cuid(),
   managerId: z.string().cuid().optional(),
