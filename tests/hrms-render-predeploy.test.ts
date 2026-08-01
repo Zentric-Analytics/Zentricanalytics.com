@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { hrEnvironmentChecks } from "../scripts/hr-preflight-lib.mjs";
 import { S3CompatibleHrStorage, validateStorageKey } from "../src/lib/hr/storage";
@@ -27,6 +29,14 @@ const baseEnvironment = {
 };
 
 describe("Render HRMS environment validation", () => {
+  it("keeps production migrations out of the build and behind the governed pre-deploy command", () => {
+    const productionBlueprint = fs.readFileSync(path.join(process.cwd(), "render.production.example.yaml"), "utf8");
+    expect(productionBlueprint).toContain("autoDeployTrigger: off");
+    expect(productionBlueprint).toContain("buildCommand: yarn install --frozen-lockfile && yarn build");
+    expect(productionBlueprint).toContain("preDeployCommand: yarn hr:release");
+    expect(productionBlueprint).toContain("healthCheckPath: /api/health/ready");
+    expect(productionBlueprint).not.toContain("buildCommand: yarn install --frozen-lockfile && yarn hr:release");
+  });
   it("accepts local-private in development but rejects it in staging and production", () => {
     expect(hrEnvironmentChecks({ ...baseEnvironment, APP_ENV: "development", OBJECT_STORAGE_PROVIDER: "local-private" }).issues).toEqual([]);
     for (const APP_ENV of ["staging", "production"]) {

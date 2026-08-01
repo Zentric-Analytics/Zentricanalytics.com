@@ -31,6 +31,10 @@ export function productionBackupPolicyIssues(env, now = Date.now()) {
   if (wholeNumber(env.DATABASE_DAILY_BACKUP_RETENTION_DAYS) < policy.dailyDays) issues.push(`Daily backup retention must be at least ${policy.dailyDays} days.`);
   if (wholeNumber(env.DATABASE_WEEKLY_BACKUP_RETENTION_DAYS) < policy.weeklyDays) issues.push(`Weekly backup retention must be at least ${policy.weeklyDays} days.`);
   if (wholeNumber(env.DATABASE_MONTHLY_ARCHIVE_RETENTION_YEARS) < policy.monthlyYears) issues.push(`Monthly archive retention must be at least ${policy.monthlyYears} years.`);
+  for (const key of ["BACKUP_OBJECT_STORAGE_ENDPOINT", "BACKUP_OBJECT_STORAGE_BUCKET", "BACKUP_OBJECT_STORAGE_REGION", "BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID", "BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY"]) {
+    if (!String(env[key] ?? "").trim()) issues.push(`${key} is required for protected logical archives.`);
+  }
+  if (String(env.BACKUP_OBJECT_STORAGE_BUCKET_LOCK_ENABLED).toLowerCase() !== "true") issues.push("Protected logical archive bucket locks must be enabled.");
   if (!evidenceAgeIsValid(env.BACKUP_LAST_RESTORE_TEST_AT, policy.restoreDrillMaxAgeDays, now)) issues.push("A successful isolated restore drill within the last quarter is required.");
   if (!evidenceAgeIsValid(env.BACKUP_LAST_DR_EXERCISE_AT, policy.disasterRecoveryExerciseMaxAgeDays, now)) issues.push("A successful disaster-recovery exercise within the last year is required.");
   return issues;

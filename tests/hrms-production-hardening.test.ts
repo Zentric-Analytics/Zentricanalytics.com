@@ -25,6 +25,12 @@ describe("HRMS production hardening", () => {
       DATABASE_MONTHLY_ARCHIVE_RETENTION_YEARS: "15",
       BACKUP_LAST_RESTORE_TEST_AT: "2026-07-01T00:00:00.000Z",
       BACKUP_LAST_DR_EXERCISE_AT: "2026-01-01T00:00:00.000Z",
+      BACKUP_OBJECT_STORAGE_ENDPOINT: "https://objects.example.test",
+      BACKUP_OBJECT_STORAGE_BUCKET: "database-archives",
+      BACKUP_OBJECT_STORAGE_REGION: "auto",
+      BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID: "placeholder",
+      BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY: "placeholder",
+      BACKUP_OBJECT_STORAGE_BUCKET_LOCK_ENABLED: "true",
     };
     expect(productionBackupPolicyIssues(valid, now)).toEqual([]);
     expect(productionBackupPolicyIssues({ ...valid, DATABASE_PITR_RETENTION_DAYS: "6" }, now)).toContain("Production PITR retention must be at least 7 days.");

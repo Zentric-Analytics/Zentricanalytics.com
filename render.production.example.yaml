@@ -1,0 +1,62 @@
+# Review-only production template. Do not sync until explicit deployment authorization.
+services:
+  - type: web
+    name: Zentricanalytics.com
+    runtime: node
+    plan: standard
+    branch: main
+    autoDeployTrigger: off
+    buildCommand: yarn install --frozen-lockfile && yarn build
+    preDeployCommand: yarn hr:release
+    startCommand: yarn start
+    healthCheckPath: /api/health/ready
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APPLICATION_BASE_URL
+        value: https://www.zentricanalytics.com
+      - key: AUTH_SECRET
+        sync: false
+      - key: EMAIL_WORKER_SECRET
+        sync: false
+      - key: ORGANIZATION_WORKER_SECRET
+        sync: false
+      - key: DOCUMENT_SCANNER_SECRET
+        sync: false
+      - key: MONITORING_SECRET
+        sync: false
+      - key: OBJECT_STORAGE_PROVIDER
+        value: s3-compatible
+      - key: OBJECT_STORAGE_ENDPOINT
+        sync: false
+      - key: OBJECT_STORAGE_BUCKET
+        sync: false
+      - key: OBJECT_STORAGE_REGION
+        value: auto
+      - key: OBJECT_STORAGE_ACCESS_KEY_ID
+        sync: false
+      - key: OBJECT_STORAGE_SECRET_ACCESS_KEY
+        sync: false
+      - key: OBJECT_STORAGE_FORCE_PATH_STYLE
+        value: "false"
+      - key: OBJECT_STORAGE_SERVER_SIDE_ENCRYPTION
+        value: AES256
+      - key: DATABASE_PITR_ENABLED
+        value: "true"
+      - key: DATABASE_PITR_RETENTION_DAYS
+        value: "7"
+      - key: DATABASE_DAILY_BACKUP_RETENTION_DAYS
+        value: "90"
+      - key: DATABASE_WEEKLY_BACKUP_RETENTION_DAYS
+        value: "365"
+      - key: DATABASE_MONTHLY_ARCHIVE_RETENTION_YEARS
+        value: "15"
+
+  # Paid service: leave commented/unprovisioned until explicit purchase approval.
+  # - type: cron
+  #   name: zentric-production-database-archive
+  #   runtime: node
+  #   plan: starter
+  #   schedule: "0 3 * * *"
+  #   buildCommand: yarn install --frozen-lockfile
+  #   startCommand: yarn hr:database-archive

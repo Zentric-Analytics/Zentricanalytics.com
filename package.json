@@ -15,6 +15,7 @@
     "hr:preflight": "node scripts/hr-preflight.mjs",
     "hr:release": "node scripts/hr-release.mjs",
     "hr:backup-readiness": "node scripts/hr-backup-readiness.mjs",
+    "hr:database-archive": "node scripts/hr-database-archive.mjs",
     "hr:restore-drill": "node scripts/hr-restore-drill.mjs",
     "hr:smoke": "node scripts/hr-smoke.mjs",
     "hr:load-smoke": "node scripts/hr-load-smoke.mjs",
