@@ -35,6 +35,12 @@ describe("final HRMS remediation security behavior", () => {
     expect(() => hrEmailBody("hr-password-reset", { credentialEnvelope: sealHrCredential(rawToken) }, "http://insecure.example.test")).toThrow("HTTPS");
   });
 
+  it("records the initial authenticated login when mandatory MFA enrollment completes", () => {
+    const securityActions = read("src/app/hr/security/actions.ts");
+    expect(securityActions).toContain("lastLoginAt: now");
+    expect(securityActions).toContain('action: "hr.auth.login_succeeded"');
+  });
+
   it("renders offer and handover emails with scoped HTTPS links", () => {
     const offer = hrEmailBody(
       "hr-offer-issued",
@@ -44,6 +50,9 @@ describe("final HRMS remediation security behavior", () => {
     expect(offer).toContain("exact approved offer");
     expect(offer).toContain("https://staging.zentricanalytics.com/track?applicationId=APL-2026-000006&email=applicant%40example.test");
     expect(hrEmailContent("hr-offer-issued", { href: "/track?applicationId=APL-2026-000006&email=applicant%40example.test" }, "https://staging.zentricanalytics.com").html).toContain("Review &amp; Accept Offer");
+    const personalized = hrEmailContent("hr-offer-issued", { href: "/track?applicationId=APL-2026-000006&email=applicant%40example.test", recipientName: "Working Email Validation" }, "https://staging.zentricanalytics.com");
+    expect(personalized.body).toContain("Hello Working Email Validation,");
+    expect(personalized.html).toContain("Hello Working Email Validation,");
     expect(() => hrEmailBody("hr-offer-issued", { href: "//untrusted.example" }, "https://staging.zentricanalytics.com")).toThrow("safe relative link");
     expect(() => hrEmailBody("hr-handover-created", { href: "/hr/admin/handovers/handover-123" }, "http://staging.example.test")).toThrow("HTTPS");
   });
