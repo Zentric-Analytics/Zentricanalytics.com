@@ -218,7 +218,7 @@ export async function createOfferWithStateAction(
     const raw = Object.fromEntries(formData);
     const input = z.object({
       applicationId: z.string().cuid(),
-      positionId: z.string().cuid(),
+      positionId: z.string().cuid().optional().or(z.literal("")),
       positionTitle: z.string().trim().min(2),
       departmentId: z.string().cuid(),
       managerId: z.string().cuid().optional().or(z.literal("")),
@@ -239,6 +239,7 @@ export async function createOfferWithStateAction(
     const auth = await requirePermission("offer.create");
     await prisma.$transaction((tx) => createOffer(tx, {
       ...input,
+      positionId: input.positionId || undefined,
       managerId: input.managerId || undefined,
       gradeId: input.gradeId || undefined,
       allowances: {},

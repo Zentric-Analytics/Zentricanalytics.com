@@ -70,6 +70,9 @@ describe("Unit 3 connected recruitment workspaces", () => {
     expect(page).toContain("prisma.hrDepartment.findMany");
     expect(page).toContain('name="positionId"><option value="">Approved open position (optional)');
     expect(page).toContain("departments.map((department)");
+    const actions = read("src/app/hr/admin/applications/[id]/actions.ts");
+    expect(actions).toContain('positionId: z.string().cuid().optional().or(z.literal(""))');
+    expect(actions).toContain("positionId: input.positionId || undefined");
   });
 
   it("keeps submitted interviewer feedback private and locked", () => {
