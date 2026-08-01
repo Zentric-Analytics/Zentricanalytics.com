@@ -48,11 +48,13 @@ All secret values must be independently generated for production and stored in t
 
 ### Backup and disaster recovery
 
-- `DATABASE_BACKUP_PROVIDER`: the approved managed provider
-- `DATABASE_PITR_ENABLED=true` with **at least 30 days of PITR**
-- `DATABASE_BACKUP_RETENTION_DAYS=90` and provider schedules proving **daily retention for 90 days**
-- Separate protected schedules proving **weekly retention for one year** and **monthly archives for 15 years**
+- `DATABASE_BACKUP_PROVIDER=render-postgresql-plus-protected-logical-archives`
+- `DATABASE_PITR_ENABLED=true` and `DATABASE_PITR_RETENTION_DAYS=7` for the supported Render PITR window
+- `DATABASE_DAILY_BACKUP_RETENTION_DAYS=90` with successful daily encrypted logical-archive jobs and manifests
+- `DATABASE_WEEKLY_BACKUP_RETENTION_DAYS=365` with successful protected weekly archive promotion
+- `DATABASE_MONTHLY_ARCHIVE_RETENTION_YEARS=15` with successful protected monthly archive promotion
 - `BACKUP_LAST_RESTORE_TEST_AT`: ISO timestamp from the latest successful isolated restore, no older than 90 days
+- `BACKUP_LAST_DR_EXERCISE_AT`: ISO timestamp from the latest successful disaster-recovery exercise, no older than one year
 - Encrypted, versioned object-storage recovery aligned with HR retention obligations
 - Isolated restore drills quarterly; full disaster-recovery exercises annually. Record recovery point, duration, RPO/RTO, validation, reviewer and cleanup.
 
@@ -115,5 +117,5 @@ Stop promotion on any failure.
 
 - Staging load evidence used 100 requests at concurrency 10; production scaling and connection-pool limits still require observation under real traffic.
 - External email placement is provider and recipient dependent; some staging mail initially reached junk, so DMARC progression and reputation monitoring remain operational work.
-- Retention longer than the managed PostgreSQL native window may require protected exported archives and periodic revalidation of restore tooling.
+- Render's native recovery window is seven days. The required 90-day, one-year and 15-year tiers therefore depend on the separately scheduled Render logical-archive worker, protected archive disk, monitoring and periodic restore validation.
 - The in-process worker scheduler is governed and recovered successfully in staging, but separate worker services may be preferable if web scaling or provider latency grows materially.

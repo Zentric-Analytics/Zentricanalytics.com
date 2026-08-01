@@ -1,4 +1,5 @@
 import { HR_PERMISSION_KEYS, HR_ROLE_KEYS } from "./hr-bootstrap-lib.mjs";
+import { productionBackupPolicyIssues } from "./hr-backup-policy.mjs";
 
 export function hrEnvironmentChecks(env) {
   const appEnv = String(env.APP_ENV ?? "").trim().toLowerCase();
@@ -43,11 +44,7 @@ export function hrEnvironmentChecks(env) {
   }
   if (appEnv === "production") {
     if (env.EMAIL_PROVIDER !== "resend" || !env.RESEND_API_KEY) issues.push("Production email delivery must use the configured Resend provider.");
-    if (!env.DATABASE_BACKUP_PROVIDER) issues.push("DATABASE_BACKUP_PROVIDER is not configured.");
-    if (Number(env.DATABASE_BACKUP_RETENTION_DAYS) < 30) issues.push("Production database backup retention must be at least 30 days.");
-    if (String(env.DATABASE_PITR_ENABLED).toLowerCase() !== "true") issues.push("Production point-in-time recovery must be enabled.");
-    const restoreTest = Date.parse(String(env.BACKUP_LAST_RESTORE_TEST_AT ?? ""));
-    if (!Number.isFinite(restoreTest) || Date.now() - restoreTest > 90 * 24 * 60 * 60 * 1000) issues.push("A successful backup restore test within the last 90 days is required.");
+    issues.push(...productionBackupPolicyIssues(env));
   }
   return { appEnv, issues, emailMode: env.EMAIL_PROVIDER === "resend" && env.RESEND_API_KEY ? "provider configured" : "delivery intentionally disabled or console-only", workerMode: env.EMAIL_WORKER_SECRET ? "configured" : "missing" };
 }

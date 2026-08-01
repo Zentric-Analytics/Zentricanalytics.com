@@ -61,6 +61,6 @@ Stop before or during release for a migration failure, persistent readiness fail
 
 ## Infrastructure gates
 
-Production deployment remains prohibited until the engineering readiness report proves: restricted database ingress; reviewed capacity; production-only secrets; verified email domain and failure handling; private encrypted/versioned object storage and malware scanning; governed workers and protected metrics; alert routing; at least 30-day PITR; 90-day daily, one-year weekly and 15-year monthly backups; and a successful isolated production restore drill.
+Production deployment remains prohibited until the engineering readiness report proves: restricted database ingress; reviewed capacity; production-only secrets; verified email domain and failure handling; private encrypted/versioned object storage and malware scanning; governed workers and protected metrics; alert routing; Render's supported seven-day PITR; separately scheduled protected logical archives retaining daily backups for 90 days, weekly backups for one year and monthly backups for 15 years; a successful quarterly isolated restore drill; and a current annual disaster-recovery exercise.
 
 Never record credentials, tokens, connection strings, backup encryption material, mailbox content or secret values in this file.

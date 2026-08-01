@@ -2,15 +2,17 @@
 
 ## Policy
 
-- Use provider-managed encrypted PostgreSQL backups with point-in-time recovery.
-- Retain point-in-time recovery for at least 30 days.
+- Keep the application, PostgreSQL database, scheduled backup jobs and recovery tooling on Render.
+- Enable Render-managed PostgreSQL point-in-time recovery and retain the supported seven-day window.
 - Retain daily backups for at least 90 days, weekly backups for one year, and monthly archives for 15 years. Archive retention must be protected from ordinary application and operator deletion.
 - Keep object storage private, encrypted, versioned and lifecycle-protected.
 - Store database and object-storage credentials only in the platform secret manager.
 - Set target RPO/RTO with the business owner; recommended starting targets are RPO 15 minutes and RTO 4 hours.
 - Run and record an isolated restore drill at least quarterly and a full disaster-recovery exercise at least annually.
 
-`yarn hr:backup-readiness` validates declared provider, retention, PITR and restore-test evidence without printing credentials.
+Render's seven-day PITR and short-lived logical exports do not by themselves satisfy the long-term tiers. Run scheduled encrypted logical exports from a dedicated Render worker to a dedicated persistent archive disk, promote successful exports into daily/weekly/monthly tiers, checksum every archive, and alert on missed schedules or verification failures. The archive service must have no application-serving role and the application service must not have delete access to it. Provisioning that paid worker and disk requires explicit purchase approval.
+
+`yarn hr:backup-readiness` independently validates the declared seven-day PITR window, 90-day daily tier, 365-day weekly tier, 15-year monthly tier, quarterly restore evidence and annual disaster-recovery evidence without printing credentials. Environment declarations are readiness inputs, not proof that provider jobs ran; retain Render job/deploy identifiers, archive manifests, checksums and restore correlations as operational evidence.
 
 ## Restore drill
 
