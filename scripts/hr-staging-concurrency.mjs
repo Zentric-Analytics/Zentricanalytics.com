@@ -35,12 +35,15 @@ function audit(tx, organizationId, actorUserId, entityType, entityId, action) {
 try {
   const organization = await prisma.hrOrganization.findFirstOrThrow({ select: { id: true } });
   const actor = await prisma.hrUser.findFirstOrThrow({ where: { organizationId: organization.id, status: "ACTIVE" }, select: { id: true } });
+  const hiringTeam = await prisma.hrHiringTeam.findFirstOrThrow({ where: { organizationId: organization.id, status: "ACTIVE" }, select: { id: true } });
   const template = await prisma.hrLifecycleTemplate.findFirstOrThrow({ where: { organizationId: organization.id, type: "ONBOARDING", active: true }, include: { tasks: true } });
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 86_400_000);
 
+  const applicant = await prisma.applicant.create({ data: { organizationId: organization.id, fullName: "Unit Three Concurrency", email: `${run}@example.invalid`, normalizedEmail: `${run}@example.invalid` } });
+  const application = await prisma.jobApplication.create({ data: { organizationId: organization.id, applicationId: id("APL-CONCURRENCY"), applicantId: applicant.id, roleAppliedFor: "Unit 3 Concurrency Analyst", status: "Submitted", recruitmentStatus: "OFFER_ISSUED" } });
   const offer = await prisma.hrRecruitmentOffer.create({ data: {
-    organizationId: organization.id, applicationId: id("application"), status: "ISSUED",
+    organizationId: organization.id, applicationId: application.id, status: "ISSUED",
     createdById: actor.id, updatedById: actor.id,
   } });
   const version = await prisma.hrRecruitmentOfferVersion.create({ data: {
@@ -51,7 +54,7 @@ try {
   await prisma.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { activeVersionId: version.id } });
 
   await race("offerAcceptance", (label) => prisma.$transaction(async (tx) => {
-    const acceptance = await tx.hrRecruitmentOfferAcceptance.create({ data: { offerId: offer.id, offerVersionId: version.id, applicantId: id(`applicant-${label}`), method: "STAGING_CONCURRENCY" } });
+    const acceptance = await tx.hrRecruitmentOfferAcceptance.create({ data: { offerId: offer.id, offerVersionId: version.id, applicantId: applicant.id, method: `STAGING_CONCURRENCY_${label}` } });
     await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "ACCEPTED", acceptedVersionId: version.id } });
     await audit(tx, organization.id, actor.id, "HrRecruitmentOffer", offer.id, "hr.validation.offer.accepted");
     return acceptance.id;
@@ -61,7 +64,7 @@ try {
   outcomes.offerAcceptance.audits = await prisma.hrAuditEvent.count({ where: { correlationId: run, action: "hr.validation.offer.accepted" } });
 
   await race("handoverCreation", () => prisma.$transaction(async (tx) => {
-    const handover = await tx.hrRecruitmentHandover.create({ data: { organizationId: organization.id, applicationId: offer.applicationId, offerAcceptanceId: acceptance.id, assignedHrTeamId: id("team") } });
+    const handover = await tx.hrRecruitmentHandover.create({ data: { organizationId: organization.id, applicationId: application.id, offerAcceptanceId: acceptance.id, assignedHrTeamId: hiringTeam.id } });
     await audit(tx, organization.id, actor.id, "HrRecruitmentHandover", handover.id, "hr.validation.handover.created");
     return handover.id;
   }, { isolationLevel: "Serializable" }));
@@ -71,7 +74,7 @@ try {
 
   await race("preHireConversion", (label) => prisma.$transaction(async (tx) => {
     const conversion = await tx.hrPreHireConversion.create({ data: {
-      organizationId: organization.id, handoverId: handover.id, applicantId: id(`conversion-applicant-${label}`), applicationId: id(`conversion-application-${label}`),
+      organizationId: organization.id, handoverId: handover.id, applicantId: applicant.id, applicationId: application.id,
       employeeId: id(`conversion-employee-${label}`), lifecycleInstanceId: id(`conversion-lifecycle-${label}`), idempotencyKey: id(`conversion-key-${label}`), convertedById: actor.id,
     } });
     await audit(tx, organization.id, actor.id, "HrPreHireConversion", conversion.id, "hr.validation.prehire.converted");
@@ -80,11 +83,13 @@ try {
   outcomes.preHireConversion.records = await prisma.hrPreHireConversion.count({ where: { handoverId: handover.id } });
   outcomes.preHireConversion.audits = await prisma.hrAuditEvent.count({ where: { correlationId: run, action: "hr.validation.prehire.converted" } });
 
-  const offer2 = await prisma.hrRecruitmentOffer.create({ data: { organizationId: organization.id, applicationId: id("onboarding-application"), status: "ACCEPTED", createdById: actor.id, updatedById: actor.id } });
+  const applicant2 = await prisma.applicant.create({ data: { organizationId: organization.id, fullName: "Unit Three Onboarding", email: `${run}-onboarding@example.invalid`, normalizedEmail: `${run}-onboarding@example.invalid` } });
+  const application2 = await prisma.jobApplication.create({ data: { organizationId: organization.id, applicationId: id("APL-ONBOARDING"), applicantId: applicant2.id, roleAppliedFor: "Unit 3 Onboarding Concurrency", status: "Submitted", recruitmentStatus: "OFFER_ACCEPTED" } });
+  const offer2 = await prisma.hrRecruitmentOffer.create({ data: { organizationId: organization.id, applicationId: application2.id, status: "ACCEPTED", createdById: actor.id, updatedById: actor.id } });
   const version2 = await prisma.hrRecruitmentOfferVersion.create({ data: { offerId: offer2.id, version: 1, positionTitle: "Onboarding Concurrency", departmentId: id("department"), legalEntityId: id("legal"), employmentType: "FULL_TIME", salary: 1, currency: "USD", payFrequency: "MONTHLY", allowances: {}, benefits: {}, workMode: "REMOTE", startDate: now, contractType: "PERMANENT", expiresAt, terms: {}, createdById: actor.id } });
-  const acceptance2 = await prisma.hrRecruitmentOfferAcceptance.create({ data: { offerId: offer2.id, offerVersionId: version2.id, applicantId: id("onboarding-applicant"), method: "STAGING_CONCURRENCY" } });
+  const acceptance2 = await prisma.hrRecruitmentOfferAcceptance.create({ data: { offerId: offer2.id, offerVersionId: version2.id, applicantId: applicant2.id, method: "STAGING_CONCURRENCY" } });
   await prisma.hrRecruitmentOffer.update({ where: { id: offer2.id }, data: { activeVersionId: version2.id, acceptedVersionId: version2.id } });
-  const handover2 = await prisma.hrRecruitmentHandover.create({ data: { organizationId: organization.id, applicationId: offer2.applicationId, offerAcceptanceId: acceptance2.id, assignedHrTeamId: id("team"), status: "APPROVED" } });
+  const handover2 = await prisma.hrRecruitmentHandover.create({ data: { organizationId: organization.id, applicationId: application2.id, offerAcceptanceId: acceptance2.id, assignedHrTeamId: hiringTeam.id, status: "APPROVED" } });
   const employee = await prisma.hrEmployee.create({ data: { organizationId: organization.id, employeeNumber: `VALIDATION-PENDING-${Date.now()}`, legalFirstName: "Unit", lastName: "Concurrency", personalEmail: `unit3-${Date.now()}@example.invalid`, employmentStatus: "PRE_HIRE", startDate: now } });
   const year = now.getUTCFullYear();
   const sequenceBefore = (await prisma.hrEmployeeNumberSequence.findUnique({ where: { organizationId_year: { organizationId: organization.id, year } } }))?.lastValue ?? 0;
@@ -92,7 +97,7 @@ try {
     const sequence = await tx.hrEmployeeNumberSequence.upsert({ where: { organizationId_year: { organizationId: organization.id, year } }, update: { lastValue: { increment: 1 } }, create: { organizationId: organization.id, year, lastValue: 1 } });
     await tx.hrEmployee.update({ where: { id: employee.id }, data: { employeeNumber: `EMP-${year}-${String(sequence.lastValue).padStart(6, "0")}` } });
     const lifecycle = await tx.hrLifecycleInstance.create({ data: { organizationId: organization.id, templateId: template.id, employeeId: employee.id, type: "ONBOARDING", status: "ACTIVE", effectiveDate: now, startedAt: now, reason: run, createdById: actor.id, tasks: { create: template.tasks.map((task) => ({ organizationId: organization.id, templateTaskKey: task.key, title: task.title, description: task.description, ownerType: task.ownerType, dueAt: now, required: task.required, instructions: task.instructions, predecessorKeys: task.predecessorKeys })) } } });
-    const conversion = await tx.hrPreHireConversion.create({ data: { organizationId: organization.id, handoverId: handover2.id, applicantId: id(`onboarding-applicant-${label}`), applicationId: id(`onboarding-application-${label}`), employeeId: employee.id, lifecycleInstanceId: lifecycle.id, idempotencyKey: id(`onboarding-key-${label}`), convertedById: actor.id } });
+    const conversion = await tx.hrPreHireConversion.create({ data: { organizationId: organization.id, handoverId: handover2.id, applicantId: applicant2.id, applicationId: application2.id, employeeId: employee.id, lifecycleInstanceId: lifecycle.id, idempotencyKey: id(`onboarding-key-${label}`), convertedById: actor.id } });
     await audit(tx, organization.id, actor.id, "HrLifecycleInstance", lifecycle.id, "hr.validation.onboarding.generated");
     return conversion.id;
   }, { isolationLevel: "Serializable" }));
