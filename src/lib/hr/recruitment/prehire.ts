@@ -1,7 +1,9 @@
 import crypto from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { appendHrAudit } from "../audit";
+import { createOpaqueToken, hashOpaqueToken, normalizeHrEmail, sealHrCredential } from "../auth/crypto";
 import { dueDate } from "../lifecycle/definitions";
+import { enqueueHrEmail } from "../notifications/outbox";
 import { reconcilePositionOccupancy } from "../organization/position-commands";
 import { evaluateActivationReadiness } from "./states";
 import { evaluateHandoverEligibility } from "./handover";
@@ -137,6 +139,14 @@ export async function convertApprovedHandoverToPreHire(
       },
     },
   });
+  await enqueueHrEmail(tx, {
+    organizationId: input.organizationId,
+    recipient: application.applicant.email,
+    template: "hr-lifecycle-started",
+    subject: "Your onboarding has started",
+    payload: { lifecycleInstanceId: lifecycle.id, recipientName: application.applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(application.applicant.email)}` },
+    idempotencyKey: `recruitment-onboarding-started:${lifecycle.id}`,
+  });
   await tx.hrCandidateEmployeeLink.create({
     data: {
       organizationId: input.organizationId,
@@ -200,18 +210,45 @@ export async function activateReadyEmployee(
     cancelledOrOnHold: ["CANCELLED", "ON_HOLD"].includes(employee.employmentStatus),
   });
   if (!readiness.ready) throw new Error(`Employee activation is blocked: ${readiness.blockers.join(", ")}.`);
-  await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: "ACTIVE" } });
-  if (employee.user && employee.user.status !== "ACTIVE") {
-    await tx.hrUser.update({ where: { id: employee.user.id }, data: { status: "ACTIVE" } });
+  let provisionedUser = employee.user;
+  if (!provisionedUser) {
+    if (!employee.personalEmail) throw new Error("Employee account provisioning requires a personal email address.");
+    const email = normalizeHrEmail(employee.personalEmail);
+    const existingUser = await tx.hrUser.findUnique({ where: { organizationId_email: { organizationId: input.organizationId, email } }, include: { employee: true } });
+    if (existingUser?.employee && existingUser.employee.id !== employee.id) throw new Error("The employee email is already linked to another employee account.");
+    const role = await tx.hrRole.findUniqueOrThrow({ where: { organizationId_key: { organizationId: input.organizationId, key: "EMPLOYEE" } } });
+    const createdById = input.actorUserId ?? (await tx.hrUser.findFirstOrThrow({ where: { organizationId: input.organizationId, isPrimaryAdmin: true, status: "ACTIVE" }, select: { id: true } })).id;
+    provisionedUser = existingUser ?? await tx.hrUser.create({ data: { organizationId: input.organizationId, email, status: "INVITED" } });
+    await tx.hrUserRole.upsert({ where: { userId_roleId: { userId: provisionedUser.id, roleId: role.id } }, update: { revokedAt: null, assignedById: createdById }, create: { userId: provisionedUser.id, roleId: role.id, assignedById: createdById } });
+    await tx.hrEmployee.update({ where: { id: employee.id }, data: { userId: provisionedUser.id, companyEmail: email, companyEmailStatus: "PENDING" } });
+    if (!provisionedUser.passwordHash) {
+      await tx.hrAccountInvitation.updateMany({ where: { userId: provisionedUser.id, status: "ACTIVE" }, data: { status: "REVOKED" } });
+      const rawToken = createOpaqueToken();
+      const invitation = await tx.hrAccountInvitation.create({ data: { organizationId: input.organizationId, userId: provisionedUser.id, createdById, tokenHash: hashOpaqueToken(rawToken), expiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000) } });
+      const recipientName = `${employee.preferredName ?? employee.legalFirstName} ${employee.lastName}`;
+      await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: email, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: invitation.id, credentialEnvelope: sealHrCredential(rawToken), recipientName }, idempotencyKey: `hr-activation-invitation:${employee.id}` });
+    }
+    await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, entityType: "HrUser", entityId: provisionedUser.id, action: "hr.recruitment.employee_account.provisioned", newValues: { employeeId: employee.id, status: provisionedUser.status, role: "EMPLOYEE" }, reason: `Employee activation policy via ${input.source}` });
   }
+  await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: "ACTIVE" } });
+  if (provisionedUser.passwordHash && provisionedUser.mfaEnabled && provisionedUser.status !== "ACTIVE") await tx.hrUser.update({ where: { id: provisionedUser.id }, data: { status: "ACTIVE" } });
+  const userActivated = Boolean(provisionedUser.passwordHash && provisionedUser.mfaEnabled);
+  await enqueueHrEmail(tx, {
+    organizationId: input.organizationId,
+    recipient: employee.personalEmail!,
+    template: "hr-employee-activated",
+    subject: "Your employee record is active",
+    payload: { employeeId: employee.id, recipientName: `${employee.preferredName ?? employee.legalFirstName} ${employee.lastName}`, href: userActivated ? "/hr/employee" : "/hr/invitation" },
+    idempotencyKey: `employee-activated:${employee.id}`,
+  });
   const activation = await tx.hrRecruitmentActivation.upsert({
     where: { employeeId: employee.id },
-    update: { employeeActivatedAt: now, userActivatedAt: employee.user ? now : null, activatedById: input.actorUserId, source: input.source },
+    update: { employeeActivatedAt: now, userActivatedAt: userActivated ? now : null, activatedById: input.actorUserId, source: input.source },
     create: {
       organizationId: input.organizationId,
       employeeId: employee.id,
       employeeActivatedAt: now,
-      userActivatedAt: employee.user ? now : null,
+      userActivatedAt: userActivated ? now : null,
       activatedById: input.actorUserId,
       source: input.source,
       idempotencyKey: `employee-activation:${employee.id}`,
@@ -224,7 +261,7 @@ export async function activateReadyEmployee(
     entityId: employee.id,
     action: "hr.recruitment.employee.activated",
     previousValues: { employmentStatus: employee.employmentStatus },
-    newValues: { employmentStatus: "ACTIVE", userActivated: Boolean(employee.user) },
+    newValues: { employmentStatus: "ACTIVE", userProvisioned: true, userActivated },
     reason: `Activation readiness passed via ${input.source}`,
   });
   return activation;

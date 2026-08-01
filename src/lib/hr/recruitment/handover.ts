@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { appendHrAudit } from "../audit";
+import { enqueueHrEmail } from "../notifications/outbox";
 import { assertHandoverTransition, evaluatePreHireEligibility, type HandoverStatus } from "./states";
 
 type Client = Prisma.TransactionClient;
@@ -101,6 +102,16 @@ export async function reviewRecruitmentDocument(
     newValues: { reviewScope: input.reviewScope, status: input.decision, documentVersion: input.documentVersion },
     reason: input.reason ?? "Document verified",
     correlationId: crypto.randomUUID(),
+  });
+  const application = await tx.jobApplication.findFirstOrThrow({ where: { id: handover.applicationId, organizationId: input.organizationId }, include: { applicant: true } });
+  const template = input.decision === "VERIFIED" ? "hr-document-available" : input.decision === "REJECTED" ? "hr-document-rejected" : "hr-document-requested";
+  await enqueueHrEmail(tx, {
+    organizationId: input.organizationId,
+    recipient: application.applicant.email,
+    template,
+    subject: input.decision === "VERIFIED" ? "Your document was approved" : input.decision === "REJECTED" ? "Your document was rejected" : "A replacement document is requested",
+    payload: { uploadedDocumentId: input.uploadedDocumentId, documentVersion: input.documentVersion, recipientName: application.applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(application.applicant.email)}` },
+    idempotencyKey: `recruitment-document-${input.decision.toLowerCase()}:${review.id}:${input.documentVersion}`,
   });
   return review;
 }

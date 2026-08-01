@@ -169,7 +169,7 @@ export async function submitApplication(
     recipient: input.email,
     template: "hr-application-confirmation",
     subject: `Application received: ${vacancy.title}`,
-    payload: { applicationReference, vacancyNumber: vacancy.vacancyNumber, href: `/careers/application/${applicationReference}` },
+    payload: { applicationReference, vacancyNumber: vacancy.vacancyNumber, recipientName: applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(input.email)}` },
     idempotencyKey: `application-confirmation:${application.id}`,
   });
 

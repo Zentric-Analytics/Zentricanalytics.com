@@ -27,6 +27,7 @@ import {
 } from "../../lib/storage";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { accessCodeRateLimitConfig } from "@/lib/access-code-config";
+import { enqueueHrEmail } from "../../lib/hr/notifications/outbox";
 
 type RedirectStatus = "requested" | "limited" | "error";
 
@@ -682,6 +683,14 @@ export async function submitOfferDecision(formData: FormData) {
       await tx.jobApplication.update({
         where: { id: application.id },
         data: { recruitmentStatus: "OFFER_DECLINED", version: { increment: 1 } },
+      });
+      await enqueueHrEmail(tx, {
+        organizationId: application.organizationId!,
+        recipient: application.applicant.email,
+        template: "hr-offer-declined",
+        subject: "Your offer decision is confirmed",
+        payload: { offerId: governedOffer.id, recipientName: application.applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(application.applicant.email)}` },
+        idempotencyKey: `offer-declined:${governedOffer.id}:${governedOffer.activeVersionId}`,
       });
     });
     redirect(portalUrl(session, { stage: "4", success: "offer_declined" }));

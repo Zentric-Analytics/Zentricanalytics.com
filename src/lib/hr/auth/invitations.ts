@@ -16,9 +16,11 @@ export class HrInvitationAcceptanceError extends Error {
 export async function createHrInvitation(input: { organizationId: string; userId: string; createdById: string; recipient: string }) {
   const rawToken = createOpaqueToken();
   const invitation = await prisma.$transaction(async (tx) => {
+    const target = await tx.hrUser.findFirstOrThrow({ where: { id: input.userId, organizationId: input.organizationId }, include: { employee: true } });
+    const recipientName = target.employee ? `${target.employee.preferredName ?? target.employee.legalFirstName} ${target.employee.lastName}` : undefined;
     await tx.hrAccountInvitation.updateMany({ where: { userId: input.userId, status: "ACTIVE" }, data: { status: "REVOKED" } });
     const created = await tx.hrAccountInvitation.create({ data: { organizationId: input.organizationId, userId: input.userId, createdById: input.createdById, tokenHash: hashOpaqueToken(rawToken), expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) } });
-    const outbox = await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: input.recipient, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: created.id, credentialEnvelope: sealHrCredential(rawToken) }, idempotencyKey: `hr-invitation:${created.id}` });
+    const outbox = await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: input.recipient, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: created.id, credentialEnvelope: sealHrCredential(rawToken), recipientName }, idempotencyKey: `hr-invitation:${created.id}` });
     await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.createdById, entityType: "HrUser", entityId: input.userId, action: "hr.user.invited" });
     return { created, outboxId: outbox?.id };
   });
@@ -36,7 +38,7 @@ export async function consumeHrInvitation(rawToken: string, password: string) {
   if (!passwordMeetsPolicy(password)) throw new HrInvitationAcceptanceError("PASSWORD_POLICY");
   const tokenHash = hashOpaqueToken(rawToken);
   return prisma.$transaction(async (tx) => {
-    const invitation = await tx.hrAccountInvitation.findUnique({ where: { tokenHash }, include: { user: true } });
+    const invitation = await tx.hrAccountInvitation.findUnique({ where: { tokenHash }, include: { user: { include: { employee: true } } } });
     if (!tokenCanBeConsumed(invitation)) throw new HrInvitationAcceptanceError("INVALID_TOKEN");
     const now = new Date();
     const claimed = await tx.hrAccountInvitation.updateMany({
@@ -57,6 +59,8 @@ export async function consumeHrInvitation(rawToken: string, password: string) {
     });
     await appendHrAudit(tx, { organizationId: invitation!.organizationId, actorUserId: invitation!.userId, entityType: "HrUser", entityId: invitation!.userId, action: "hr.invitation.consumed" });
     await appendHrAudit(tx, { organizationId: invitation!.organizationId, actorUserId: invitation!.userId, entityType: "HrUser", entityId: invitation!.userId, action: "hr.auth.mfa.enrollment_started" });
+    const employee = invitation!.user.employee;
+    await enqueueHrEmail(tx, { organizationId: invitation!.organizationId, recipient: invitation!.user.email, template: "hr-mfa-enrollment", subject: "Complete your Zentric HR security setup", payload: { recipientName: employee ? `${employee.preferredName ?? employee.legalFirstName} ${employee.lastName}` : undefined, href: "/hr/security" }, idempotencyKey: `hr-mfa-enrollment:${invitation!.userId}` });
     return user;
   });
 }

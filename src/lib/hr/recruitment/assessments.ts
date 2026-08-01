@@ -43,6 +43,7 @@ export async function createAssessment(
       createdById: raw.actorUserId,
     },
   });
+  const applicant = await tx.applicant.findUniqueOrThrow({ where: { id: application.applicantId } });
   if (application.recruitmentStatus !== "ASSESSMENT_PENDING") {
     await tx.jobApplication.update({
       where: { id: application.id },
@@ -56,6 +57,14 @@ export async function createAssessment(
     subject: `Assessment assigned: ${input.assessmentType}`,
     payload: { assessmentId: assessment.id, href: `/hr/admin/applications/${application.id}` },
     idempotencyKey: `assessment-assigned:${assessment.id}:${evaluator.id}`,
+  });
+  await enqueueHrEmail(tx, {
+    organizationId: input.organizationId,
+    recipient: applicant.email,
+    template: "hr-assessment-assigned",
+    subject: `Assessment invitation: ${input.assessmentType}`,
+    payload: { assessmentId: assessment.id, recipientName: applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(applicant.email)}` },
+    idempotencyKey: `candidate-assessment-assigned:${assessment.id}`,
   });
   await appendHrAudit(tx, {
     organizationId: input.organizationId,

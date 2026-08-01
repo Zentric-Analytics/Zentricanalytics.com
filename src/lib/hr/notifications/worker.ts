@@ -20,6 +20,50 @@ export function safeWorkerError(value: unknown) {
 type HrEmailPayload = { credentialEnvelope?: unknown; href?: unknown; recipientName?: unknown } | null;
 type HrEmailContent = { body: string; html: string };
 
+type NotificationTemplate = {
+  title: string;
+  body: string;
+  ctaLabel: string;
+  defaultHref: string;
+};
+
+const notificationTemplates: Record<string, NotificationTemplate> = {
+  "hr-application-confirmation": { title: "We received your application", body: "Your application has been received and is now in our review queue.", ctaLabel: "Track Application", defaultHref: "/track" },
+  "hr-new-application": { title: "New application received", body: "A new candidate application is ready for secure review.", ctaLabel: "Review Application", defaultHref: "/hr/admin/recruitment" },
+  "hr-interview-invitation": { title: "Interview invitation", body: "An interview has been scheduled. Review the secure workspace for the confirmed time and details.", ctaLabel: "Review Interview", defaultHref: "/hr/admin/recruitment" },
+  "hr-interview-reminder": { title: "Interview reminder", body: "This is a reminder for your upcoming interview. Review the confirmed details in the secure workspace.", ctaLabel: "Review Interview", defaultHref: "/hr/admin/recruitment" },
+  "hr-interview-rescheduled": { title: "Interview rescheduled", body: "Your interview schedule has changed. Review the new confirmed time and details.", ctaLabel: "Review New Schedule", defaultHref: "/hr/admin/recruitment" },
+  "hr-interview-cancelled": { title: "Interview cancelled", body: "The scheduled interview has been cancelled. Review the secure workspace for any next steps.", ctaLabel: "Review Update", defaultHref: "/hr/admin/recruitment" },
+  "hr-assessment-assigned": { title: "Assessment invitation", body: "An assessment is ready for secure review and completion.", ctaLabel: "Review Assessment", defaultHref: "/hr/admin/recruitment" },
+  "hr-offer-reminder": { title: "Employment offer reminder", body: "Your employment offer is still awaiting your response. Review the exact approved version before its deadline.", ctaLabel: "Review Offer", defaultHref: "/track" },
+  "hr-offer-accepted": { title: "Offer acceptance confirmed", body: "Your acceptance of the exact approved employment offer has been recorded.", ctaLabel: "Review Application", defaultHref: "/track" },
+  "hr-offer-declined": { title: "Offer decision confirmed", body: "Your decision to decline the employment offer has been recorded.", ctaLabel: "Review Application", defaultHref: "/track" },
+  "hr-document-requested": { title: "Document requested", body: "HR has requested a document. Upload it only through the secure HR workspace.", ctaLabel: "Review Request", defaultHref: "/hr/employee/documents" },
+  "hr-document-available": { title: "Document approved", body: "An HR document has passed verification and is available in your secure workspace.", ctaLabel: "View Document", defaultHref: "/hr/employee/documents" },
+  "hr-document-rejected": { title: "Document needs attention", body: "An HR document could not be approved. Review the reason and required next step securely.", ctaLabel: "Review Document", defaultHref: "/hr/employee/documents" },
+  "hr-document-scan-attention": { title: "Document needs attention", body: "A document upload needs secure review before it can be made available.", ctaLabel: "Review Document", defaultHref: "/hr/employee/documents" },
+  "hr-document-expiring": { title: "Document expiration reminder", body: "An HR document is approaching its expiration date. Review it securely and update it if required.", ctaLabel: "Review Document", defaultHref: "/hr/employee/documents" },
+  "hr-lifecycle-started": { title: "Onboarding started", body: "Your onboarding checklist is ready. Complete each assigned task in the secure HR workspace.", ctaLabel: "Start Onboarding", defaultHref: "/hr/employee/tasks" },
+  "hr-lifecycle-task-due": { title: "Onboarding reminder", body: "An assigned onboarding task is due. Review and complete it in the secure HR workspace.", ctaLabel: "Review Task", defaultHref: "/hr/employee/tasks" },
+  "hr-employee-activated": { title: "Employee account activated", body: "Your employee record is active and your HR self-service workspace is ready.", ctaLabel: "Open HR Workspace", defaultHref: "/hr/employee" },
+  "hr-mfa-enrollment": { title: "MFA enrollment required", body: "Multi-factor authentication is required before you can enter the HR workspace.", ctaLabel: "Complete Security Setup", defaultHref: "/hr/security" },
+  "hr-asset-assigned": { title: "Asset assigned", body: "An asset has been assigned to you. Review the assignment details securely.", ctaLabel: "View Assets", defaultHref: "/hr/employee/assets" },
+  "hr-asset-return-recorded": { title: "Asset return recorded", body: "Your asset return has been recorded in the HR workspace.", ctaLabel: "View Assets", defaultHref: "/hr/employee/assets" },
+  "hr-asset-return-reminder": { title: "Asset return reminder", body: "An assigned asset is due for return. Review the return requirements securely.", ctaLabel: "View Assets", defaultHref: "/hr/employee/assets" },
+  "hr-leave-review-requested": { title: "Leave request awaiting review", body: "A leave request is ready for your secure review.", ctaLabel: "Review Leave", defaultHref: "/hr/supervisor/leave" },
+  "hr-leave-approved": { title: "Leave request approved", body: "Your leave request has been approved.", ctaLabel: "View Leave", defaultHref: "/hr/employee/leave" },
+  "hr-leave-rejected": { title: "Leave request update", body: "Your leave request was not approved. Review the decision securely.", ctaLabel: "View Decision", defaultHref: "/hr/employee/leave" },
+  "hr-leave-cancelled": { title: "Approved leave cancelled", body: "A previously approved leave request has been cancelled.", ctaLabel: "View Leave", defaultHref: "/hr/employee/leave" },
+  "hr-payroll-review-ready": { title: "Payroll ready for review", body: "A payroll run is awaiting authorized review.", ctaLabel: "Review Payroll", defaultHref: "/hr/admin/payroll" },
+  "hr-payroll-approval-ready": { title: "Payroll ready for approval", body: "A reviewed payroll run is awaiting independent approval.", ctaLabel: "Approve Payroll", defaultHref: "/hr/admin/payroll" },
+  "hr-payroll-approved": { title: "Payroll run approved", body: "The payroll run has completed its approval gate.", ctaLabel: "View Payroll", defaultHref: "/hr/admin/payroll" },
+  "hr-payslip-ready": { title: "Payslip ready", body: "Your payslip is available in the secure HR workspace.", ctaLabel: "View Payslip", defaultHref: "/hr/employee/payslips" },
+  "hr-workflow-approval": { title: "Workflow approval requested", body: "A governed workflow stage is awaiting your decision.", ctaLabel: "Review Approval", defaultHref: "/hr/employee/approvals" },
+  "hr-employment-exit": { title: "Employment exit information", body: "Employment exit information is available in the secure HR workspace.", ctaLabel: "Review Information", defaultHref: "/hr/employee" },
+};
+
+const vacancyTemplate: NotificationTemplate = { title: "Vacancy workflow update", body: "A vacancy has changed state and is ready for secure review.", ctaLabel: "Review Vacancy", defaultHref: "/hr/admin/vacancies" };
+
 function escapeHtml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
@@ -64,10 +108,12 @@ export function hrEmailContent(template: string, payload: unknown, applicationBa
 
   if (template === "hr-handover-created") {
     const href = secureHrEmailLink(emailPayload, baseUrl);
-    return brandedHrEmail("HR handover requires review", "A candidate has accepted an employment offer and requires HR review.", { label: "Review HR Handover", href });
+    return brandedHrEmail("HR handover requires review", `${greeting}A candidate has accepted an employment offer and requires HR review.`, { label: "Review HR Handover", href });
   }
-
-  return brandedHrEmail("Zentric HRMS notification", "You have a new HRMS notification. Sign in to the secure Zentric HR portal to review it. Do not reply with confidential information.");
+  const definition = notificationTemplates[template] ?? (template.startsWith("hr-vacancy-") ? vacancyTemplate : null);
+  if (!definition) throw new Error(`Unknown HR email template: ${template}`);
+  const href = secureHrEmailLink({ href: typeof emailPayload?.href === "string" ? emailPayload.href : definition.defaultHref }, baseUrl);
+  return brandedHrEmail(definition.title, `${greeting}${definition.body}`, { label: definition.ctaLabel, href });
 }
 
 export function hrEmailBody(template: string, payload: unknown, applicationBaseUrl = process.env.APPLICATION_BASE_URL ?? "") {

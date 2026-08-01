@@ -26,6 +26,7 @@ export async function scheduleInterview(
   const application = await tx.jobApplication.findFirstOrThrow({
     where: { id: input.applicationId, organizationId: input.organizationId },
   });
+  const applicant = await tx.applicant.findUniqueOrThrow({ where: { id: application.applicantId } });
   const participants = await tx.hrUser.findMany({
     where: { id: { in: [...new Set(input.participantUserIds)] }, organizationId: input.organizationId, status: "ACTIVE" },
   });
@@ -60,6 +61,14 @@ export async function scheduleInterview(
       idempotencyKey: `interview-invitation:${interview.id}:${user.id}:${interview.version}`,
     });
   }
+  await enqueueHrEmail(tx, {
+    organizationId: input.organizationId,
+    recipient: applicant.email,
+    template: "hr-interview-invitation",
+    subject: `Interview invitation: ${input.title}`,
+    payload: { interviewId: interview.id, recipientName: applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(applicant.email)}` },
+    idempotencyKey: `candidate-interview-invitation:${interview.id}:${interview.version}`,
+  });
   await appendHrAudit(tx, {
     organizationId: input.organizationId,
     actorUserId: raw.actorUserId,
@@ -123,6 +132,8 @@ export async function changeInterview(
     where: { id: input.interviewId, organizationId: input.organizationId },
     include: { participants: true },
   });
+  const application = await tx.jobApplication.findFirstOrThrow({ where: { id: interview.applicationId, organizationId: input.organizationId } });
+  const applicant = await tx.applicant.findUniqueOrThrow({ where: { id: application.applicantId } });
   if (interview.status === "CANCELLED") throw new Error("A cancelled interview cannot be changed.");
   if (interview.status === "COMPLETED") throw new Error("A completed interview is locked.");
   if (input.action === "RESCHEDULE") {
@@ -142,6 +153,17 @@ export async function changeInterview(
     },
   });
   if (result.count !== 1) throw new Error("Interview changed concurrently. Reload and try again.");
+  if (input.action === "RESCHEDULE" || input.action === "CANCEL") {
+    const template = input.action === "RESCHEDULE" ? "hr-interview-rescheduled" : "hr-interview-cancelled";
+    await enqueueHrEmail(tx, {
+      organizationId: input.organizationId,
+      recipient: applicant.email,
+      template,
+      subject: input.action === "RESCHEDULE" ? `Interview rescheduled: ${interview.title}` : `Interview cancelled: ${interview.title}`,
+      payload: { interviewId: interview.id, recipientName: applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(applicant.email)}` },
+      idempotencyKey: `candidate-interview-${input.action.toLowerCase()}:${interview.id}:${interview.version + 1}`,
+    });
+  }
   if (input.action === "COMPLETE") {
     await tx.jobApplication.updateMany({
       where: { id: interview.applicationId, organizationId: input.organizationId, recruitmentStatus: "INTERVIEW_SCHEDULED" },

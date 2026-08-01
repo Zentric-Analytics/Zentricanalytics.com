@@ -193,7 +193,7 @@ export async function acceptOffer(
     include: { activeVersion: true },
   });
   if (!offer.activeVersion || offer.activeVersion.expiresAt <= now) throw new Error("This offer is expired or no longer active.");
-  const application = await tx.jobApplication.findFirstOrThrow({ where: { id: offer.applicationId, applicantId: input.applicantId, organizationId: input.organizationId } });
+  const application = await tx.jobApplication.findFirstOrThrow({ where: { id: offer.applicationId, applicantId: input.applicantId, organizationId: input.organizationId }, include: { applicant: true } });
   const acceptance = await tx.hrRecruitmentOfferAcceptance.upsert({
     where: { offerId: offer.id },
     update: {},
@@ -228,6 +228,14 @@ export async function acceptOffer(
     previousValues: { status: "ISSUED" },
     newValues: { status: "ACCEPTED", handoverId: handover.id },
     reason: "Applicant accepted the active offer version",
+  });
+  await enqueueHrEmail(tx, {
+    organizationId: input.organizationId,
+    recipient: application.applicant.email,
+    template: "hr-offer-accepted",
+    subject: "Your offer acceptance is confirmed",
+    payload: { offerId: offer.id, recipientName: application.applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(application.applicant.email)}` },
+    idempotencyKey: `offer-accepted:${offer.id}:${input.offerVersionId}`,
   });
   const hrRecipients = await tx.hrHiringTeamMember.findMany({
     where: { hiringTeamId: handover.assignedHrTeamId, status: "ACTIVE", user: { status: "ACTIVE" } },
