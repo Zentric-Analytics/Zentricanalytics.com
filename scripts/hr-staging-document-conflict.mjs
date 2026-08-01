@@ -11,7 +11,7 @@ const bucket = process.env.OBJECT_STORAGE_BUCKET;
 const s3 = new S3Client({ endpoint: process.env.OBJECT_STORAGE_ENDPOINT, region: process.env.OBJECT_STORAGE_REGION, forcePathStyle: process.env.OBJECT_STORAGE_FORCE_PATH_STYLE !== "false", credentials: { accessKeyId: process.env.OBJECT_STORAGE_ACCESS_KEY_ID, secretAccessKey: process.env.OBJECT_STORAGE_SECRET_ACCESS_KEY } });
 
 try {
-  const application = await prisma.jobApplication.findFirstOrThrow({ where: { applicationId: "APL-2026-000010" } });
+  const application = await prisma.jobApplication.findFirstOrThrow({ where: { applicationReference: "APL-2026-000010" } });
   const handover = await prisma.hrRecruitmentHandover.findFirstOrThrow({ where: { applicationId: application.id } });
   const actor = await prisma.hrUser.findFirstOrThrow({ where: { organizationId: application.organizationId, status: "ACTIVE" }, select: { id: true } });
   const key1 = `${application.applicationId}/${run}-v1.pdf`;
