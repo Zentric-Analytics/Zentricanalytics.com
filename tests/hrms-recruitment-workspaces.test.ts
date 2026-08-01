@@ -82,7 +82,7 @@ describe("Unit 3 connected recruitment workspaces", () => {
   it("exposes the exact governed offer in the verified candidate portal", () => {
     const portal = read("src/app/track/portal/page.tsx");
     const actions = read("src/app/track/actions.ts");
-    expect(portal).toContain("Governed employment offer Â· exact version");
+    expect(portal).toContain("Governed employment offer · exact version");
     expect(portal).toContain("Accept exact offer");
     expect(actions).toContain("acceptGovernedOffer");
     expect(actions).toContain('isolationLevel: "Serializable"');
@@ -129,4 +129,3 @@ describe("Unit 3 connected recruitment workspaces", () => {
     expect(handover).toContain("A newer document version was submitted. Review the latest version.");
   });
 });
-

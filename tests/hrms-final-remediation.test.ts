@@ -110,4 +110,3 @@ describe("final HRMS remediation security behavior", () => {
     expect(scanner).toContain("conflicting terminal scan result");
   });
 });
-

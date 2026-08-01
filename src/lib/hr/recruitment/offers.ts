@@ -245,4 +245,3 @@ export async function acceptOffer(
   }
   return { ...acceptance, handover };
 }
-
