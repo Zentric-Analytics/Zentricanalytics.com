@@ -17,7 +17,7 @@ export function safeWorkerError(value: unknown) {
   return secrets.reduce((safe, secret) => safe.replaceAll(secret, "[redacted]"), message).replace(/Bearer\s+\S+/gi, "Bearer [redacted]").slice(0, 500);
 }
 
-type HrEmailPayload = { credentialEnvelope?: unknown; href?: unknown } | null;
+type HrEmailPayload = { credentialEnvelope?: unknown; href?: unknown; recipientName?: unknown } | null;
 type HrEmailContent = { body: string; html: string };
 
 function escapeHtml(value: string) {
@@ -42,6 +42,10 @@ function secureHrEmailLink(payload: HrEmailPayload, baseUrl: string) {
 export function hrEmailContent(template: string, payload: unknown, applicationBaseUrl = process.env.APPLICATION_BASE_URL ?? ""): HrEmailContent {
   const baseUrl = String(applicationBaseUrl).replace(/\/+$/, "");
   const emailPayload = (payload && typeof payload === "object" ? payload : null) as HrEmailPayload;
+  const recipientName = typeof emailPayload?.recipientName === "string" && emailPayload.recipientName.trim()
+    ? emailPayload.recipientName.trim()
+    : null;
+  const greeting = recipientName ? `Hello ${recipientName},\n\n` : "";
   if (template === "hr-account-invitation" || template === "hr-password-reset") {
     if (!/^https:\/\//.test(baseUrl)) throw new Error("APPLICATION_BASE_URL must be HTTPS for credential email delivery.");
     const credentialEnvelope = emailPayload?.credentialEnvelope;
@@ -50,12 +54,12 @@ export function hrEmailContent(template: string, payload: unknown, applicationBa
     const destination = template === "hr-account-invitation" ? "invitation" : "password-reset";
     const action = destination === "invitation" ? "set up your HR account" : "reset your HR password";
     const href = `${baseUrl}/hr/${destination}/redeem#token=${encodeURIComponent(token)}`;
-    return brandedHrEmail(`Zentric HR: ${destination === "invitation" ? "Account setup" : "Password reset"}`, `Use the secure one-time link below to ${action}.\n\nThis link is time-limited and single-use. Do not forward it.`, { label: destination === "invitation" ? "Set Up Account" : "Reset Password", href });
+    return brandedHrEmail(`Zentric HR: ${destination === "invitation" ? "Account setup" : "Password reset"}`, `${greeting}Use the secure one-time link below to ${action}.\n\nThis link is time-limited and single-use. Do not forward it.`, { label: destination === "invitation" ? "Set Up Account" : "Reset Password", href });
   }
 
   if (template === "hr-offer-issued") {
     const href = secureHrEmailLink(emailPayload, baseUrl);
-    return brandedHrEmail("Your employment offer is ready", "Your employment offer is ready for review.\n\nReview the exact approved offer and accept or decline it securely.", { label: "Review & Accept Offer", href });
+    return brandedHrEmail("Your employment offer is ready", `${greeting}Your employment offer is ready for review.\n\nReview the exact approved offer and accept or decline it securely.`, { label: "Review & Accept Offer", href });
   }
 
   if (template === "hr-handover-created") {
