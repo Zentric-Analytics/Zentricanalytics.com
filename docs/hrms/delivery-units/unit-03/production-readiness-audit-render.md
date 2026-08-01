@@ -1,6 +1,8 @@
 # Units 1–3 production readiness audit — Render policy
 
-Audit date: 2026-08-01. Scope: read-only Render and repository inspection. Production was not deployed, migrated, written to or modified.
+Audit date: 2026-08-01. Initial scope: read-only Render and repository inspection. Production was not deployed, migrated or written to.
+
+Follow-up remediation: production web-service auto-deploy was disabled on 2026-08-01. This configuration-only guard did not start a deployment; Render still reported deployment `dep-d92r4u3tqb8s73cm9btg` at commit `5aac0c6cc03d693a45699b4f65c3cba2a39cc0f8` as live. No production code, database data, migration or secret changed.
 
 ## Recovery-policy decision
 
@@ -41,7 +43,7 @@ Render retains database logical exports for at least seven days. Meeting the lon
 ### High risk
 
 - Database ingress is open broadly, HA is disabled, connection pooling is disabled and the Basic-256mb database has not been capacity-approved for HRMS production traffic.
-- Auto-deploy is enabled on commits to `main`, which is incompatible with the governed migration and release sequence.
+- Auto-deploy is now disabled. Keep it disabled through release and use only the explicitly authorized manual deployment sequence.
 - Notifications cover failures only; no log stream or HRMS metrics/alert integration is configured.
 - Email-domain provider alignment, bounce/complaint webhooks and suppression handling remain unverified.
 
