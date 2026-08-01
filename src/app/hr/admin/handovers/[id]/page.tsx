@@ -35,9 +35,9 @@ export default async function HandoverPage({ params }: { params: Promise<{ id: s
   const current = handover.status as HandoverStatus;
   return <main className="space-y-7">
     <header><p className="text-sm font-bold uppercase tracking-widest text-teal-700">HR handover</p><h1 className="mt-2 text-3xl font-bold">{application.applicant.fullName}</h1><p className="mt-2 text-slate-600">{application.applicant.applicantNumber} · {application.applicationReference} · {label(handover.status)} · v{handover.version}</p></header>
-    <section className={`rounded-2xl border p-5 ${eligibility.eligible ? "border-emerald-300 bg-emerald-50" : "border-amber-300 bg-amber-50"}`}>
-      <h2 className="text-xl font-bold">Pre-hire eligibility: {eligibility.eligible ? "ELIGIBLE" : "BLOCKED"}</h2>
-      {eligibility.blockers.length ? <ul className="mt-2 list-disc pl-5 text-sm">{eligibility.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}</ul> : <p className="mt-2 text-sm">All current conversion gates pass.</p>}
+    <section className={`rounded-2xl border p-5 ${handover.conversion || eligibility.eligible ? "border-emerald-300 bg-emerald-50" : "border-amber-300 bg-amber-50"}`}>
+      <h2 className="text-xl font-bold">{handover.conversion ? "Pre-hire conversion: COMPLETED" : `Pre-hire eligibility: ${eligibility.eligible ? "ELIGIBLE" : "BLOCKED"}`}</h2>
+      {handover.conversion ? <p className="mt-2 text-sm">This handover has been converted to its linked employee and onboarding records.</p> : eligibility.blockers.length ? <ul className="mt-2 list-disc pl-5 text-sm">{eligibility.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}</ul> : <p className="mt-2 text-sm">All current conversion gates pass.</p>}
     </section>
     <div className="grid gap-5 xl:grid-cols-2">
       <section className="rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Accepted exact offer</h2>{accepted ? <dl className="mt-3 grid gap-2 sm:grid-cols-2"><Info name="Version" value={`v${accepted.version}`} /><Info name="Role" value={accepted.positionTitle} /><Info name="Department" value={accepted.departmentId} /><Info name="Legal entity" value={accepted.legalEntityId} /><Info name="Start date" value={accepted.startDate.toLocaleDateString()} /><Info name="Compensation" value={`${accepted.currency} ${accepted.salary.toString()} ${accepted.payFrequency}`} /></dl> : <p>Accepted version missing.</p>}</section>
