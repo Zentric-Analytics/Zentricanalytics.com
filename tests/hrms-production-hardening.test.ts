@@ -4,11 +4,17 @@ import { describe, expect, it } from "vitest";
 import { timingSafeSecret } from "../src/lib/hr/internal-auth";
 import { retryAt, safeWorkerError } from "../src/lib/hr/notifications/worker";
 import { generateTotpSecret, totpCode, totpProvisioningUri, verifyTotp } from "../src/lib/hr/auth/totp";
+import { minimumPitrRetentionDays } from "../scripts/hr-backup-policy.mjs";
 
 const root = process.cwd();
 const read = (file: string) => fs.readFileSync(path.join(root, file), "utf8");
 
 describe("HRMS production hardening", () => {
+  it("permits the approved seven-day staging PITR policy without weakening production", () => {
+    expect(minimumPitrRetentionDays("staging")).toBe(7);
+    expect(minimumPitrRetentionDays("production")).toBe(30);
+    expect(minimumPitrRetentionDays("development")).toBe(30);
+  });
   it("implements RFC-compatible TOTP with a bounded verification window", () => {
     const rfcSecret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
     expect(totpCode(rfcSecret, 59_000)).toBe("287082");
