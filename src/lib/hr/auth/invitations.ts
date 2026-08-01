@@ -1,0 +1,66 @@
+import { prisma } from "@/lib/prisma";
+import { appendHrAudit } from "@/lib/hr/audit";
+import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
+import { processHrOutboxItem } from "@/lib/hr/notifications/worker";
+import { createOpaqueToken, hashHrPassword, hashOpaqueToken, passwordMeetsPolicy, sealHrCredential } from "./crypto";
+import { generateTotpSecret } from "./totp";
+import { tokenCanBeConsumed } from "./tokens";
+
+export class HrInvitationAcceptanceError extends Error {
+  constructor(public readonly code: "INVALID_TOKEN" | "PASSWORD_POLICY") {
+    super(code === "PASSWORD_POLICY" ? "Password does not meet policy." : "Invitation is invalid or expired.");
+    this.name = "HrInvitationAcceptanceError";
+  }
+}
+
+export async function createHrInvitation(input: { organizationId: string; userId: string; createdById: string; recipient: string }) {
+  const rawToken = createOpaqueToken();
+  const invitation = await prisma.$transaction(async (tx) => {
+    const target = await tx.hrUser.findFirstOrThrow({ where: { id: input.userId, organizationId: input.organizationId }, include: { employee: true } });
+    const recipientName = target.employee ? `${target.employee.preferredName ?? target.employee.legalFirstName} ${target.employee.lastName}` : undefined;
+    await tx.hrAccountInvitation.updateMany({ where: { userId: input.userId, status: "ACTIVE" }, data: { status: "REVOKED" } });
+    const created = await tx.hrAccountInvitation.create({ data: { organizationId: input.organizationId, userId: input.userId, createdById: input.createdById, tokenHash: hashOpaqueToken(rawToken), expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) } });
+    const outbox = await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: input.recipient, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: created.id, credentialEnvelope: sealHrCredential(rawToken), recipientName }, idempotencyKey: `hr-invitation:${created.id}` });
+    await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.createdById, entityType: "HrUser", entityId: input.userId, action: "hr.user.invited" });
+    return { created, outboxId: outbox?.id };
+  });
+  if (invitation.outboxId) {
+    try {
+      await processHrOutboxItem(invitation.outboxId);
+    } catch {
+      // The durable cron worker remains the fallback for infrastructure errors.
+    }
+  }
+  return { invitation: invitation.created, rawToken };
+}
+
+export async function consumeHrInvitation(rawToken: string, password: string) {
+  if (!passwordMeetsPolicy(password)) throw new HrInvitationAcceptanceError("PASSWORD_POLICY");
+  const tokenHash = hashOpaqueToken(rawToken);
+  return prisma.$transaction(async (tx) => {
+    const invitation = await tx.hrAccountInvitation.findUnique({ where: { tokenHash }, include: { user: { include: { employee: true } } } });
+    if (!tokenCanBeConsumed(invitation)) throw new HrInvitationAcceptanceError("INVALID_TOKEN");
+    const now = new Date();
+    const claimed = await tx.hrAccountInvitation.updateMany({
+      where: { id: invitation!.id, status: "ACTIVE", usedAt: null, expiresAt: { gt: now } },
+      data: { status: "USED", usedAt: now },
+    });
+    if (claimed.count !== 1) throw new HrInvitationAcceptanceError("INVALID_TOKEN");
+    const user = await tx.hrUser.update({
+      where: { id: invitation!.userId },
+      data: {
+        passwordHash: await hashHrPassword(password),
+        status: "ACTIVE",
+        emailVerifiedAt: new Date(),
+        mfaEnabled: false,
+        mfaSecretEncrypted: sealHrCredential(generateTotpSecret()),
+        mfaLastUsedStep: null,
+      },
+    });
+    await appendHrAudit(tx, { organizationId: invitation!.organizationId, actorUserId: invitation!.userId, entityType: "HrUser", entityId: invitation!.userId, action: "hr.invitation.consumed" });
+    await appendHrAudit(tx, { organizationId: invitation!.organizationId, actorUserId: invitation!.userId, entityType: "HrUser", entityId: invitation!.userId, action: "hr.auth.mfa.enrollment_started" });
+    const employee = invitation!.user.employee;
+    await enqueueHrEmail(tx, { organizationId: invitation!.organizationId, recipient: invitation!.user.email, template: "hr-mfa-enrollment", subject: "Complete your Zentric HR security setup", payload: { recipientName: employee ? `${employee.preferredName ?? employee.legalFirstName} ${employee.lastName}` : undefined, href: "/hr/security" }, idempotencyKey: `hr-mfa-enrollment:${invitation!.userId}` });
+    return user;
+  });
+}

@@ -41,7 +41,7 @@ describe("Stage 2 cleaned candidate identity flow", () => {
     expect(portal).toContain("countryPhoneOptions.map");
   });
 
-  it("rejects invalid phone numbers and masks ID numbers in payload", () => {
+  it("rejects invalid phone numbers and preserves full ID numbers for protected HR review", () => {
     const base = {
       session: "1234567890123456",
       fullLegalName: "Ada Lovelace",
@@ -82,6 +82,8 @@ describe("Stage 2 cleaned candidate identity flow", () => {
       applicantPhoneNational: "08012345678",
     });
     const payload = toStage2SubmissionPayload(parsed);
+    expect(payload.primaryIdNumber).toBe("A123456789");
+    expect(payload.secondaryIdNumber).toBe("VIN123456");
     expect(payload.primaryIdNumberMasked).not.toBe("A123456789");
     expect(payload.secondaryIdNumberMasked).not.toBe("VIN123456");
     expect(payload.applicantPhoneE164).toBe("+2348012345678");

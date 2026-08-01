@@ -1,110 +1,94 @@
 import Link from 'next/link';
 
 const companyLinks = [
-  ['/', 'Home'],
   ['/about', 'About'],
   ['/services', 'Services'],
   ['/careers', 'Careers'],
+  ['/contact', 'Contact'],
 ] as const;
 
-const hiringLinks = [
-  ['/apply', 'Apply Now'],
-  ['/track', 'Track Application'],
-  ['/careers', 'Careers Overview'],
+const capabilityLinks = [
+  'Software Engineering',
+  'Artificial Intelligence',
+  'Data & Analytics',
+  'Cloud & Infrastructure',
+  'Research & Innovation',
+  'Emerging Technologies',
 ] as const;
 
-const focusAreas = [
-  'Software development',
-  'Web platforms',
-  'AI solutions',
-  'Data analytics',
-  'Computer science R&D',
-  'Emerging technologies',
-];
+const resourceLinks = [
+  ['/privacy', 'Privacy Policy'],
+  ['/terms', 'Terms & Conditions'],
+  ['/contact', 'Contact Us'],
+] as const;
+
+const footerLinkClasses =
+  'w-fit rounded-sm py-0.5 text-sm font-normal leading-5 text-white/75 transition-colors duration-200 hover:text-accent';
 
 function FooterLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link
-      className="w-fit text-sm font-medium text-slate-600 transition hover:text-brand"
-      href={href}
-    >
+    <Link className={footerLinkClasses} href={href}>
       {label}
     </Link>
   );
 }
 
 function FooterHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-ink">
-      {children}
-    </h3>
-  );
+  return <h3 className="text-sm font-semibold tracking-[-0.01em] text-white">{children}</h3>;
 }
 
 export function SiteFooter() {
-  const year = new Date().getFullYear();
-
   return (
-    <footer className="mt-16 border-t border-slate-200 bg-white text-ink" aria-label="Site footer">
-      <div className="mx-auto w-full max-w-6xl min-w-0 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid min-w-0 gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,1fr)]">
-          <section className="min-w-0" aria-labelledby="footer-brand">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand">
+    <footer className="bg-brand text-white" aria-label="Site footer">
+      <div className="za-container-wide py-7 sm:py-8">
+        <div className="grid gap-5 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.7fr)_minmax(0,0.95fr)_minmax(0,0.8fr)] lg:gap-x-10">
+          <section aria-labelledby="footer-company-overview" className="min-w-0">
+            <h2
+              id="footer-company-overview"
+              className="zentric-wordmark text-white"
+            >
               Zentric Analytics
-            </p>
-            <h2 id="footer-brand" className="mt-4 max-w-xl break-words text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-              Reliable software, data, and AI systems for serious work.
             </h2>
-            <p className="mt-4 max-w-2xl break-words text-sm leading-6 text-slate-600">
-              Zentric Analytics builds disciplined web platforms, software systems, AI-enabled workflows, analytics tools, and research-led technology solutions with careful implementation and maintainable handover practices.
+            <p className="mt-3 max-w-xs text-sm leading-[1.55] text-white/75">
+              Engineering reliable software, artificial intelligence, data platforms, and research-driven technology solutions for organizations building the future.
             </p>
-            <div className="mt-6 flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link className="btn btn-primary" href="/services">
-                Explore services
-              </Link>
-              <Link className="btn btn-secondary" href="/apply">
-                Apply Now
-              </Link>
-            </div>
           </section>
 
-          <nav className="min-w-0 border-t border-slate-200 pt-6 sm:border-t-0 sm:pt-0" aria-label="Company links">
+          <nav aria-label="Company" className="min-w-0">
             <FooterHeading>Company</FooterHeading>
-            <div className="mt-4 flex min-w-0 flex-col gap-3">
+            <div className="mt-3 flex flex-col gap-1">
               {companyLinks.map(([href, label]) => (
                 <FooterLink key={href} href={href} label={label} />
               ))}
             </div>
           </nav>
 
-          <nav className="min-w-0 border-t border-slate-200 pt-6 sm:border-t-0 sm:pt-0" aria-label="Hiring portal links">
-            <FooterHeading>Hiring portal</FooterHeading>
-            <div className="mt-4 flex min-w-0 flex-col gap-3">
-              {hiringLinks.map(([href, label]) => (
-                <FooterLink key={href} href={href} label={label} />
+          <nav aria-label="Capabilities" className="min-w-0">
+            <FooterHeading>Capabilities</FooterHeading>
+            <div className="mt-3 flex flex-col gap-1">
+              {capabilityLinks.map((label) => (
+                <FooterLink key={label} href="/services" label={label} />
               ))}
             </div>
           </nav>
 
-          <section className="min-w-0 border-t border-slate-200 pt-6 sm:border-t-0 sm:pt-0" aria-labelledby="footer-focus">
-            <FooterHeading>Focus areas</FooterHeading>
-            <ul id="footer-focus" className="mt-4 grid min-w-0 gap-2">
-              {focusAreas.map((area) => (
-                <li className="flex min-w-0 items-start gap-2 text-sm leading-6 text-slate-600" key={area}>
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-                  <span className="min-w-0 break-words">{area}</span>
-                </li>
+          <nav aria-label="Resources" className="min-w-0">
+            <FooterHeading>Resources</FooterHeading>
+            <div className="mt-3 flex flex-col gap-1">
+              {resourceLinks.map(([href, label]) => (
+                <FooterLink key={href} href={href} label={label} />
               ))}
-            </ul>
-            <p className="mt-5 min-w-0 border-l-2 border-accent/40 pl-4 text-sm leading-6 text-slate-600">
-              Hiring enrollment documents are released after review, verification, e-signature, and submission steps in the staged application workflow.
-            </p>
-          </section>
+              {/* TODO: Update this placeholder email when the official company email is available. */}
+              <a className={footerLinkClasses} href="mailto:hello@example.com">
+                Email Us
+              </a>
+            </div>
+          </nav>
         </div>
 
-        <div className="mt-10 flex min-w-0 flex-col gap-2 border-t border-slate-200 pt-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p className="min-w-0 break-words">© {year} Zentric Analytics. All rights reserved.</p>
-          <p className="min-w-0 break-words">Software • Web • AI • Data Analytics • R&D</p>
+        <div className="mt-6 flex flex-col gap-2 border-t border-white/15 pt-4 text-[13px] leading-5 text-white/70 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p>© 2026 Zentric Analytics. All rights reserved.</p>
+          <p>Software • Web • AI • Data Analytics • Research</p>
         </div>
       </div>
     </footer>

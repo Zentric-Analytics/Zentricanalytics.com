@@ -1,0 +1,14 @@
+import Link from 'next/link';
+import { PageShell } from '@/components/PageShell';
+
+const sections = [
+  ['Information we collect', 'We collect information you choose to provide through enquiry and application forms, such as contact details, project information, employment history, uploaded documents, and application identifiers. Technical logs may also record basic request, security, and diagnostic information.'],
+  ['How we use information', 'We use enquiry information to respond and assess potential work. We use candidate information to review applications, communicate decisions, operate the candidate portal, and maintain recruitment records. Technical information helps protect and operate the website.'],
+  ['How information is shared', 'We do not sell personal information. Information may be handled by service providers that support hosting, email, document storage, and website operations, or disclosed when required to protect users, the service, or comply with applicable law.'],
+  ['Retention and security', 'We retain information only as needed for the purpose collected, operational records, dispute resolution, and applicable obligations. We use access controls and operational safeguards intended to reduce unauthorized access, but no online service can guarantee absolute security.'],
+  ['Your choices', 'You may ask about the personal information associated with your enquiry or application, request a correction, or raise a privacy concern. Some records may need to be retained where an operational or legal reason applies.'],
+] as const;
+
+export default function PrivacyPage() {
+  return <PageShell><div className="za-container za-section-compact"><header className="max-w-3xl"><p className="text-sm font-bold uppercase tracking-[0.18em] text-accent">Privacy</p><h1 className="za-page-heading mt-3 text-ink">How Zentric Analytics handles your information</h1><p className="mt-4 text-sm leading-7 text-slate-700 sm:text-[0.9375rem]">This notice explains the information this website collects, why it is used, and the choices available to visitors, prospective clients, and candidates.</p></header><div className="mt-8 max-w-3xl divide-y divide-[#DCE3EA] border-y border-[#DCE3EA]">{sections.map(([title,body])=><section className="py-6" key={title}><h2 className="text-xl font-bold text-ink">{title}</h2><p className="mt-2 text-sm leading-7 text-slate-700 sm:text-[0.9375rem]">{body}</p></section>)}</div><section className="mt-8 max-w-3xl"><h2 className="text-xl font-bold text-ink">Contact us about privacy</h2><p className="mt-2 text-sm leading-7 text-slate-700">Use the contact form and state that your enquiry concerns privacy. Include enough information for us to identify the relevant interaction without sending unnecessary sensitive information.</p><Link className="btn btn-primary mt-5" href="/contact">Contact Us About Privacy</Link></section></div></PageShell>;
+}

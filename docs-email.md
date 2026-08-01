@@ -27,9 +27,9 @@ Do not prefix `RESEND_API_KEY` with `NEXT_PUBLIC_`. The app reads it only in ser
 
 Admin access no longer uses URL query-string secrets. Configure:
 
-- `ADMIN_EMAIL` — the admin login email.
-- `ADMIN_PASSWORD_HASH` — PBKDF2 hash, never a plaintext password.
-- `ADMIN_SESSION_SECRET` — at least 32 random characters for signed httpOnly admin sessions.
+- `ADMIN_EMAIL`: the admin login email.
+- `ADMIN_PASSWORD_HASH`: PBKDF2 hash, never a plaintext password.
+- `ADMIN_SESSION_SECRET`: at least 32 random characters for signed httpOnly admin sessions.
 
 Generate a password hash locally with this shell-safe command. The plaintext password is used only as the command argument and later in the admin login form; do not store the plaintext password in Render:
 
@@ -43,11 +43,11 @@ Failed admin login attempts write safe boolean diagnostics to server logs so sta
 
 Private upload storage:
 
-- `PRIVATE_UPLOAD_ROOT` — staging/local private filesystem root. Do not point this at `public/`.
+- `PRIVATE_UPLOAD_ROOT`: staging/local private filesystem root. Do not point this at `public/`.
 - Render staging must mount a persistent private disk at `/var/data` and use `PRIVATE_UPLOAD_ROOT=/var/data/zentric-private-uploads`; local `.private-uploads` is only for development.
-- `PRIVATE_OBJECT_STORAGE_PROVIDER` — defaults to `local-private`. Non-local private object storage is intentionally a production placeholder in this build; if set without an adapter, uploads fail closed instead of becoming public.
-- `UPLOAD_MAX_BYTES` — optional override; default remains 20MB.
+- `PRIVATE_OBJECT_STORAGE_PROVIDER`: defaults to `local-private`. Non-local private object storage is intentionally a production placeholder in this build; if set without an adapter, uploads fail closed instead of becoming public.
+- `UPLOAD_MAX_BYTES`: optional override; default remains 20MB.
 
 Rate limiting:
 
-- `RATE_LIMIT_SALT` — optional salt for hashed rate-limit keys. If omitted, the admin session secret is used where available.
+- `RATE_LIMIT_SALT`: optional salt for hashed rate-limit keys. If omitted, the admin session secret is used where available.

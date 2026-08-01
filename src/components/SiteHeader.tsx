@@ -1,50 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { primaryNavigationLinks } from './navigation';
 
-const links = [
-  ['/', 'Home'],
-  ['/about', 'About'],
-  ['/services', 'Services'],
-  ['/careers', 'Careers'],
-  ['/track', 'Track Application'],
-];
-
-const mobileMenuSections = [
-  {
-    label: 'MAIN',
-    links: [
-      ['/', 'Home'],
-      ['/about', 'About'],
-      ['/services', 'Services'],
-    ],
-  },
-  {
-    label: 'CAREERS',
-    links: [
-      ['/careers', 'Careers'],
-      ['/apply', 'Apply Now'],
-      ['/track', 'Track Application'],
-    ],
-  },
-  {
-    label: 'COMPANY',
-    links: [
-      ['/about', 'About Zentric Analytics'],
-      ['/services', 'Services'],
-    ],
-  },
-];
+const contactLink = ['/contact', "Let's Talk"] as const;
 
 export function SiteHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
   const mobileMenuId = 'site-header-mobile-menu';
+  const isHomepage = pathname === '/';
+  const visibleNavigationLinks = isHomepage
+    ? primaryNavigationLinks.filter(([href]) => href !== '/')
+    : primaryNavigationLinks;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = Math.max(window.scrollY, 0);
+      setHasScrolled(currentScrollY > 8);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (!isMobileMenuOpen) return;
 
     const previousScrollY = window.scrollY;
+    const menuButton = menuButtonRef.current;
     const previousBodyOverflow = document.body.style.overflow;
     const previousBodyPosition = document.body.style.position;
     const previousBodyTop = document.body.style.top;
@@ -60,10 +51,28 @@ export function SiteHeader() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsMobileMenuOpen(false);
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        const focusable = Array.from(
+          mobileMenuRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? [],
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
+    mobileMenuRef.current?.querySelector<HTMLElement>('button')?.focus();
 
     return () => {
       document.body.style.overflow = previousBodyOverflow;
@@ -73,32 +82,71 @@ export function SiteHeader() {
       document.documentElement.style.overflow = previousHtmlOverflow;
       window.scrollTo(0, previousScrollY);
       window.removeEventListener('keydown', handleKeyDown);
+      menuButton?.focus();
     };
   }, [isMobileMenuOpen]);
 
+  const isActiveLink = (href: string) => (href === '/' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
   return (
-    <header className="border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
-      <nav className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-        <Link href="/" className="min-w-0 flex-1 truncate font-bold text-brand md:flex-none">
-          Zentric Analytics
+    <header
+      className={`site-header sticky inset-x-0 top-0 z-50 border-b transition-all duration-300 bg-white motion-reduce:transition-none ${
+        hasScrolled
+          ? 'border-brand/10 shadow-[0_10px_26px_rgba(11,31,58,0.07)]'
+          : 'border-transparent'
+      }`}
+    >
+      <nav className={`za-container-wide flex h-[66px] items-center justify-between gap-5 sm:h-[70px] lg:h-[72px] lg:gap-7`}>
+        <Link
+          href="/"
+          aria-label="Zentric Analytics homepage"
+          className="inline-flex shrink-0 items-center rounded-md"
+        >
+          <span className="zentric-wordmark text-brand">
+            Zentric Analytics
+          </span>
         </Link>
-        <div className="hidden min-w-0 items-center gap-5 md:flex">
-          {links.map(([href, label]) => (
-            <Link className="whitespace-nowrap text-sm font-medium text-slate-700 hover:text-brand" key={href} href={href}>
-              {label}
-            </Link>
-          ))}
+
+        <div className="hidden min-w-0 flex-1 translate-y-px items-center justify-center gap-7 lg:flex lg:gap-9">
+          {visibleNavigationLinks.map(([href, label]) => {
+            const isActive = isActiveLink(href);
+
+            return (
+              <Link
+                aria-current={isActive ? 'page' : undefined}
+                className={`relative whitespace-nowrap py-2 text-[15px] font-medium tracking-[-0.005em] transition-colors duration-200 ${
+                  isActive ? 'text-brand' : 'text-brand-hover/75 hover:text-accent'
+                } after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-center after:rounded-full after:bg-accent after:transition-transform after:duration-200 ${
+                  isActive ? 'after:scale-x-100' : 'after:scale-x-0 hover:after:scale-x-100'
+                }`}
+                key={href}
+                href={href}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Link className="btn btn-primary px-3 py-2 text-sm sm:px-4 sm:py-3" href="/apply">
-            Apply Now
+
+        <div className="hidden shrink-0 items-center lg:flex">
+          <Link
+            href={contactLink[0]}
+            className="btn zentric-primary-cta site-header__desktop-cta"
+          >
+            <span>{contactLink[1]}</span>
+            <span className="zentric-primary-cta__arrow" aria-hidden="true">
+              →
+            </span>
           </Link>
+        </div>
+
+        <div className="flex shrink-0 items-center lg:hidden">
           <button
             type="button"
+            ref={menuButtonRef}
             aria-expanded={isMobileMenuOpen}
             aria-controls={mobileMenuId}
             aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white/80 text-slate-700 shadow-sm transition hover:border-brand hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 md:hidden"
+            className="btn btn-secondary btn-compact h-11 w-11 p-0 lg:hidden"
             onClick={() => setIsMobileMenuOpen((open) => !open)}
           >
             <span className="sr-only">{isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}</span>
@@ -112,20 +160,21 @@ export function SiteHeader() {
       </nav>
       {isMobileMenuOpen ? (
         <div
+          ref={mobileMenuRef}
           id={mobileMenuId}
           role="dialog"
           aria-modal="true"
           aria-labelledby="mobile-menu-title"
-          className="fixed inset-0 z-50 flex h-screen min-h-dvh w-full flex-col overflow-hidden bg-white md:hidden"
+          className="fixed inset-0 z-50 flex h-screen min-h-dvh w-full flex-col overflow-hidden bg-white lg:hidden"
         >
-          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-slate-200 px-5 py-5 sm:px-8">
-            <h2 id="mobile-menu-title" className="text-3xl font-bold tracking-tight text-slate-950">
+          <div className="mx-auto flex w-full max-w-lg items-center justify-between border-b border-[#0B1F3A]/10 px-4 py-4 sm:px-8">
+            <h2 id="mobile-menu-title" className="text-2xl font-semibold tracking-[-0.03em] text-[#0B1F3A]">
               Menu
             </h2>
             <button
               type="button"
               aria-label="Close navigation menu"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-brand hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
+              className="btn btn-secondary btn-compact h-11 w-11 p-0"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <span className="sr-only">Close navigation menu</span>
@@ -135,24 +184,42 @@ export function SiteHeader() {
             </button>
           </div>
 
-          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-7 overflow-y-auto overscroll-contain px-5 py-7 sm:px-8">
-            {mobileMenuSections.map((section) => (
-              <section className="border-b border-slate-200 pb-6 last:border-b-0 last:pb-0" key={section.label}>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{section.label}</p>
-                <div className="flex flex-col">
-                  {section.links.map(([href, label]) => (
+          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-8 overflow-y-auto overscroll-contain px-4 py-7 sm:px-8">
+            <section aria-label="Primary navigation">
+              <div className="flex flex-col gap-1">
+                {[...visibleNavigationLinks, contactLink].map(([href, label]) => {
+                  const isActive = isActiveLink(href);
+                  const isContact = href === contactLink[0] && label === contactLink[1];
+
+                  return (
                     <Link
-                      className="-mx-3 rounded-2xl px-3 py-3.5 text-lg font-semibold text-slate-900 transition hover:bg-slate-50 hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
-                      key={`${section.label}-${href}-${label}`}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`-mx-3 rounded-2xl border-l-2 px-3 py-3.5 text-lg font-semibold tracking-[-0.02em] transition-colors duration-200 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1F3A] ${
+                        isContact
+                          ? 'btn zentric-primary-cta mt-4 w-full border-0'
+                          : isActive
+                            ? 'border-[#10B981] bg-[#0B1F3A]/[0.03] text-[#0B1F3A]'
+                            : 'border-transparent text-[#173B67] hover:bg-[#0B1F3A]/[0.03] hover:text-[#0B1F3A]'
+                      }`}
+                      key={`${href}-${label}`}
                       href={href}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      {label}
+                      {isContact ? (
+                        <>
+                          <span>{label}</span>
+                          <span className="zentric-primary-cta__arrow" aria-hidden="true">
+                            →
+                          </span>
+                        </>
+                      ) : (
+                        label
+                      )}
                     </Link>
-                  ))}
-                </div>
-              </section>
-            ))}
+                  );
+                })}
+              </div>
+            </section>
           </div>
         </div>
       ) : null}

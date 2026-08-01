@@ -22,7 +22,7 @@ function fieldWidth(width: Width = 'standard') {
   }[width];
 }
 function inputClass(state: Stage1FormState, field: Stage1Field) {
-  return `input h-11 border-slate-300 bg-white text-[0.95rem] shadow-sm transition placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10 ${errorFor(state, field) ? 'border-red-400 bg-red-50/40 focus:border-red-500 focus:ring-red-100' : ''}`;
+  return `input text-[0.95rem] placeholder:text-slate-400 ${errorFor(state, field) ? 'border-red-400 bg-red-50/40 focus:border-red-500 focus:ring-red-100' : ''}`;
 }
 function FieldError({ state, field }: { state: Stage1FormState; field: Stage1Field }) {
   const error = errorFor(state, field);
@@ -32,9 +32,9 @@ function Required() { return <span className="text-red-600" aria-label="required
 
 function FormSection({ eyebrow, title, helper, children }: { eyebrow: string; title: string; helper: string; children: React.ReactNode }) {
   return (
-    <section className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+    <section className="w-full min-w-0 overflow-hidden rounded-2xl sm:rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
       <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-5 py-5 sm:px-6 lg:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand">{eyebrow}</p>
+        <p className="text-base font-bold uppercase tracking-[0.18em] text-brand">{eyebrow}</p>
         <h2 className="mt-2 text-xl font-bold text-ink sm:text-2xl">{title}</h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{helper}</p>
       </div>
@@ -56,7 +56,7 @@ function ConsentBox({ state, name, children }: { state: Stage1FormState; name: S
   return <label className="flex min-w-0 gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-700 shadow-sm transition focus-within:border-brand focus-within:ring-4 focus-within:ring-brand/10 md:col-span-6"><input className="mt-1 h-4 w-4 accent-brand" name={name} type="checkbox" defaultChecked={state.values[name] === 'on'} required aria-invalid={Boolean(errorFor(state, name))} /><span className="min-w-0"><span>{children}</span> <Required /><FieldError state={state} field={name} /></span></label>;
 }
 
-export function Stage1ApplicationForm() {
+export function Stage1ApplicationForm({ vacancy }: { vacancy?: { publicSlug: string; title: string; vacancyNumber: string; applicationDeadline: Date | null } | null }) {
   const [state, formAction, pending] = useActionState(submitStage1Application, initialStage1FormState);
   const [clearedErrors, setClearedErrors] = useState<Partial<Record<Stage1Field, boolean>>>({});
   const [selectedFile, setSelectedFile] = useState('');
@@ -77,6 +77,12 @@ export function Stage1ApplicationForm() {
       setSelectedFile('');
       setFileNeedsReselection(true);
     }
+    const firstInvalidField = Object.keys(state.fieldErrors)[0];
+    if (firstInvalidField) {
+      requestAnimationFrame(() => {
+        document.querySelector<HTMLElement>(`[name="${CSS.escape(firstInvalidField)}"]`)?.focus();
+      });
+    }
   }, [state]);
 
   const clearFieldError = (field: Stage1Field) => {
@@ -91,10 +97,14 @@ export function Stage1ApplicationForm() {
   };
   const visibleMessage = state.message && !editedSinceServerError ? state.message : undefined;
   const fileErrorDescription = [errorFor(displayState, 'cv') ? 'cv-error' : '', fileNeedsReselection ? 'cv-reselection-error' : ''].filter(Boolean).join(' ') || undefined;
-  const [selectedRole, setSelectedRole] = useState(values.role || roleAppliedForOptions[0]);
+  const [submissionKey] = useState(() => crypto.randomUUID());
+  const [selectedRole, setSelectedRole] = useState(vacancy ? "Other" : values.role || roleAppliedForOptions[0]);
   const otherRoleIsSelected = selectedRole === 'Other';
 
-  return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8" onSubmit={() => { validateVisibleFileSelection(); }} onChange={(event) => { const name = (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as Stage1Field | undefined; if (name) clearFieldError(name); }}>
+  return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8" aria-busy={pending} onSubmit={() => { validateVisibleFileSelection(); }} onChange={(event) => { const name = (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as Stage1Field | undefined; if (name) clearFieldError(name); }}>
+    <input type="hidden" name="submissionKey" value={submissionKey} />
+    {vacancy ? <><input type="hidden" name="vacancySlug" value={vacancy.publicSlug} /><input type="hidden" name="role" value="Other" /><input type="hidden" name="otherRole" value={vacancy.title} /></> : null}
+    <p className="sr-only" aria-live="polite">{pending ? 'Submitting application' : ''}</p>
     {visibleMessage ? <div className="min-w-0 break-words rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{visibleMessage}</div> : null}
 
     <FormSection eyebrow="Step 01" title="Personal details" helper="Use the same contact information you want our hiring team to use for updates.">
@@ -116,8 +126,8 @@ export function Stage1ApplicationForm() {
     </FormSection>
 
     <FormSection eyebrow="Step 02" title="Role preference" helper="Select the role and work arrangement that best match this application.">
-      <label className={`field ${fieldWidth('wide')}`}><span className="text-sm font-bold text-ink">Role applied for <Required /></span><select className={inputClass(displayState,'role')} name="role" required value={selectedRole} onChange={(event)=>{ setSelectedRole(event.currentTarget.value); clearFieldError('role'); }} aria-invalid={Boolean(errorFor(displayState, 'role'))}>{roleAppliedForOptions.map((role)=><option key={role} value={role}>{role}</option>)}</select><FieldError state={displayState} field="role" /></label>
-      {otherRoleIsSelected ? <TextField state={displayState} name="otherRole" label="Other role" required width="standard" /> : null}
+      {vacancy ? <div className={`rounded-2xl border border-brand/20 bg-brand/5 p-4 ${fieldWidth("full")}`}><p className="text-sm font-bold text-brand">{vacancy.vacancyNumber}</p><p className="mt-1 text-lg font-bold">{vacancy.title}</p><p className="mt-1 text-sm text-slate-600">{vacancy.applicationDeadline ? `Applications close ${vacancy.applicationDeadline.toLocaleString()}.` : "Applications are currently open."}</p></div> : <><label className={`field ${fieldWidth('wide')}`}><span className="text-sm font-bold text-ink">Role applied for <Required /></span><select className={inputClass(displayState,'role')} name="role" required value={selectedRole} onChange={(event)=>{ setSelectedRole(event.currentTarget.value); clearFieldError('role'); }} aria-invalid={Boolean(errorFor(displayState, 'role'))}>{roleAppliedForOptions.map((role)=><option key={role} value={role}>{role}</option>)}</select><FieldError state={displayState} field="role" /></label>
+      {otherRoleIsSelected ? <TextField state={displayState} name="otherRole" label="Other role" required width="standard" /> : null}</>}
       <SelectField state={displayState} name="employmentType" label="Employment type" options={employmentTypeOptions} width="compact" />
       <SelectField state={displayState} name="workMode" label="Preferred work mode" options={stage1WorkModeOptions} width="compact" />
     </FormSection>
@@ -133,7 +143,7 @@ export function Stage1ApplicationForm() {
       <div className="md:col-span-6 min-w-0 rounded-[1.5rem] border border-brand/20 bg-gradient-to-br from-brand/5 via-white to-accent/10 p-4 shadow-inner sm:p-5">
         <div className="grid gap-4 rounded-2xl border border-white/80 bg-white/85 p-4 sm:grid-cols-[1fr_auto] sm:items-center sm:p-5">
           <div className="min-w-0"><p className="text-base font-bold text-ink">CV/resume <Required /></p><p className="mt-1 text-sm leading-6 text-slate-600">PDF, DOC, DOCX, JPG, PNG, or WEBP. Maximum file size: 20MB.</p>{selectedFile ? <p className="mt-3 max-w-full break-words rounded-xl bg-brand/10 px-3 py-2 text-sm font-semibold text-brand">Selected: {selectedFile}</p> : <p className="mt-3 text-sm font-semibold text-slate-500">No file selected yet.</p>}<FieldError state={displayState} field="cv" />{fileNeedsReselection && !selectedFile ? <p className="mt-2 text-sm font-semibold text-red-700" id="cv-reselection-error" role="alert">Please reselect your CV/resume before submitting again.</p> : null}</div>
-          <div><input ref={fileInputRef} id={fileInputId} className="sr-only" name="cv" type="file" accept={uploadAccept} required aria-invalid={Boolean(errorFor(displayState, 'cv') || fileNeedsReselection)} aria-describedby={fileErrorDescription} onInvalid={()=>setFileNeedsReselection(true)} onChange={(event)=>{ setSelectedFile(event.currentTarget.files?.[0]?.name ?? ''); clearFieldError('cv'); }} /><label htmlFor={fileInputId} className="btn btn-secondary cursor-pointer border-brand/30 px-5 py-3 text-brand shadow-sm hover:bg-brand hover:text-white focus-within:ring-4 focus-within:ring-brand/10">Choose file</label></div>
+          <div><input ref={fileInputRef} id={fileInputId} className="sr-only" name="cv" type="file" accept={uploadAccept} required aria-invalid={Boolean(errorFor(displayState, 'cv') || fileNeedsReselection)} aria-describedby={fileErrorDescription} onInvalid={()=>setFileNeedsReselection(true)} onChange={(event)=>{ setSelectedFile(event.currentTarget.files?.[0]?.name ?? ''); clearFieldError('cv'); }} /><label htmlFor={fileInputId} className="btn btn-secondary btn-compact cursor-pointer">Choose file</label></div>
         </div>
       </div>
     </FormSection>
@@ -145,6 +155,6 @@ export function Stage1ApplicationForm() {
       <ConsentBox state={displayState} name="signatureConsent">I confirm this typed name is my electronic signature.</ConsentBox>
     </FormSection>
 
-    <div className="flex w-full min-w-0 flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-ink p-5 text-white shadow-xl sm:p-6 md:flex-row md:items-center md:justify-between"><p className="text-sm leading-6 text-slate-200">Review your details before submitting. We will email your application ID after successful submission.</p><button className="btn w-full min-w-0 justify-center bg-accent px-8 py-4 text-base text-ink shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70 md:w-auto" type="submit" disabled={pending}>{pending ? 'Submitting...' : 'Submit stage 1 application'}</button></div>
+    <div className="flex w-full min-w-0 flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-ink p-5 text-white shadow-[0_12px_30px_rgba(15,23,42,0.10)] sm:shadow-xl sm:p-6 md:flex-row md:items-center md:justify-between"><p className="text-sm leading-6 text-slate-200">Review your details before submitting. We will email your application ID after successful submission.</p><button className="btn btn-primary w-full min-w-0 justify-center md:w-auto" type="submit" disabled={pending}>{pending ? 'Submitting...' : 'Submit stage 1 application'}</button></div>
   </form>;
 }

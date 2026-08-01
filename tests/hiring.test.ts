@@ -32,6 +32,8 @@ import { mkdtemp, rm, unlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { applicantIdentityFilter } from "../src/lib/hr/recruitment/applicant-identity";
+
 const payload = {
   firstName: "Ada",
   middleInitial: "B",
@@ -92,6 +94,20 @@ const utf16PdfHex = (value: string) =>
 const utf16PdfHexFragment = (value: string) => utf16PdfHex(value).slice(5, -1);
 
 describe("hiring workflow helpers", () => {
+  it("matches existing applicants by email, not a reused phone number", () => {
+    expect(applicantIdentityFilter({ organizationId: "org-1", normalizedEmail: "  GeneralDeveloper2@ZentricAnalytics.com " })).toEqual({ organizationId: "org-1", normalizedEmail: "generaldeveloper2@zentricanalytics.com" });
+  });
+
+  it("refreshes the reusable applicant profile from the latest signed submission", () => {
+    const action = readFileSync(path.join(process.cwd(), "src/app/apply/actions.ts"), "utf8");
+    const recruitment = readFileSync(path.join(process.cwd(), "src/lib/hr/recruitment/applications.ts"), "utf8");
+    for (const source of [action, recruitment]) {
+      expect(source).toContain("applicant = await tx.applicant.update");
+      expect(source).toContain("fullName:");
+      expect(source).toContain("location:");
+    }
+  });
+
   it("generates formatted application ids", () => {
     expect(generateApplicationId(41, new Date("2026-06-21T00:00:00Z"))).toBe(
       "ZA-APP-2026-00041",
@@ -752,7 +768,7 @@ describe("production hardening helpers", () => {
 
 
   it("saves private bytes before committing uploaded document metadata", () => {
-    const action = readFileSync("src/app/apply/actions.ts", "utf8");
+    const action = readFileSync("src/app/apply/actions.ts", "utf8").replace(/\r\n/g, "\n");
     expect(action.indexOf("await savePrivateUpload(file, applicationPublicId)")).toBeGreaterThan(-1);
     expect(action.indexOf("await savePrivateUpload(file, applicationPublicId)")).toBeLessThan(
       action.indexOf("tx.uploadedDocument.create"),
@@ -762,7 +778,7 @@ describe("production hardening helpers", () => {
   });
 
   it("redirects after the Stage 1 cleanup try/catch so successful uploads are not deleted", () => {
-    const action = readFileSync("src/app/apply/actions.ts", "utf8");
+    const action = readFileSync("src/app/apply/actions.ts", "utf8").replace(/\r\n/g, "\n");
     const catchStart = action.indexOf("} catch (error) {");
     const catchEnd = action.indexOf("\n  }\n\n  redirect(`/apply?submitted=", catchStart);
     const successRedirect = action.indexOf("redirect(`/apply?submitted=", catchStart);
@@ -777,7 +793,6 @@ describe("production hardening helpers", () => {
 
   it("requires an explicit private upload root for local production or staging uploads", () => {
     const previousRoot = process.env.PRIVATE_UPLOAD_ROOT;
-    const previousNodeEnv = process.env.NODE_ENV;
     const previousAppEnv = process.env.APP_ENV;
     delete process.env.PRIVATE_UPLOAD_ROOT;
     process.env.APP_ENV = "staging";
@@ -787,10 +802,41 @@ describe("production hardening helpers", () => {
     } finally {
       if (previousRoot === undefined) delete process.env.PRIVATE_UPLOAD_ROOT;
       else process.env.PRIVATE_UPLOAD_ROOT = previousRoot;
-      if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
-      else process.env.NODE_ENV = previousNodeEnv;
       if (previousAppEnv === undefined) delete process.env.APP_ENV;
       else process.env.APP_ENV = previousAppEnv;
+    }
+  });
+
+  it("accepts complete S3-compatible configuration for applicant uploads", () => {
+    const keys = [
+      "PRIVATE_OBJECT_STORAGE_PROVIDER",
+      "OBJECT_STORAGE_ENDPOINT",
+      "OBJECT_STORAGE_BUCKET",
+      "OBJECT_STORAGE_REGION",
+      "OBJECT_STORAGE_ACCESS_KEY_ID",
+      "OBJECT_STORAGE_SECRET_ACCESS_KEY",
+    ] as const;
+    const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+    Object.assign(process.env, {
+      PRIVATE_OBJECT_STORAGE_PROVIDER: "s3-compatible",
+      OBJECT_STORAGE_ENDPOINT: "https://storage.staging.example",
+      OBJECT_STORAGE_BUCKET: "unit3-staging",
+      OBJECT_STORAGE_REGION: "auto",
+      OBJECT_STORAGE_ACCESS_KEY_ID: "staging-key",
+      OBJECT_STORAGE_SECRET_ACCESS_KEY: "staging-secret",
+    });
+    try {
+      expect(selectedStorageProvider()).toBe("s3-compatible");
+      expect(() => assertPrivateUploadStorageConfigured()).not.toThrow();
+      const source = readFileSync("src/lib/storage.ts", "utf8");
+      expect(source).toContain("await storage.put(key, bytes");
+      expect(source).toContain("return hrObjectStorage().exists(storageKey)");
+      expect(source).toContain("await hrObjectStorage().delete(storageKey)");
+    } finally {
+      for (const key of keys) {
+        if (previous[key] === undefined) delete process.env[key];
+        else process.env[key] = previous[key];
+      }
     }
   });
 

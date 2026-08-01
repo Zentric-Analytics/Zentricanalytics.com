@@ -208,20 +208,20 @@ function formatDateTime(value?: Date | null) {
 
 function formatField(value: unknown) {
   if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "Not available";
   return String(value);
 }
 
 function InfoGrid({ rows }: { rows: Array<[string, unknown]> }) {
   return (
-    <dl className="grid gap-3 text-sm md:grid-cols-2">
+    <dl className="grid min-w-0 gap-3 text-sm md:grid-cols-2">
       {rows.map(([label, value]) => (
         <div
-          className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+          className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4"
           key={label}
         >
           <dt className="font-semibold text-slate-500">{label}</dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+          <dd className="mt-1 min-w-0 whitespace-pre-wrap break-words text-slate-950 [overflow-wrap:anywhere]">
             {formatField(value)}
           </dd>
         </div>
@@ -254,7 +254,7 @@ function StageActionForm({
         Request correction
       </button>
       <button
-        className="rounded-full border border-red-200 px-5 py-2 font-semibold text-red-700 hover:bg-red-50"
+        className="btn btn-secondary"
         name="action"
         value="reject"
       >
@@ -282,7 +282,7 @@ function Stage8FinalApprovalForm({ applicationId }: { applicationId: string }) {
     <div className="grid gap-4 lg:grid-cols-2">{checklist.map(([group, items]) => <section className="rounded-2xl border border-blue-100 bg-white p-4" key={group}><h4 className="font-bold text-slate-950">{group}</h4><div className="mt-3 space-y-2">{items.map((label) => { const name = names[index++]; return <label className="flex gap-2 text-sm font-semibold text-slate-700" key={name}><input name={name} type="checkbox" /> {label}</label>; })}</div></section>)}</div>
     <label className="block text-sm font-semibold">Optional final HR notes (admin-only)<textarea className="input mt-1 min-h-24" name="finalHrNotes" maxLength={1500} /></label>
     <label className="block text-sm font-semibold">Optional candidate-facing note<textarea className="input mt-1 min-h-20" name="candidateFacingNote" maxLength={1000} /></label>
-    <div className="flex flex-wrap gap-2"><button className="btn btn-primary" name="action" value="finalize">Finalize Stage 8 and mark hired</button><button className="btn btn-secondary" name="action" value="correction">Request Stage 8 correction</button><button className="rounded-full border border-red-200 px-5 py-2 font-semibold text-red-700 hover:bg-red-50" name="action" value="reject">Reject at final review</button></div>
+    <div className="flex flex-wrap gap-2"><button className="btn btn-primary" name="action" value="finalize">Finalize Stage 8 and mark hired</button><button className="btn btn-secondary" name="action" value="correction">Request Stage 8 correction</button><button className="btn btn-secondary" name="action" value="reject">Reject at final review</button></div>
   </form>;
 }
 
@@ -477,11 +477,11 @@ export default async function AdminApplicationDetail({
   const stageSixSignature = stageSixSubmission?.signature;
   const stageSixDocuments = stageSixSubmission?.documents ?? [];
   const stageSevenSubmission = stageSeven?.submissions[0];
-  const stageSevenPayload = (stageSevenSubmission?.payload ?? {}) as Record<string, any>;
+  const stageSevenPayload = (stageSevenSubmission?.payload ?? {}) as Record<string, unknown>;
   const stageSevenSections = (stageSevenPayload.sections ?? {}) as Record<string, boolean>;
   const stageSevenSignature = stageSevenSubmission?.signature;
   const stageEightSubmission = stageEight?.submissions[0];
-  const stageEightPayload = (stageEightSubmission?.payload ?? {}) as Record<string, any>;
+  const stageEightPayload = (stageEightSubmission?.payload ?? {}) as Record<string, unknown>;
   const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
   const stageSixDocumentsWithAvailability = await Promise.all(
     stageSixDocuments.map(async (document: ApplicantDocument) => {
@@ -540,7 +540,7 @@ export default async function AdminApplicationDetail({
   });
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="admin-workspace min-h-screen bg-slate-50">
       <div className="mx-auto max-w-6xl px-4 py-8">
         <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>
@@ -789,39 +789,39 @@ export default async function AdminApplicationDetail({
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <h3 className="font-semibold">Identity details</h3>
                   <p>
-                    Legal name: {String(stageTwoPayload.fullLegalName ?? "—")}
+                    Legal name: {String(stageTwoPayload.fullLegalName ?? "Not available")}
                   </p>
-                  <p>DOB: {String(stageTwoPayload.dateOfBirth ?? "—")}</p>
-                  <p>Gender: {String(stageTwoPayload.gender ?? "—")}</p>
+                  <p>DOB: {String(stageTwoPayload.dateOfBirth ?? "Not available")}</p>
+                  <p>Gender: {String(stageTwoPayload.gender ?? "Not available")}</p>
                   <p>
-                    Nationality: {String(stageTwoPayload.nationality ?? "—")}
+                    Nationality: {String(stageTwoPayload.nationality ?? "Not available")}
                   </p>
-                  <p>Residence: {String(stageTwoPayload.currentCity ?? "—")}</p>
+                  <p>Residence: {String(stageTwoPayload.currentCity ?? "Not available")}</p>
                   <p>
-                    Phone: {String(stageTwoPayload.applicantPhoneE164 ?? "—")}
+                    Phone: {String(stageTwoPayload.applicantPhoneE164 ?? "Not available")}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <h3 className="font-semibold">Primary ID summary</h3>
                   <p>
                     Primary ID type:{" "}
-                    {String(stageTwoPayload.primaryIdType ?? "—")}
+                    {String(stageTwoPayload.primaryIdType ?? "Not available")}
                   </p>
                   <p>
                     Primary ID number:{" "}
-                    {String(stageTwoPayload.primaryIdNumberMasked ?? "—")}
+                    {String(stageTwoPayload.primaryIdNumber ?? stageTwoPayload.primaryIdNumberMasked ?? "Not available")}
                   </p>
                   <p>
                     Authority:{" "}
-                    {String(stageTwoPayload.primaryIdIssuingAuthority ?? "—")}
+                    {String(stageTwoPayload.primaryIdIssuingAuthority ?? "Not available")}
                   </p>
                   <p>
                     Issue date:{" "}
-                    {String(stageTwoPayload.primaryIdIssueDate ?? "—")}
+                    {String(stageTwoPayload.primaryIdIssueDate ?? "Not available")}
                   </p>
                   <p>
                     Expiry date:{" "}
-                    {String(stageTwoPayload.primaryIdExpiryDate ?? "—")}
+                    {String(stageTwoPayload.primaryIdExpiryDate ?? "Not available")}
                   </p>
                 </div>
                 {stageTwoPayload.hasSecondaryId ? (
@@ -829,46 +829,46 @@ export default async function AdminApplicationDetail({
                     <h3 className="font-semibold">Secondary ID summary</h3>
                     <p>
                       Secondary ID type:{" "}
-                      {String(stageTwoPayload.secondaryIdType ?? "—")}
+                      {String(stageTwoPayload.secondaryIdType ?? "Not available")}
                     </p>
                     <p>
                       Secondary ID number:{" "}
-                      {String(stageTwoPayload.secondaryIdNumberMasked ?? "—")}
+                      {String(stageTwoPayload.secondaryIdNumber ?? stageTwoPayload.secondaryIdNumberMasked ?? "Not available")}
                     </p>
                     <p>
                       Authority:{" "}
                       {String(
-                        stageTwoPayload.secondaryIdIssuingAuthority ?? "—",
+                        stageTwoPayload.secondaryIdIssuingAuthority ?? "Not available",
                       )}
                     </p>
                     <p>
                       Issue date:{" "}
-                      {String(stageTwoPayload.secondaryIdIssueDate ?? "—")}
+                      {String(stageTwoPayload.secondaryIdIssueDate ?? "Not available")}
                     </p>
                     <p>
                       Expiry date:{" "}
-                      {String(stageTwoPayload.secondaryIdExpiryDate ?? "—")}
+                      {String(stageTwoPayload.secondaryIdExpiryDate ?? "Not available")}
                     </p>
                   </div>
                 ) : null}
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <h3 className="font-semibold">Emergency contact</h3>
                   <p>
-                    Name: {String(stageTwoPayload.emergencyContactName ?? "—")}
+                    Name: {String(stageTwoPayload.emergencyContactName ?? "Not available")}
                   </p>
                   <p>
                     Relationship:{" "}
                     {String(
-                      stageTwoPayload.emergencyContactRelationship ?? "—",
+                      stageTwoPayload.emergencyContactRelationship ?? "Not available",
                     )}
                   </p>
                   <p>
                     Phone:{" "}
-                    {String(stageTwoPayload.emergencyContactPhoneE164 ?? "—")}
+                    {String(stageTwoPayload.emergencyContactPhoneE164 ?? "Not available")}
                   </p>
                   <p>
                     Address:{" "}
-                    {String(stageTwoPayload.emergencyContactAddress ?? "—")}
+                    {String(stageTwoPayload.emergencyContactAddress ?? "Not available")}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -884,7 +884,7 @@ export default async function AdminApplicationDetail({
                   <p>
                     Signature:{" "}
                     {stageTwoSignature?.typedName ??
-                      String(stageTwoPayload.signatureName ?? "—")}
+                      String(stageTwoPayload.signatureName ?? "Not available")}
                   </p>
                   <p>Signed: {formatDateTime(stageTwoSignature?.signedAt)}</p>
                 </div>
@@ -1161,8 +1161,8 @@ export default async function AdminApplicationDetail({
                     "No instructions released yet."}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">
-                  Released: {stageThreeMetadata.releasedAt ?? "—"} · By:{" "}
-                  {stageThreeMetadata.releasedByAdminEmail ?? "—"}
+                  Released: {stageThreeMetadata.releasedAt ?? "Not available"} · By:{" "}
+                  {stageThreeMetadata.releasedByAdminEmail ?? "Not available"}
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -1171,11 +1171,11 @@ export default async function AdminApplicationDetail({
                   <div className="mt-2 text-sm">
                     <p>
                       <strong>Availability:</strong>{" "}
-                      {String(stageThreePayload.availability ?? "—")}
+                      {String(stageThreePayload.availability ?? "Not available")}
                     </p>
                     <p className="whitespace-pre-wrap">
                       <strong>Message:</strong>{" "}
-                      {String(stageThreePayload.responseMessage ?? "—")}
+                      {String(stageThreePayload.responseMessage ?? "Not available")}
                     </p>
                     <p>
                       <strong>Declared accurate:</strong>{" "}
@@ -1413,7 +1413,7 @@ export default async function AdminApplicationDetail({
                   </button>
                   {offer?.status === "Released" ? (
                     <button
-                      className="rounded-full border border-red-300 px-5 py-2 font-semibold text-red-700"
+                      className="btn btn-secondary"
                       name="action"
                       value="withdraw"
                     >
@@ -1450,7 +1450,7 @@ export default async function AdminApplicationDetail({
               </form>
             ) : <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Stage 5 is {stageFive?.status}; agreement editing is closed.</p>}
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Released agreement summary</h3><p className="mt-2 text-sm">{agreement ? `${agreement.title} · v${agreement.version} · ${agreement.status}` : "No agreement draft yet."}</p><p className="mt-1 text-xs text-slate-500">Released: {formatDateTime(agreement?.releasedAt)} · By: {agreement?.releasedByAdminEmail ?? "—"}</p></div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Released agreement summary</h3><p className="mt-2 text-sm">{agreement ? `${agreement.title} · v${agreement.version} · ${agreement.status}` : "No agreement draft yet."}</p><p className="mt-1 text-xs text-slate-500">Released: {formatDateTime(agreement?.releasedAt)} · By: {agreement?.releasedByAdminEmail ?? "Not available"}</p></div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Candidate submission and signature</h3>{stageFiveSubmission ? <div className="mt-2 text-sm"><p>Submitted: {formatDateTime(stageFiveSubmission.submittedAt)}</p><p>Version: {stageFiveSubmission.version}</p><p>Signature: {stageFiveSignature?.confirmed ? "Confirmed" : "Missing"} · Signed: {formatDateTime(stageFiveSignature?.signedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 5 submission found.</p>}</div>
             </div>
             <h3 className="mt-5 font-semibold">Stage 5 admin actions</h3>
@@ -1462,9 +1462,33 @@ export default async function AdminApplicationDetail({
           <section className="card mt-6 p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><h2 className="font-bold">Stage 6 Onboarding Form</h2><StatusBadge status={stageSix?.status ?? "Locked"} /></div>
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Submission summary</h3>{stageSixSubmission ? <div className="mt-3 grid gap-2 text-sm"><p><strong>Submitted:</strong> {formatDateTime(stageSixSubmission.submittedAt)}</p><p><strong>Version:</strong> {stageSixSubmission.version}</p><p><strong>Candidate:</strong> {formatField(stageSixPayload.fullLegalName)} · {formatField(stageSixPayload.email)}</p><p><strong>Start readiness:</strong> {formatField(stageSixPayload.confirmedStartDate)} · {formatField(stageSixPayload.workModeReadiness)}</p><p><strong>Next of kin:</strong> {formatField(stageSixPayload.nextOfKinName)} / {formatField(stageSixPayload.nextOfKinRelationship)}</p><p><strong>Emergency contact:</strong> {formatField(stageSixPayload.emergencyContactName)} / {formatField(stageSixPayload.emergencyContactPhone)}</p><p><strong>Bank:</strong> {formatField(stageSixPayload.bankName)} · Account {formatField(stageSixPayload.accountNumberMasked)}</p><p><strong>Tax ID:</strong> {formatField(stageSixPayload.taxIdentificationNumberMasked)} · <strong>National ID:</strong> {formatField(stageSixPayload.nationalIdentificationNumberMasked)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 6 onboarding submission found.</p>}</div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Electronic signature</h3>{stageSixSignature ? <p className="mt-2 text-sm">Confirmed: {yesNo(stageSixSignature.confirmed)} · Signed: {formatDateTime(stageSixSignature.signedAt)}</p> : <p className="mt-2 text-sm text-slate-600">No Stage 6 signature found.</p>}<p className="mt-3 text-xs text-slate-500">Typed signature names and full payroll/statutory values are intentionally not shown in summaries.</p></div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Submission summary</h3>{stageSixSubmission ? <div className="mt-3 grid gap-2 text-sm"><p><strong>Submitted:</strong> {formatDateTime(stageSixSubmission.submittedAt)}</p><p><strong>Version:</strong> {stageSixSubmission.version}</p><p><strong>Candidate:</strong> {formatField(stageSixPayload.fullLegalName)} · {formatField(stageSixPayload.email)}</p><p><strong>Start readiness:</strong> {formatField(stageSixPayload.confirmedStartDate)} · {formatField(stageSixPayload.workModeReadiness)}</p><p><strong>Next of kin:</strong> {formatField(stageSixPayload.nextOfKinName)} / {formatField(stageSixPayload.nextOfKinRelationship)}</p><p><strong>Emergency contact:</strong> {formatField(stageSixPayload.emergencyContactName)} / {formatField(stageSixPayload.emergencyContactPhone)}</p><p><strong>Bank:</strong> {formatField(stageSixPayload.bankName)} · Account {formatField(stageSixPayload.accountNumber ?? stageSixPayload.accountNumberMasked)}</p><p><strong>Tax ID:</strong> {formatField(stageSixPayload.taxIdentificationNumber ?? stageSixPayload.taxIdentificationNumberMasked)} · <strong>National ID:</strong> {formatField(stageSixPayload.nationalIdentificationNumber ?? stageSixPayload.nationalIdentificationNumberMasked)}</p><p><strong>Pension account:</strong> {formatField(stageSixPayload.pensionAccountNumber ?? stageSixPayload.pensionAccountNumberMasked)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 6 onboarding submission found.</p>}</div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Electronic signature</h3>{stageSixSignature ? <div className="mt-2 space-y-1 text-sm"><p><strong>Typed name:</strong> {formatField(stageSixSignature.typedName)}</p><p><strong>Confirmed:</strong> {yesNo(stageSixSignature.confirmed)}</p><p><strong>Signed:</strong> {formatDateTime(stageSixSignature.signedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 6 signature found.</p>}</div>
             </div>
+            {stageSixSubmission ? <div className="mt-5 space-y-5">
+              <h3 className="font-semibold">Complete employee onboarding information</h3>
+              <InfoGrid rows={[
+                ["Full legal name", stageSixPayload.fullLegalName], ["Preferred name", stageSixPayload.preferredName],
+                ["Date of birth", stageSixPayload.dateOfBirth], ["Residential address", stageSixPayload.residentialAddress],
+                ["Current city", stageSixPayload.currentCity], ["State of residence", stageSixPayload.stateOfResidence],
+                ["Nationality", stageSixPayload.nationality], ["Phone number", stageSixPayload.phoneNumber],
+                ["Email", stageSixPayload.email], ["Confirmed start date", stageSixPayload.confirmedStartDate],
+                ["Preferred start-date notes", stageSixPayload.preferredStartDateNotes], ["Work mode readiness", stageSixPayload.workModeReadiness],
+                ["Equipment needs", stageSixPayload.equipmentNeeds], ["Internet/power readiness", stageSixPayload.internetPowerReadiness],
+                ["Orientation availability", stageSixPayload.availabilityForOrientation], ["Emergency start constraints", stageSixPayload.emergencyStartConstraints],
+                ["Next of kin name", stageSixPayload.nextOfKinName], ["Next of kin relationship", stageSixPayload.nextOfKinRelationship],
+                ["Next of kin phone", stageSixPayload.nextOfKinPhone], ["Next of kin email", stageSixPayload.nextOfKinEmail],
+                ["Next of kin address", stageSixPayload.nextOfKinAddress], ["Emergency contact name", stageSixPayload.emergencyContactName],
+                ["Emergency contact relationship", stageSixPayload.emergencyContactRelationship], ["Emergency contact phone", stageSixPayload.emergencyContactPhone],
+                ["Emergency contact address", stageSixPayload.emergencyContactAddress], ["Bank name", stageSixPayload.bankName],
+                ["Account name", stageSixPayload.accountName], ["Account number", stageSixPayload.accountNumber ?? stageSixPayload.accountNumberMasked],
+                ["Tax identification number", stageSixPayload.taxIdentificationNumber ?? stageSixPayload.taxIdentificationNumberMasked],
+                ["Pension provider", stageSixPayload.pensionProvider],
+                ["Pension account number", stageSixPayload.pensionAccountNumber ?? stageSixPayload.pensionAccountNumberMasked],
+                ["National identification number", stageSixPayload.nationalIdentificationNumber ?? stageSixPayload.nationalIdentificationNumberMasked],
+                ["Statutory contribution notes", stageSixPayload.statutoryContributionNotes],
+              ]} />
+            </div> : null}
             <div className="mt-5 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Onboarding documents</h3><div className="mt-3 grid gap-3 md:grid-cols-2">{stageSixDocumentsWithAvailability.length ? stageSixDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? <article className="rounded-xl border border-slate-200 bg-slate-50 p-3" key={document.id}><p className="text-sm font-semibold">{document.uploadedDocument.kind}</p><p className="text-xs text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType}</p><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={privateFileAvailable && ["application/pdf","image/jpeg","image/png","image/webp"].includes(document.uploadedDocument.mimeType)} available={privateFileAvailable} /></article> : null) : <p className="text-sm text-slate-600">No Stage 6 documents uploaded.</p>}</div></div>
             <h3 className="mt-5 font-semibold">Stage 6 admin actions</h3>
             {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 6 actions.</p> : <StageActionForm action={adminStage6Action} applicationId={application.id} stage="Stage 6" />}
@@ -1476,8 +1500,8 @@ export default async function AdminApplicationDetail({
           <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><h2 className="font-bold">Stage 7 Policy, Privacy, and Access Acknowledgements</h2><StatusBadge status={stageSeven?.status ?? "Locked"} /></div>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Acknowledgement summary</h3>{stageSevenSubmission ? <div className="mt-3 grid gap-2 text-sm"><p><strong>Submitted:</strong> {formatDateTime(stageSevenSubmission.submittedAt)}</p><p><strong>Version:</strong> {stageSevenSubmission.version}</p><p><strong>Candidate note:</strong> {stageSevenPayload.candidateNotePresent ? "Provided" : "Not provided"}</p>{[["privacyAcknowledgement","Data privacy"],["policyAcknowledgement","Company policy"],["confidentialityAcknowledgement","Confidentiality"],["systemAccessAcknowledgement","System access/property"],["communicationAcknowledgement","Communication/conduct"],["finalDeclaration","Final declaration"],["finalHrApprovalUnderstanding","Stage 8 understanding"],["electronicSignatureConsent","E-signature consent"]].map(([key,label]) => <p key={key}><strong>{label}:</strong> {yesNo(Boolean(stageSevenSections[key]))}</p>)}</div> : <p className="mt-2 text-sm text-slate-600">No Stage 7 acknowledgement submission found.</p>}</div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Electronic signature</h3>{stageSevenSignature ? <p className="mt-2 text-sm">Confirmed: {yesNo(stageSevenSignature.confirmed)} · Signed: {formatDateTime(stageSevenSignature.signedAt)}</p> : <p className="mt-2 text-sm text-slate-600">No Stage 7 signature found.</p>}<p className="mt-3 text-xs text-slate-500">Typed signature names and full acknowledgement payloads are intentionally not shown in summaries.</p></div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Acknowledgement summary</h3>{stageSevenSubmission ? <div className="mt-3 grid gap-2 text-sm"><p><strong>Submitted:</strong> {formatDateTime(stageSevenSubmission.submittedAt)}</p><p><strong>Version:</strong> {stageSevenSubmission.version}</p><p className="whitespace-pre-wrap"><strong>Candidate note:</strong> {formatField(stageSevenPayload.candidateNote)}</p>{[["privacyAcknowledgement","Data privacy"],["policyAcknowledgement","Company policy"],["confidentialityAcknowledgement","Confidentiality"],["systemAccessAcknowledgement","System access/property"],["communicationAcknowledgement","Communication/conduct"],["finalDeclaration","Final declaration"],["finalHrApprovalUnderstanding","Stage 8 understanding"],["electronicSignatureConsent","E-signature consent"]].map(([key,label]) => <p key={key}><strong>{label}:</strong> {yesNo(Boolean(stageSevenSections[key]))}</p>)}</div> : <p className="mt-2 text-sm text-slate-600">No Stage 7 acknowledgement submission found.</p>}</div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Electronic signature</h3>{stageSevenSignature ? <div className="mt-2 space-y-1 text-sm"><p><strong>Typed name:</strong> {formatField(stageSevenSignature.typedName)}</p><p><strong>Confirmed:</strong> {yesNo(stageSevenSignature.confirmed)}</p><p><strong>Signed:</strong> {formatDateTime(stageSevenSignature.signedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 7 signature found.</p>}</div>
             </div>
             {stageSeven?.approvals?.length ? <div className="mt-4 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Review history</h3><div className="mt-3 space-y-2 text-sm">{stageSeven.approvals.map((approval) => <p key={approval.id}><strong>{approval.action}</strong> by {approval.adminEmail} on {formatDateTime(approval.createdAt)}{approval.notes ? " · Notes recorded" : ""}</p>)}</div></div> : null}
             <h3 className="mt-5 font-semibold">Stage 7 admin actions</h3>
@@ -1490,7 +1514,7 @@ export default async function AdminApplicationDetail({
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="font-bold">Stage 8 Final HR Approval</h2><p className="mt-1 text-sm text-slate-600">Controlled HR gate for employee-file readiness and final hiring completion.</p></div><StatusBadge status={stageEight?.status ?? "Locked"} /></div>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">All-stage completion summary</h3><div className="mt-3 grid gap-2 text-sm">{[stageOne, stageTwo, stageThree, stageFour, stageFive, stageSix, stageSeven, stageEight].map((stage, idx) => <p key={idx}><strong>Stage {idx + 1}:</strong> {stage?.status ?? "Missing"}</p>)}<p><strong>Offer accepted:</strong> {yesNo(offer?.status === "Accepted")}</p><p><strong>Overall application status:</strong> {application.status}</p><p><strong>Current stage:</strong> {application.currentStageOrder}</p></div></div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Employee-file readiness record</h3>{stageEightSubmission ? <div className="mt-3 space-y-2 text-sm"><p><strong>Recorded:</strong> {formatDateTime(stageEightSubmission.submittedAt)}</p><p><strong>Checklist version:</strong> {formatField(stageEightPayload.checklistVersion)}</p><p><strong>Final HR notes:</strong> {stageEightPayload.finalHrNotesPresent ? "Recorded privately" : "Not recorded"}</p><p><strong>Candidate-facing note:</strong> {stageEightPayload.candidateFacingNote ? "Recorded" : "Not recorded"}</p></div> : <p className="mt-2 text-sm text-slate-600">No final HR approval checklist has been recorded.</p>}</div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Employee-file readiness record</h3>{stageEightSubmission ? <div className="mt-3 space-y-2 text-sm"><p><strong>Recorded:</strong> {formatDateTime(stageEightSubmission.submittedAt)}</p><p><strong>Checklist version:</strong> {formatField(stageEightPayload.checklistVersion)}</p><p className="whitespace-pre-wrap"><strong>Final HR notes:</strong> {formatField(stageEight.approvals?.[0]?.notes)}</p><p className="whitespace-pre-wrap"><strong>Candidate-facing note:</strong> {formatField(stageEightPayload.candidateFacingNote)}</p></div> : <p className="mt-2 text-sm text-slate-600">No final HR approval checklist has been recorded.</p>}</div>
             </div>
             {stageEight?.approvals?.length ? <div className="mt-4 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Stage 8 decision history</h3><div className="mt-3 space-y-2 text-sm">{stageEight.approvals.map((approval) => <p key={approval.id}><strong>{approval.action}</strong> by {approval.adminEmail} on {formatDateTime(approval.createdAt)}{approval.notes ? " · Private notes recorded" : ""}</p>)}</div></div> : null}
             <h3 className="mt-5 font-semibold">Stage 8 admin final decision</h3>
@@ -1538,7 +1562,7 @@ export default async function AdminApplicationDetail({
                   placeholder={application.applicationId}
                   required
                 />
-                <button className="btn bg-red-700 text-white hover:bg-red-800">
+                <button className="btn btn-secondary">
                   Permanently delete
                 </button>
               </form>
@@ -1566,7 +1590,7 @@ export default async function AdminApplicationDetail({
                 />{" "}
                 Confirm moving this application to deleted records
               </label>
-              <button className="btn bg-red-700 text-white hover:bg-red-800">
+              <button className="btn btn-secondary">
                 Move to deleted records
               </button>
             </form>
