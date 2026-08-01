@@ -166,7 +166,11 @@ export async function changeInterview(
   }
   if (input.action === "COMPLETE") {
     await tx.jobApplication.updateMany({
-      where: { id: interview.applicationId, organizationId: input.organizationId, recruitmentStatus: "INTERVIEW_SCHEDULED" },
+      where: {
+        id: interview.applicationId,
+        organizationId: input.organizationId,
+        recruitmentStatus: { in: ["INTERVIEW_SCHEDULED", "INTERVIEW_PENDING"] },
+      },
       data: { recruitmentStatus: "INTERVIEW_COMPLETED", version: { increment: 1 } },
     });
   }

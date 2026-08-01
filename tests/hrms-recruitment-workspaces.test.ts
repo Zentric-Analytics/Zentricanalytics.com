@@ -64,9 +64,12 @@ describe("Unit 3 connected recruitment workspaces", () => {
 
   it("keeps submitted interviewer feedback private and locked", () => {
     const interviews = read("src/lib/hr/recruitment/interviews.ts");
+    const page = read("src/app/hr/admin/applications/[id]/page.tsx");
     expect(interviews).toContain("You are not assigned to this interview.");
     expect(interviews).toContain("Submitted interview feedback is locked.");
     expect(interviews).toContain("interviewerId: input.interviewerId");
+    expect(interviews).toContain('recruitmentStatus: { in: ["INTERVIEW_SCHEDULED", "INTERVIEW_PENDING"] }');
+    expect(page).toContain('application.recruitmentStatus === "INTERVIEW_PENDING"');
   });
 
   it("binds offer approval, issuance, and acceptance to exact immutable versions", () => {

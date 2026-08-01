@@ -94,7 +94,7 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
       </aside>
     </div>
 
-    {auth.permissions.has("interview.schedule") ? <section className="rounded-2xl border bg-white p-5">
+    {auth.permissions.has("interview.schedule") && application.recruitmentStatus === "INTERVIEW_PENDING" ? <section className="rounded-2xl border bg-white p-5">
       <h2 className="text-xl font-bold">Schedule interview</h2>
       <WorkflowActionForm actionName="scheduleInterview" submitLabel="Schedule and notify panel" className="mt-4 grid gap-3 md:grid-cols-2">
         <input type="hidden" name="applicationId" value={application.id} />
