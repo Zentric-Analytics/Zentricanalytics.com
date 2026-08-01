@@ -67,6 +67,9 @@ describe("Unit 3 connected recruitment workspaces", () => {
       "Versioned offer",
       "Immutable stage history",
     ]) expect(page).toContain(section);
+    expect(page).toContain("prisma.hrDepartment.findMany");
+    expect(page).toContain('name="positionId"><option value="">Approved open position (optional)');
+    expect(page).toContain("departments.map((department)");
   });
 
   it("keeps submitted interviewer feedback private and locked", () => {

@@ -10,7 +10,7 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
   const auth = await requirePermission("application.view");
   const { id } = await params;
   const organizationId = auth.user.organizationId;
-  const [application, users, positions, legalEntities, grades] = await Promise.all([
+  const [application, users, positions, departments, legalEntities, grades] = await Promise.all([
     prisma.jobApplication.findFirst({
       where: { id, organizationId },
       include: {
@@ -24,6 +24,7 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
       include: { department: true },
       orderBy: { title: "asc" },
     }),
+    prisma.hrDepartment.findMany({ where: { organizationId, status: "ACTIVE" }, orderBy: { name: "asc" } }),
     prisma.hrLegalEntity.findMany({ where: { organizationId, status: "ACTIVE" }, orderBy: { name: "asc" } }),
     prisma.hrGrade.findMany({ where: { organizationId, status: "ACTIVE" }, orderBy: { name: "asc" } }),
   ]);
@@ -172,9 +173,9 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
         <h2 className="text-xl font-bold">Versioned offer</h2>
         {auth.permissions.has("offer.create") && ["FINAL_REVIEW", "OFFER_DRAFT"].includes(current) ? <WorkflowActionForm actionName="createOffer" submitLabel={offer ? "Create new immutable version" : "Create draft offer"} className="mt-3 rounded-2xl border bg-white p-4 grid gap-2 sm:grid-cols-2">
           <input type="hidden" name="applicationId" value={application.id} />
-          <select className="input" name="positionId" required><option value="">Approved open position</option>{positions.map((position) => <option value={position.id} key={position.id}>{position.title} · {position.department.name}</option>)}</select>
+          <select className="input" name="positionId"><option value="">Approved open position (optional)</option>{positions.map((position) => <option value={position.id} key={position.id}>{position.title} · {position.department.name}</option>)}</select>
           <input className="input" name="positionTitle" defaultValue={application.roleAppliedFor} required />
-          <select className="input" name="departmentId" required><option value="">Department</option>{[...new Map(positions.map((position) => [position.department.id, position.department])).values()].map((department) => <option value={department.id} key={department.id}>{department.name}</option>)}</select>
+          <select className="input" name="departmentId" required><option value="">Department</option>{departments.map((department) => <option value={department.id} key={department.id}>{department.name}</option>)}</select>
           <select className="input" name="managerId"><option value="">Manager</option>{users.map((user) => <option value={user.id} key={user.id}>{user.email}</option>)}</select>
           <select className="input" name="legalEntityId" required><option value="">Legal entity</option>{legalEntities.map((entity) => <option value={entity.id} key={entity.id}>{entity.name}</option>)}</select>
           <select className="input" name="gradeId"><option value="">Grade</option>{grades.map((grade) => <option value={grade.id} key={grade.id}>{grade.name}</option>)}</select>
