@@ -21,20 +21,21 @@ Long-term recovery is a separate logical-archive control:
 | Restore drill | Isolated restore at least quarterly | **Blocking** — staging evidence exists, but no current isolated production-source restore evidence exists. |
 | DR exercise | Full exercise at least annually | **Blocking** — no current evidence exists. |
 
-Render retains database logical exports for at least seven days. Meeting the longer tiers requires a dedicated scheduled backup process and protected capacity. A Render worker/cron service plus persistent archive disk keeps execution on Render, but provisioning incurs a paid infrastructure purchase and therefore requires explicit product-owner approval. Before acceptance, validate that the chosen Render storage arrangement provides the required deletion protection and durability for 15-year archives; environment variables alone are not evidence.
+Render retains database logical exports for at least seven days. The dedicated HRMS backup cron is now scheduled at 03:00 UTC daily, but protected archive object storage remains unapproved. A guarded verification run stopped before dumping because the required S3-compatible archive configuration was absent. Environment variables and a schedule are not successful-backup evidence.
 
 ## Current production identity
 
 - Workspace/project: Production / Zentric Analytics (`prj-d8s88bb7uimc7382jeh0`).
 - Web service: `srv-d8s89fbeo5us73e7ljk0`, branch `main`, Starter instance.
-- Database: `dpg-d8s88jurnols738a7og0-a`, Basic-256mb.
+- Database: `dpg-d8s88jurnols738a7og0-a`, **Basic-1gb**, 15 GB storage, HA disabled.
+- Backup cron: `crn-d9n53dp42hec73etr2jg`, Starter, daily 03:00 UTC, release commit `793c2888462454353f2e1d9bb251bce1b6244cd6`.
 - The service remains on the legacy production release. The Units 1–3 candidate has not been deployed.
 
 ## Re-audited release blockers
 
 ### Blocking
 
-- Long-term backup schedules, protected archive capacity, manifests, monitoring and restore/DR evidence are absent.
+- The long-term backup schedule now exists, but protected archive capacity, successful manifests, monitoring and restore/DR evidence remain absent.
 - Production HRMS secrets and independent worker/scanner/monitoring secrets are absent.
 - Production private, encrypted, versioned HR document storage and a real malware-scanner integration are absent. Render does not supply an S3-compatible object-storage product; this is a document-security blocker independent of backup retention.
 - Twenty-two additive HRMS migrations remain pending. They must only run through the governed pre-deploy release command after explicit migration authorization.
@@ -44,7 +45,7 @@ Render retains database logical exports for at least seven days. Meeting the lon
 
 ### High risk
 
-- Database ingress is open broadly, HA is disabled, connection pooling is disabled and the Basic-256mb database has not been capacity-approved for HRMS production traffic.
+- Database ingress is open broadly, HA is disabled and connection pooling is disabled. Basic-1gb meets the approved RAM floor but must still pass the post-migration capacity gates.
 - Auto-deploy is now disabled. Keep it disabled through release and use only the explicitly authorized manual deployment sequence.
 - Notifications cover failures only; no log stream or HRMS metrics/alert integration is configured.
 - Email-domain provider alignment, bounce/complaint webhooks and suppression handling remain unverified.
@@ -56,8 +57,8 @@ Render retains database logical exports for at least seven days. Meeting the lon
 
 ## Next authorized sequence
 
-1. Approve the paid Render database capacity/HA choice and the paid Render backup job plus archive capacity.
-2. Provision the long-term logical-archive schedules and monitoring without changing production data.
+1. Basic-1gb database capacity and the dedicated backup cron are complete; do not add HA or more storage without separate approval.
+2. Approve protected object storage, then complete successful logical-archive, retention and monitoring evidence.
 3. Resolve the independent private document-storage and malware-scanner provider blocker.
 4. Configure production-only secrets and safe service commands; disable auto-deploy and set `/api/health/ready` only when the candidate is ready for controlled promotion.
 5. Create an isolated restore target from a production recovery point, verify it, and delete the temporary target after recording evidence.

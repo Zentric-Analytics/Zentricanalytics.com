@@ -1,6 +1,6 @@
 # Units 1–3 production subscription and cost audit
 
-Prepared 2026-08-01 from read-only inspection of the Production workspace in Render. No plan, service, disk, database, worker, cron job, add-on, or payment setting was changed. Prices exclude tax and variable overage.
+Prepared 2026-08-01 from inspection of the Production workspace in Render. The product owner subsequently approved only the Basic-1gb database resize and dedicated backup cron, approximately +$14/month. Prices exclude tax and variable overage.
 
 ## Current paid baseline
 
@@ -8,15 +8,15 @@ Prepared 2026-08-01 from read-only inspection of the Production workspace in Ren
 | --- | --- | ---: | --- |
 | Render workspace | **Pro**, one member; 1,000 included pipeline minutes; 15 included custom domains; 25 GB included bandwidth | **$25/month** | **Already sufficient — no change.** It provides the production workspace controls and the database Recovery page confirms seven-day PITR. |
 | Zentricanalytics.com web service | **Starter**, 0.5 CPU, 512 MB RAM, one instance | **$7/month** | **Already sufficient — no change for initial release.** The same-sized staging service passed the Unit 3 production-like load gate. Reassess from post-release CPU, memory, latency, and restart evidence. |
-| Zentric Analytics PostgreSQL | **Basic-256mb**, 0.1 CPU, 256 MB RAM | **$6/month** | **Upgrade required.** It is below the explicit 1 GB minimum and therefore does not qualify for a keep-current capacity test. |
+| Zentric Analytics PostgreSQL | **Basic-1gb**, 0.5 CPU, 1 GB RAM | **$19/month** | **Approved change completed.** Fifteen GB storage was retained and HA remains disabled. |
 | PostgreSQL storage | **15 GB**, autoscaling disabled | **$4.50/month** | **Already sufficient — no immediate capacity increase.** Enable a bounded autoscaling maximum as a no-cost configuration control when the database tier is changed. |
 | PostgreSQL PITR | Restore to any timestamp in the past **7 days**; logical exports retained at least seven days | Included | **Already sufficient — no change** for the adopted Render recovery window. It does not satisfy the separate long-term archive tiers. |
 | Web persistent disk | **1 GB** at `/var/data`; daily snapshots available for seven days | **$0.25/month** at Render's published disk rate | **Already paid, but not suitable for private HR documents or 15-year archives.** Retain only for its existing non-HR purpose unless a later inventory proves it unused. |
-| HRMS cron jobs | **None** in the Zentric Analytics production environment | $0 | **New service required** for scheduled logical backups. The workspace's existing cron job belongs to Kurioticket and must not be reused. |
+| HRMS cron jobs | `zentric-hrms-database-backup` (`crn-d9n53dp42hec73etr2jg`), Starter, daily at 03:00 UTC | Minimum **$1/month** | **Approved change completed.** The release-branch build succeeds and the production archive command is installed. Archive delivery remains blocked until protected object storage is approved. |
 | HRMS background workers | **None** in the Zentric Analytics production environment | $0 | **New service required** for malware scanning unless an approved managed scanner is selected. Existing in-process outbox/activation scheduling can remain initially, subject to monitoring. |
 | HRMS paid add-ons | **None observed** | $0 | **No duplicate purchase.** |
 
-The production workspace also contains Kurioticket and PecuniarRemit services and databases, plus one Kurioticket cron job. Render projects **$92.55** for the entire workspace for August; that figure is not the HRMS cost. The currently attributable Zentric Analytics infrastructure is approximately **$17.75/month** (`$7 + $10.50 + $0.25`), plus the already-paid shared **$25/month** Pro workspace subscription.
+The production workspace also contains Kurioticket and PecuniarRemit services and databases, plus one Kurioticket cron job. Render's pre-change projection was **$92.55** for the entire workspace; that figure is not the HRMS cost. After the approved changes, attributable Zentric Analytics infrastructure is approximately **$31.75/month** (`$7 + $23.50 + $0.25 + $1 minimum`), plus the already-paid shared **$25/month** Pro workspace subscription.
 
 ## Smallest qualifying Render changes
 
@@ -34,7 +34,7 @@ After an approved upgrade, rerun migration preflight, database-backed contention
 
 ### Scheduled backup execution
 
-Add one Zentric Analytics Render Cron Job running `yarn hr:database-archive` daily. Render's minimum cron charge is **$1/month**, with usage above the minimum prorated by runtime. The existing Kurioticket cron job is unrelated and cannot safely share HRMS database/archive credentials.
+The dedicated Zentric Analytics Render Cron Job now runs `yarn hr:database-archive` daily at 03:00 UTC. Render's minimum cron charge is **$1/month**, with usage above the minimum prorated by runtime. It uses the frozen Units 1–3 release branch and the production database secret. A verification run stopped before `pg_dump` with the intended guard: production archives require dedicated S3-compatible object storage.
 
 ### Long-term archives and private HR documents
 
@@ -44,7 +44,7 @@ The lowest-cost option remains private Cloudflare R2 Standard storage: the first
 
 ### Malware scanning
 
-A dedicated scanner is a **new service required** before production HR document upload. The lower-cost Render option is a Starter background worker at **$7/month**, but 512 MB may be insufficient for ClamAV signatures and concurrent scans. Run a non-paid staging memory profile first. Use Starter only if it passes bounded-file, concurrent-scan, signature-update, restart, and failure-recovery gates; otherwise the smallest safe option is Standard at **$25/month**. No worker purchase should be approved until that test fixes the exact tier.
+A dedicated scanner is a **new service required** before production HR document upload. The ClamAV engine's published memory profile rules out Render Starter and Standard: ClamAV reports about 1.2 GiB for loaded signatures, about 2.4 GiB during concurrent signature reload before scan overhead, recommends at least 3 GiB, and prefers 4 GiB for containers. Render provides 512 MB on Starter and 2 GB on Standard, both below that envelope. The smallest compliant Render worker is therefore **Pro, 4 GB RAM and 2 CPU, $85/month**. This is a worker tier, not a database upgrade. It has not been provisioned and still requires explicit cost approval.
 
 ## Cost decision
 
@@ -55,9 +55,9 @@ The presently fixed minimum Render increase is:
 - Basic-1gb PostgreSQL: **+$13/month**
 - Daily backup Cron Job: **at least +$1/month**
 
-**Fixed Render increase awaiting approval: at least +$14/month.**
+**Approved fixed Render increase completed: at least +$14/month.**
 
-The malware scanner adds either **+$7/month** if Starter passes staging profiling or **+$25/month** if Standard is required. Private R2 storage is expected to start at $0 within its allowance but remains a new provider configuration and usage-priced service. Therefore the likely minimum total increase is **+$21/month**, subject to scanner evidence and actual checkout confirmation.
+The minimum safe ClamAV worker would add **+$85/month**. Private R2 storage is expected to start at $0 within its allowance but remains a new provider configuration and usage-priced service. Neither has been approved or provisioned.
 
 Do not purchase or provision any item until the product owner explicitly approves the net additional cost. Existing Pro workspace, Starter web service, 15 GB database storage, and 1 GB disk must not be purchased again.
 
@@ -68,5 +68,7 @@ Do not purchase or provision any item until the product owner explicitly approve
 - [Render PostgreSQL backups](https://render.com/docs/postgresql-backups)
 - [Render compute plans](https://render.com/docs/compute-plans)
 - [Render persistent disks](https://render.com/docs/disks)
+- [ClamAV system requirements](https://docs.clamav.net/)
+- [ClamAV container memory requirements](https://docs.clamav.net/manual/Installing/Docker.html)
 - [Cloudflare R2 pricing](https://developers.cloudflare.com/r2/pricing/)
 - [Cloudflare R2 bucket locks](https://developers.cloudflare.com/r2/buckets/bucket-locks/)
