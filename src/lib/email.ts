@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import { maskEmail, maskGeneric } from './security';
+import { resolveEmailSender } from './email-senders';
 
 export type EmailEvent = {
   to: string;
@@ -19,14 +20,8 @@ type EmailSendResult = {
 };
 
 const RESEND_EMAIL_URL = 'https://api.resend.com/emails';
-const DEFAULT_FROM = 'careers@zentricanalytics.com';
-
 function selectedProvider() {
   return process.env.EMAIL_PROVIDER === 'resend' ? 'resend' : 'console';
-}
-
-function emailFrom() {
-  return process.env.EMAIL_FROM || DEFAULT_FROM;
 }
 
 function safeFailureReason(error: unknown) {
@@ -40,6 +35,7 @@ function textToHtml(text: string) {
 }
 
 async function sendConsoleEmail(event: EmailEvent): Promise<EmailSendResult> {
+  const sender = resolveEmailSender(event.template);
   console.info('Hiring email delivery', {
     provider: 'console',
     status: 'sent',
@@ -47,11 +43,13 @@ async function sendConsoleEmail(event: EmailEvent): Promise<EmailSendResult> {
     subject: event.subject,
     applicationId: maskGeneric(event.applicationId),
     template: event.template,
+    senderCategory: sender.category,
   });
   return { provider: 'console', status: 'sent' };
 }
 
 async function sendResendEmail(event: EmailEvent): Promise<EmailSendResult> {
+  const sender = resolveEmailSender(event.template);
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return { provider: 'resend', status: 'failed', failureReason: 'RESEND_API_KEY is required when EMAIL_PROVIDER=resend' };
 
@@ -60,7 +58,8 @@ async function sendResendEmail(event: EmailEvent): Promise<EmailSendResult> {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: emailFrom(),
+        from: sender.from,
+        reply_to: sender.replyTo,
         to: [event.to],
         subject: event.subject,
         text: event.body ?? '',

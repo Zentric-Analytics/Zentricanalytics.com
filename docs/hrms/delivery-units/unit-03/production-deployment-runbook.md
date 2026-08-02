@@ -25,7 +25,9 @@ All secret values must be independently generated for production and stored in t
 
 ### Email and domain
 
-- `EMAIL_PROVIDER=resend`, production `RESEND_API_KEY`, and an approved `EMAIL_FROM` address.
+- `EMAIL_PROVIDER=resend`, production `RESEND_API_KEY`, and the intent-based sender variables `EMAIL_FROM_CAREERS`, `EMAIL_FROM_OFFERS`, `EMAIL_FROM_HR`, and `EMAIL_FROM_ACCOUNTS`.
+- Configure Reply-To independently with `EMAIL_REPLY_TO_CAREERS`, `EMAIL_REPLY_TO_OFFERS`, `EMAIL_REPLY_TO_HR`, and `EMAIL_REPLY_TO_ACCOUNTS`; use the support mailbox for account-security replies where appropriate.
+- Every registered template must map to one sender category. Unknown or unmapped templates fail closed and must not be retried until configuration or code is corrected.
 - Verify the sending domain with the provider. Publish and validate SPF and DKIM; publish a DMARC policy with monitored aggregate reporting before enforcement is increased.
 - Configure a custom return-path/bounce domain where supported, provider webhooks, suppression handling and operational ownership for bounces/complaints.
 - Confirm all CTA origins are the HTTPS production origin and send the registered template set to approved test mailboxes before opening access.

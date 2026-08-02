@@ -35,12 +35,16 @@ describe('email provider abstraction', () => {
   it('selects Resend when EMAIL_PROVIDER=resend and records provider response ID', async () => {
     vi.stubEnv('EMAIL_PROVIDER', 'resend');
     vi.stubEnv('RESEND_API_KEY', 'secret-key');
-    vi.stubEnv('EMAIL_FROM', 'careers@example.com');
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ id: 'email_123' }), { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
     const { sendAndRecordEmail } = await loadEmailModule();
     const record = await sendAndRecordEmail({ applicationId: 'app_1', to: 'ada@example.com', template: 'access-code', subject: 'Code', body: '123456' });
     expect(fetchMock).toHaveBeenCalledWith('https://api.resend.com/emails', expect.objectContaining({ method: 'POST', headers: expect.objectContaining({ Authorization: 'Bearer secret-key' }) }));
+    const request = JSON.parse(String((fetchMock.mock.calls as unknown as Array<[string, RequestInit]>)[0]?.[1]?.body));
+    expect(request).toMatchObject({
+      from: 'Zentric Careers <careers@zentricanalytics.com>',
+      reply_to: 'careers@zentricanalytics.com',
+    });
     expect(record).toMatchObject({ status: 'sent', providerMessageId: 'email_123' });
     expect(mocks.emailNotificationCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ status: 'sent', providerMessageId: 'email_123' }) });
   });
