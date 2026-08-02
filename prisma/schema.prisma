@@ -1791,13 +1791,20 @@ model HrEmployeeDocumentVersion {
   contentType      String
   sizeBytes        Int
   storageProvider  String
+  storageBucket    String?
   storageKey       String                @unique
+  storageVersionId String?
+  storageEtag      String?
   checksum         String
   scanStatus       HrDocumentScanStatus  @default(PENDING)
   scanProvider     String?
   scanReference    String?
   scanReason       String?
   scanCompletedAt  DateTime?
+  scanRequestedAt  DateTime              @default(now())
+  providerScanEventId String?             @unique
+  providerScanStatus String?
+  releasedAt       DateTime?
   scanRecordedById String?
   uploadedById     String
   uploadedAt       DateTime              @default(now())
@@ -1811,6 +1818,7 @@ model HrEmployeeDocumentVersion {
   @@index([organizationId, scanStatus, uploadedAt])
   @@index([scanStatus, uploadedAt])
   @@index([checksum])
+  @@index([storageBucket, storageKey, storageVersionId])
 }
 
 model HrDocumentAccessLog {

@@ -16,7 +16,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const self = auth.user.employee?.id === version.document.employeeId && auth.permissions.has("document.read_self") && !version.document.archivedAt;
   const authorizedStaff = version.document.restricted ? auth.permissions.has("document.read_sensitive") : auth.permissions.has("document.read_employee") || auth.permissions.has("document.read_sensitive");
   if (!self && !authorizedStaff) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const bytes = await hrObjectStorage().get(version.storageKey);
+  const bytes = await hrObjectStorage().getAuthorized({ provider: version.storageProvider, bucket: version.storageBucket ?? undefined, key: version.storageKey, versionId: version.storageVersionId ?? undefined, eTag: version.storageEtag ?? undefined, checksum: version.checksum });
   const forwardedIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const ipHash = crypto.createHash("sha256").update(`${process.env.AUTH_SECRET ?? ""}:${forwardedIp}`).digest("hex");
   const userAgent = request.headers.get("user-agent")?.slice(0, 500);

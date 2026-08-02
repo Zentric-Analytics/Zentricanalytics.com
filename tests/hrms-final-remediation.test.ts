@@ -114,7 +114,7 @@ describe("final HRMS remediation security behavior", () => {
 
   it("makes scanner callback retries idempotent while rejecting conflicts", () => {
     const scanner = read("src/app/api/internal/hr/document-scan/route.ts");
-    expect(scanner).toContain("sameResult");
+    expect(scanner).toContain("version.providerScanEventId === result.eventId");
     expect(scanner).toContain("alreadyRecorded: !recorded");
     expect(scanner).toContain("conflicting terminal scan result");
   });

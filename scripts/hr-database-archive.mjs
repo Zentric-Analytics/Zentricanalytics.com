@@ -4,7 +4,7 @@ import { createReadStream, createWriteStream } from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { pipeline } from "node:stream/promises";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, validateArchiveRoot } from "./hr-database-archive-lib.mjs";
 
 function blocked(message) {
@@ -20,7 +20,10 @@ let root;
 try { root = validateArchiveRoot(process.env.BACKUP_ARCHIVE_ROOT); } catch (error) { blocked(error.message); }
 const encryptionKey = Buffer.from(String(process.env.BACKUP_ENCRYPTION_KEY_B64 ?? ""), "base64");
 if (encryptionKey.length !== 32) blocked("BACKUP_ENCRYPTION_KEY_B64 must decode to exactly 32 bytes.");
-const remoteKeys = ["BACKUP_OBJECT_STORAGE_ENDPOINT", "BACKUP_OBJECT_STORAGE_BUCKET", "BACKUP_OBJECT_STORAGE_REGION", "BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID", "BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY"];
+const backupProvider = String(process.env.BACKUP_OBJECT_STORAGE_PROVIDER ?? "s3-compatible").toLowerCase();
+const remoteKeys = backupProvider === "aws-s3"
+  ? ["BACKUP_OBJECT_STORAGE_BUCKET", "BACKUP_OBJECT_STORAGE_REGION"]
+  : ["BACKUP_OBJECT_STORAGE_ENDPOINT", "BACKUP_OBJECT_STORAGE_BUCKET", "BACKUP_OBJECT_STORAGE_REGION", "BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID", "BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY"];
 if (process.env.APP_ENV === "production" && remoteKeys.some((key) => !String(process.env[key] ?? "").trim())) blocked("Production archives require dedicated S3-compatible object storage configuration.");
 
 await fs.mkdir(root, { recursive: true, mode: 0o700 });
@@ -64,17 +67,29 @@ try {
   await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { encoding: "utf8", mode: 0o600, flag: "wx" });
 
   if (remoteKeys.every((key) => String(process.env[key] ?? "").trim())) {
-    const endpoint = new URL(process.env.BACKUP_OBJECT_STORAGE_ENDPOINT);
-    if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) throw new Error("Backup object-storage endpoint must be a credential-free HTTPS URL.");
+    const endpoint = process.env.BACKUP_OBJECT_STORAGE_ENDPOINT ? new URL(process.env.BACKUP_OBJECT_STORAGE_ENDPOINT) : undefined;
+    if (endpoint && (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash)) throw new Error("Backup object-storage endpoint must be a credential-free HTTPS URL.");
+    const credentials = process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID && process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY
+      ? { accessKeyId: process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID, secretAccessKey: process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY }
+      : undefined;
     const client = new S3Client({
-      endpoint: endpoint.toString(),
+      endpoint: endpoint?.toString(),
       region: process.env.BACKUP_OBJECT_STORAGE_REGION,
-      forcePathStyle: String(process.env.BACKUP_OBJECT_STORAGE_FORCE_PATH_STYLE).toLowerCase() === "true",
-      credentials: { accessKeyId: process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID, secretAccessKey: process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY },
+      forcePathStyle: backupProvider === "s3-compatible" && String(process.env.BACKUP_OBJECT_STORAGE_FORCE_PATH_STYLE).toLowerCase() === "true",
+      credentials,
     });
     const prefix = `database-archives/${tiers.join("-")}/${createdAt.getUTCFullYear()}`;
-    await client.send(new PutObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: `${prefix}/${archiveFile}`, Body: createReadStream(archivePath), ContentLength: stat.size, ContentType: "application/octet-stream", Metadata: { correlation, sha256: manifest.sha256, expiresat: manifest.expiresAt } }));
-    await client.send(new PutObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: `${prefix}/${manifestFile}`, Body: JSON.stringify(manifest), ContentType: "application/json", Metadata: { correlation } }));
+    const archiveKey = `${prefix}/${archiveFile}`;
+    const retention = backupProvider === "aws-s3" ? { ObjectLockMode: "COMPLIANCE", ObjectLockRetainUntilDate: new Date(manifest.expiresAt) } : {};
+    const uploaded = await client.send(new PutObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: archiveKey, Body: createReadStream(archivePath), ContentLength: stat.size, ContentType: "application/octet-stream", Metadata: { correlation, sha256: manifest.sha256, expiresat: manifest.expiresAt }, ...retention }));
+    const remote = await client.send(new HeadObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: archiveKey, VersionId: uploaded.VersionId }));
+    if (remote.ContentLength !== stat.size || remote.Metadata?.sha256 !== manifest.sha256) throw new Error("Uploaded archive failed size or SHA-256 metadata verification.");
+    if (backupProvider === "aws-s3" && (!uploaded.VersionId || remote.ObjectLockMode !== "COMPLIANCE" || !remote.ObjectLockRetainUntilDate || remote.ObjectLockRetainUntilDate < new Date(manifest.expiresAt))) throw new Error("Uploaded archive lacks the required immutable AWS version and retention evidence.");
+    manifest.remote = { provider: backupProvider, bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, key: archiveKey, versionId: uploaded.VersionId, eTag: uploaded.ETag?.replaceAll('"', ""), verifiedAt: new Date().toISOString(), objectLockMode: remote.ObjectLockMode, retainUntil: remote.ObjectLockRetainUntilDate?.toISOString() };
+    await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+    const manifestBody = JSON.stringify(manifest);
+    const manifestUpload = await client.send(new PutObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: `${prefix}/${manifestFile}`, Body: manifestBody, ContentType: "application/json", Metadata: { correlation }, ...retention }));
+    if (backupProvider === "aws-s3" && !manifestUpload.VersionId) throw new Error("Uploaded manifest lacks an immutable AWS version ID.");
   }
 
   const entries = await fs.readdir(root);

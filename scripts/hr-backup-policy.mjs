@@ -31,7 +31,9 @@ export function productionBackupPolicyIssues(env, now = Date.now()) {
   if (wholeNumber(env.DATABASE_DAILY_BACKUP_RETENTION_DAYS) < policy.dailyDays) issues.push(`Daily backup retention must be at least ${policy.dailyDays} days.`);
   if (wholeNumber(env.DATABASE_WEEKLY_BACKUP_RETENTION_DAYS) < policy.weeklyDays) issues.push(`Weekly backup retention must be at least ${policy.weeklyDays} days.`);
   if (wholeNumber(env.DATABASE_MONTHLY_ARCHIVE_RETENTION_YEARS) < policy.monthlyYears) issues.push(`Monthly archive retention must be at least ${policy.monthlyYears} years.`);
-  for (const key of ["BACKUP_OBJECT_STORAGE_ENDPOINT", "BACKUP_OBJECT_STORAGE_BUCKET", "BACKUP_OBJECT_STORAGE_REGION", "BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID", "BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY"]) {
+  const archiveProvider = String(env.BACKUP_OBJECT_STORAGE_PROVIDER ?? "s3-compatible").toLowerCase();
+  const archiveKeys = archiveProvider === "aws-s3" ? ["BACKUP_OBJECT_STORAGE_BUCKET", "BACKUP_OBJECT_STORAGE_REGION"] : ["BACKUP_OBJECT_STORAGE_ENDPOINT", "BACKUP_OBJECT_STORAGE_BUCKET", "BACKUP_OBJECT_STORAGE_REGION", "BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID", "BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY"];
+  for (const key of archiveKeys) {
     if (!String(env[key] ?? "").trim()) issues.push(`${key} is required for protected logical archives.`);
   }
   if (String(env.BACKUP_OBJECT_STORAGE_BUCKET_LOCK_ENABLED).toLowerCase() !== "true") issues.push("Protected logical archive bucket locks must be enabled.");
