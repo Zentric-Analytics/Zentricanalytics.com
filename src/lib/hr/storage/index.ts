@@ -146,7 +146,8 @@ export class S3CompatibleHrStorage implements HrObjectStorage {
   }
   async headVersion(location: PrivateObjectLocation) {
     this.assertLocation(location);
-    const response = await this.safeSend(() => this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(location.key), VersionId: location.versionId })));
+    const versionId = hrStorageProvider() === "aws-s3" ? location.versionId : undefined;
+    const response = await this.safeSend(() => this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(location.key), VersionId: versionId })));
     let scanStatus: string | undefined;
     if (hrStorageProvider() === "aws-s3") {
       const tags = await this.safeSend(() => this.client.send(new GetObjectTaggingCommand({ Bucket: this.bucket, Key: validateStorageKey(location.key), VersionId: location.versionId })));
@@ -158,13 +159,13 @@ export class S3CompatibleHrStorage implements HrObjectStorage {
     const metadata = await this.headVersion(location);
     if (metadata.checksum !== location.checksum) throw new Error("Private HR object checksum metadata does not match the immutable document version.");
     if (hrStorageProvider() === "aws-s3" && metadata.scanStatus !== "NO_THREATS_FOUND") throw new Error("Private HR object is not released by the malware-scanning provider.");
-    const response = await this.safeSend(() => this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(location.key), VersionId: location.versionId })));
+    const response = await this.safeSend(() => this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(location.key), VersionId: hrStorageProvider() === "aws-s3" ? location.versionId : undefined })));
     if (!response.Body) throw new Error("HR object was not found.");
     return new Uint8Array(await response.Body.transformToByteArray());
   }
   async deleteVersion(location: PrivateObjectLocation) {
     this.assertLocation(location);
-    await this.safeSend(() => this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(location.key), VersionId: location.versionId })));
+    await this.safeSend(() => this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: validateStorageKey(location.key), VersionId: hrStorageProvider() === "aws-s3" ? location.versionId : undefined })));
   }
   private assertLocation(location: PrivateObjectLocation) {
     if (location.bucket && location.bucket !== this.bucket) throw new Error("Private HR object bucket does not match the configured provider.");
