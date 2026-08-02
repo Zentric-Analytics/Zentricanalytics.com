@@ -1,0 +1,257 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Zentric HRMS production private storage, archive retention, audit, and least-privilege identities.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [production]
+
+Resources:
+  DocumentBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub zentric-${Environment}-hr-documents-${AWS::AccountId}-${AWS::Region}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+            BucketKeyEnabled: true
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerEnforced }]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration: { Status: Enabled }
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 1 }
+          - Id: NoncurrentVersionRetention
+            Status: Enabled
+            NoncurrentVersionTransitions:
+              - StorageClass: INTELLIGENT_TIERING
+                TransitionInDays: 30
+      Tags:
+        - { Key: application, Value: zentric-hrms }
+        - { Key: environment, Value: production }
+        - { Key: data-classification, Value: restricted-hr }
+
+  ArchiveBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub zentric-${Environment}-database-archives-${AWS::AccountId}-${AWS::Region}
+      ObjectLockEnabled: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+            BucketKeyEnabled: true
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerEnforced }]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration: { Status: Enabled }
+      LifecycleConfiguration:
+        Rules:
+          - Id: DailyRetention
+            Status: Enabled
+            Prefix: database-archives/daily/
+            ExpirationInDays: 91
+            NoncurrentVersionExpiration: { NoncurrentDays: 91 }
+          - Id: WeeklyRetention
+            Status: Enabled
+            Prefix: database-archives/daily-weekly/
+            Transitions:
+              - { StorageClass: GLACIER_IR, TransitionInDays: 30 }
+            ExpirationInDays: 366
+            NoncurrentVersionExpiration: { NoncurrentDays: 366 }
+          - Id: MonthlyRetention
+            Status: Enabled
+            Prefix: database-archives/daily-weekly-monthly/
+            Transitions:
+              - { StorageClass: GLACIER_IR, TransitionInDays: 30 }
+              - { StorageClass: DEEP_ARCHIVE, TransitionInDays: 180 }
+            ExpirationInDays: 5479
+            NoncurrentVersionExpiration: { NoncurrentDays: 5479 }
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 1 }
+      Tags:
+        - { Key: application, Value: zentric-hrms }
+        - { Key: environment, Value: production }
+        - { Key: data-classification, Value: encrypted-backup }
+
+  DocumentBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DocumentBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource: [!GetAtt DocumentBucket.Arn, !Sub "${DocumentBucket.Arn}/*"]
+            Condition: { Bool: { "aws:SecureTransport": "false" } }
+
+  ArchiveBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ArchiveBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource: [!GetAtt ArchiveBucket.Arn, !Sub "${ArchiveBucket.Arn}/*"]
+            Condition: { Bool: { "aws:SecureTransport": "false" } }
+          - Sid: CloudTrailBucketAclCheck
+            Effect: Allow
+            Principal: { Service: cloudtrail.amazonaws.com }
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt ArchiveBucket.Arn
+            Condition: { StringEquals: { "aws:SourceArn": !Sub "arn:${AWS::Partition}:cloudtrail:${AWS::Region}:${AWS::AccountId}:trail/zentric-production-hrms-audit" } }
+          - Sid: CloudTrailWrite
+            Effect: Allow
+            Principal: { Service: cloudtrail.amazonaws.com }
+            Action: s3:PutObject
+            Resource: !Sub "${ArchiveBucket.Arn}/cloudtrail/AWSLogs/${AWS::AccountId}/*"
+            Condition:
+              StringEquals:
+                "s3:x-amz-acl": bucket-owner-full-control
+                "aws:SourceArn": !Sub "arn:${AWS::Partition}:cloudtrail:${AWS::Region}:${AWS::AccountId}:trail/zentric-production-hrms-audit"
+
+  DocumentApplicationUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: zentric-production-hr-document-application
+      Tags:
+        - { Key: application, Value: zentric-hrms }
+        - { Key: environment, Value: production }
+      Policies:
+        - PolicyName: ExactVersionDocumentAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: BucketMetadata
+                Effect: Allow
+                Action: [s3:GetBucketLocation, s3:ListBucket]
+                Resource: !GetAtt DocumentBucket.Arn
+                Condition: { StringLike: { "s3:prefix": ["quarantine/*"] } }
+              - Sid: QuarantineVersionOperations
+                Effect: Allow
+                Action: [s3:PutObject, s3:GetObject, s3:GetObjectVersion, s3:GetObjectTagging, s3:GetObjectVersionTagging, s3:DeleteObjectVersion]
+                Resource: !Sub "${DocumentBucket.Arn}/quarantine/*"
+
+  BackupCronUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: zentric-production-database-archive-cron
+      Tags:
+        - { Key: application, Value: zentric-hrms }
+        - { Key: environment, Value: production }
+      Policies:
+        - PolicyName: LockedArchiveWriter
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: BucketMetadata
+                Effect: Allow
+                Action: [s3:GetBucketLocation, s3:ListBucket]
+                Resource: !GetAtt ArchiveBucket.Arn
+                Condition: { StringLike: { "s3:prefix": ["database-archives/*"] } }
+              - Sid: ImmutableArchiveWriteAndVerify
+                Effect: Allow
+                Action: [s3:PutObject, s3:GetObject, s3:GetObjectVersion, s3:GetObjectRetention, s3:PutObjectRetention]
+                Resource: !Sub "${ArchiveBucket.Arn}/database-archives/*"
+
+  ScannerDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: zentric-production-hr-document-scan-dlq
+      MessageRetentionPeriod: 1209600
+      SqsManagedSseEnabled: true
+      Tags:
+        - { Key: application, Value: zentric-hrms }
+        - { Key: environment, Value: production }
+
+  ScannerDeadLetterQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [!Ref ScannerDeadLetterQueue]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: EventBridgeDeadLetterOnly
+            Effect: Allow
+            Principal: { Service: events.amazonaws.com }
+            Action: sqs:SendMessage
+            Resource: !GetAtt ScannerDeadLetterQueue.Arn
+            Condition:
+              StringEquals: { "aws:SourceAccount": !Ref "AWS::AccountId" }
+              ArnEquals: { "aws:SourceArn": !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/zentric-production-hr-document-scan-results" }
+
+  EventBridgeDeliveryRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: zentric-production-eventbridge-document-scan
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: events.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeScannerAndDeadLetter
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: events:InvokeApiDestination
+                Resource: !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:api-destination/zentric-production-hr-document-scan/*"
+              - Effect: Allow
+                Action: sqs:SendMessage
+                Resource: !GetAtt ScannerDeadLetterQueue.Arn
+      Tags:
+        - { Key: application, Value: zentric-hrms }
+        - { Key: environment, Value: production }
+
+  AuditTrail:
+    Type: AWS::CloudTrail::Trail
+    DependsOn: ArchiveBucketPolicy
+    Properties:
+      TrailName: zentric-production-hrms-audit
+      IsLogging: true
+      IsMultiRegionTrail: false
+      IncludeGlobalServiceEvents: true
+      EnableLogFileValidation: true
+      S3BucketName: !Ref ArchiveBucket
+      S3KeyPrefix: cloudtrail
+      EventSelectors:
+        - IncludeManagementEvents: true
+          ReadWriteType: All
+          DataResources:
+            - Type: AWS::S3::Object
+              Values:
+                - !Sub "${DocumentBucket.Arn}/quarantine/"
+                - !Sub "${ArchiveBucket.Arn}/database-archives/"
+
+Outputs:
+  DocumentBucketName: { Value: !Ref DocumentBucket }
+  ArchiveBucketName: { Value: !Ref ArchiveBucket }
+  DocumentApplicationUserName: { Value: !Ref DocumentApplicationUser }
+  BackupCronUserName: { Value: !Ref BackupCronUser }
+  ScannerDeadLetterQueueArn: { Value: !GetAtt ScannerDeadLetterQueue.Arn }
+  EventBridgeDeliveryRoleArn: { Value: !GetAtt EventBridgeDeliveryRole.Arn }
