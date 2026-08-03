@@ -17,7 +17,8 @@ export async function finalizeEmployeeProvisioning(
   });
   if (draft.createdById === input.actorUserId) throw new Error("Employee creator cannot perform final activation.");
   const payload = provisioningPayloadSchema.parse(draft.payload);
-  const readiness = provisioningReadiness(payload);
+  const existingEmployeeCount = await tx.hrEmployee.count({ where: { organizationId: input.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } } });
+  const readiness = provisioningReadiness(payload, { requireManager: existingEmployeeCount > 0 });
   if (readiness.blocking.length) throw new Error(`Provisioning is not ready: ${readiness.blocking.map(({ label }) => label).join(", ")}.`);
   if (payload.compensation?.baseSalary && (!payload.compensation.currency || !payload.compensation.effectiveFrom || !payload.compensation.reason)) {
     throw new Error("Compensation requires currency, effective date, and approval reason.");
@@ -36,7 +37,9 @@ export async function finalizeEmployeeProvisioning(
   const [department, position, manager] = await Promise.all([
     tx.hrDepartment.findFirstOrThrow({ where: { id: payload.assignment!.departmentId!, organizationId: input.organizationId, status: "ACTIVE" } }),
     tx.hrPosition.findFirstOrThrow({ where: { id: payload.assignment!.positionId!, organizationId: input.organizationId, status: "ACTIVE", lifecycleStatus: { in: ["OPEN", "PARTIALLY_FILLED"] } } }),
-    tx.hrEmployee.findFirstOrThrow({ where: { id: payload.assignment!.primaryManagerId!, organizationId: input.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } }, include: { user: true } }),
+    payload.assignment?.primaryManagerId
+      ? tx.hrEmployee.findFirstOrThrow({ where: { id: payload.assignment.primaryManagerId, organizationId: input.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } }, include: { user: true } })
+      : Promise.resolve(null),
   ]);
   if (position.departmentId !== department.id) throw new Error("The selected position does not belong to the selected department.");
   if (payload.assignment?.teamId && position.teamId !== payload.assignment.teamId) throw new Error("The selected position does not belong to the selected team.");
@@ -67,7 +70,7 @@ export async function finalizeEmployeeProvisioning(
     reason: payload.assignment!.reason!, createdById: input.actorUserId,
   } });
   await reconcilePositionOccupancy(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole }, position.id);
-  await tx.hrSupervisorAssignment.create({ data: {
+  if (manager) await tx.hrSupervisorAssignment.create({ data: {
     organizationId: input.organizationId, supervisorEmployeeId: manager.id, assignedEmployeeId: employee.id,
     assignmentType: "DIRECT_REPORT", effectiveFrom: new Date(payload.assignment!.effectiveFrom!), reason: payload.assignment!.reason!,
     capabilities: ["supervisor.read_team", "supervisor.review_assigned"], assignedByUserId: input.actorUserId,
@@ -114,7 +117,7 @@ export async function finalizeEmployeeProvisioning(
         organizationId: input.organizationId, templateTaskKey: task.key, title: task.title, description: task.description,
         ownerType: task.ownerType, dueAt: dueDate(startDate, task.dueOffsetDays), required: task.required,
         instructions: task.instructions, predecessorKeys: task.predecessorKeys, status: task.predecessorKeys.length ? "BLOCKED" : "PENDING",
-        assignedUserId: task.ownerType === "SUPERVISOR" ? manager.userId : null,
+        assignedUserId: task.ownerType === "SUPERVISOR" ? manager?.userId ?? null : null,
       })) },
     } });
   }

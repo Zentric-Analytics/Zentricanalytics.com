@@ -45,7 +45,8 @@ export async function submitProvisioningDraftAction(formData: FormData) {
   const auth = await requirePermission("employee.create");
   const draftId = z.string().cuid().parse(formData.get("draftId"));
   const draft = await prisma.hrEmployeeProvisioningDraft.findFirstOrThrow({ where: { id: draftId, organizationId: auth.user.organizationId, status: "DRAFT" } });
-  const readiness = provisioningReadiness(provisioningPayloadSchema.parse(draft.payload));
+  const existingEmployeeCount = await prisma.hrEmployee.count({ where: { organizationId: auth.user.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } } });
+  const readiness = provisioningReadiness(provisioningPayloadSchema.parse(draft.payload), { requireManager: existingEmployeeCount > 0 });
   if (readiness.blocking.length) throw new Error(`Complete required readiness items: ${readiness.blocking.map(({ label }) => label).join(", ")}.`);
   await prisma.$transaction(async (tx) => {
     await tx.hrEmployeeProvisioningDraft.update({ where: { id: draft.id }, data: { status: "PENDING_APPROVAL", submittedAt: new Date(), readinessScore: readiness.score, updatedById: auth.user.id } });

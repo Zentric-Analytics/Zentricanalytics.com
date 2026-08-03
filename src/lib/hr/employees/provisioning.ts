@@ -69,12 +69,13 @@ export const provisioningPayloadSchema = z.object({
 
 export type ProvisioningPayload = z.infer<typeof provisioningPayloadSchema>;
 
-export function provisioningReadiness(payload: ProvisioningPayload) {
+export function provisioningReadiness(payload: ProvisioningPayload, options: { requireManager?: boolean } = {}) {
+  const requireManager = options.requireManager ?? true;
   const checks = [
     { key: "personal", label: "Personal profile complete", ready: Boolean(payload.personal?.legalFirstName && payload.personal?.lastName && payload.personal?.personalEmail) },
     { key: "employment", label: "Employment dates complete", ready: Boolean(payload.employment?.hireDate && payload.employment?.startDate && payload.employment?.employmentType) },
     { key: "assignment", label: "Assignment complete", ready: Boolean(payload.assignment?.departmentId && payload.assignment?.positionId && payload.assignment?.effectiveFrom && payload.assignment?.reason) },
-    { key: "manager", label: "Manager assigned", ready: Boolean(payload.assignment?.primaryManagerId) },
+    { key: "manager", label: requireManager ? "Manager assigned" : "Manager not required for the first employee", ready: !requireManager || Boolean(payload.assignment?.primaryManagerId) },
     { key: "compensation", label: "Compensation complete", ready: Boolean(payload.compensation?.baseSalary && payload.compensation?.currency && payload.compensation?.effectiveFrom && payload.compensation?.reason) },
     { key: "payroll", label: "Payroll account complete", ready: Boolean(payload.payroll?.bankName && payload.payroll?.accountName && payload.payroll?.accountNumber && payload.payroll?.taxCountry) },
     { key: "access", label: "User access configured", ready: !payload.access?.createUser || Boolean(payload.access.email && payload.access.role) },

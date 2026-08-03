@@ -12,7 +12,6 @@ export default async function NewEmployeePage({ searchParams }: { searchParams: 
   const draft = drafts.find(({ id }) => id === params.draft);
   if (!draft) throw new Error("Provisioning draft is unavailable.");
   const payload = provisioningPayloadSchema.parse(draft.payload);
-  const readiness = provisioningReadiness(payload);
   const [departments, teams, positions, managers, templates] = await Promise.all([
     prisma.hrDepartment.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, orderBy: { name: "asc" } }),
     prisma.hrTeam.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, include: { department: true }, orderBy: { name: "asc" } }),
@@ -20,6 +19,7 @@ export default async function NewEmployeePage({ searchParams }: { searchParams: 
     prisma.hrEmployee.findMany({ where: { organizationId: auth.user.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } }, orderBy: [{ lastName: "asc" }] }),
     prisma.hrLifecycleTemplate.findMany({ where: { organizationId: auth.user.organizationId, type: "ONBOARDING", active: true }, orderBy: [{ name: "asc" }, { version: "desc" }] }),
   ]);
+  const readiness = provisioningReadiness(payload, { requireManager: managers.length > 0 });
   return <EmployeeProvisioningWizard draft={{ id: draft.id, status: draft.status, createdById: draft.createdById }} payload={payload} step={Math.min(8, Math.max(1, Number(params.step) || draft.currentStep))} score={readiness.score} checks={readiness.checks} actorId={auth.user.id}
     departments={departments.map(item => ({ id: item.id, label: item.name }))} teams={teams.map(item => ({ id: item.id, label: `${item.department.name} · ${item.name}` }))} positions={positions.map(item => ({ id: item.id, label: `${item.department.name} · ${item.title}` }))} managers={managers.map(item => ({ id: item.id, label: `${item.legalFirstName} ${item.lastName}` }))} templates={templates.map(item => ({ id: item.id, label: `${item.name} v${item.version}` }))} />;
 }
