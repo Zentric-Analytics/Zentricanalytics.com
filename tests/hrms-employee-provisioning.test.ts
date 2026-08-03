@@ -16,6 +16,10 @@ describe("employee provisioning workflow", () => {
   it("calculates complete readiness", () => expect(provisioningReadiness(provisioningPayloadSchema.parse(complete))).toMatchObject({ score: 100, blocking: [] }));
   it("blocks activation without an assignment", () => expect(provisioningReadiness(provisioningPayloadSchema.parse({ ...complete, assignment: {} })).blocking.map(item => item.key)).toContain("assignment"));
   it("blocks activation without a manager", () => expect(provisioningReadiness(provisioningPayloadSchema.parse({ ...complete, assignment: { ...complete.assignment, primaryManagerId: undefined } })).blocking.map(item => item.key)).toContain("manager"));
+  it("allows the first employee to omit a manager when explicitly authorized by organization state", () => {
+    const payload = provisioningPayloadSchema.parse({ ...complete, assignment: { ...complete.assignment, primaryManagerId: undefined } });
+    expect(provisioningReadiness(payload, { requireManager: false })).toMatchObject({ blocking: [] });
+  });
   it("does not require an account when account creation is disabled", () => expect(provisioningReadiness(provisioningPayloadSchema.parse({ ...complete, access: { createUser: false } })).checks.find(item => item.key === "access")?.ready).toBe(true));
   it("requires a template when onboarding is enabled", () => expect(provisioningReadiness(provisioningPayloadSchema.parse({ ...complete, onboarding: { start: true } })).checks.find(item => item.key === "onboarding")?.ready).toBe(false));
   it("merges a saved step without losing earlier sections", () => {
