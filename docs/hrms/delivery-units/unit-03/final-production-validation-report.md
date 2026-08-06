@@ -32,7 +32,7 @@
 ## Phase 3 - final production smoke tests
 
 - Worker authentication: unauthenticated outbox invocation `401`; authenticated invocation `200`
-- Worker execution: authenticated outbox worker completed successfully
+- Worker execution: authenticated outbox worker completed successfully; read-only 2026-08-06 reconciliation found 12 delivered outbox records and 12 delivered attempts, with no pending/failed status represented
 - Email delivery smoke: provider acceptance and authenticated delivery through manual GoDaddy release verified; automatic first-hop passage and automatic Outlook Inbox placement remain unproven and blocking
 - Document upload: production smoke document retained with v1 and v2 metadata
 - Quarantine behavior: exact version remained governed by scan state
@@ -42,12 +42,12 @@
 - SQS DLQ behavior: `zentric-production-hr-document-scan-dlq` is configured as the target DLQ, encrypted with SSE-SQS, and its resource policy permits `sqs:SendMessage` only from the production scan-results rule in AWS account `976090824866`.
 - Exact-version release: v2 `CLEAN`; v1 retained; access log records v2 downloads
 - Authorization boundaries: unauthenticated exact-version download returned `401`
-- Health/readiness: production preflight ready; `/api/health/live`, `/api/health/ready`, and `/hr/login` passed on rerun after one transient `502`
+- Health/readiness: 2026-08-06 production preflight ready; `/api/health/live`, `/api/health/ready`, and `/hr/login` all passed
 - Public website: production homepage returned successfully during release smoke
 - Careers portal: production Careers route returned successfully during release smoke
 - Applicant tracking: public tracking route rendered successfully during release smoke
-- Integrity query checks: representative application, handover, employee, onboarding, document, outbox, and audit checks passed; no release-blocking duplicate/orphan condition recorded
-- Backup verification: `yarn hr:backup-readiness` passed; Render cron `crn-d9n53dp42hec73etr2jg` succeeded nightly through 2026-08-06
+- Integrity query checks: read-only production queries returned zero employee-number duplicates, employee-user duplicates, handover orphans, conversion-handover orphans, conversion-employee orphans, lifecycle-employee orphans, duplicate outbox provider IDs, empty audit correlations, and duplicate document-review versions
+- Backup verification: `yarn hr:backup-readiness` passed; Render cron `crn-d9n53dp42hec73etr2jg` runs `yarn hr:database-archive` at 03:00 UTC and succeeded nightly through 2026-08-06
 
 ## Gate controls and release safety
 
@@ -61,12 +61,17 @@
 - Final production deployment ID: `dep-d9nu7j8u01pc73c9pdgg`
 - Final production commit SHA: `657ab18de80d5ce2cbf945806f52b6e99f2e5e99`
 - Migration status (`yarn prisma migrate status`): 30 migrations found; database schema up to date
+- Automated validation: 108/108 suites and 530/530 tests passed; TypeScript, ESLint, Prisma client generation, and optimized production build passed
 - Email evidence record: [metadata-only GoDaddy support package](godaddy-metadata-only-support-package.md)
 - Worker evidence record: unauthenticated outbox invocation `401`; authenticated invocation `200`; governed worker completed successfully
 - Scanner evidence record: API destination `zentric-production-hr-document-scan` is Active and Authorized, uses HTTPS `POST` to the production callback, and stores API-key connection material in AWS Secrets Manager. Rule `zentric-production-hr-document-scan-results` is Enabled and matches only GuardDuty S3-object scan results for bucket `zentric-production-hr-documents-976090824866-us-east-2` under `quarantine/`. GuardDuty Malware Protection for S3 is Active for exactly that one bucket and one prefix.
 - Backup evidence record: backup-readiness passed; protected nightly archive cron succeeded through 2026-08-06; isolated restore and annual DR evidence remain recorded in the production recovery runbooks
 - Audit evidence record: password reset, successful login, document scan completion, exact-version access, and worker execution correlations verified without storing secrets in this report
 - Final verdict: FAIL pending safe GoDaddy authenticated-sender handling. AWS callback, scope, retry, and DLQ configuration gates pass.
+
+## Non-blocking operational risk
+
+- Render recorded one production instance OOM at the 512 MB service limit on 2026-08-06 at 07:16 PDT and automatic recovery at 07:17 PDT. Health, readiness, preflight, migrations, and integrity checks passed afterward. This does not change the email-blocked verdict, but memory usage must be monitored and profiled; repeat OOM events require a capacity decision before the release can be called operationally stable.
 
 ## Approved response paths
 

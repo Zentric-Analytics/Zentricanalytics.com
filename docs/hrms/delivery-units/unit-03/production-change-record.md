@@ -62,6 +62,8 @@ Record final evidence in the [final production validation report](final-producti
 
 **External vendor false-positive:** GoDaddy Advanced Email Security quarantines fully authenticated HRMS transactional mail before custom filters can evaluate it. SPF, DKIM, and DMARC pass and align; Microsoft 365 delivers a manually released message after Enhanced Filtering, but automatic Inbox delivery remains unproven. No broad allowlist, spam-confidence bypass, speculative DNS change, or additional reset send is authorized while the provider case is pending.
 
+Read-only revalidation on 2026-08-06 confirmed the deployed SHA, 30 applied migrations, ready preflight, live/ready/login health checks, current backup evidence, active narrowly scoped GuardDuty/EventBridge/SQS configuration, and zero results across the recorded duplicate/orphan integrity checks. The same review recorded one 512 MB Render OOM restart followed by automatic recovery one minute later; retain enhanced memory monitoring.
+
 ## Stop conditions
 
 Stop before or during release for a migration failure, persistent readiness failure, destructive or unresolved data risk, data corruption, authorization or tenant-isolation leak, document exposure, broken MFA/login, worker duplication, duplicate employee/application creation, critical email misrouting, backup/PITR discontinuity or unacceptable production error rate.
