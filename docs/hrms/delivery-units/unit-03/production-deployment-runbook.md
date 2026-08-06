@@ -28,9 +28,52 @@ All secret values must be independently generated for production and stored in t
 - `EMAIL_PROVIDER=resend`, production `RESEND_API_KEY`, and the intent-based sender variables `EMAIL_FROM_CAREERS`, `EMAIL_FROM_OFFERS`, `EMAIL_FROM_HR`, and `EMAIL_FROM_ACCOUNTS`.
 - Configure Reply-To independently with `EMAIL_REPLY_TO_CAREERS`, `EMAIL_REPLY_TO_OFFERS`, `EMAIL_REPLY_TO_HR`, and `EMAIL_REPLY_TO_ACCOUNTS`; use the support mailbox for account-security replies where appropriate.
 - Every registered template must map to one sender category. Unknown or unmapped templates fail closed and must not be retried until configuration or code is corrected.
+- `accounts@zentricanalytics.com`, `offers@zentricanalytics.com`, `careers@zentricanalytics.com`, and `hr@zentricanalytics.com` are aliases of `admin@zentricanalytics.com` and must be treated as authenticated sender identities only, not independent application accounts.
 - Verify the sending domain with the provider. Publish and validate SPF and DKIM; publish a DMARC policy with monitored aggregate reporting before enforcement is increased.
 - Configure a custom return-path/bounce domain where supported, provider webhooks, suppression handling and operational ownership for bounces/complaints.
 - Confirm all CTA origins are the HTTPS production origin and send the registered template set to approved test mailboxes before opening access.
+- Enforce sender anti-spoof posture as follows:
+  - Sender identities and allowed Reply-To are fixed by template category:
+    - `recruitment` -> `Zentric Careers <careers@zentricanalytics.com>`
+    - `offers` -> `Zentric Offers <offers@zentricanalytics.com>`
+    - `hr` -> `Zentric HR <hr@zentricanalytics.com>`
+    - `account-security` -> `Zentric Account Security <accounts@zentricanalytics.com>`
+  - `hr-account-invitation`, `hr-password-reset`, `hr-mfa-enrollment`, and `hr-employee-activated` must never send from recruitment/offers/HR sender addresses.
+  - `EMAIL_FROM_*` overrides must stay in `@zentricanalytics.com` and only change the local-part for operational routing.
+- For detailed anti-spoof and provider-control procedure, use the [production email deliverability runbook](production-email-deliverability-runbook.md).
+
+#### GoDaddy Advanced Email Security + M365 quarantine trust baseline
+
+- Do not create allowlist rules for all `@zentricanalytics.com` traffic.
+- Create narrowly scoped GoDaddy rules only for the approved HRMS sender identities:
+  - `careers@zentricanalytics.com`
+  - `offers@zentricanalytics.com`
+  - `hr@zentricanalytics.com`
+  - `accounts@zentricanalytics.com`
+- Required checks for these rules:
+  - SPF pass
+  - DKIM pass
+  - DMARC pass/alignment
+  - authenticated return-path/domain alignment to the approved Resend infrastructure (`send.zentricanalytics.com`) where supported
+- Reject (quarantine/reject) when any of SPF, DKIM, or DMARC fails.
+- Never bypass malware or attachment scanning; never bypass anti-malware outcomes.
+- Retain quarantine and release workflows as auditable process:
+  - capture inbound recipient, subject, sender, reason code, and timestamp on quarantine
+  - record manual release actor and release reason
+  - review release list at least daily during the first 48 hours after promotion
+- Exchange Online mail-flow requirements:
+  - add one narrowly scoped transport rule for approved sender identities only
+  - require DMARC alignment and expected delivery infrastructure before delivery
+  - preserve normal anti-malware, anti-spam, attachment, and anti-phishing protections
+  - never apply blanket spam-confidence bypass for the whole domain
+- Verify weekly for every production release candidate:
+  - GoDaddy rule evaluation reason summary (allow/deny/quarantine)
+  - Message Trace outcome
+  - Junk and quarantine placement
+  - Message delivered to inbox of approved destination mailbox (not just upstream acceptance)
+  - bounce/complaint/suppression/deduplication logs
+  - outbound alias routing and connector status
+- Any recipient receiving accepted-but-misplaced (junk-only) message is treated as a delivery-control defect and is blocking until corrected.
 
 ### Internal workers and monitoring secrets
 
@@ -95,7 +138,7 @@ Stop promotion on any failure.
 9. Confirm dashboards, metrics, logs and alerts are receiving data without sensitive payloads.
 10. Record results, operator, timestamps and correlation IDs in the change record.
 
-## 24–48 hour monitoring checklist
+## 24-48 hour monitoring checklist
 
 - At deployment, +15 minutes, +1 hour, +4 hours, +24 hours and +48 hours review liveness/readiness, HTTP 5xx/4xx changes, p50/p95 latency, CPU/memory, connection-pool pressure and database locks.
 - Review failed logins, MFA failures, password-reset/invitation failures and authorization-denial anomalies against baseline.

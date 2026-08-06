@@ -42,6 +42,9 @@ const senderByCategory = {
   hr: { from: "Zentric HR <hr@zentricanalytics.com>", replyTo: "hr@zentricanalytics.com" },
   "account-security": { from: "Zentric Account Security <accounts@zentricanalytics.com>", replyTo: "support@zentricanalytics.com" },
 } as const;
+const registeredTemplateEntries = Object.entries(expected).flatMap(([category, templates]) =>
+  templates.map((template) => [template, category] as const),
+);
 
 describe("intent-based email sender registry", () => {
   afterEach(() => {
@@ -56,16 +59,12 @@ describe("intent-based email sender registry", () => {
   });
 
   it("assigns every registered template to exactly one sender category", () => {
-    const flattened = Object.entries(expected).flatMap(([category, templates]) =>
-      templates.map((template) => [template, category]),
-    );
+    const flattened = registeredTemplateEntries;
     expect(new Set(flattened.map(([template]) => template))).toHaveLength(flattened.length);
     expect(emailTemplateSenderRegistry).toEqual(Object.fromEntries(flattened));
   });
 
-  it.each(Object.entries(expected).flatMap(([category, templates]) =>
-    templates.map((template) => [template, category] as const),
-  ))("maps %s to %s with the correct display name and Reply-To", (template, category) => {
+  it.each(registeredTemplateEntries)("maps %s to %s with the correct display name and Reply-To", (template, category) => {
     const sender = resolveEmailSender(template);
     const expectedSender = senderByCategory[category as keyof typeof senderByCategory];
     expect(sender.category).toBe(category);
@@ -73,11 +72,37 @@ describe("intent-based email sender registry", () => {
     expect(sender.replyTo).toBe(expectedSender.replyTo);
   });
 
-  it("keeps password resets out of Careers and offers out of Account Security", () => {
+  it("keeps security templates out of recruitment and offers out of security categories", () => {
     expect(resolveEmailSender("hr-password-reset").from).toBe("Zentric Account Security <accounts@zentricanalytics.com>");
     expect(resolveEmailSender("hr-password-reset").from).not.toContain("careers@");
     expect(resolveEmailSender("hr-offer-issued").from).toBe("Zentric Offers <offers@zentricanalytics.com>");
     expect(resolveEmailSender("hr-offer-issued").from).not.toContain("accounts@");
+    expect(resolveEmailSender("hr-offer-issued").from).not.toContain("support@");
+    expect(resolveEmailSender("hr-account-invitation").from).toBe("Zentric Account Security <accounts@zentricanalytics.com>");
+    expect(resolveEmailSender("hr-account-invitation").from).not.toContain("careers@");
+  });
+
+  it("hard-enforces complete security and offer sender boundaries", () => {
+    const accountSecurityTemplates = expected["account-security"];
+    const offerTemplates = expected.offers;
+
+    accountSecurityTemplates.forEach((template) => {
+      const from = resolveEmailSender(template).from;
+      expect(from).toContain("Account Security");
+      expect(from).toContain("accounts@zentricanalytics.com");
+      expect(from).not.toContain("careers@");
+      expect(from).not.toContain("offers@");
+      expect(from).not.toContain("hr@");
+    });
+
+    offerTemplates.forEach((template) => {
+      const from = resolveEmailSender(template).from;
+      expect(from).toContain("Offers");
+      expect(from).toContain("offers@zentricanalytics.com");
+      expect(from).not.toContain("accounts@");
+      expect(from).not.toContain("careers@");
+      expect(from).not.toContain("hr@");
+    });
   });
 
   it("supports separately configured Reply-To addresses", () => {
@@ -86,6 +111,23 @@ describe("intent-based email sender registry", () => {
       address: "offers@zentricanalytics.com",
       replyTo: "support@zentricanalytics.com",
     });
+  });
+
+  it("enforces approved sender domain and configured reply-to domain for all templates", () => {
+    const senderTemplates = {
+      recruitment: new Set(expected.recruitment),
+      offers: new Set(expected.offers),
+      hr: new Set(expected.hr),
+      "account-security": new Set(expected["account-security"]),
+    };
+
+    for (const [template] of Object.entries(emailTemplateSenderRegistry)) {
+      const { address, replyTo, category } = resolveEmailSender(template);
+      expect(address).toMatch(/^[^@\s]+@zentricanalytics\.com$/);
+      expect(replyTo).toMatch(/^[^@\s]+@zentricanalytics\.com$/);
+      expect(senderTemplates[category]).toContain(template);
+      expect(address).not.toContain(" ");
+    }
   });
 
   it("fails closed for unknown templates and untrusted From domains", () => {

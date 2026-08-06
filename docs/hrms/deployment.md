@@ -76,3 +76,7 @@ Exit code 0 means the declared environment is ready. Output never includes secre
 ## Rollback
 
 Back up before migration. Roll back application code first and leave additive tables/history intact. Never delete audit, payroll, workflow, document or identity history as a rollback shortcut. Use the disaster-recovery runbook for data restoration.
+
+## Operations handbook
+
+Use the [Operations Handbook index](operations-handbook-index.md) for the complete Unit 1–3 production runbook set (deployment, email, storage, workers, backup, DR, monitoring, and security).
