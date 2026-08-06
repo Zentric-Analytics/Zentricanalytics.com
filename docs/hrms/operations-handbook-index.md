@@ -15,7 +15,7 @@ Units 1-3 production operations and runbooks, with only production-safe, non-imp
 
 - [Production email deliverability runbook](delivery-units/unit-03/production-email-deliverability-runbook.md)
 - [Notification model and intent handling](notification-model.md)
-- [Secure sender registry tests](../tests/email-sender-registry.test.ts) *(local regression tests)*
+- [Secure sender registry tests](../../tests/email-sender-registry.test.ts) *(local regression tests)*
 
 ## Backup, recovery, and continuity
 
