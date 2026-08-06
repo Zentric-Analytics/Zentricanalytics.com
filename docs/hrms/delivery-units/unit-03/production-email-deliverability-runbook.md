@@ -82,6 +82,17 @@ Validation checklist:
 - Quarantine events are reviewed before release.
 - Any message accepted by upstream but placed in spam/junk is treated as control failure until message-placement issue is resolved.
 
+### Quarantine lookup and controlled release
+
+1. In GoDaddy Advanced Email Security, open **Log Search** and select inbound mail.
+2. Search by the approved recipient domain, sender identity, redacted subject, and narrow timestamp window. Do not search with or expose the reset token or URL.
+3. Open **Detail**, not the private message body, and record the GoDaddy message ID/MRID, envelope sender, sending IP, SPF/DKIM/DMARC results, alignment, classification, size, and attachment presence.
+4. Confirm the visible sender is one of the four registered HRMS senders, the Return-Path is the approved `send.zentricanalytics.com` path, authentication passes, there is no unexpected attachment, and the CTA uses the canonical HTTPS production origin.
+5. If any condition fails, keep the message quarantined and escalate as a security event.
+6. If every condition passes and the message correlates to one expected HRMS outbox/provider ID, use **Release from quarantine**. Do not select an address/domain-wide approval action.
+7. Record the release actor, reason, message IDs, and time in restricted operational evidence.
+8. Verify Microsoft 365 Message Trace and the final Outlook folder. A GoDaddy release alone is not delivery evidence.
+
 ## Microsoft 365 / Exchange Online
 
 1. When GoDaddy Advanced Email Security is the third-party filter in front of
@@ -135,10 +146,13 @@ Validation checklist:
 
 ## Monitoring and release checklist
 
-- Alert on:
-  - quarantine spikes,
-  - bounce/complaint/suppression rate changes,
-  - repeated junk placement of approved HRMS messages.
+- Until GoDaddy supplies a safe event/API integration, the accepted-risk monitoring control is a documented provider-console review rather than a fabricated automated alert:
+  - review GoDaddy quarantine at least every four hours during business operations and at the start/end of each release window;
+  - escalate immediately when any approved HRMS sender is quarantined, two or more HRMS messages are quarantined in one hour, or a released message does not appear in Microsoft 365 Message Trace;
+  - review Resend bounces, complaints, and suppressions at least daily; escalate on any complaint, any new suppression of an approved operational recipient, or a bounce-rate increase above the established daily baseline;
+  - review Microsoft 365 Message Trace, Quarantine, and repeated Junk placement for approved HRMS messages daily;
+  - correlate provider message ID, GoDaddy ID/MRID, M365 trace, outbox ID, final disposition, and remediation action without storing private bodies or tokens.
+- Configure automated provider notifications/webhooks only when a reviewed authenticated endpoint exists. Until then, do not claim automated quarantine/bounce/complaint/suppression alerting is configured.
 - Add end-to-end mailbox-delivery verification to production release smoke:
   - provider response ID,
   - message trace ID and result,

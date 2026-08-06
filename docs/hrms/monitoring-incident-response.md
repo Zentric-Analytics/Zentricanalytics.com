@@ -16,6 +16,14 @@ Recommended alerts:
 - workflow/lifecycle overdue counts rise continuously;
 - backup/PITR or restore-test evidence expires.
 
+Accepted-risk email monitoring for the Units 1-3 conditional baseline:
+
+- GoDaddy quarantine is reviewed at least every four operating hours and at release-window boundaries until the vendor false-positive is remediated.
+- Any authenticated HRMS quarantine, any complaint, any new suppression of an approved operational recipient, or a released message missing from Microsoft 365 Message Trace is escalated immediately.
+- Resend bounce, complaint, and suppression dashboards are reviewed daily; Microsoft 365 Message Trace, Quarantine, and repeated Junk placement are reviewed daily.
+- This manual provider-console control is temporary. It does not claim an automated GoDaddy event feed exists and must be replaced with a reviewed authenticated integration if the provider makes one available.
+- Preserve only message identifiers, timestamps, dispositions, authentication results, and correlation IDs. Never copy reset URLs/tokens or private message bodies into monitoring records.
+
 Never place request bodies, tokens, bank data, salaries, identity data, document content or raw workflow context in logs or alert payloads.
 
 ## Incident flow

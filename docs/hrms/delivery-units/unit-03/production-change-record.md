@@ -5,6 +5,7 @@
 - Release: HRMS Units 1–3 production integration
 - Frozen release tag: `hrms-unit-03-v1.0.0`
 - Frozen tag target: `558b5217eae01d6009383e4b41f782401fe471dd`
+- Conditional production baseline tag: `hrms-unit-03-v1.0.1` (annotated tag created after the accepted-risk evidence commit)
 - Approved Unit 3 feature baseline: `c522e02cee50d876d6b63761ce9606aa2c593626`
 - Current production branch: `main`
 - Current production commit: `657ab18de80d5ce2cbf945806f52b6e99f2e5e99`
@@ -63,6 +64,10 @@ Record final evidence in the [final production validation report](final-producti
 **External vendor false-positive:** GoDaddy Advanced Email Security quarantines fully authenticated HRMS transactional mail before custom filters can evaluate it. SPF, DKIM, and DMARC pass and align; Microsoft 365 delivers a manually released message after Enhanced Filtering, but automatic Inbox delivery remains unproven. No broad allowlist, spam-confidence bypass, speculative DNS change, or additional reset send is authorized while the provider case is pending.
 
 Read-only revalidation on 2026-08-06 confirmed the deployed SHA, 30 applied migrations, ready preflight, live/ready/login health checks, current backup evidence, active narrowly scoped GuardDuty/EventBridge/SQS configuration, and zero results across the recorded duplicate/orphan integrity checks. The same review recorded one 512 MB Render OOM restart followed by automatic recovery one minute later; retain enhanced memory monitoring.
+
+## Accepted conditional release decision
+
+On 2026-08-06 the product owner accepted the temporary operational risk of manual GoDaddy quarantine review/release and authorized the verdict **CONDITIONAL PASS — Production Ready with Accepted Email Deliverability Risk**. The email trust gate remains unpassed; automatic GoDaddy-to-Outlook Inbox placement is not proven. The exception is recorded in [conditional-email-risk-acceptance.md](conditional-email-risk-acceptance.md) and does not permit a broad security bypass.
 
 ## Stop conditions
 

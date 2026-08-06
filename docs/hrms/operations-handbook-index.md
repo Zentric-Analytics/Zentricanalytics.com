@@ -14,6 +14,8 @@ Units 1-3 production operations and runbooks, with only production-safe, non-imp
 ## Email and communications
 
 - [Production email deliverability runbook](delivery-units/unit-03/production-email-deliverability-runbook.md)
+- [Conditional email-risk acceptance](delivery-units/unit-03/conditional-email-risk-acceptance.md)
+- [Metadata-only GoDaddy support package](delivery-units/unit-03/godaddy-metadata-only-support-package.md)
 - [Notification model and intent handling](notification-model.md)
 - [Secure sender registry tests](../../tests/email-sender-registry.test.ts) *(local regression tests)*
 

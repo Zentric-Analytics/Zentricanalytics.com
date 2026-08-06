@@ -4,8 +4,9 @@
 
 - Production commit: `657ab18de80d5ce2cbf945806f52b6e99f2e5e99`
 - Production deployment: `dep-d9nu7j8u01pc73c9pdgg`
+- Conditional baseline tag: `hrms-unit-03-v1.0.1`
 - Merge base: `main`
-- Feature freeze status: Units 1-3 frozen
+- Feature freeze status: Units 1-3 frozen at the conditional production baseline; only release-blocking fixes are permitted
 - Migration state: 30 migrations found; database schema up to date
 
 ## Phase 1 - production email validation
@@ -16,7 +17,7 @@
 - DKIM: pass
 - DMARC: pass
 - GoDaddy Advanced Email Security disposition: authenticated messages still classified as Spam / Domain Spoofing and quarantined; manual release required. The address-only allow list and the domain-level SPF/DKIM/DMARC exception lists were rejected as unsafe. Enabled filter `authenticated-resend` (`7905673`) remains at `0 email(s)` usage because the filter surface cannot safely predicate on GoDaddy's computed authentication verdict before the proprietary anti-spoof decision.
-- Blocking classification: **External vendor false-positive: GoDaddy Advanced Email Security quarantines fully authenticated HRMS transactional mail before custom filters can evaluate it.**
+- Accepted exception: **External vendor false-positive: GoDaddy Advanced Email Security quarantines fully authenticated HRMS transactional mail before custom filters can evaluate it.** The product owner accepts temporary manual quarantine review/release while the vendor escalation remains open. This is an operational-risk acceptance, not a passed email trust gate.
 - Microsoft 365 Message Trace: after Enhanced Filtering was enabled and the SCL `-1` rule disabled, the released validation message was `Delivered`.
 - Final Inbox placement: visible in Outlook Inbox; no Microsoft quarantine release was required after the connector fix.
 - Evidence timestamp: 2026-08-06
@@ -33,7 +34,7 @@
 
 - Worker authentication: unauthenticated outbox invocation `401`; authenticated invocation `200`
 - Worker execution: authenticated outbox worker completed successfully; read-only 2026-08-06 reconciliation found 12 delivered outbox records and 12 delivered attempts, with no pending/failed status represented
-- Email delivery smoke: provider acceptance and authenticated delivery through manual GoDaddy release verified; automatic first-hop passage and automatic Outlook Inbox placement remain unproven and blocking
+- Email delivery smoke: sender registry, message generation, Resend acceptance, SPF, DKIM, and DMARC passed. Authenticated delivery through manual GoDaddy release was verified. Automatic GoDaddy-to-Outlook Inbox placement remains unproven under an explicitly accepted temporary operational exception.
 - Document upload: production smoke document retained with v1 and v2 metadata
 - Quarantine behavior: exact version remained governed by scan state
 - GuardDuty scan: audit action `hr.document.scan.completed` for version `cmscjgi4k002zi22uu0qhu77v`
@@ -53,7 +54,7 @@
 
 - Document intake closed before callback:
 - Scanner callback success before intake reopen:
-- Any blocker encountered: GoDaddy first-hop quarantine remains blocking. A metadata-only provider escalation is pending. If GoDaddy requires the original message, obtain separate approval and invalidate or confirm expiry of the reset token before submitting only the expired diagnostic message. AWS scanner wiring inspection completed successfully on 2026-08-06.
+- Accepted release exception: GoDaddy first-hop quarantine remains unresolved and the metadata-only provider escalation remains open. This exception does not authorize broad security bypasses. If GoDaddy requires the original message, obtain separate approval and invalidate or confirm expiry of the reset token before submitting only the expired diagnostic message. AWS scanner wiring inspection completed successfully on 2026-08-06.
 - Rollback status:
 
 ## Final production state
@@ -67,7 +68,7 @@
 - Scanner evidence record: API destination `zentric-production-hr-document-scan` is Active and Authorized, uses HTTPS `POST` to the production callback, and stores API-key connection material in AWS Secrets Manager. Rule `zentric-production-hr-document-scan-results` is Enabled and matches only GuardDuty S3-object scan results for bucket `zentric-production-hr-documents-976090824866-us-east-2` under `quarantine/`. GuardDuty Malware Protection for S3 is Active for exactly that one bucket and one prefix.
 - Backup evidence record: backup-readiness passed; protected nightly archive cron succeeded through 2026-08-06; isolated restore and annual DR evidence remain recorded in the production recovery runbooks
 - Audit evidence record: password reset, successful login, document scan completion, exact-version access, and worker execution correlations verified without storing secrets in this report
-- Final verdict: FAIL pending safe GoDaddy authenticated-sender handling. AWS callback, scope, retry, and DLQ configuration gates pass.
+- Final verdict: **CONDITIONAL PASS — Production Ready with Accepted Email Deliverability Risk.** The email trust gate did not pass: automatic GoDaddy-to-Outlook Inbox placement remains unproven. All recorded non-email production gates passed and the owner explicitly accepted the temporary manual quarantine risk pending vendor remediation.
 
 ## Non-blocking operational risk
 
