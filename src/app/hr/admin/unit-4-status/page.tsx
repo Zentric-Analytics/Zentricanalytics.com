@@ -4,7 +4,7 @@ const deploymentStatus = isRenderStaging
   ? `Live staging candidate ${deployedHead}`
   : "Local validation candidate; not a staging deployment";
 const migrationStatus = isRenderStaging
-  ? "32 migrations applied; Unit 4 workforce foundation and employment lifecycles current"
+  ? "33 migrations applied; Unit 4 workforce foundation, employment lifecycles, and document release invariant current"
   : "Two additive Unit 4 migrations prepared; verify against staging before release";
 
 const statusItems = [
@@ -14,11 +14,11 @@ const statusItems = [
   ["HEAD SHA", deployedHead],
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "562/562 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
-  ["Browser workflow", "Authenticated staging lifecycle: employee profile through rehire"],
-  ["Defects found", "A stale manual apply submitted after the effective-date worker had already won returned an error page"],
-  ["Fixes applied", "Completed event retries are idempotent; active execution claims and invalid states still fail closed"],
-  ["Next release gate", "Browser lifecycle, real concurrency, worker recovery, security, email, and restore"],
+  ["Test totals", "564/564 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
+  ["Browser workflow", "Scheduled separation approved; offboarding completed with employee, account, assignment, and access retained before effective date"],
+  ["Defects found", "Offboarding checklist completion could terminate employment before the scheduled effective date"],
+  ["Fixes applied", "Terminal employment, assignment, account, and access effects are deferred to the exactly-once effective-dated worker"],
+  ["Next release gate", "Effective-date worker application, exactly-once evidence, rehire, concurrency, recovery, security, email, and restore"],
 ] as const;
 
 export default function Unit4StatusPage() {
