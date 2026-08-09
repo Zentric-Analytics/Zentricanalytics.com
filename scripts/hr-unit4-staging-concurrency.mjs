@@ -34,17 +34,17 @@ try {
     include: { department: true },
   });
 
-  async function createWorkerFixture(label, workMode) {
-    const person = await prisma.hrPerson.create({ data: { organizationId: organization.id, identityKeyHash: crypto.createHash("sha256").update(`${run}:${label}`).digest("hex") } });
-    const employee = await prisma.hrEmployee.create({ data: {
+  async function createWorkerFixture(tx, label, workMode) {
+    const person = await tx.hrPerson.create({ data: { organizationId: organization.id, identityKeyHash: crypto.createHash("sha256").update(`${run}:${label}`).digest("hex") } });
+    const employee = await tx.hrEmployee.create({ data: {
       organizationId: organization.id, personId: person.id, employeeNumber: `U4-${Date.now()}-${label}`,
       legalFirstName: "UnitFour", lastName: label, employmentStatus: "ACTIVE", startDate: now, workMode,
     } });
-    const relationship = await prisma.hrWorkRelationship.create({ data: {
+    const relationship = await tx.hrWorkRelationship.create({ data: {
       organizationId: organization.id, personId: person.id, employeeId: employee.id,
       relationshipRef: `WR-U4-${crypto.randomUUID().slice(0, 8).toUpperCase()}`, status: "ACTIVE", startedAt: now,
     } });
-    const assignment = await prisma.hrEmployeeAssignment.create({ data: {
+    const assignment = await tx.hrEmployeeAssignment.create({ data: {
       organizationId: organization.id, employeeId: employee.id, departmentId: position.departmentId,
       teamId: position.teamId, positionId: position.id, employmentType: "FULL_TIME", effectiveFrom: now,
       status: "ACTIVE", reason: `${run} isolated concurrency fixture`, createdById: initiator.id,
@@ -53,31 +53,34 @@ try {
     return { employee, relationship, assignment };
   }
 
-  const eventFixture = await createWorkerFixture("EventRace", "ONSITE");
-  const event = await prisma.hrWorkforceEvent.create({ data: {
-    organizationId: organization.id, employeeId: eventFixture.employee.id, workRelationshipId: eventFixture.relationship.id,
-    reference: `WFE-U4-${crypto.randomUUID().slice(0, 8).toUpperCase()}`, type: "WORK_MODE_CHANGE", status: "APPROVED",
-    reason: `${run} exactly-once workforce event`, currentSnapshot: { workMode: "ONSITE" }, proposedSnapshot: { workMode: "REMOTE" },
-    requestedEffectiveAt: now, initiatedById: initiator.id, idempotencyKey: `${run}:event`, correlationId: `${run}:event`,
-  } });
+  const { eventFixture, event, separationFixture, lifecycle, separation } = await prisma.$transaction(async (tx) => {
+    const eventFixture = await createWorkerFixture(tx, "EventRace", "ONSITE");
+    const event = await tx.hrWorkforceEvent.create({ data: {
+      organizationId: organization.id, employeeId: eventFixture.employee.id, workRelationshipId: eventFixture.relationship.id,
+      reference: `WFE-U4-${crypto.randomUUID().slice(0, 8).toUpperCase()}`, type: "WORK_ARRANGEMENT_CHANGE", status: "APPROVED",
+      reason: `${run} exactly-once workforce event`, currentSnapshot: { workMode: "ONSITE" }, proposedSnapshot: { workMode: "REMOTE" },
+      requestedEffectiveAt: now, initiatedById: initiator.id, idempotencyKey: `${run}:event`, correlationId: `${run}:event`,
+    } });
 
-  const separationFixture = await createWorkerFixture("SeparationRace", "HYBRID");
-  const lifecycle = await prisma.hrLifecycleInstance.create({ data: {
-    organizationId: organization.id, templateId: template.id, employeeId: separationFixture.employee.id,
-    type: "OFFBOARDING", status: "COMPLETED", effectiveDate: now, reason: `${run} exactly-once separation`,
-    payrollStopDate: now, finalPayrollRequired: true, leaveReconciliation: "Concurrency fixture reconciled",
-    startedAt: now, completedAt: now, finalCommunicationSentAt: now, createdById: initiator.id,
-    tasks: { create: template.tasks.map((task) => ({
-      organizationId: organization.id, templateTaskKey: task.key, title: task.title, description: task.description,
-      ownerType: task.ownerType, dueAt: now, required: task.required, status: "COMPLETED", instructions: task.instructions,
-      predecessorKeys: task.predecessorKeys, completionNotes: `${run} completed prerequisite`, completedAt: now, completedById: initiator.id,
-    })) },
-  } });
-  const separation = await prisma.hrSeparationCase.create({ data: {
-    organizationId: organization.id, employeeId: separationFixture.employee.id, workRelationshipId: separationFixture.relationship.id,
-    type: "OTHER", status: "SCHEDULED", reason: `${run} exactly-once separation`, initiatedById: initiator.id,
-    noticeDate: now, finalWorkingDate: now, approvedById: approver.id, approvedAt: now, correlationId: `${run}:separation`,
-  } });
+    const separationFixture = await createWorkerFixture(tx, "SeparationRace", "HYBRID");
+    const lifecycle = await tx.hrLifecycleInstance.create({ data: {
+      organizationId: organization.id, templateId: template.id, employeeId: separationFixture.employee.id,
+      type: "OFFBOARDING", status: "COMPLETED", effectiveDate: now, reason: `${run} exactly-once separation`,
+      payrollStopDate: now, finalPayrollRequired: true, leaveReconciliation: "Concurrency fixture reconciled",
+      startedAt: now, completedAt: now, finalCommunicationSentAt: now, createdById: initiator.id,
+      tasks: { create: template.tasks.map((task) => ({
+        organizationId: organization.id, templateTaskKey: task.key, title: task.title, description: task.description,
+        ownerType: task.ownerType, dueAt: now, required: task.required, status: "COMPLETED", instructions: task.instructions,
+        predecessorKeys: task.predecessorKeys, completionNotes: `${run} completed prerequisite`, completedAt: now, completedById: initiator.id,
+      })) },
+    } });
+    const separation = await tx.hrSeparationCase.create({ data: {
+      organizationId: organization.id, employeeId: separationFixture.employee.id, workRelationshipId: separationFixture.relationship.id,
+      type: "OTHER", status: "SCHEDULED", reason: `${run} exactly-once separation`, initiatedById: initiator.id,
+      noticeDate: now, finalWorkingDate: now, approvedById: approver.id, approvedAt: now, correlationId: `${run}:separation`,
+    } });
+    return { eventFixture, event, separationFixture, lifecycle, separation };
+  }, { isolationLevel: "Serializable" });
 
   const responses = await Promise.all([invokeWorker(), invokeWorker()]);
   await invokeWorker();
