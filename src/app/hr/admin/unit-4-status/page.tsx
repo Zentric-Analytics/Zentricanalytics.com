@@ -14,10 +14,10 @@ const statusItems = [
   ["HEAD SHA", deployedHead],
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "561/561 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
+  ["Test totals", "562/562 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
   ["Browser workflow", "Authenticated staging lifecycle: employee profile through rehire"],
-  ["Defects found", "Status page retained pre-deployment state after the exact candidate became live"],
-  ["Fixes applied", "Runtime-scoped deployment SHA and staging migration state; governed lifecycle protections"],
+  ["Defects found", "A stale manual apply submitted after the effective-date worker had already won returned an error page"],
+  ["Fixes applied", "Completed event retries are idempotent; active execution claims and invalid states still fail closed"],
   ["Next release gate", "Browser lifecycle, real concurrency, worker recovery, security, email, and restore"],
 ] as const;
 

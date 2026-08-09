@@ -88,4 +88,11 @@ describe("Unit 4 workforce foundation", () => {
     expect(review).toContain('name="subjectEmployeeId" value={event.employeeId}');
     expect(review).toContain("startWorkflowAction");
   });
+
+  it("treats an already-applied worker winner as an idempotent retry", () => {
+    const commands = readFileSync("src/lib/hr/workforce/commands.ts", "utf8");
+    expect(commands).toContain('if (event.status === "APPLIED") return event;');
+    expect(commands).toContain('status: "APPLYING"');
+    expect(commands).toContain("Another worker or administrator already claimed this workforce event.");
+  });
 });

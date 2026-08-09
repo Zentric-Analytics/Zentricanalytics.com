@@ -142,6 +142,7 @@ export async function approveWorkforceEvent(tx: Prisma.TransactionClient, contex
 
 export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context: Context, eventId: string, now = new Date()) {
   const event = await tx.hrWorkforceEvent.findFirstOrThrow({ where: { id: eventId, organizationId: context.organizationId } });
+  if (event.status === "APPLIED") return event;
   if (!["APPROVED", "SCHEDULED", "FAILED"].includes(event.status)) throw new Error(`Workforce event ${event.reference} is not eligible for application.`);
   assertEffectiveDateNotEarly(event.requestedEffectiveAt, now);
   const claim = await tx.hrWorkforceEvent.updateMany({ where: { id: event.id, version: event.version, status: event.status }, data: { status: "APPLYING", failureReason: null, failedAt: null } });
