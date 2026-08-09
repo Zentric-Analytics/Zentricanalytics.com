@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import type { HrWorkforceEventType, Prisma } from "@prisma/client";
 import { appendHrAudit } from "@/lib/hr/audit";
+import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import {
   assertEffectiveDateNotEarly,
   assertEventVersion,
@@ -134,6 +135,9 @@ export async function approveWorkforceEvent(tx: Prisma.TransactionClient, contex
   const result = await tx.hrWorkforceEvent.updateMany({ where: { id: event.id, version: expectedVersion, status: event.status }, data: { status: nextStatus, approvedAt: workflow.completedAt ?? new Date(), scheduledAt: nextStatus === "SCHEDULED" ? new Date() : null } });
   if (result.count !== 1) throw new Error("This workforce event changed while it was being approved.");
   await appendHrAudit(tx, { ...context, entityType: "HrWorkforceEvent", entityId: event.id, action: nextStatus === "SCHEDULED" ? "hr.workforce_event.scheduled" : "hr.workforce_event.approved", previousValues: { status: event.status }, newValues: { status: nextStatus, version: event.version, effectiveAt: event.requestedEffectiveAt }, reason, correlationId: event.correlationId });
+  const employee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: event.employeeId } });
+  const recipient = employee.preferredNotificationEmail ?? employee.companyEmail ?? employee.personalEmail;
+  if (recipient) await enqueueHrEmail(tx, { organizationId: context.organizationId, recipient, template: "hr-workforce-event-approved", subject: "Workforce change approved", payload: { recipientName: employee.preferredName ?? employee.legalFirstName, href: "/hr/employee/profile", workforceEventId: event.id }, idempotencyKey: `workforce-event-approved:${event.id}:v${event.version}` });
 }
 
 export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context: Context, eventId: string, now = new Date()) {
@@ -206,4 +210,7 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
   await tx.hrWorkforceEventExecutionAttempt.update({ where: { id: attempt.id }, data: { status: "COMPLETED", completedAt: now } });
   await tx.hrWorkforceEvent.update({ where: { id: event.id }, data: { status: "APPLIED", appliedAt: now } });
   await appendHrAudit(tx, { ...context, entityType: "HrWorkforceEvent", entityId: event.id, action: "hr.workforce_event.applied", previousValues: { status: event.status }, newValues: { status: "APPLIED", version: event.version, effectiveAt: event.requestedEffectiveAt, changedFields: Object.keys(proposed) }, reason: event.reason, correlationId: event.correlationId });
+  const notifiedEmployee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: event.employeeId } });
+  const recipient = notifiedEmployee.preferredNotificationEmail ?? notifiedEmployee.companyEmail ?? notifiedEmployee.personalEmail;
+  if (recipient) await enqueueHrEmail(tx, { organizationId: context.organizationId, recipient, template: "hr-workforce-event-applied", subject: "Workforce change is now effective", payload: { recipientName: notifiedEmployee.preferredName ?? notifiedEmployee.legalFirstName, href: "/hr/employee/profile", workforceEventId: event.id }, idempotencyKey: `workforce-event-applied:${event.id}:v${event.version}` });
 }

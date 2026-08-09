@@ -61,6 +61,19 @@ const notificationTemplates: Record<string, NotificationTemplate> = {
   "hr-payslip-ready": { title: "Payslip ready", body: "Your payslip is available in the secure HR workspace.", ctaLabel: "View Payslip", defaultHref: "/hr/employee/payslips" },
   "hr-workflow-approval": { title: "Workflow approval requested", body: "A governed workflow stage is awaiting your decision.", ctaLabel: "Review Approval", defaultHref: "/hr/employee/approvals" },
   "hr-employment-exit": { title: "Employment exit information", body: "Employment exit information is available in the secure HR workspace.", ctaLabel: "Review Information", defaultHref: "/hr/employee" },
+  "hr-workforce-event-submitted": { title: "Workforce change submitted", body: "A governed workforce change is awaiting review.", ctaLabel: "Review Workforce Change", defaultHref: "/hr/admin/workforce-events" },
+  "hr-workforce-event-approved": { title: "Workforce change approved", body: "Your workforce change has completed approval and is scheduled for its effective date.", ctaLabel: "View Change", defaultHref: "/hr/employee/profile" },
+  "hr-workforce-event-applied": { title: "Workforce change effective", body: "An approved workforce change is now effective and recorded in your employment history.", ctaLabel: "View Employment History", defaultHref: "/hr/employee/profile" },
+  "hr-probation-review-due": { title: "Probation review due", body: "A probation checkpoint or final review requires action.", ctaLabel: "Review Probation", defaultHref: "/hr/admin/workforce-events" },
+  "hr-probation-confirmed": { title: "Employment confirmed", body: "Your probation outcome has been approved and your employment is confirmed.", ctaLabel: "View Employment Profile", defaultHref: "/hr/employee/profile" },
+  "hr-probation-extended": { title: "Probation period updated", body: "Your probation period has been extended through a governed review.", ctaLabel: "View Updated Timeline", defaultHref: "/hr/employee/profile" },
+  "hr-contract-review": { title: "Employment contract requires review", body: "A versioned employment contract is ready for secure review.", ctaLabel: "Review Contract", defaultHref: "/hr/employee/documents" },
+  "hr-contract-active": { title: "Employment contract active", body: "The exact approved and signed contract version is now active.", ctaLabel: "View Contract", defaultHref: "/hr/employee/documents" },
+  "hr-contract-expiring": { title: "Employment contract expiring", body: "An employment contract is approaching its expiry date and requires review.", ctaLabel: "Review Contract", defaultHref: "/hr/admin/workforce-events" },
+  "hr-separation-submitted": { title: "Separation submitted", body: "A governed separation case is awaiting independent review.", ctaLabel: "Review Separation", defaultHref: "/hr/admin/workforce-events" },
+  "hr-separation-approved": { title: "Separation approved", body: "The separation plan is approved and scheduled for the final working date.", ctaLabel: "Review Offboarding", defaultHref: "/hr/employee/tasks" },
+  "hr-separation-completed": { title: "Employment separation completed", body: "The approved separation and required offboarding steps are complete.", ctaLabel: "Review Employment History", defaultHref: "/hr/employee/profile" },
+  "hr-rehire-started": { title: "Rehire onboarding started", body: "A new work relationship has been created and onboarding is ready.", ctaLabel: "Start Onboarding", defaultHref: "/hr/employee/tasks" },
 };
 
 const vacancyTemplate: NotificationTemplate = { title: "Vacancy workflow update", body: "A vacancy has changed state and is ready for secure review.", ctaLabel: "Review Vacancy", defaultHref: "/hr/admin/vacancies" };

@@ -54,4 +54,17 @@ describe("Unit 4 probation, contract, separation, and rehire invariants", () => 
     expect(actions).toContain("createSeparationCase");
     expect(actions).not.toContain("terminateEmployeeAction");
   });
+
+  it("implements probation, exact-version contracts, and identity-preserving rehire", () => {
+    const commands = readFileSync("src/lib/hr/workforce/lifecycle-commands.ts", "utf8");
+    expect(commands).toContain("createProbationCase");
+    expect(commands).toContain("submitProbationReview");
+    expect(commands).toContain("decideProbationCase");
+    expect(commands).toContain("assertContractVersionDecision");
+    expect(commands).toContain("documentVersionId");
+    expect(commands).toContain("assertContractActivation");
+    expect(commands).toContain("assertRehire");
+    expect(commands).toContain("personId: prior.personId");
+    expect(commands).toContain("rehireOfId: prior.id");
+  });
 });

@@ -32,6 +32,10 @@ const expected = {
     "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected", "hr-leave-cancelled",
     "hr-payroll-review-ready", "hr-payroll-approval-ready", "hr-payroll-approved", "hr-payslip-ready",
     "hr-workflow-approval", "hr-employment-exit",
+    "hr-workforce-event-submitted", "hr-workforce-event-approved", "hr-workforce-event-applied",
+    "hr-probation-review-due", "hr-probation-confirmed", "hr-probation-extended",
+    "hr-contract-review", "hr-contract-active", "hr-contract-expiring",
+    "hr-separation-submitted", "hr-separation-approved", "hr-separation-completed", "hr-rehire-started",
   ],
   "account-security": ["hr-account-invitation", "hr-password-reset", "hr-mfa-enrollment", "hr-employee-activated"],
 } as const;

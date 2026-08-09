@@ -15,6 +15,7 @@ describe("HR worker scheduling", () => {
   it("runs email and activation workers with independent configured secrets", () => {
     expect(launcher).toContain('"/api/internal/hr/outbox", process.env.EMAIL_WORKER_SECRET');
     expect(launcher).toContain('"/api/internal/hr/recruitment-activation", process.env.ORGANIZATION_WORKER_SECRET');
+    expect(launcher).toContain('"/api/internal/hr/workforce-events", process.env.ORGANIZATION_WORKER_SECRET');
   });
 
   it("prevents overlapping ticks and handles graceful shutdown", () => {
