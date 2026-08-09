@@ -25,7 +25,7 @@ export function assertWorkforceEventTransition(from: WorkforceEventStatus, to: W
 }
 
 export type WorkforceImpactSnapshot = Partial<{
-  jobProfileId: string;
+  jobProfileId: string | null;
   positionId: string;
   departmentId: string;
   teamId: string | null;

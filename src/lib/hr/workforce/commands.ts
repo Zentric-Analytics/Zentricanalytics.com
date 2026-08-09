@@ -36,9 +36,11 @@ function json(value: WorkforceImpactSnapshot): Prisma.InputJsonValue {
 async function currentAssignmentSnapshot(tx: Prisma.TransactionClient, organizationId: string, employeeId: string) {
   const assignment = await tx.hrEmployeeAssignment.findFirst({
     where: { organizationId, employeeId, isPrimary: true, status: "ACTIVE" },
+    include: { position: true },
     orderBy: { effectiveFrom: "desc" },
   });
   if (!assignment) throw new Error("The employee does not have an active primary assignment.");
+  const supervisor = await tx.hrSupervisorAssignment.findFirst({ where: { organizationId, assignedEmployeeId: employeeId, status: "ACTIVE", effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] }, orderBy: { effectiveFrom: "desc" } });
   return {
     assignment,
     snapshot: {
@@ -47,6 +49,9 @@ async function currentAssignmentSnapshot(tx: Prisma.TransactionClient, organizat
       teamId: assignment.teamId,
       locationId: assignment.locationId,
       legalEntityId: assignment.legalEntityId,
+      jobProfileId: assignment.position.jobProfileId,
+      gradeId: assignment.position.gradeId,
+      managerEmployeeId: supervisor?.supervisorEmployeeId ?? null,
       employmentType: assignment.employmentType,
     } satisfies WorkforceImpactSnapshot,
   };
@@ -122,7 +127,9 @@ export async function approveWorkforceEvent(tx: Prisma.TransactionClient, contex
   assertIndependentApproval(event.initiatedById, context.actorUserId);
   if (!event.workflowInstanceId) throw new Error("A workforce event cannot be approved until its governed approval workflow is attached.");
   const workflow = await tx.hrWorkflowInstance.findFirstOrThrow({ where: { id: event.workflowInstanceId, organizationId: context.organizationId, subjectId: event.id, status: "APPROVED" } });
-  assertWorkforceEventTransition(event.status, "APPROVED");
+  const reviewStatus = event.status === "SUBMITTED" ? "UNDER_REVIEW" : event.status;
+  if (event.status === "SUBMITTED") assertWorkforceEventTransition("SUBMITTED", "UNDER_REVIEW");
+  assertWorkforceEventTransition(reviewStatus, "APPROVED");
   const nextStatus = event.requestedEffectiveAt > new Date() ? "SCHEDULED" : "APPROVED";
   const result = await tx.hrWorkforceEvent.updateMany({ where: { id: event.id, version: expectedVersion, status: event.status }, data: { status: nextStatus, approvedAt: workflow.completedAt ?? new Date(), scheduledAt: nextStatus === "SCHEDULED" ? new Date() : null } });
   if (result.count !== 1) throw new Error("This workforce event changed while it was being approved.");
@@ -141,6 +148,19 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
   const proposed = event.proposedSnapshot as WorkforceImpactSnapshot;
   const { assignment } = await currentAssignmentSnapshot(tx, context.organizationId, event.employeeId);
 
+  let targetPosition = null;
+  if (proposed.positionId) {
+    targetPosition = await tx.hrPosition.findFirstOrThrow({ where: { id: proposed.positionId, organizationId: context.organizationId, status: "ACTIVE", lifecycleStatus: { in: ["OPEN", "PARTIALLY_FILLED", "FILLED"] } } });
+    const occupied = await tx.hrEmployeeAssignment.count({ where: { organizationId: context.organizationId, positionId: targetPosition.id, status: "ACTIVE", employeeId: { not: event.employeeId } } });
+    if (occupied >= targetPosition.headcountLimit) throw new Error("The target position no longer has available capacity.");
+    if (proposed.departmentId && proposed.departmentId !== targetPosition.departmentId) throw new Error("The proposed department does not match the target position.");
+    if (proposed.teamId !== undefined && proposed.teamId !== targetPosition.teamId) throw new Error("The proposed team does not match the target position.");
+  }
+  if (proposed.managerEmployeeId) {
+    if (proposed.managerEmployeeId === event.employeeId) throw new Error("An employee cannot be their own manager.");
+    await tx.hrEmployee.findFirstOrThrow({ where: { id: proposed.managerEmployeeId, organizationId: context.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE", "NOTICE_PERIOD"] } } });
+  }
+
   const assignmentFields = ["positionId", "departmentId", "teamId", "locationId", "legalEntityId", "employmentType"] as const;
   if (assignmentFields.some((field) => Object.prototype.hasOwnProperty.call(proposed, field))) {
     const updated = await tx.hrEmployeeAssignment.updateMany({ where: { id: assignment.id, version: assignment.version, status: "ACTIVE" }, data: { status: "ENDED", effectiveTo: event.requestedEffectiveAt, endedAt: now, endedById: context.actorUserId, version: { increment: 1 } } });
@@ -148,8 +168,8 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
     await tx.hrEmployeeAssignment.create({ data: {
       organizationId: assignment.organizationId,
       employeeId: assignment.employeeId,
-      departmentId: proposed.departmentId ?? assignment.departmentId,
-      teamId: Object.prototype.hasOwnProperty.call(proposed, "teamId") ? proposed.teamId : assignment.teamId,
+      departmentId: proposed.departmentId ?? targetPosition?.departmentId ?? assignment.departmentId,
+      teamId: Object.prototype.hasOwnProperty.call(proposed, "teamId") ? proposed.teamId : targetPosition?.teamId ?? assignment.teamId,
       positionId: proposed.positionId ?? assignment.positionId,
       employmentType: (proposed.employmentType as typeof assignment.employmentType | undefined) ?? assignment.employmentType,
       location: assignment.location,
@@ -166,6 +186,12 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
       fte: assignment.fte,
       placementSnapshot: { workforceEventId: event.id, priorAssignmentId: assignment.id },
     } });
+  }
+
+  if (Object.prototype.hasOwnProperty.call(proposed, "managerEmployeeId")) {
+    const activeManagers = await tx.hrSupervisorAssignment.findMany({ where: { organizationId: context.organizationId, assignedEmployeeId: event.employeeId, status: "ACTIVE" } });
+    for (const manager of activeManagers) await tx.hrSupervisorAssignment.update({ where: { id: manager.id }, data: { status: "ENDED", effectiveTo: event.requestedEffectiveAt, endedAt: now, endedByUserId: context.actorUserId, endReason: `${event.type}: ${event.reason}` } });
+    if (proposed.managerEmployeeId) await tx.hrSupervisorAssignment.create({ data: { organizationId: context.organizationId, supervisorEmployeeId: proposed.managerEmployeeId, assignedEmployeeId: event.employeeId, assignmentType: "DIRECT_REPORT", status: "ACTIVE", effectiveFrom: event.requestedEffectiveAt, capabilities: { source: "workforce-event", eventId: event.id }, assignedByUserId: context.actorUserId, reason: `${event.type}: ${event.reason}` } });
   }
 
   if (Object.prototype.hasOwnProperty.call(proposed, "workMode")) {

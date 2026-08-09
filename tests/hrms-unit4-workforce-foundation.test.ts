@@ -66,4 +66,16 @@ describe("Unit 4 workforce foundation", () => {
     expect(sql).toContain('INSERT INTO "HrPerson"');
     expect(sql).not.toMatch(/DROP TABLE|DROP COLUMN|TRUNCATE/);
   });
+
+  it("revalidates tenant, capacity, manager, workflow, and execution claims", () => {
+    const commands = readFileSync("src/lib/hr/workforce/commands.ts", "utf8");
+    const actions = readFileSync("src/app/hr/admin/workforce-events/actions.ts", "utf8");
+    expect(commands).toContain("target position no longer has available capacity");
+    expect(commands).toContain("An employee cannot be their own manager");
+    expect(commands).toContain('organizationId: context.organizationId');
+    expect(commands).toContain('workflowInstanceId');
+    expect(commands).toContain('status: "APPLYING"');
+    expect(actions).toContain('isolationLevel: "Serializable"');
+    expect(actions).toContain("idempotencyKey");
+  });
 });
