@@ -74,8 +74,11 @@ describe("HRMS documents and assets", () => {
 
   it("blocks unscanned files and enforces self or permission-bound downloads", () => {
     const route = fs.readFileSync(path.join(process.cwd(), "src/app/api/hr/documents/versions/[id]/route.ts"), "utf8");
+    const releaseMigration = fs.readFileSync(path.join(process.cwd(), "prisma/migrations/20260809190000_document_clean_release_invariant/migration.sql"), "utf8");
     expect(route).toContain('scanStatus: "CLEAN"');
     expect(route).toContain('releasedAt: { not: null }');
+    expect(releaseMigration).toContain('DISABLE TRIGGER "HrEmployeeDocumentVersion_protected_update"');
+    expect(releaseMigration).toContain('ENABLE TRIGGER "HrEmployeeDocumentVersion_protected_update"');
     expect(route).toContain("auth.user.employee?.id === version.document.employeeId");
     expect(route).toContain('auth.permissions.has("document.read_sensitive")');
     expect(route).toContain("hrDocumentAccessLog.create");
