@@ -42,13 +42,17 @@ describe("HRMS onboarding and offboarding", () => {
     expect(actions).toContain("appendHrAudit");
     expect(actions).toContain("payload: { lifecycleTaskId: task.id }");
   });
-  it("revokes access and blocks completion while assets remain assigned", () => {
+  it("blocks checklist completion while assets remain assigned and defers termination to the effective-dated worker", () => {
     const actions = read("src/app/hr/admin/lifecycle/actions.ts");
+    const commands = read("src/lib/hr/workforce/lifecycle-commands.ts");
     expect(actions).toContain("activeAssets");
     expect(actions).toContain("Offboarding cannot complete while the employee has active asset assignments");
-    expect(actions).toContain("hrSession.updateMany");
-    expect(actions).toContain('status: "SUSPENDED"');
-    expect(actions).toContain('employmentStatus: "TERMINATED"');
+    expect(actions).not.toContain('employmentStatus: "TERMINATED"');
+    expect(actions).not.toContain("hrSession.updateMany");
+    expect(commands).toContain("assertSeparationExecution");
+    expect(commands).toContain("hrSession.updateMany");
+    expect(commands).toContain('status: "SUSPENDED"');
+    expect(commands).toContain('employmentStatus: "TERMINATED"');
   });
   it("creates the governed separation case in the same offboarding transaction", () => {
     const actions = read("src/app/hr/admin/lifecycle/actions.ts");

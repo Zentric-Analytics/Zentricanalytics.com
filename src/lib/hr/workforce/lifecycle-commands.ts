@@ -108,6 +108,7 @@ export async function applySeparationCase(tx: Prisma.TransactionClient, context:
   const claim = await tx.hrSeparationCase.updateMany({ where: { id: separation.id, version: separation.version, status: separation.status }, data: { status: "APPLIED", version: { increment: 1 }, appliedAt: now, failureReason: null } });
   if (claim.count !== 1) throw new Error("Another worker already applied this separation case.");
   await tx.hrEmployee.update({ where: { id: separation.employeeId }, data: { employmentStatus: "TERMINATED", terminationDate: separation.finalWorkingDate, terminationReason: separation.reason, companyEmailStatus: "DISABLED" } });
+  if (lifecycle) await tx.hrLifecycleInstance.update({ where: { id: lifecycle.id }, data: { companyEmailDisabledAt: now } });
   await tx.hrEmployeeStatusHistory.create({ data: { organizationId: context.organizationId, employeeId: separation.employeeId, previousStatus: separation.employee.employmentStatus, newStatus: "TERMINATED", effectiveAt: separation.finalWorkingDate, reason: separation.reason, changedById: context.actorUserId } });
   await tx.hrWorkRelationship.update({ where: { id: separation.workRelationshipId }, data: { status: "ENDED", endedAt: separation.finalWorkingDate, endReason: separation.reason } });
   await tx.hrEmployeeAssignment.updateMany({ where: { employeeId: separation.employeeId, status: "ACTIVE" }, data: { status: "ENDED", effectiveTo: separation.finalWorkingDate, endedAt: now, endedById: context.actorUserId, version: { increment: 1 } } });
