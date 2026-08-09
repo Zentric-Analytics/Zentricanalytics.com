@@ -4,14 +4,15 @@ import { assertContractActivation, assertContractVersionDecision, assertProbatio
 
 describe("Unit 4 probation, contract, separation, and rehire invariants", () => {
   it("requires an independent completed probation review", () => {
-    const base = { actorUserId: "hr", employeeUserId: "employee", finalReviewSubmitted: true, recommendation: "CONFIRM" as const, outcome: "CONFIRM" as const, currentEndAt: new Date("2026-09-01"), extensionCount: 0 };
+    const base = { actorUserId: "hr", employeeUserId: "employee", finalReviewSubmitted: true, finalReviewSubmittedById: "manager", recommendation: "CONFIRM" as const, outcome: "CONFIRM" as const, currentEndAt: new Date("2026-09-01"), extensionCount: 0 };
     expect(() => assertProbationDecision(base)).not.toThrow();
     expect(() => assertProbationDecision({ ...base, actorUserId: "employee" })).toThrow(/cannot decide/);
+    expect(() => assertProbationDecision({ ...base, actorUserId: "manager" })).toThrow(/independent decision/);
     expect(() => assertProbationDecision({ ...base, finalReviewSubmitted: false })).toThrow(/final probation review/);
   });
 
   it("prevents silent or repeated probation extensions", () => {
-    const base = { actorUserId: "hr", employeeUserId: "employee", finalReviewSubmitted: true, recommendation: "EXTEND" as const, outcome: "EXTEND" as const, currentEndAt: new Date("2026-09-01"), extensionCount: 0 };
+    const base = { actorUserId: "hr", employeeUserId: "employee", finalReviewSubmitted: true, finalReviewSubmittedById: "manager", recommendation: "EXTEND" as const, outcome: "EXTEND" as const, currentEndAt: new Date("2026-09-01"), extensionCount: 0 };
     expect(() => assertProbationDecision({ ...base, extensionEndAt: new Date("2026-10-01") })).not.toThrow();
     expect(() => assertProbationDecision({ ...base, extensionEndAt: new Date("2026-08-01") })).toThrow(/later end date/);
     expect(() => assertProbationDecision({ ...base, extensionEndAt: new Date("2026-10-01"), extensionCount: 1 })).toThrow(/limit/);

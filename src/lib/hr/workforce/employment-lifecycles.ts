@@ -1,6 +1,7 @@
 export function assertProbationDecision(input: {
   actorUserId: string;
   employeeUserId?: string | null;
+  finalReviewSubmittedById?: string | null;
   finalReviewSubmitted: boolean;
   recommendation?: "CONTINUE" | "CONFIRM" | "EXTEND" | "END_EMPLOYMENT" | null;
   outcome: "CONFIRM" | "EXTEND" | "END_EMPLOYMENT";
@@ -11,6 +12,7 @@ export function assertProbationDecision(input: {
 }) {
   if (input.employeeUserId === input.actorUserId) throw new Error("An employee cannot decide their own probation outcome.");
   if (!input.finalReviewSubmitted) throw new Error("The final probation review must be completed before an outcome is recorded.");
+  if (input.finalReviewSubmittedById === input.actorUserId) throw new Error("A probation outcome requires an independent decision after the final review.");
   if (input.outcome === "CONFIRM" && input.recommendation !== "CONFIRM") throw new Error("Confirmation requires a submitted manager recommendation to confirm.");
   if (input.outcome === "EXTEND") {
     if (!input.extensionEndAt || input.extensionEndAt <= input.currentEndAt) throw new Error("A probation extension must set a later end date.");
