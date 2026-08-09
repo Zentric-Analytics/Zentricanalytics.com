@@ -2,14 +2,14 @@ const statusItems = [
   ["Current Unit 4 subsection", "4C — Workforce Event Engine"],
   ["Current milestone", "Governed promotion, transfer, manager, position, grade, location, and legal-entity changes"],
   ["Branch", "feature/hrms-unit-04-workforce-operations"],
-  ["HEAD SHA", "acd227b — governed employee separations; next checkpoint in progress"],
+  ["HEAD SHA", "d4c6c02 — employment lifecycle workspace"],
   ["Current staging deployment", "Units 1–3 staging baseline; Unit 4 candidate not deployed"],
   ["Database / migration", "Two additive Unit 4 migrations prepared; staging application pending"],
-  ["Test totals", "544/544 passing at last full gate; TypeScript, ESLint, and Prisma passed"],
+  ["Test totals", "558/558 passing at last full gate; TypeScript, ESLint, Prisma, and build passed"],
   ["Browser workflow", "Authenticated staging administrator; workforce-event UI awaits exact candidate deployment"],
   ["Defects found", "Legacy direct termination, incomplete supervisor mutation, and missing position-capacity revalidation"],
   ["Fixes applied", "Governed separation plus tenant, capacity, supervisor-history, approval, and execution protections"],
-  ["Next release gate", "Manager-scoped requests, probation and contract commands, effective-date worker"],
+  ["Next release gate", "Authenticated staging deployment, migrations, browser E2E, concurrency, and restore"],
 ] as const;
 
 export default function Unit4StatusPage() {
