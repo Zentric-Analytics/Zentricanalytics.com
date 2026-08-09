@@ -75,6 +75,7 @@ describe("HRMS documents and assets", () => {
   it("blocks unscanned files and enforces self or permission-bound downloads", () => {
     const route = fs.readFileSync(path.join(process.cwd(), "src/app/api/hr/documents/versions/[id]/route.ts"), "utf8");
     expect(route).toContain('scanStatus: "CLEAN"');
+    expect(route).toContain('releasedAt: { not: null }');
     expect(route).toContain("auth.user.employee?.id === version.document.employeeId");
     expect(route).toContain('auth.permissions.has("document.read_sensitive")');
     expect(route).toContain("hrDocumentAccessLog.create");
@@ -90,6 +91,7 @@ describe("HRMS documents and assets", () => {
     expect(actions).toContain("hrObjectStorage().deleteVersion(stored.location)");
     expect(actions).toContain("crypto.randomUUID()");
     expect(actions).toContain('scanStatus: "PENDING"');
+    expect(actions).toContain('releasedAt: input.status === "CLEAN" ? scanCompletedAt : null');
     expect(actions).toContain("documentMustBeRestricted");
   });
 

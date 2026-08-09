@@ -89,7 +89,8 @@ export async function recordDocumentScanAction(formData: FormData) {
   const input = scanInput.parse(Object.fromEntries(formData));
   await prisma.$transaction(async (tx) => {
     const version = await tx.hrEmployeeDocumentVersion.findFirstOrThrow({ where: { id: input.versionId, organizationId: auth.user.organizationId, scanStatus: "PENDING" }, include: { document: { include: { employee: { include: { user: true } } } } } });
-    await tx.hrEmployeeDocumentVersion.update({ where: { id: version.id }, data: { scanStatus: input.status, scanProvider: input.provider, scanReference: input.reference, scanReason: input.reason, scanCompletedAt: new Date(), scanRecordedById: auth.user.id } });
+    const scanCompletedAt = new Date();
+    await tx.hrEmployeeDocumentVersion.update({ where: { id: version.id }, data: { scanStatus: input.status, scanProvider: input.provider, scanReference: input.reference, scanReason: input.reason, scanCompletedAt, releasedAt: input.status === "CLEAN" ? scanCompletedAt : null, scanRecordedById: auth.user.id } });
     if (version.document.employee.user) await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: version.document.employee.user.email, template: input.status === "CLEAN" ? "hr-document-available" : "hr-document-scan-attention", subject: input.status === "CLEAN" ? "An HR document is available" : "An HR document upload needs attention", payload: { documentId: version.documentId }, idempotencyKey: `hr-document-scan:${version.id}:${input.status}` });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrEmployeeDocumentVersion", entityId: version.id, action: "hr.document.scan.recorded", previousValues: { scanStatus: version.scanStatus }, newValues: { scanStatus: input.status, scanProvider: input.provider }, reason: input.reason });
   });

@@ -11,7 +11,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (privilegedMfaRequired(auth)) return NextResponse.json({ error: "MFA enrollment required" }, { status: 403 });
   const { id } = await params;
-  const version = await prisma.hrEmployeeDocumentVersion.findFirst({ where: { id, organizationId: auth.user.organizationId, scanStatus: "CLEAN" }, include: { document: true } });
+  const version = await prisma.hrEmployeeDocumentVersion.findFirst({ where: { id, organizationId: auth.user.organizationId, scanStatus: "CLEAN", releasedAt: { not: null } }, include: { document: true } });
   if (!version) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const self = auth.user.employee?.id === version.document.employeeId && auth.permissions.has("document.read_self") && !version.document.archivedAt;
   const authorizedStaff = version.document.restricted ? auth.permissions.has("document.read_sensitive") : auth.permissions.has("document.read_employee") || auth.permissions.has("document.read_sensitive");
