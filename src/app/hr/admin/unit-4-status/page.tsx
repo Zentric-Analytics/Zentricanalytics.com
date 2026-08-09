@@ -14,11 +14,11 @@ const statusItems = [
   ["HEAD SHA", deployedHead],
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "564/564 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
-  ["Browser workflow", "Scheduled separation approved; offboarding completed with employee, account, assignment, and access retained before effective date"],
-  ["Defects found", "Offboarding checklist completion could terminate employment before the scheduled effective date"],
-  ["Fixes applied", "Terminal employment, assignment, account, and access effects are deferred to the exactly-once effective-dated worker"],
-  ["Next release gate", "Effective-date worker application, exactly-once evidence, rehire, concurrency, recovery, security, email, and restore"],
+  ["Test totals", "567/567 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
+  ["Browser workflow", "Pre-effective separation invariant passed; real PostgreSQL concurrent worker and scheduled-worker recovery passed exactly once"],
+  ["Defects found", "Early offboarding termination fixed; two validation-fixture setup defects were isolated and audit-corrected without weakening product constraints"],
+  ["Fixes applied", "Terminal effects are deferred to the worker; concurrency seed is atomic, uses valid enums and non-zero assignment intervals"],
+  ["Next release gate", "Unit Pass effective-date worker application, rehire, recovery, security, email, restore, and complete 4A-4F lifecycle"],
 ] as const;
 
 export default function Unit4StatusPage() {
