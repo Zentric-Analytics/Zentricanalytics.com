@@ -1,8 +1,9 @@
+const deployedHead = process.env.RENDER_GIT_COMMIT ?? "local candidate — see Git branch";
 const statusItems = [
   ["Current Unit 4 subsection", "4C — Workforce Event Engine"],
   ["Current milestone", "Governed promotion, transfer, manager, position, grade, location, and legal-entity changes"],
   ["Branch", "feature/hrms-unit-04-workforce-operations"],
-  ["HEAD SHA", "d4c6c02 — employment lifecycle workspace"],
+  ["HEAD SHA", deployedHead],
   ["Current staging deployment", "Units 1–3 staging baseline; Unit 4 candidate not deployed"],
   ["Database / migration", "Two additive Unit 4 migrations prepared; staging application pending"],
   ["Test totals", "558/558 passing at last full gate; TypeScript, ESLint, Prisma, and build passed"],
