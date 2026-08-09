@@ -12,7 +12,7 @@ import {
   saveEmployeeBankAccountAction,
   saveEmployeeIdentifierAction,
   saveEmployeeTaxProfileAction,
-  terminateEmployeeAction,
+  initiateSeparationAction,
   updateEmployeeProfileAction,
 } from "../actions";
 
@@ -198,7 +198,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: { pa
 
     <section className="mt-5 rounded-2xl border border-red-200 bg-white p-5">
       <h2 className="text-lg font-bold">Employment lifecycle</h2>
-      {!["TERMINATED", "ARCHIVED"].includes(employee.employmentStatus) ? <form action={terminateEmployeeAction} className="mt-4 grid gap-3 md:grid-cols-[220px_1fr_auto]"><input type="hidden" name="employeeId" value={employee.id} /><input className="input" name="effectiveDate" type="date" required /><input className="input" name="reason" placeholder="Termination reason" required /><ConfirmSubmitButton className="btn btn-secondary text-red-700" message="Terminate this employee and end active assignments? Historical records will be retained.">Terminate employment</ConfirmSubmitButton></form> : null}
+      {!["TERMINATED", "ARCHIVED"].includes(employee.employmentStatus) ? <form action={initiateSeparationAction} className="mt-4 grid gap-3 md:grid-cols-[180px_180px_1fr_auto]"><input type="hidden" name="employeeId" value={employee.id} /><select className="input" name="type"><option>RESIGNATION</option><option>TERMINATION</option><option>REDUNDANCY</option><option>RETIREMENT</option><option>CONTRACT_EXPIRY</option><option>OTHER</option></select><input className="input" name="effectiveDate" type="date" required /><input className="input" name="reason" placeholder="Separation reason" required /><ConfirmSubmitButton className="btn btn-secondary text-red-700" message="Submit this separation for independent review? Employment and access remain active until approval, completed offboarding, and the final working date.">Submit separation</ConfirmSubmitButton></form> : null}
       {employee.employmentStatus === "TERMINATED" ? <form action={archiveEmployeeAction} className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]"><input type="hidden" name="employeeId" value={employee.id} /><input className="input" name="reason" placeholder="Archive reason" required /><ConfirmSubmitButton className="btn btn-secondary text-red-700" message="Archive this terminated employee? Payroll, documents, assignments, and audit history will remain retained.">Archive employee</ConfirmSubmitButton></form> : null}
       {employee.employmentStatus === "ARCHIVED" ? <p className="mt-3 text-sm text-slate-600">This employee is archived. All history remains available.</p> : null}
     </section>

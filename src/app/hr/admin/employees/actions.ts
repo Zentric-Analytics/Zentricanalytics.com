@@ -6,6 +6,7 @@ import { appendHrAudit } from "@/lib/hr/audit";
 import { sealHrCredential } from "@/lib/hr/auth/crypto";
 import { employeeCreateInput, employeeInput, lastFour } from "@/lib/hr/core/invariants";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { createSeparationCase } from "@/lib/hr/workforce/lifecycle-commands";
 
 export async function createEmployeeAction(formData: FormData) {
   const auth = await requirePermission("employee.create");
@@ -109,26 +110,12 @@ export async function saveEmployeeTaxProfileAction(formData: FormData) {
   revalidatePath(`/hr/admin/employees/${input.employeeId}`);
 }
 
-const lifecycleInput = z.object({ employeeId: z.string().cuid(), reason: z.string().trim().min(3).max(500), effectiveDate: z.coerce.date() });
-export async function terminateEmployeeAction(formData: FormData) {
-  const auth = await requirePermission("employee.update");
-  const input = lifecycleInput.parse(Object.fromEntries(formData));
-  const employee = await prisma.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: auth.user.organizationId, employmentStatus: { notIn: ["TERMINATED", "ARCHIVED"] } }, include: { user: true } });
-  await prisma.$transaction(async (tx) => {
-    await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: "TERMINATED", terminationDate: input.effectiveDate, terminationReason: input.reason, companyEmailStatus: "DISABLED" } });
-    await tx.hrEmployeeStatusHistory.create({ data: { organizationId: auth.user.organizationId, employeeId: employee.id, previousStatus: employee.employmentStatus, newStatus: "TERMINATED", effectiveAt: input.effectiveDate, reason: input.reason, changedById: auth.user.id } });
-    const employmentAssignments = await tx.hrEmployeeAssignment.findMany({ where: { employeeId: employee.id, status: "ACTIVE" } });
-    for (const assignment of employmentAssignments) await tx.hrEmployeeAssignment.update({ where: { id: assignment.id }, data: assignment.effectiveFrom < input.effectiveDate ? { status: "ENDED", effectiveTo: input.effectiveDate, endedAt: new Date(), endedById: auth.user.id } : { status: "REVOKED", endedAt: new Date(), endedById: auth.user.id } });
-    const supervisorAssignments = await tx.hrSupervisorAssignment.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE", OR: [{ supervisorEmployeeId: employee.id }, { assignedEmployeeId: employee.id }] } });
-    for (const assignment of supervisorAssignments) await tx.hrSupervisorAssignment.update({ where: { id: assignment.id }, data: assignment.effectiveFrom < input.effectiveDate ? { status: "ENDED", effectiveTo: input.effectiveDate, endedAt: new Date(), endedByUserId: auth.user.id, endReason: `Employment ended: ${input.reason}` } : { status: "REVOKED", endedAt: new Date(), endedByUserId: auth.user.id, endReason: `Future assignment revoked: ${input.reason}` } });
-    await tx.hrSystemAccessAssignment.updateMany({ where: { employeeId: employee.id, status: { in: ["REQUESTED", "ACTIVE", "SUSPENDED"] } }, data: { status: "REVOKED", endedAt: input.effectiveDate, endedById: auth.user.id, endReason: `Employment ended: ${input.reason}` } });
-    if (employee.userId) {
-      await tx.hrSession.updateMany({ where: { userId: employee.userId, revokedAt: null }, data: { revokedAt: new Date() } });
-      await tx.hrUser.update({ where: { id: employee.userId }, data: { status: "SUSPENDED", suspendedAt: new Date() } });
-    }
-    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrEmployee", entityId: employee.id, action: "hr.employee.terminated", previousValues: { employmentStatus: employee.employmentStatus }, newValues: { employmentStatus: "TERMINATED", terminationDate: input.effectiveDate }, reason: input.reason });
-  });
-  revalidatePath(`/hr/admin/employees/${employee.id}`);
+const separationInput = z.object({ employeeId: z.string().cuid(), reason: z.string().trim().min(3).max(500), effectiveDate: z.coerce.date(), type: z.enum(["RESIGNATION", "TERMINATION", "REDUNDANCY", "RETIREMENT", "CONTRACT_EXPIRY", "DEATH_IN_SERVICE", "OTHER"]) });
+export async function initiateSeparationAction(formData: FormData) {
+  const auth = await requirePermission("workforce_event.create");
+  const input = separationInput.parse(Object.fromEntries(formData));
+  await prisma.$transaction((tx) => createSeparationCase(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, { employeeId: input.employeeId, type: input.type, reason: input.reason, finalWorkingDate: input.effectiveDate }), { isolationLevel: "Serializable" });
+  revalidatePath(`/hr/admin/employees/${input.employeeId}`);
   revalidatePath("/hr/admin/employees");
 }
 

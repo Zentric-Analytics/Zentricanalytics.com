@@ -43,4 +43,15 @@ describe("Unit 4 probation, contract, separation, and rehire invariants", () => 
     expect(sql).toContain('CREATE TABLE "HrSeparationCase"');
     expect(sql).not.toMatch(/DROP TABLE|DROP COLUMN|TRUNCATE/);
   });
+
+  it("routes separation through independent, versioned, fail-closed execution", () => {
+    const commands = readFileSync("src/lib/hr/workforce/lifecycle-commands.ts", "utf8");
+    const actions = readFileSync("src/app/hr/admin/employees/actions.ts", "utf8");
+    expect(commands).toContain("A separation case requires independent review");
+    expect(commands).toContain("version: input.expectedVersion");
+    expect(commands).toContain("requiredTasksOpen");
+    expect(commands).toContain('? "SCHEDULED" : input.decision');
+    expect(actions).toContain("createSeparationCase");
+    expect(actions).not.toContain("terminateEmployeeAction");
+  });
 });
