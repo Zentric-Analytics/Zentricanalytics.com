@@ -13,6 +13,7 @@ describe("Unit 4 real staging concurrency gate", () => {
   it("races the authenticated worker and verifies exactly-once durable effects", () => {
     expect(script).toContain('type: "WORK_ARRANGEMENT_CHANGE"');
     expect(script).toContain('isolationLevel: "Serializable"');
+    expect(script).toContain("fixtureStartedAt = new Date(now.getTime() - 86_400_000)");
     expect(script).toContain("Promise.all([invokeWorker(), invokeWorker()])");
     expect(script).toContain('action: "hr.workforce_event.applied"');
     expect(script).toContain('action: "hr.separation.applied"');

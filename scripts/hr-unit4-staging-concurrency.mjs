@@ -12,6 +12,7 @@ if (!workerSecret || workerSecret.length < 64) throw new Error("A valid staging 
 const prisma = new PrismaClient();
 const run = `unit4-concurrency-${Date.now()}`;
 const now = new Date();
+const fixtureStartedAt = new Date(now.getTime() - 86_400_000);
 const headers = { authorization: `Bearer ${workerSecret}` };
 
 async function invokeWorker() {
@@ -38,15 +39,15 @@ try {
     const person = await tx.hrPerson.create({ data: { organizationId: organization.id, identityKeyHash: crypto.createHash("sha256").update(`${run}:${label}`).digest("hex") } });
     const employee = await tx.hrEmployee.create({ data: {
       organizationId: organization.id, personId: person.id, employeeNumber: `U4-${Date.now()}-${label}`,
-      legalFirstName: "UnitFour", lastName: label, employmentStatus: "ACTIVE", startDate: now, workMode,
+      legalFirstName: "UnitFour", lastName: label, employmentStatus: "ACTIVE", startDate: fixtureStartedAt, workMode,
     } });
     const relationship = await tx.hrWorkRelationship.create({ data: {
       organizationId: organization.id, personId: person.id, employeeId: employee.id,
-      relationshipRef: `WR-U4-${crypto.randomUUID().slice(0, 8).toUpperCase()}`, status: "ACTIVE", startedAt: now,
+      relationshipRef: `WR-U4-${crypto.randomUUID().slice(0, 8).toUpperCase()}`, status: "ACTIVE", startedAt: fixtureStartedAt,
     } });
     const assignment = await tx.hrEmployeeAssignment.create({ data: {
       organizationId: organization.id, employeeId: employee.id, departmentId: position.departmentId,
-      teamId: position.teamId, positionId: position.id, employmentType: "FULL_TIME", effectiveFrom: now,
+      teamId: position.teamId, positionId: position.id, employmentType: "FULL_TIME", effectiveFrom: fixtureStartedAt,
       status: "ACTIVE", reason: `${run} isolated concurrency fixture`, createdById: initiator.id,
       legalEntityId: position.legalEntityId, isPrimary: true,
     } });
