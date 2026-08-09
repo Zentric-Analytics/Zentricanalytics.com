@@ -190,3 +190,27 @@ WHERE NOT EXISTS (
   SELECT 1 FROM "HrWorkRelationship" wr
   WHERE wr."organizationId" = e."organizationId" AND wr."employeeId" = e."id"
 );
+
+-- Register Unit 4 capabilities using deterministic IDs so the migration is
+-- repeat-safe in restored staging validation environments.
+WITH permission_keys("key") AS (
+  VALUES
+    ('employee.profile_change.request'), ('employee.profile_change.review'),
+    ('workforce_event.create'), ('workforce_event.review'), ('workforce_event.apply'),
+    ('workforce_event.read_self'), ('workforce_event.read_team')
+)
+INSERT INTO "HrPermission" ("id", "organizationId", "key", "description", "createdAt")
+SELECT 'unit4_permission_' || md5(o."id" || ':' || p."key"), o."id", p."key", 'Unit 4 workforce operations permission', CURRENT_TIMESTAMP
+FROM "HrOrganization" o CROSS JOIN permission_keys p
+ON CONFLICT ("organizationId", "key") DO NOTHING;
+
+INSERT INTO "HrRolePermission" ("id", "roleId", "permissionId", "createdAt")
+SELECT 'unit4_role_permission_' || md5(r."id" || ':' || p."id"), r."id", p."id", CURRENT_TIMESTAMP
+FROM "HrRole" r
+JOIN "HrPermission" p ON p."organizationId" = r."organizationId"
+WHERE p."key" IN ('employee.profile_change.request', 'employee.profile_change.review', 'workforce_event.create', 'workforce_event.review', 'workforce_event.apply', 'workforce_event.read_self', 'workforce_event.read_team')
+  AND (
+    r."key" IN ('ADMIN', 'HR_ADMIN')
+    OR (r."key" = 'EMPLOYEE' AND p."key" IN ('employee.profile_change.request', 'workforce_event.read_self'))
+  )
+ON CONFLICT ("roleId", "permissionId") DO NOTHING;
