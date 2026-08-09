@@ -86,11 +86,13 @@ describe("Unit 4 workforce foundation", () => {
   it("provides a governed review start path with an exact event subject", () => {
     const register = readFileSync("src/app/hr/admin/workforce-events/page.tsx", "utf8");
     const review = readFileSync("src/app/hr/admin/workforce-events/[eventId]/review/page.tsx", "utf8");
+    const workflowActions = readFileSync("src/app/hr/admin/workflows/actions.ts", "utf8");
     expect(register).toContain("Start governed review");
     expect(review).toContain('subjectType: "HrWorkforceEvent"');
     expect(review).toContain('name="subjectId" value={event.id}');
     expect(review).toContain('name="subjectEmployeeId" value={event.employeeId}');
     expect(review).toContain("startWorkflowAction");
+    expect(workflowActions).toContain("if (existing) return existing;");
   });
 
   it("treats an already-applied worker winner as an idempotent retry", () => {

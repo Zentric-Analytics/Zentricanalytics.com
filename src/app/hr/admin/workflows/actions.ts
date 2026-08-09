@@ -59,6 +59,8 @@ export async function startWorkflowAction(formData: FormData) {
   assertSafeWorkflowContext(context);
   await prisma.$transaction(async (tx) => {
     const definition = await tx.hrWorkflowDefinition.findFirstOrThrow({ where: { id: input.definitionId, organizationId: auth.user.organizationId, active: true }, include: { stages: { orderBy: { sortOrder: "asc" } } } });
+    const existing = await tx.hrWorkflowInstance.findFirst({ where: { organizationId: auth.user.organizationId, definitionId: definition.id, subjectType: definition.subjectType, subjectId: input.subjectId } });
+    if (existing) return existing;
     if (input.subjectEmployeeId) await tx.hrEmployee.findFirstOrThrow({ where: { id: input.subjectEmployeeId, organizationId: auth.user.organizationId } });
     const eligible = definition.stages.filter((stage) => conditionMatches(stage.routingCondition ? workflowCondition.parse(stage.routingCondition) : null, context));
     if (!eligible.length) throw new Error("No workflow stage matched this context.");
@@ -82,6 +84,7 @@ export async function startWorkflowAction(formData: FormData) {
     const recipients = await tx.hrUser.findMany({ where: { id: { in: first.approverUserIds }, organizationId: auth.user.organizationId }, select: { id: true, email: true } });
     for (const recipient of recipients) await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: recipient.email, template: "hr-workflow-approval", subject: "Workflow approval requested", payload: { workflowInstanceId: instance.id, workflowStageKey: first.stage.key }, idempotencyKey: `hr-workflow-stage:${instance.id}:${first.stage.key}:${recipient.id}` });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrWorkflowInstance", entityId: instance.id, action: "hr.workflow.started", newValues: { definitionId: definition.id, definitionVersion: definition.version, subjectType: definition.subjectType, subjectId: input.subjectId } });
+    return instance;
   }, { isolationLevel: "Serializable" });
   refresh();
 }
