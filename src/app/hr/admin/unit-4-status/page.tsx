@@ -1,16 +1,24 @@
 const deployedHead = process.env.RENDER_GIT_COMMIT ?? "local candidate — see Git branch";
+const isRenderStaging = process.env.RENDER_SERVICE_ID === "srv-d8s6ovvavr4c73fctksg";
+const deploymentStatus = isRenderStaging
+  ? `Live staging candidate ${deployedHead}`
+  : "Local validation candidate; not a staging deployment";
+const migrationStatus = isRenderStaging
+  ? "32 migrations applied; Unit 4 workforce foundation and employment lifecycles current"
+  : "Two additive Unit 4 migrations prepared; verify against staging before release";
+
 const statusItems = [
-  ["Current Unit 4 subsection", "4C — Workforce Event Engine"],
-  ["Current milestone", "Governed promotion, transfer, manager, position, grade, location, and legal-entity changes"],
+  ["Current Unit 4 subsection", "4F — Lifecycle integration and release hardening"],
+  ["Current milestone", "Full effective-dated employee lifecycle validation"],
   ["Branch", "feature/hrms-unit-04-workforce-operations"],
   ["HEAD SHA", deployedHead],
-  ["Current staging deployment", "Units 1–3 staging baseline; Unit 4 candidate not deployed"],
-  ["Database / migration", "Two additive Unit 4 migrations prepared; staging application pending"],
+  ["Current staging deployment", deploymentStatus],
+  ["Database / migration", migrationStatus],
   ["Test totals", "558/558 passing at last full gate; TypeScript, ESLint, Prisma, and build passed"],
-  ["Browser workflow", "Authenticated staging administrator; workforce-event UI awaits exact candidate deployment"],
-  ["Defects found", "Legacy direct termination, incomplete supervisor mutation, and missing position-capacity revalidation"],
-  ["Fixes applied", "Governed separation plus tenant, capacity, supervisor-history, approval, and execution protections"],
-  ["Next release gate", "Authenticated staging deployment, migrations, browser E2E, concurrency, and restore"],
+  ["Browser workflow", "Authenticated staging lifecycle: employee profile through rehire"],
+  ["Defects found", "Status page retained pre-deployment state after the exact candidate became live"],
+  ["Fixes applied", "Runtime-scoped deployment SHA and staging migration state; governed lifecycle protections"],
+  ["Next release gate", "Browser lifecycle, real concurrency, worker recovery, security, email, and restore"],
 ] as const;
 
 export default function Unit4StatusPage() {
