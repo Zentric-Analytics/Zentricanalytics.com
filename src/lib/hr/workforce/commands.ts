@@ -1,0 +1,183 @@
+import crypto from "node:crypto";
+import type { HrWorkforceEventType, Prisma } from "@prisma/client";
+import { appendHrAudit } from "@/lib/hr/audit";
+import {
+  assertEffectiveDateNotEarly,
+  assertEventVersion,
+  assertIndependentApproval,
+  assertSupportedImpactSnapshot,
+  assertWorkforceEventTransition,
+  changedImpactKeys,
+  eventsConflict,
+  type WorkforceImpactSnapshot,
+} from "./events";
+
+type Context = { organizationId: string; actorUserId: string; actorRole?: string };
+
+type DraftInput = {
+  employeeId: string;
+  workRelationshipId?: string;
+  type: HrWorkforceEventType;
+  reason: string;
+  proposedSnapshot: WorkforceImpactSnapshot;
+  requestedEffectiveAt: Date;
+  idempotencyKey: string;
+  ownerUserId?: string;
+};
+
+function reference() {
+  return `WFE-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+}
+
+function json(value: WorkforceImpactSnapshot): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonValue;
+}
+
+async function currentAssignmentSnapshot(tx: Prisma.TransactionClient, organizationId: string, employeeId: string) {
+  const assignment = await tx.hrEmployeeAssignment.findFirst({
+    where: { organizationId, employeeId, isPrimary: true, status: "ACTIVE" },
+    orderBy: { effectiveFrom: "desc" },
+  });
+  if (!assignment) throw new Error("The employee does not have an active primary assignment.");
+  return {
+    assignment,
+    snapshot: {
+      positionId: assignment.positionId,
+      departmentId: assignment.departmentId,
+      teamId: assignment.teamId,
+      locationId: assignment.locationId,
+      legalEntityId: assignment.legalEntityId,
+      employmentType: assignment.employmentType,
+    } satisfies WorkforceImpactSnapshot,
+  };
+}
+
+export async function createWorkforceEventDraft(tx: Prisma.TransactionClient, context: Context, input: DraftInput) {
+  assertSupportedImpactSnapshot(input.proposedSnapshot);
+  const employee = await tx.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: context.organizationId } });
+  const { snapshot } = await currentAssignmentSnapshot(tx, context.organizationId, employee.id);
+  const changed = changedImpactKeys(snapshot, input.proposedSnapshot);
+  if (!changed.length) throw new Error("The proposed workforce event does not change the employee's current assignment.");
+
+  if (input.workRelationshipId) {
+    await tx.hrWorkRelationship.findFirstOrThrow({ where: { id: input.workRelationshipId, organizationId: context.organizationId, employeeId: employee.id, status: { in: ["ACTIVE", "NOTICE_PERIOD", "SUSPENDED"] } } });
+  }
+
+  const existing = await tx.hrWorkforceEvent.findUnique({
+    where: { organizationId_idempotencyKey: { organizationId: context.organizationId, idempotencyKey: input.idempotencyKey } },
+  });
+  if (existing) return existing;
+
+  const openEvents = await tx.hrWorkforceEvent.findMany({
+    where: {
+      organizationId: context.organizationId,
+      employeeId: employee.id,
+      requestedEffectiveAt: input.requestedEffectiveAt,
+      status: { in: ["SUBMITTED", "UNDER_REVIEW", "APPROVED", "SCHEDULED", "APPLYING"] },
+    },
+    select: { id: true, proposedSnapshot: true },
+  });
+  for (const open of openEvents) {
+    if (eventsConflict(
+      { employeeId: employee.id, effectiveAt: input.requestedEffectiveAt, changes: open.proposedSnapshot as WorkforceImpactSnapshot },
+      { employeeId: employee.id, effectiveAt: input.requestedEffectiveAt, changes: input.proposedSnapshot },
+    )) throw new Error(`A conflicting workforce event (${open.id}) already owns one or more proposed fields for this effective date.`);
+  }
+
+  const correlationId = crypto.randomUUID();
+  const event = await tx.hrWorkforceEvent.create({
+    data: {
+      organizationId: context.organizationId,
+      employeeId: employee.id,
+      workRelationshipId: input.workRelationshipId,
+      reference: reference(),
+      type: input.type,
+      reason: input.reason,
+      currentSnapshot: json(snapshot),
+      proposedSnapshot: json(input.proposedSnapshot),
+      requestedEffectiveAt: input.requestedEffectiveAt,
+      initiatedById: context.actorUserId,
+      ownerUserId: input.ownerUserId,
+      idempotencyKey: input.idempotencyKey,
+      correlationId,
+      versions: { create: { version: 1, currentSnapshot: json(snapshot), proposedSnapshot: json(input.proposedSnapshot), reason: input.reason, createdById: context.actorUserId } },
+    },
+  });
+  await appendHrAudit(tx, { ...context, entityType: "HrWorkforceEvent", entityId: event.id, action: "hr.workforce_event.created", newValues: { type: event.type, version: event.version, effectiveAt: event.requestedEffectiveAt, changedFields: changed }, reason: input.reason, correlationId });
+  return event;
+}
+
+export async function submitWorkforceEvent(tx: Prisma.TransactionClient, context: Context, eventId: string, expectedVersion: number) {
+  const event = await tx.hrWorkforceEvent.findFirstOrThrow({ where: { id: eventId, organizationId: context.organizationId } });
+  assertEventVersion(expectedVersion, event.version);
+  assertWorkforceEventTransition(event.status, "SUBMITTED");
+  const result = await tx.hrWorkforceEvent.updateMany({ where: { id: event.id, organizationId: context.organizationId, version: expectedVersion, status: event.status }, data: { status: "SUBMITTED", submittedAt: new Date() } });
+  if (result.count !== 1) throw new Error("This workforce event changed while it was being submitted.");
+  await appendHrAudit(tx, { ...context, entityType: "HrWorkforceEvent", entityId: event.id, action: "hr.workforce_event.submitted", previousValues: { status: event.status }, newValues: { status: "SUBMITTED", version: event.version }, reason: event.reason, correlationId: event.correlationId });
+}
+
+export async function approveWorkforceEvent(tx: Prisma.TransactionClient, context: Context, eventId: string, expectedVersion: number, reason: string) {
+  const event = await tx.hrWorkforceEvent.findFirstOrThrow({ where: { id: eventId, organizationId: context.organizationId } });
+  assertEventVersion(expectedVersion, event.version);
+  assertIndependentApproval(event.initiatedById, context.actorUserId);
+  if (!event.workflowInstanceId) throw new Error("A workforce event cannot be approved until its governed approval workflow is attached.");
+  const workflow = await tx.hrWorkflowInstance.findFirstOrThrow({ where: { id: event.workflowInstanceId, organizationId: context.organizationId, subjectId: event.id, status: "APPROVED" } });
+  assertWorkforceEventTransition(event.status, "APPROVED");
+  const nextStatus = event.requestedEffectiveAt > new Date() ? "SCHEDULED" : "APPROVED";
+  const result = await tx.hrWorkforceEvent.updateMany({ where: { id: event.id, version: expectedVersion, status: event.status }, data: { status: nextStatus, approvedAt: workflow.completedAt ?? new Date(), scheduledAt: nextStatus === "SCHEDULED" ? new Date() : null } });
+  if (result.count !== 1) throw new Error("This workforce event changed while it was being approved.");
+  await appendHrAudit(tx, { ...context, entityType: "HrWorkforceEvent", entityId: event.id, action: nextStatus === "SCHEDULED" ? "hr.workforce_event.scheduled" : "hr.workforce_event.approved", previousValues: { status: event.status }, newValues: { status: nextStatus, version: event.version, effectiveAt: event.requestedEffectiveAt }, reason, correlationId: event.correlationId });
+}
+
+export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context: Context, eventId: string, now = new Date()) {
+  const event = await tx.hrWorkforceEvent.findFirstOrThrow({ where: { id: eventId, organizationId: context.organizationId } });
+  if (!["APPROVED", "SCHEDULED", "FAILED"].includes(event.status)) throw new Error(`Workforce event ${event.reference} is not eligible for application.`);
+  assertEffectiveDateNotEarly(event.requestedEffectiveAt, now);
+  const claim = await tx.hrWorkforceEvent.updateMany({ where: { id: event.id, version: event.version, status: event.status }, data: { status: "APPLYING", failureReason: null, failedAt: null } });
+  if (claim.count !== 1) throw new Error("Another worker or administrator already claimed this workforce event.");
+
+  const attemptNumber = await tx.hrWorkforceEventExecutionAttempt.count({ where: { eventId: event.id, eventVersion: event.version } }) + 1;
+  const attempt = await tx.hrWorkforceEventExecutionAttempt.create({ data: { eventId: event.id, eventVersion: event.version, attemptNumber, claimTokenHash: crypto.createHash("sha256").update(crypto.randomUUID()).digest("hex"), status: "PROCESSING" } });
+  const proposed = event.proposedSnapshot as WorkforceImpactSnapshot;
+  const { assignment } = await currentAssignmentSnapshot(tx, context.organizationId, event.employeeId);
+
+  const assignmentFields = ["positionId", "departmentId", "teamId", "locationId", "legalEntityId", "employmentType"] as const;
+  if (assignmentFields.some((field) => Object.prototype.hasOwnProperty.call(proposed, field))) {
+    const updated = await tx.hrEmployeeAssignment.updateMany({ where: { id: assignment.id, version: assignment.version, status: "ACTIVE" }, data: { status: "ENDED", effectiveTo: event.requestedEffectiveAt, endedAt: now, endedById: context.actorUserId, version: { increment: 1 } } });
+    if (updated.count !== 1) throw new Error("The employee assignment changed before this event could be applied.");
+    await tx.hrEmployeeAssignment.create({ data: {
+      organizationId: assignment.organizationId,
+      employeeId: assignment.employeeId,
+      departmentId: proposed.departmentId ?? assignment.departmentId,
+      teamId: Object.prototype.hasOwnProperty.call(proposed, "teamId") ? proposed.teamId : assignment.teamId,
+      positionId: proposed.positionId ?? assignment.positionId,
+      employmentType: (proposed.employmentType as typeof assignment.employmentType | undefined) ?? assignment.employmentType,
+      location: assignment.location,
+      effectiveFrom: event.requestedEffectiveAt,
+      status: "ACTIVE",
+      reason: `${event.type}: ${event.reason}`,
+      createdById: context.actorUserId,
+      legalEntityId: Object.prototype.hasOwnProperty.call(proposed, "legalEntityId") ? proposed.legalEntityId : assignment.legalEntityId,
+      businessUnitId: assignment.businessUnitId,
+      divisionId: assignment.divisionId,
+      locationId: Object.prototype.hasOwnProperty.call(proposed, "locationId") ? proposed.locationId : assignment.locationId,
+      costCenterId: assignment.costCenterId,
+      isPrimary: true,
+      fte: assignment.fte,
+      placementSnapshot: { workforceEventId: event.id, priorAssignmentId: assignment.id },
+    } });
+  }
+
+  if (Object.prototype.hasOwnProperty.call(proposed, "workMode")) {
+    await tx.hrEmployee.update({ where: { id: event.employeeId }, data: { workMode: proposed.workMode as "ONSITE" | "HYBRID" | "REMOTE" } });
+  }
+  if (Object.prototype.hasOwnProperty.call(proposed, "employmentStatus")) {
+    const employee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: event.employeeId } });
+    await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: proposed.employmentStatus as typeof employee.employmentStatus } });
+    await tx.hrEmployeeStatusHistory.create({ data: { organizationId: context.organizationId, employeeId: employee.id, previousStatus: employee.employmentStatus, newStatus: proposed.employmentStatus as typeof employee.employmentStatus, effectiveAt: event.requestedEffectiveAt, reason: event.reason, changedById: context.actorUserId } });
+  }
+
+  await tx.hrWorkforceEventExecutionAttempt.update({ where: { id: attempt.id }, data: { status: "COMPLETED", completedAt: now } });
+  await tx.hrWorkforceEvent.update({ where: { id: event.id }, data: { status: "APPLIED", appliedAt: now } });
+  await appendHrAudit(tx, { ...context, entityType: "HrWorkforceEvent", entityId: event.id, action: "hr.workforce_event.applied", previousValues: { status: event.status }, newValues: { status: "APPLIED", version: event.version, effectiveAt: event.requestedEffectiveAt, changedFields: Object.keys(proposed) }, reason: event.reason, correlationId: event.correlationId });
+}
