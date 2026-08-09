@@ -152,6 +152,7 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
   const attempt = await tx.hrWorkforceEventExecutionAttempt.create({ data: { eventId: event.id, eventVersion: event.version, attemptNumber, claimTokenHash: crypto.createHash("sha256").update(crypto.randomUUID()).digest("hex"), status: "PROCESSING" } });
   const proposed = event.proposedSnapshot as WorkforceImpactSnapshot;
   const { assignment } = await currentAssignmentSnapshot(tx, context.organizationId, event.employeeId);
+  const appliedEffectiveAt = event.requestedEffectiveAt < now ? now : event.requestedEffectiveAt;
 
   let targetPosition = null;
   if (proposed.positionId) {
@@ -181,7 +182,7 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
 
   const assignmentFields = ["positionId", "departmentId", "teamId", "locationId", "legalEntityId", "employmentType"] as const;
   if (assignmentFields.some((field) => Object.prototype.hasOwnProperty.call(proposed, field))) {
-    const updated = await tx.hrEmployeeAssignment.updateMany({ where: { id: assignment.id, version: assignment.version, status: "ACTIVE" }, data: { status: "ENDED", effectiveTo: event.requestedEffectiveAt, endedAt: now, endedById: context.actorUserId, version: { increment: 1 } } });
+    const updated = await tx.hrEmployeeAssignment.updateMany({ where: { id: assignment.id, version: assignment.version, status: "ACTIVE" }, data: { status: "ENDED", effectiveTo: appliedEffectiveAt, endedAt: now, endedById: context.actorUserId, version: { increment: 1 } } });
     if (updated.count !== 1) throw new Error("The employee assignment changed before this event could be applied.");
     await tx.hrEmployeeAssignment.create({ data: {
       organizationId: assignment.organizationId,
@@ -191,7 +192,7 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
       positionId: proposed.positionId ?? assignment.positionId,
       employmentType: (proposed.employmentType as typeof assignment.employmentType | undefined) ?? assignment.employmentType,
       location: assignment.location,
-      effectiveFrom: event.requestedEffectiveAt,
+      effectiveFrom: appliedEffectiveAt,
       status: "ACTIVE",
       reason: `${event.type}: ${event.reason}`,
       createdById: context.actorUserId,
@@ -208,8 +209,8 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
 
   if (Object.prototype.hasOwnProperty.call(proposed, "managerEmployeeId")) {
     const activeManagers = await tx.hrSupervisorAssignment.findMany({ where: { organizationId: context.organizationId, assignedEmployeeId: event.employeeId, status: "ACTIVE" } });
-    for (const manager of activeManagers) await tx.hrSupervisorAssignment.update({ where: { id: manager.id }, data: { status: "ENDED", effectiveTo: event.requestedEffectiveAt, endedAt: now, endedByUserId: context.actorUserId, endReason: `${event.type}: ${event.reason}` } });
-    if (proposed.managerEmployeeId) await tx.hrSupervisorAssignment.create({ data: { organizationId: context.organizationId, supervisorEmployeeId: proposed.managerEmployeeId, assignedEmployeeId: event.employeeId, assignmentType: "DIRECT_REPORT", status: "ACTIVE", effectiveFrom: event.requestedEffectiveAt, capabilities: { source: "workforce-event", eventId: event.id }, assignedByUserId: context.actorUserId, reason: `${event.type}: ${event.reason}` } });
+    for (const manager of activeManagers) await tx.hrSupervisorAssignment.update({ where: { id: manager.id }, data: { status: "ENDED", effectiveTo: appliedEffectiveAt, endedAt: now, endedByUserId: context.actorUserId, endReason: `${event.type}: ${event.reason}` } });
+    if (proposed.managerEmployeeId) await tx.hrSupervisorAssignment.create({ data: { organizationId: context.organizationId, supervisorEmployeeId: proposed.managerEmployeeId, assignedEmployeeId: event.employeeId, assignmentType: "DIRECT_REPORT", status: "ACTIVE", effectiveFrom: appliedEffectiveAt, capabilities: { source: "workforce-event", eventId: event.id }, assignedByUserId: context.actorUserId, reason: `${event.type}: ${event.reason}` } });
   }
 
   if (Object.prototype.hasOwnProperty.call(proposed, "workMode")) {
@@ -218,12 +219,12 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
   if (Object.prototype.hasOwnProperty.call(proposed, "employmentStatus")) {
     const employee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: event.employeeId } });
     await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: proposed.employmentStatus as typeof employee.employmentStatus } });
-    await tx.hrEmployeeStatusHistory.create({ data: { organizationId: context.organizationId, employeeId: employee.id, previousStatus: employee.employmentStatus, newStatus: proposed.employmentStatus as typeof employee.employmentStatus, effectiveAt: event.requestedEffectiveAt, reason: event.reason, changedById: context.actorUserId } });
+    await tx.hrEmployeeStatusHistory.create({ data: { organizationId: context.organizationId, employeeId: employee.id, previousStatus: employee.employmentStatus, newStatus: proposed.employmentStatus as typeof employee.employmentStatus, effectiveAt: appliedEffectiveAt, reason: event.reason, changedById: context.actorUserId } });
   }
 
   await tx.hrWorkforceEventExecutionAttempt.update({ where: { id: attempt.id }, data: { status: "COMPLETED", completedAt: now } });
   await tx.hrWorkforceEvent.update({ where: { id: event.id }, data: { status: "APPLIED", appliedAt: now } });
-  await appendHrAudit(tx, { ...context, entityType: "HrWorkforceEvent", entityId: event.id, action: "hr.workforce_event.applied", previousValues: { status: event.status }, newValues: { status: "APPLIED", version: event.version, effectiveAt: event.requestedEffectiveAt, changedFields: Object.keys(proposed) }, reason: event.reason, correlationId: event.correlationId });
+  await appendHrAudit(tx, { ...context, entityType: "HrWorkforceEvent", entityId: event.id, action: "hr.workforce_event.applied", previousValues: { status: event.status }, newValues: { status: "APPLIED", version: event.version, requestedEffectiveAt: event.requestedEffectiveAt, appliedEffectiveAt, changedFields: Object.keys(proposed) }, reason: event.reason, correlationId: event.correlationId });
   const notifiedEmployee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: event.employeeId } });
   const recipient = notifiedEmployee.preferredNotificationEmail ?? notifiedEmployee.companyEmail ?? notifiedEmployee.personalEmail;
   if (recipient) await enqueueHrEmail(tx, { organizationId: context.organizationId, recipient, template: "hr-workforce-event-applied", subject: "Workforce change is now effective", payload: { recipientName: notifiedEmployee.preferredName ?? notifiedEmployee.legalFirstName, href: "/hr/employee/profile", workforceEventId: event.id }, idempotencyKey: `workforce-event-applied:${event.id}:v${event.version}` });

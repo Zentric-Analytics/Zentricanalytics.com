@@ -98,5 +98,7 @@ describe("Unit 4 workforce foundation", () => {
     expect(commands).toContain('if (event.status === "APPLIED") return event;');
     expect(commands).toContain('status: "APPLYING"');
     expect(commands).toContain("Another worker or administrator already claimed this workforce event.");
+    expect(commands).toContain("const appliedEffectiveAt = event.requestedEffectiveAt < now ? now : event.requestedEffectiveAt");
+    expect(commands).toContain("requestedEffectiveAt: event.requestedEffectiveAt, appliedEffectiveAt");
   });
 });
