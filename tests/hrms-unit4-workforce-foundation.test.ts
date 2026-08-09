@@ -95,6 +95,12 @@ describe("Unit 4 workforce foundation", () => {
     expect(workflowActions).toContain("if (existing) return existing;");
   });
 
+  it("accepts reconciled work relationships without accepting arbitrary identifiers", () => {
+    const lifecycleActions = readFileSync("src/app/hr/admin/employment-lifecycle/actions.ts", "utf8");
+    expect(lifecycleActions).toContain("/^legacy_relationship_[a-f0-9]{32}$/");
+    expect(lifecycleActions).toContain("workRelationshipId,");
+  });
+
   it("treats an already-applied worker winner as an idempotent retry", () => {
     const commands = readFileSync("src/lib/hr/workforce/commands.ts", "utf8");
     expect(commands).toContain('if (event.status === "APPLIED") return event;');
