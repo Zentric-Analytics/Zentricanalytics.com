@@ -67,4 +67,16 @@ describe("Unit 4 probation, contract, separation, and rehire invariants", () => 
     expect(commands).toContain("personId: prior.personId");
     expect(commands).toContain("rehireOfId: prior.id");
   });
+
+  it("exposes lifecycle actions without bypassing domain commands", () => {
+    const actions = readFileSync("src/app/hr/admin/employment-lifecycle/actions.ts", "utf8");
+    expect(actions).toContain("createProbationCase");
+    expect(actions).toContain("submitProbationReview");
+    expect(actions).toContain("decideProbationCase");
+    expect(actions).toContain("createContractVersion");
+    expect(actions).toContain("approveContractVersion");
+    expect(actions).toContain("reviewSeparationCase");
+    expect(actions).toContain("rehireEmployee");
+    expect(actions.match(/isolationLevel: "Serializable"/g)?.length).toBeGreaterThanOrEqual(7);
+  });
 });
