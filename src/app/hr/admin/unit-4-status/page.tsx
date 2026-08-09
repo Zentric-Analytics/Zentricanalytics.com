@@ -2,14 +2,14 @@ const statusItems = [
   ["Current Unit", "4A — Employee Master Profile"],
   ["Current milestone", "4A/4C foundation: authoritative identity anchors and governed event commands"],
   ["Current branch", "feature/hrms-unit-04-workforce-operations"],
-  ["Latest commit", "4754f65 — Unit 4 blueprint baseline"],
-  ["Current staging deployment", "Not deployed — pre-staging implementation checkpoint"],
-  ["Migration status", "Additive Unit 4 foundation migration created; staging preflight pending"],
+  ["Latest commit", "77aa97e — governed profile changes"],
+  ["Current staging deployment", "Not deployed — environment identity verified"],
+  ["Migration status", "Additive Unit 4 foundation migration created; staging apply pending"],
   ["Tests", "530/530 baseline + 7/7 focused; TypeScript passed"],
   ["Browser journey", "Status view established; lifecycle not started"],
-  ["Known defects", "No functional defect; staging identity preflight not yet executed"],
-  ["Fix in progress", "Employee 360 and self-service server boundaries"],
-  ["Next gate", "4A profile aggregation and scoped authorization UI"],
+  ["Known defects", "No functional defect; Unit 4 lifecycle modules remain incomplete"],
+  ["Fix in progress", "Probation, contract, separation, and rehire governed foundations"],
+  ["Next gate", "4D–4F additive models and lifecycle invariants"],
 ] as const;
 
 export default function Unit4StatusPage() {
@@ -34,6 +34,10 @@ export default function Unit4StatusPage() {
       <section className="mt-6 rounded-2xl border border-indigo-200 bg-indigo-50 p-5">
         <h2 className="font-bold text-indigo-950">Release boundary</h2>
         <p className="mt-2 text-sm text-indigo-900">No Unit 4 production deployment is authorized. The GoDaddy deliverability exception remains tracked separately from Unit 4.</p>
+      </section>
+      <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+        <h2 className="font-bold text-emerald-950">Staging identity verified</h2>
+        <p className="mt-2 text-sm text-emerald-900">Render Staging Workspace · Zentricanalytics.com-Staging · staging.zentricanalytics.com · PostgreSQL zentric_analytics_staging · staging-scoped S3-compatible storage · staging worker and scanner credentials present.</p>
       </section>
     </main>
   );
