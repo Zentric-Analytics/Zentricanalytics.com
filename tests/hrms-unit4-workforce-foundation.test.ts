@@ -72,6 +72,10 @@ describe("Unit 4 workforce foundation", () => {
     const actions = readFileSync("src/app/hr/admin/workforce-events/actions.ts", "utf8");
     expect(commands).toContain("target position no longer has available capacity");
     expect(commands).toContain("An employee cannot be their own manager");
+    expect(commands).toContain("A cross-department transfer requires a compatible target position");
+    expect(commands).toContain("A grade change requires a target position in that grade");
+    expect(commands).toContain("A job change requires a target position with that job profile");
+    expect(commands).toContain("The proposed team does not belong to the destination department");
     expect(commands).toContain('organizationId: context.organizationId');
     expect(commands).toContain('workflowInstanceId');
     expect(commands).toContain('status: "APPLYING"');

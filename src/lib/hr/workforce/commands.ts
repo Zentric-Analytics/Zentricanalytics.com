@@ -161,6 +161,19 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
     if (proposed.departmentId && proposed.departmentId !== targetPosition.departmentId) throw new Error("The proposed department does not match the target position.");
     if (proposed.teamId !== undefined && proposed.teamId !== targetPosition.teamId) throw new Error("The proposed team does not match the target position.");
   }
+  if (proposed.departmentId) await tx.hrDepartment.findFirstOrThrow({ where: { id: proposed.departmentId, organizationId: context.organizationId, status: "ACTIVE" } });
+  if (proposed.teamId) {
+    const team = await tx.hrTeam.findFirstOrThrow({ where: { id: proposed.teamId, organizationId: context.organizationId, status: "ACTIVE" } });
+    const destinationDepartmentId = proposed.departmentId ?? targetPosition?.departmentId ?? assignment.departmentId;
+    if (team.departmentId !== destinationDepartmentId) throw new Error("The proposed team does not belong to the destination department.");
+  }
+  if (proposed.locationId) await tx.hrLocation.findFirstOrThrow({ where: { id: proposed.locationId, organizationId: context.organizationId, status: "ACTIVE" } });
+  if (proposed.legalEntityId) await tx.hrLegalEntity.findFirstOrThrow({ where: { id: proposed.legalEntityId, organizationId: context.organizationId, status: "ACTIVE" } });
+  if (proposed.gradeId) await tx.hrGrade.findFirstOrThrow({ where: { id: proposed.gradeId, organizationId: context.organizationId, status: "ACTIVE" } });
+  if (proposed.jobProfileId) await tx.hrJobProfile.findFirstOrThrow({ where: { id: proposed.jobProfileId, organizationId: context.organizationId, status: "ACTIVE" } });
+  if (!targetPosition && proposed.departmentId && proposed.departmentId !== assignment.departmentId) throw new Error("A cross-department transfer requires a compatible target position.");
+  if (proposed.gradeId && (!targetPosition || targetPosition.gradeId !== proposed.gradeId)) throw new Error("A grade change requires a target position in that grade.");
+  if (proposed.jobProfileId && (!targetPosition || targetPosition.jobProfileId !== proposed.jobProfileId)) throw new Error("A job change requires a target position with that job profile.");
   if (proposed.managerEmployeeId) {
     if (proposed.managerEmployeeId === event.employeeId) throw new Error("An employee cannot be their own manager.");
     await tx.hrEmployee.findFirstOrThrow({ where: { id: proposed.managerEmployeeId, organizationId: context.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE", "NOTICE_PERIOD"] } } });
