@@ -7,6 +7,7 @@ import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { completeLifecycleTaskInput, dueDate, lifecycleType, STANDARD_LIFECYCLE_TASKS, startLifecycleInput, taskIsUnblocked } from "@/lib/hr/lifecycle/definitions";
 import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
+import { createSeparationCase } from "@/lib/hr/workforce/lifecycle-commands";
 
 const paths = ["/hr/admin/lifecycle", "/hr/employee/tasks", "/hr/supervisor/onboarding", "/hr/supervisor/tasks"];
 function refresh() { paths.forEach((path) => revalidatePath(path)); }
@@ -45,6 +46,11 @@ export async function startLifecycleAction(formData: FormData) {
     if (input.knowledgeTransferToId) {
       if (input.knowledgeTransferToId === employee.id) throw new Error("Knowledge transfer must be assigned to another active employee.");
       await tx.hrEmployee.findFirstOrThrow({ where: { id: input.knowledgeTransferToId, organizationId: auth.user.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] }, archivedAt: null } });
+    }
+    if (template.type === "OFFBOARDING") {
+      await createSeparationCase(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, {
+        employeeId: employee.id, type: input.separationType, reason: input.reason!, finalWorkingDate: input.effectiveDate,
+      });
     }
     const instance = await tx.hrLifecycleInstance.create({ data: {
       organizationId: auth.user.organizationId, templateId: template.id, employeeId: employee.id, type: template.type,
