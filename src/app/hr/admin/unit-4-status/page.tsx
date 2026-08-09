@@ -14,7 +14,7 @@ const statusItems = [
   ["HEAD SHA", deployedHead],
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "558/558 passing at last full gate; TypeScript, ESLint, Prisma, and build passed"],
+  ["Test totals", "561/561 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
   ["Browser workflow", "Authenticated staging lifecycle: employee profile through rehire"],
   ["Defects found", "Status page retained pre-deployment state after the exact candidate became live"],
   ["Fixes applied", "Runtime-scoped deployment SHA and staging migration state; governed lifecycle protections"],
