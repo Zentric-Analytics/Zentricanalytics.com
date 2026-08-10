@@ -4,7 +4,7 @@ const deploymentStatus = isRenderStaging
   ? `Live staging candidate ${deployedHead}`
   : "Local validation candidate; not a staging deployment";
 const migrationStatus = isRenderStaging
-  ? "35 migrations expected; additive auditor enum/seed migrations must be confirmed on this deployment"
+  ? "35 migrations applied; schema current; staging preflight, live, ready, and backup-readiness checks pass"
   : "Four additive Unit 4 migrations prepared; verify against staging before release";
 
 const statusItems = [
@@ -14,11 +14,11 @@ const statusItems = [
   ["HEAD SHA", deployedHead],
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "570/570 passing after focused privacy remediation; TypeScript and ESLint passed; full release rerun pending deployment"],
-  ["Browser workflow", "Recipient-backed governed rehire delivered exactly once to the real Gmail Inbox; field-level privacy matrix is now under test"],
-  ["Defects found", "Normal offboarding duplicated an open separation; auditor persona was absent; denied employee/supervisor routes used a generic error; manager pages incorrectly required a permanent role permission"],
-  ["Fixes applied", "Exact-date separation reuse; read-only AUDITOR; accessible 403 denials; manager authority derives from live supervisor scope with server-side direct-report enforcement"],
-  ["Next release gate", "Deploy exact candidate, execute Employee/Supervisor/HR/Auditor browser and direct-route privacy tests, then restore correlation and final 4A-4F lifecycle"],
+  ["Test totals", "572/572 passing; TypeScript, ESLint, Prisma validation, and production build pass; final rerun remains required after evidence updates"],
+  ["Browser workflow", "Recipient-backed rehire delivery PASS; Employee/Manager/HR/Auditor field-privacy matrix PASS; coherent Unit Pass lifecycle and rehire assignment verified"],
+  ["Defects found", "Rehire omitted its active assignment; HR navigation/actions exposed unavailable controls; invite roles exceeded assignable scope; staging archive encryption secret is unavailable to the web service"],
+  ["Fixes applied", "Rehire now creates its relationship and assignment atomically; navigation/actions/role choices are permission-filtered; concurrency fixtures and effective dating are exactly-once"],
+  ["Next release gate", "Provide scoped staging archive execution configuration, create and restore a fresh encrypted archive into an approved isolated target, then run final correlation and release reruns"],
 ] as const;
 
 export default function Unit4StatusPage() {
