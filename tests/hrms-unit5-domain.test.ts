@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertCurrentRequestVersion, assertIndependentLeaveApproval, assertUnit5RequestTransition, projectedPeriodBalance, reconstructUnit5Balance, resolveLeavePolicy, usageLabel, validateWeeklyPattern } from "../src/lib/hr/leave/unit5";
+import { assertCurrentRequestVersion, assertIndependentLeaveApproval, assertUnit5RequestTransition, calculateUnit5Segments, projectedPeriodBalance, reconstructUnit5Balance, resolveLeavePolicy, usageLabel, validateWeeklyPattern } from "../src/lib/hr/leave/unit5";
 
 describe("Unit 5 leave domain", () => {
   it("resolves policy precedence deterministically and fails closed on ambiguity", () => {
@@ -33,5 +33,12 @@ describe("Unit 5 leave domain", () => {
 
   it("shows usage rather than a fake unlimited balance", () => {
     expect(usageLabel("UNLIMITED", 8, "DAYS")).toBe("Unlimited policy · 8 days used this year");
+  });
+
+  it("stores an explainable schedule and holiday calculation", () => {
+    const segments = calculateUnit5Segments({ startDate: new Date("2026-08-10"), endDate: new Date("2026-08-12"), unit: "DAYS", weeklyPattern: [{ weekday: 1, start: "09:00", end: "17:00" }, { weekday: 2, start: "09:00", end: "17:00" }, { weekday: 3, start: "09:00", end: "17:00" }], holidays: [{ localDate: new Date("2026-08-11"), name: "Public holiday" }] });
+    expect(segments.map(({ chargeableAmount }) => chargeableAmount)).toEqual([1, 0, 1]);
+    expect(segments.every(({ scheduledMinutes }) => scheduledMinutes === 480)).toBe(true);
+    expect(segments[1]).toMatchObject({ excludedMinutes: 480, exclusionReason: "Public holiday" });
   });
 });

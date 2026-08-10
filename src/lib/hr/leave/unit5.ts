@@ -104,3 +104,29 @@ export function assertCurrentRequestVersion(expected: number, actual: number) {
 export function usageLabel(model: string, used: number, unit: string) {
   return model === "UNLIMITED" ? `Unlimited policy · ${used} ${unit.toLowerCase()} used this year` : null;
 }
+
+export function calculateUnit5Segments(input: { startDate: Date; endDate: Date; unit: "DAYS" | "HOURS"; requestedHours?: number; weeklyPattern: unknown; holidays: Array<{ localDate: Date; durationMinutes?: number | null; name: string }> }) {
+  if (input.endDate < input.startDate) throw new Error("Leave end date cannot be before start date.");
+  const pattern = validateWeeklyPattern(input.weeklyPattern);
+  const holidays = new Map(input.holidays.map((holiday) => [holiday.localDate.toISOString().slice(0, 10), holiday]));
+  const segments: Array<{ localDate: Date; startsAt: Date; endsAt: Date; scheduledMinutes: number; excludedMinutes: number; chargeableAmount: number; exclusionReason?: string }> = [];
+  const cursor = new Date(Date.UTC(input.startDate.getUTCFullYear(), input.startDate.getUTCMonth(), input.startDate.getUTCDate()));
+  const end = Date.UTC(input.endDate.getUTCFullYear(), input.endDate.getUTCMonth(), input.endDate.getUTCDate());
+  while (cursor.getTime() <= end) {
+    const intervals = pattern.filter((entry) => entry.weekday === cursor.getUTCDay());
+    const scheduledMinutes = intervals.reduce((total, interval) => total + minutes(interval.end) - minutes(interval.start), 0);
+    const holiday = holidays.get(cursor.toISOString().slice(0, 10));
+    const excludedMinutes = holiday ? Math.min(scheduledMinutes, holiday.durationMinutes ?? scheduledMinutes) : 0;
+    const chargeableMinutes = Math.max(0, scheduledMinutes - excludedMinutes);
+    if (scheduledMinutes > 0) segments.push({ localDate: new Date(cursor), startsAt: new Date(cursor), endsAt: new Date(cursor.getTime() + 86_400_000), scheduledMinutes, excludedMinutes, chargeableAmount: input.unit === "HOURS" ? chargeableMinutes / 60 : chargeableMinutes / scheduledMinutes, exclusionReason: holiday?.name });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  if (input.unit === "HOURS") {
+    if (!input.requestedHours) throw new Error("Enter the number of leave hours requested.");
+    const availableHours = segments.reduce((total, segment) => total + segment.chargeableAmount, 0);
+    if (input.requestedHours > availableHours) throw new Error("Requested hours exceed scheduled chargeable time.");
+    let remaining = input.requestedHours;
+    for (const segment of segments) { const amount = Math.min(segment.chargeableAmount, remaining); segment.chargeableAmount = amount; remaining -= amount; }
+  }
+  return segments;
+}
