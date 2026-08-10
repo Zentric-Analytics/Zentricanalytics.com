@@ -10,11 +10,11 @@ const migrationStatus = isRenderStaging
 const statusItems = [
   ["Current Unit 4 subsection", "4F — Lifecycle integration and release hardening"],
   ["Current milestone", "All mandatory Unit 4A-4F staging release gates passed"],
-  ["Branch", "feature/hrms-unit-04-workforce-operations"],
+  ["Branch", "dev"],
   ["HEAD SHA", deployedHead],
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "572/572 passing; TypeScript, ESLint, Prisma validation, production build, preflight, health, readiness, concurrency, and load pass"],
+  ["Test totals", "578/578 passing; TypeScript, ESLint, Prisma validation, production build, preflight, health, readiness, concurrency, and load pass"],
   ["Browser workflow", "Recipient-backed rehire delivery PASS; Employee/Manager/HR/Auditor field-privacy matrix PASS; coherent Unit Pass lifecycle and rehire assignment verified"],
   ["Defects found", "Rehire omitted its active assignment; HR navigation/actions exposed unavailable controls; invite roles exceeded assignable scope; restore evidence was not portable across ephemeral instances"],
   ["Fixes applied", "Atomic rehire assignment; permission-filtered UI and role choices; guarded encrypted restore utility with checksum, target validation, and plaintext cleanup"],
