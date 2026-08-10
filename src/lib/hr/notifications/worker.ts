@@ -104,7 +104,7 @@ export function hrEmailContent(template: string, payload: unknown, applicationBa
     ? emailPayload.recipientName.trim()
     : null;
   const greeting = recipientName ? `Hello ${recipientName},\n\n` : "";
-  if (template === "hr-account-invitation" || template === "hr-password-reset") {
+  if (template === "hr-account-invitation") {
     if (!/^https:\/\//.test(baseUrl)) throw new Error("APPLICATION_BASE_URL must be HTTPS for credential email delivery.");
     const credentialEnvelope = emailPayload?.credentialEnvelope;
     if (typeof credentialEnvelope !== "string") throw new Error("Credential email payload is invalid.");
@@ -123,6 +123,19 @@ export function hrEmailContent(template: string, payload: unknown, applicationBa
   if (template === "hr-handover-created") {
     const href = secureHrEmailLink(emailPayload, baseUrl);
     return brandedHrEmail("HR handover requires review", `${greeting}A candidate has accepted an employment offer and requires HR review.`, { label: "Review HR Handover", href });
+  }
+
+  if (template === "hr-password-reset") {
+    const credentialEnvelope = emailPayload?.credentialEnvelope;
+    if (typeof credentialEnvelope !== "string") throw new Error("Password reset code payload is invalid.");
+    const code = unsealHrCredential(credentialEnvelope);
+    if (!/^\d{6}$/.test(code)) throw new Error("Password reset code payload is invalid.");
+    return brandedHrEmail("Your Zentric HR password reset code", `${greeting}Use this verification code to reset your Zentric HR password:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once. If you did not request a password reset, ignore this message.`, { label: "Return to Password Reset", href: `${baseUrl}/hr/password-reset` });
+  }
+
+  if (template === "hr-password-reset-complete") {
+    const href = secureHrEmailLink({ href: "/hr/login" }, baseUrl);
+    return brandedHrEmail("Your Zentric HR password was changed", `${greeting}Your HR password was successfully changed and all existing HR sessions were signed out.\n\nIf you did not make this change, contact Zentric Analytics HR or Security immediately.`, { label: "Sign In to Zentric HR", href });
   }
   const definition = notificationTemplates[template] ?? (template.startsWith("hr-vacancy-") ? vacancyTemplate : null);
   if (!definition) throw new Error(`Unknown HR email template: ${template}`);
