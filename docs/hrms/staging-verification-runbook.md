@@ -31,9 +31,10 @@ Run only after explicit authorization against an isolated staging service with s
 | 25 | Authenticate worker, scanner, and metrics with correct/incorrect secrets | Correct accepted; incorrect uniformly denied | Status codes and monitor evidence | Rotate affected secret | Yes |
 | 26 | Connect live/ready/metrics monitors and force a safe synthetic failure | Alert reaches named on-call path | Alert/incident IDs | Block promotion | Yes |
 | 27 | Run `yarn hr:smoke` and authorized `HR_LOAD_SMOKE_CONFIRM=non-production yarn hr:load-smoke` | All smoke checks pass; p95 within approved threshold | Sanitized command output | Diagnose; do not increase limits blindly | Yes |
-| 28 | Execute security test plan and independent penetration scope | No open critical/high findings | Signed report and retest IDs | Block promotion | Yes |
-| 29 | Run `yarn hr:backup-readiness`, restore to isolated target, then guarded restore drill | Current backup and successful isolated restore | Backup/restore IDs and timestamp | Block promotion | Yes |
-| 30 | Capture final HR, payroll, security, operations sign-off | Named approval of evidence package | Approval record IDs | Do not promote | Yes |
+| 28 | Run end-to-end approved email-deliverability verification for each sender category using approved test recipients | One delivery attempt and one mailbox-delivered result per category; provider id + email trace + quarantine outcomes are captured | Subject, sender, from/reply, provider message ID, trace ID, inbox placement, audit entry IDs | Pause release; investigate and correct mail-flow controls | Yes |
+| 29 | Execute security test plan and independent penetration scope | No open critical/high findings | Signed report and retest IDs | Block promotion | Yes |
+| 30 | Run `yarn hr:backup-readiness`, restore to isolated target, then guarded restore drill | Current backup and successful isolated restore | Backup/restore IDs and timestamp | Block promotion | Yes |
+| 31 | Capture final HR, payroll, security, operations sign-off | Named approval of evidence package | Approval record IDs | Do not promote | Yes |
 
 ## Rollback
 

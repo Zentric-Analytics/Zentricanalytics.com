@@ -256,6 +256,7 @@ enum HrRoleKey {
   HR_ADMIN
   PAYROLL_ADMIN
   EMPLOYEE
+  AUDITOR
 }
 
 enum HrUserStatus {
@@ -608,6 +609,117 @@ enum HrVacancyApprovalDecision {
   RETURNED
 }
 
+enum HrWorkRelationshipStatus {
+  ACTIVE
+  NOTICE_PERIOD
+  SUSPENDED
+  ENDED
+  CANCELLED
+}
+
+enum HrWorkforceEventType {
+  JOB_CHANGE
+  POSITION_CHANGE
+  PROMOTION
+  TRANSFER
+  DEPARTMENT_CHANGE
+  TEAM_CHANGE
+  MANAGER_CHANGE
+  LOCATION_CHANGE
+  LEGAL_ENTITY_TRANSFER
+  GRADE_CHANGE
+  EMPLOYMENT_TYPE_CHANGE
+  WORK_ARRANGEMENT_CHANGE
+  CONTRACT_CHANGE
+  PROBATION_CONFIRMATION
+  PROBATION_EXTENSION
+  RESIGNATION
+  TERMINATION
+  RETIREMENT
+  CONTRACT_EXPIRY
+  REHIRE
+}
+
+enum HrWorkforceEventStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  RETURNED
+  APPROVED
+  SCHEDULED
+  APPLYING
+  APPLIED
+  REJECTED
+  CANCELLED
+  FAILED
+}
+
+enum HrProfileChangeRequestStatus {
+  DRAFT
+  SUBMITTED
+  MORE_INFORMATION_REQUIRED
+  APPROVED
+  REJECTED
+  CANCELLED
+  APPLIED
+}
+
+enum HrProbationCaseStatus {
+  ACTIVE
+  UNDER_REVIEW
+  CONFIRMED
+  EXTENDED
+  UNSUCCESSFUL
+  CANCELLED
+}
+
+enum HrProbationReviewType {
+  CHECKPOINT
+  FINAL
+}
+
+enum HrProbationRecommendation {
+  CONTINUE
+  CONFIRM
+  EXTEND
+  END_EMPLOYMENT
+}
+
+enum HrEmploymentContractStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  SIGNED
+  SCHEDULED
+  ACTIVE
+  SUPERSEDED
+  EXPIRED
+  CANCELLED
+}
+
+enum HrSeparationType {
+  RESIGNATION
+  TERMINATION
+  REDUNDANCY
+  RETIREMENT
+  CONTRACT_EXPIRY
+  DEATH_IN_SERVICE
+  OTHER
+}
+
+enum HrSeparationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  SCHEDULED
+  APPLIED
+  WITHDRAWN
+  REJECTED
+  CANCELLED
+  FAILED
+}
+
 model HrOrganization {
   id                         String                            @id @default(cuid())
   slug                       String                            @unique
@@ -676,6 +788,13 @@ model HrOrganization {
   recruitmentFallbackQueues  HrRecruitmentFallbackQueue[]
   vacancies                  HrVacancy[]
   vacancyNumberSequences     HrVacancyNumberSequence[]
+  people                     HrPerson[]
+  workRelationships          HrWorkRelationship[]
+  workforceEvents            HrWorkforceEvent[]
+  profileChangeRequests      HrProfileChangeRequest[]
+  probationCases             HrProbationCase[]
+  employmentContracts       HrEmploymentContract[]
+  separationCases           HrSeparationCase[]
 }
 
 model HrUser {
@@ -933,10 +1052,19 @@ model HrEmployee {
   statusHistory                HrEmployeeStatusHistory[]
   systemAccessAssignments      HrSystemAccessAssignment[]
   provisioningDraft            HrEmployeeProvisioningDraft?
+  personId                     String?
+  person                       HrPerson?                    @relation(fields: [personId], references: [id], onDelete: Restrict)
+  workRelationships            HrWorkRelationship[]
+  workforceEvents              HrWorkforceEvent[]
+  profileChangeRequests        HrProfileChangeRequest[]
+  probationCases               HrProbationCase[]
+  employmentContracts         HrEmploymentContract[]
+  separationCases             HrSeparationCase[]
 
   @@unique([organizationId, employeeNumber])
   @@unique([organizationId, companyEmail])
   @@index([organizationId, lastName, legalFirstName])
+  @@index([organizationId, personId])
 }
 
 model HrEmployeeProvisioningDraft {
@@ -1152,6 +1280,268 @@ model HrEmployeeAssignment {
 
   @@index([organizationId, employeeId, status, effectiveFrom, effectiveTo])
   @@index([departmentId, positionId, status])
+}
+
+model HrPerson {
+  id              String               @id @default(cuid())
+  organizationId  String
+  identityKeyHash String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  organization    HrOrganization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employees       HrEmployee[]
+  relationships   HrWorkRelationship[]
+
+  @@unique([organizationId, identityKeyHash])
+  @@index([organizationId, createdAt])
+}
+
+model HrWorkRelationship {
+  id              String                   @id @default(cuid())
+  organizationId  String
+  personId        String
+  employeeId      String
+  relationshipRef String
+  status          HrWorkRelationshipStatus @default(ACTIVE)
+  startedAt       DateTime
+  noticeDate      DateTime?
+  endedAt         DateTime?
+  endReason       String?
+  rehireOfId      String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  organization    HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  person          HrPerson                 @relation(fields: [personId], references: [id], onDelete: Restrict)
+  employee        HrEmployee               @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  rehireOf        HrWorkRelationship?      @relation("WorkRelationshipRehire", fields: [rehireOfId], references: [id], onDelete: Restrict)
+  rehires         HrWorkRelationship[]      @relation("WorkRelationshipRehire")
+  workforceEvents HrWorkforceEvent[]
+  contracts       HrEmploymentContract[]
+  separationCases HrSeparationCase[]
+
+  @@unique([organizationId, relationshipRef])
+  @@index([organizationId, personId, status])
+  @@index([employeeId, status, startedAt, endedAt])
+}
+
+model HrWorkforceEvent {
+  id                   String                 @id @default(cuid())
+  organizationId       String
+  employeeId           String
+  workRelationshipId   String?
+  reference            String
+  type                 HrWorkforceEventType
+  status               HrWorkforceEventStatus @default(DRAFT)
+  version              Int                    @default(1)
+  reason               String
+  currentSnapshot      Json
+  proposedSnapshot     Json
+  requestedEffectiveAt DateTime
+  initiatedById        String
+  ownerUserId          String?
+  workflowInstanceId   String?
+  idempotencyKey       String
+  correlationId        String
+  submittedAt          DateTime?
+  approvedAt           DateTime?
+  scheduledAt          DateTime?
+  appliedAt            DateTime?
+  cancelledAt          DateTime?
+  failedAt             DateTime?
+  failureReason        String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  organization         HrOrganization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee             HrEmployee             @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  workRelationship     HrWorkRelationship?    @relation(fields: [workRelationshipId], references: [id], onDelete: Restrict)
+  versions             HrWorkforceEventVersion[]
+  executionAttempts    HrWorkforceEventExecutionAttempt[]
+
+  @@unique([organizationId, reference])
+  @@unique([organizationId, idempotencyKey])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, status, requestedEffectiveAt])
+  @@index([employeeId, status, requestedEffectiveAt])
+}
+
+model HrWorkforceEventVersion {
+  id                 String           @id @default(cuid())
+  eventId            String
+  version            Int
+  currentSnapshot    Json
+  proposedSnapshot   Json
+  reason             String
+  evidenceVersionIds String[]         @default([])
+  createdById        String
+  createdAt          DateTime         @default(now())
+  event              HrWorkforceEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@unique([eventId, version])
+  @@index([eventId, createdAt])
+}
+
+model HrWorkforceEventExecutionAttempt {
+  id             String           @id @default(cuid())
+  eventId        String
+  eventVersion   Int
+  attemptNumber  Int
+  claimTokenHash String           @unique
+  status         String
+  safeError      String?
+  startedAt      DateTime         @default(now())
+  completedAt    DateTime?
+  event          HrWorkforceEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@unique([eventId, eventVersion, attemptNumber])
+  @@index([status, startedAt])
+}
+
+model HrProfileChangeRequest {
+  id                     String                       @id @default(cuid())
+  organizationId         String
+  employeeId             String
+  status                 HrProfileChangeRequestStatus @default(DRAFT)
+  version                Int                          @default(1)
+  fieldKey               String
+  currentValueRedacted   Json?
+  proposedValueEncrypted String?
+  proposedValueRedacted  Json
+  effectiveAt            DateTime?
+  evidenceVersionIds     String[]                     @default([])
+  requestedById          String
+  reviewedById           String?
+  reviewReason           String?
+  submittedAt            DateTime?
+  reviewedAt             DateTime?
+  appliedAt              DateTime?
+  cancelledAt            DateTime?
+  correlationId          String
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
+  organization           HrOrganization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee               HrEmployee                   @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, status, createdAt])
+  @@index([employeeId, fieldKey, status])
+}
+
+model HrProbationCase {
+  id                    String                @id @default(cuid())
+  organizationId        String
+  employeeId            String
+  workforceEventId      String?
+  status                HrProbationCaseStatus @default(ACTIVE)
+  version               Int                   @default(1)
+  startedAt             DateTime
+  scheduledEndAt        DateTime
+  configuredDurationDays Int
+  objectives            Json
+  extensionCount        Int                   @default(0)
+  confirmedAt           DateTime?
+  unsuccessfulAt        DateTime?
+  decisionReason        String?
+  createdById           String
+  decidedById           String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  organization          HrOrganization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee              HrEmployee            @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  reviews               HrProbationReview[]
+
+  @@index([organizationId, status, scheduledEndAt])
+  @@index([employeeId, status, startedAt])
+}
+
+model HrProbationReview {
+  id               String                     @id @default(cuid())
+  probationCaseId  String
+  type             HrProbationReviewType
+  checkpointAt     DateTime
+  managerUserId    String?
+  employeeComment  String?
+  managerComment   String?
+  recommendation   HrProbationRecommendation?
+  submittedAt      DateTime?
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  probationCase    HrProbationCase            @relation(fields: [probationCaseId], references: [id], onDelete: Restrict)
+
+  @@unique([probationCaseId, type, checkpointAt])
+  @@index([checkpointAt, submittedAt])
+}
+
+model HrEmploymentContract {
+  id                 String                     @id @default(cuid())
+  organizationId     String
+  employeeId         String
+  workRelationshipId String
+  contractRef        String
+  status             HrEmploymentContractStatus @default(DRAFT)
+  currentVersion     Int                        @default(1)
+  effectiveFrom      DateTime
+  effectiveTo        DateTime?
+  createdById        String
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  organization       HrOrganization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee           HrEmployee                 @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  workRelationship   HrWorkRelationship         @relation(fields: [workRelationshipId], references: [id], onDelete: Restrict)
+  versions           HrEmploymentContractVersion[]
+
+  @@unique([organizationId, contractRef])
+  @@index([employeeId, status, effectiveFrom, effectiveTo])
+}
+
+model HrEmploymentContractVersion {
+  id                    String               @id @default(cuid())
+  contractId            String
+  version               Int
+  termsSnapshot         Json
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  documentVersionId     String?
+  approvedById          String?
+  approvedAt            DateTime?
+  signedAt              DateTime?
+  supersededAt          DateTime?
+  createdById           String
+  createdAt             DateTime             @default(now())
+  contract              HrEmploymentContract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+
+  @@unique([contractId, version])
+  @@index([contractId, effectiveFrom, effectiveTo])
+}
+
+model HrSeparationCase {
+  id                 String             @id @default(cuid())
+  organizationId     String
+  employeeId         String
+  workRelationshipId String
+  workforceEventId   String?
+  type               HrSeparationType
+  status             HrSeparationStatus @default(DRAFT)
+  version            Int                @default(1)
+  reason             String
+  initiatedById      String
+  noticeDate         DateTime?
+  finalWorkingDate   DateTime
+  approvedById       String?
+  approvedAt         DateTime?
+  appliedAt          DateTime?
+  withdrawnAt        DateTime?
+  cancelledAt        DateTime?
+  failureReason      String?
+  correlationId      String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  organization       HrOrganization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee           HrEmployee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  workRelationship   HrWorkRelationship @relation(fields: [workRelationshipId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, status, finalWorkingDate])
+  @@index([employeeId, status, finalWorkingDate])
 }
 
 model HrEmployeeAddress {

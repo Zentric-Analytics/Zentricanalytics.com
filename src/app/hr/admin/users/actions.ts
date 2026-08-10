@@ -22,7 +22,7 @@ function requirePrimaryAdmin(auth: { roles: string[]; user: { isPrimaryAdmin: bo
   }
 }
 
-const createSchema = z.object({ email: z.string().email().max(180), role: z.enum(["ADMIN","HR_ADMIN","PAYROLL_ADMIN","EMPLOYEE"]) });
+const createSchema = z.object({ email: z.string().email().max(180), role: z.enum(["ADMIN","HR_ADMIN","PAYROLL_ADMIN","EMPLOYEE","AUDITOR"]) });
 export async function createHrUserAction(formData: FormData) {
   const auth = await requirePermission("user.create");
   const input = createSchema.parse(Object.fromEntries(formData));
@@ -69,7 +69,7 @@ export async function reactivateHrUserAction(formData: FormData) {
   revalidatePath("/hr/admin/users");
 }
 
-const roleChangeSchema = z.object({ userId: z.string().cuid(), role: z.enum(["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN", "EMPLOYEE"]) });
+const roleChangeSchema = z.object({ userId: z.string().cuid(), role: z.enum(["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN", "EMPLOYEE", "AUDITOR"]) });
 export async function assignHrRoleAction(formData: FormData) {
   const auth = await requirePermission("user.role.assign");
   const input = roleChangeSchema.parse(Object.fromEntries(formData));

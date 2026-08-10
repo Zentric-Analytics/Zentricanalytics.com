@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BriefcaseBusiness, CalendarDays, ClipboardCheck, UserRoundPlus } from "lucide-react";
 import { requireAnyPermission } from "@/lib/hr/permissions/authorize";
 import { prisma } from "@/lib/prisma";
 
@@ -42,19 +43,15 @@ export default async function RecruitmentWorkspace() {
   ]);
   return <main>
     <p className="text-sm font-bold uppercase tracking-widest text-teal-700">Connected hiring lifecycle</p>
-    <h1 className="mt-2 text-3xl font-bold">Recruitment and pre-hire workspace</h1>
+    <h1 className="mt-2 text-3xl font-bold">Recruitment &amp; Pre-hire Workspace</h1>
     <p className="mt-2 text-slate-600">Review applications, interview schedules, HR handovers, blocking requirements, and start readiness without losing recruitment history.</p>
 
-    <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {[
-        ["Applications", applications.length],
-        ["Upcoming interviews", interviews.filter((item) => item.status === "SCHEDULED").length],
-        ["HR handovers", handovers.length],
-        ["Pre-hires", preHires.length],
-      ].map(([title, value]) => <article className="rounded-2xl border bg-white p-5" key={title}>
-        <p className="text-sm text-slate-600">{title}</p><p className="mt-1 text-3xl font-bold">{value}</p>
-      </article>)}
-    </div>
+    <div className="hr-grid-4">{[
+      {label:"Applications",value:applications.length,icon:BriefcaseBusiness},
+      {label:"Upcoming interviews",value:interviews.filter((item) => item.status === "SCHEDULED").length,icon:CalendarDays},
+      {label:"HR handovers",value:handovers.length,icon:ClipboardCheck},
+      {label:"Pre-hires",value:preHires.length,icon:UserRoundPlus},
+    ].map(({label,value,icon:Icon}) => <article className="hr-card hr-stat" key={label}><span className="hr-icon"><Icon /></span><span><strong>{value}</strong><p>{label}</p></span></article>)}</div>
 
     <section className="mt-7">
       <h2 className="text-xl font-bold">Application review queue</h2>

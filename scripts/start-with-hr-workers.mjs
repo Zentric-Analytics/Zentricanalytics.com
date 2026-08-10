@@ -32,6 +32,7 @@ async function tick() {
   try {
     await invoke("/api/internal/hr/outbox", process.env.EMAIL_WORKER_SECRET);
     await invoke("/api/internal/hr/recruitment-activation", process.env.ORGANIZATION_WORKER_SECRET);
+    await invoke("/api/internal/hr/workforce-events", process.env.ORGANIZATION_WORKER_SECRET);
   } catch (error) {
     console.error(`[hr-worker] ${error instanceof Error ? error.message : "worker invocation failed"}`);
   } finally {

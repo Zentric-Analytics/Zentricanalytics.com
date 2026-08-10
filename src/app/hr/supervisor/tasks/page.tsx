@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { forbidden } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
 
 export default async function SupervisorTasksPage() {
   const auth = await requireAuthenticatedUser();
-  if (!auth.user.employee) throw new Error("Forbidden");
+  if (!auth.user.employee) forbidden();
   const [tasks, approvals] = await Promise.all([
     prisma.hrLifecycleTask.findMany({ where: { organizationId: auth.user.organizationId, assignedUserId: auth.user.id, status: { in: ["PENDING", "IN_PROGRESS", "BLOCKED"] } }, include: { instance: { include: { employee: true } } }, orderBy: { dueAt: "asc" }, take: 100 }),
     prisma.hrWorkflowStageRun.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE", approverUserIds: { has: auth.user.id } }, include: { instance: { include: { definition: true } } }, orderBy: { dueAt: "asc" }, take: 100 }),

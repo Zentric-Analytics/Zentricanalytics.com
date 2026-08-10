@@ -62,6 +62,7 @@ describe("final HRMS remediation security behavior", () => {
     expect(privilegedMfaRequired({ roles: ["ADMIN"], user: { mfaEnabled: false } })).toBe(true);
     expect(privilegedMfaRequired({ roles: ["EMPLOYEE"], user: { mfaEnabled: false } })).toBe(false);
     expect(privilegedMfaRequired({ roles: ["PAYROLL_ADMIN"], user: { mfaEnabled: true } })).toBe(false);
+    expect(privilegedMfaRequired({ roles: ["AUDITOR"], user: { mfaEnabled: false } })).toBe(true);
   });
 
   it("resolves direct, team, and department supervisor scope without crossing organizations", async () => {
@@ -99,6 +100,28 @@ describe("final HRMS remediation security behavior", () => {
     const actions = read("src/app/hr/admin/users/actions.ts");
     expect(actions).toMatch(/assignHrRoleAction[\s\S]*?revokeAllHrSessions\(target\.id\)/);
     expect(actions).toMatch(/revokeHrRoleAction[\s\S]*?revokeAllHrSessions\(input\.userId\)/);
+  });
+
+  it("renders the accessible 403 boundary and derives manager authority from live scope", () => {
+    for (const path of [
+      "src/app/hr/employee/layout.tsx",
+      "src/app/hr/supervisor/layout.tsx",
+      "src/app/hr/supervisor/team/page.tsx",
+      "src/app/hr/supervisor/tasks/page.tsx",
+      "src/app/hr/supervisor/workforce/page.tsx",
+    ]) {
+      const source = read(path);
+      expect(source).toContain('import { forbidden } from "next/navigation"');
+      expect(source).not.toContain('throw new Error("Forbidden")');
+    }
+    const team = read("src/app/hr/supervisor/team/page.tsx");
+    const workforcePage = read("src/app/hr/supervisor/workforce/page.tsx");
+    const workforceActions = read("src/app/hr/supervisor/workforce/actions.ts");
+    expect(team).not.toContain('permissions.has("supervisor.read_team")');
+    expect(workforcePage).not.toContain('permissions.has("supervisor.review_assigned")');
+    expect(workforceActions).not.toContain('permissions.has("supervisor.review_assigned")');
+    expect(workforceActions).toContain("supervisedEmployeeIds");
+    expect(workforceActions).toContain("outside your active supervisory scope");
   });
 
   it("provides a guarded non-recurring Render release flow", () => {

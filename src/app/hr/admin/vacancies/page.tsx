@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { recruitmentTransitionMaps } from "@/lib/hr/recruitment/states";
 import { createVacancyAction } from "./actions";
 import { VacancyTransitionForm } from "./VacancyTransitionForm";
+import { Ban, BriefcaseBusiness, Clock3, Send } from "lucide-react";
 
 export default async function VacanciesPage() {
   const auth = await requirePermission("vacancy.view");
@@ -16,11 +17,15 @@ export default async function VacanciesPage() {
     prisma.hrHiringTeam.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, orderBy: { name: "asc" } }),
     prisma.hrUser.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, orderBy: { email: "asc" } }),
   ]);
+  const published = vacancies.filter(vacancy => ["OPEN", "SCHEDULED"].includes(vacancy.status)).length;
+  const drafts = vacancies.filter(vacancy => vacancy.status === "DRAFT").length;
+  const closed = vacancies.filter(vacancy => ["CLOSED", "FILLED", "CANCELLED"].includes(vacancy.status)).length;
 
   return <main>
     <p className="text-sm font-bold uppercase tracking-widest text-teal-700">Recruitment administration</p>
     <h1 className="mt-2 text-3xl font-bold">Vacancies</h1>
     <p className="mt-2 text-slate-600">Only approved, explicitly published vacancies become visible on the public Careers page.</p>
+    <div className="hr-grid-4">{[{label:"Total vacancies",value:vacancies.length,icon:BriefcaseBusiness},{label:"Published / open",value:published,icon:Send},{label:"Draft",value:drafts,icon:Clock3},{label:"Closed",value:closed,icon:Ban}].map(({label,value,icon:Icon}) => <article className="hr-card hr-stat" key={label}><span className="hr-icon"><Icon /></span><span><strong>{value}</strong><p>{label}</p></span></article>)}</div>
 
     {auth.permissions.has("vacancy.create") ? <form action={createVacancyAction} className="mt-7 grid gap-3 rounded-2xl border bg-white p-5 md:grid-cols-2">
       <h2 className="text-xl font-bold md:col-span-2">Create vacancy</h2>
