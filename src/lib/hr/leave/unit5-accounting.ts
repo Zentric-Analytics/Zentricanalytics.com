@@ -2,6 +2,8 @@ import { Prisma, type HrLeaveEntryKind, type HrLeaveRequestLifecycleStatus } fro
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { assertIndependentLeaveApproval, assertUnit5RequestTransition, projectedPeriodBalance } from "./unit5";
+import { createWorkforceEventDraft, submitWorkforceEvent } from "@/lib/hr/workforce/commands";
+import { capAccrual, scheduledAccrualAmount } from "./engine";
 
 type Tx = Prisma.TransactionClient;
 type ProjectionField = "granted" | "accrued" | "carriedOver" | "adjusted" | "reserved" | "consumed" | "expired";
@@ -29,22 +31,23 @@ async function transition(tx: Tx, input: { requestVersionId: string; from: HrLea
   return tx.hrLeaveTransition.create({ data: { requestVersionId: input.requestVersionId, fromStatus: input.from, toStatus: input.to, actorUserId: input.actorUserId, reason: input.reason, idempotencyKey: input.idempotencyKey, correlationId: input.correlationId } });
 }
 
-async function postEntry(tx: Tx, input: { organizationId: string; accountPeriodId: string; leavePolicyId: string; kind: HrLeaveEntryKind; amount: Prisma.Decimal | number; unit: "DAYS" | "HOURS"; effectiveAt: Date; sourceType: string; sourceId: string; actorUserId?: string; workerKey?: string; reason: string; correlationId: string; idempotencyKey: string; reversalOfId?: string }) {
+async function postEntry(tx: Tx, input: { organizationId: string; accountPeriodId: string; leavePolicyId: string; kind: HrLeaveEntryKind; amount: Prisma.Decimal | number; impactSign?: 1 | -1; unit: "DAYS" | "HOURS"; effectiveAt: Date; sourceType: string; sourceId: string; actorUserId?: string; workerKey?: string; reason: string; correlationId: string; idempotencyKey: string; reversalOfId?: string }) {
   const existing = await tx.hrLeaveLedgerEntry.findUnique({ where: { organizationId_idempotencyKey: { organizationId: input.organizationId, idempotencyKey: input.idempotencyKey } } });
   if (existing) return { entry: existing, applied: false };
   const amount = new Prisma.Decimal(input.amount);
   if (amount.lte(0)) throw new Error("Authoritative leave ledger entries require a positive amount.");
   const field = projectionField[input.kind];
-  if (field) await tx.hrLeaveAccountPeriod.update({ where: { id: input.accountPeriodId }, data: { [field]: { increment: amount }, version: { increment: 1 } } });
+  const impactSign = input.impactSign ?? 1;
+  if (field) await tx.hrLeaveAccountPeriod.update({ where: { id: input.accountPeriodId }, data: { [field]: { increment: amount.mul(impactSign) }, version: { increment: 1 } } });
   else if (input.kind === "RESERVATION_RELEASE") await tx.hrLeaveAccountPeriod.update({ where: { id: input.accountPeriodId }, data: { reserved: { decrement: amount }, version: { increment: 1 } } });
   else if (input.kind === "REVERSAL") {
     if (!input.reversalOfId) throw new Error("A reversal must identify the original ledger entry.");
     const original = await tx.hrLeaveLedgerEntry.findUniqueOrThrow({ where: { id: input.reversalOfId } });
     const originalField = projectionField[original.kind];
     if (!originalField) throw new Error("This ledger entry kind requires an explicit correction rather than automatic reversal.");
-    await tx.hrLeaveAccountPeriod.update({ where: { id: input.accountPeriodId }, data: { [originalField]: { decrement: amount }, version: { increment: 1 } } });
+    await tx.hrLeaveAccountPeriod.update({ where: { id: input.accountPeriodId }, data: { [originalField]: { increment: amount.mul(-original.impactSign) }, version: { increment: 1 } } });
   }
-  return { entry: await tx.hrLeaveLedgerEntry.create({ data: { ...input, amount } }), applied: true };
+  return { entry: await tx.hrLeaveLedgerEntry.create({ data: { ...input, amount, impactSign: input.kind === "REVERSAL" && input.reversalOfId ? -(await tx.hrLeaveLedgerEntry.findUniqueOrThrow({ where: { id: input.reversalOfId } })).impactSign : impactSign } }), applied: true };
 }
 
 export async function ensureUnit5AccountPeriod(input: { organizationId: string; employeeId: string; leaveTypeId: string; leavePolicyId: string; unit: "DAYS" | "HOURS"; periodStart: Date; periodEnd: Date; grant: number; actorUserId: string; correlationId: string }) {
@@ -57,6 +60,46 @@ export async function ensureUnit5AccountPeriod(input: { organizationId: string; 
   }, { isolationLevel: "Serializable" });
 }
 
+export async function adjustUnit5BalanceFromLegacy(input: { organizationId: string; legacyBalanceId: string; amount: number; actorUserId: string; actorRole?: string; reason: string; correlationId: string }) {
+  if (!Number.isFinite(input.amount) || input.amount === 0) throw new Error("A non-zero finite leave adjustment is required.");
+  return prisma.$transaction(async (tx) => {
+    const balance = await tx.hrLeaveBalance.findFirstOrThrow({ where: { id: input.legacyBalanceId, organizationId: input.organizationId }, include: { leaveType: true } });
+    const periodStart = new Date(Date.UTC(balance.periodYear, 0, 1));
+    const periodEnd = new Date(Date.UTC(balance.periodYear + 1, 0, 1));
+    const account = await tx.hrLeaveAccount.upsert({ where: { organizationId_employeeId_leaveTypeId_unit: { organizationId: input.organizationId, employeeId: balance.employeeId, leaveTypeId: balance.leaveTypeId, unit: balance.leaveType.unit } }, update: {}, create: { organizationId: input.organizationId, employeeId: balance.employeeId, leaveTypeId: balance.leaveTypeId, unit: balance.leaveType.unit } });
+    const period = await tx.hrLeaveAccountPeriod.upsert({ where: { accountId_periodStart_periodEnd: { accountId: account.id, periodStart, periodEnd } }, update: {}, create: { accountId: account.id, leavePolicyId: balance.leavePolicyId, periodStart, periodEnd } });
+    await postEntry(tx, { organizationId: input.organizationId, accountPeriodId: period.id, leavePolicyId: balance.leavePolicyId, kind: "ADJUSTMENT", amount: Math.abs(input.amount), impactSign: input.amount > 0 ? 1 : -1, unit: balance.leaveType.unit, effectiveAt: new Date(), sourceType: "HR_ADJUSTMENT", sourceId: balance.id, actorUserId: input.actorUserId, reason: input.reason, correlationId: input.correlationId, idempotencyKey: `unit5-adjustment:${input.correlationId}` });
+    await tx.hrLeaveBalance.update({ where: { id: balance.id }, data: { adjusted: { increment: input.amount } } });
+    await tx.hrLeaveLedger.create({ data: { balanceId: balance.id, type: "ADJUSTMENT", amount: input.amount, effectiveAt: new Date(), reason: input.reason, actorUserId: input.actorUserId, idempotencyKey: `leave-adjustment:${input.correlationId}` } });
+    await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole, entityType: "HrLeaveAccountPeriod", entityId: period.id, action: "hr.leave.unit5.balance.adjusted", newValues: { amount: input.amount, impactSign: input.amount > 0 ? 1 : -1, legacyBalanceId: balance.id }, reason: input.reason, correlationId: input.correlationId });
+    return period.id;
+  }, { isolationLevel: "Serializable" });
+}
+
+export async function accrueUnit5Assignment(input: { organizationId: string; assignmentId: string; effectiveAt: Date; actorUserId: string; actorRole?: string }) {
+  return prisma.$transaction(async (tx) => {
+    const assignment = await tx.hrEmployeeLeavePolicy.findFirstOrThrow({ where: { id: input.assignmentId, employee: { organizationId: input.organizationId }, status: "ACTIVE" }, include: { employee: true, leavePolicy: { include: { leaveType: true } } } });
+    const policy = assignment.leavePolicy;
+    if (!["MONTHLY", "QUARTERLY"].includes(policy.accrualFrequency)) return { applied: false, amount: 0 };
+    const year = input.effectiveAt.getUTCFullYear();
+    const quarter = Math.floor(input.effectiveAt.getUTCMonth() / 3) + 1;
+    const windowKey = policy.accrualFrequency === "MONTHLY" ? `${year}-${String(input.effectiveAt.getUTCMonth() + 1).padStart(2, "0")}` : `${year}-Q${quarter}`;
+    const account = await tx.hrLeaveAccount.upsert({ where: { organizationId_employeeId_leaveTypeId_unit: { organizationId: input.organizationId, employeeId: assignment.employeeId, leaveTypeId: policy.leaveTypeId, unit: policy.leaveType.unit } }, update: {}, create: { organizationId: input.organizationId, employeeId: assignment.employeeId, leaveTypeId: policy.leaveTypeId, unit: policy.leaveType.unit } });
+    const periodStart = new Date(Date.UTC(year, 0, 1)); const periodEnd = new Date(Date.UTC(year + 1, 0, 1));
+    const period = await tx.hrLeaveAccountPeriod.upsert({ where: { accountId_periodStart_periodEnd: { accountId: account.id, periodStart, periodEnd } }, update: {}, create: { accountId: account.id, leavePolicyId: policy.id, periodStart, periodEnd } });
+    const available = projectedPeriodBalance({ granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) });
+    const amount = Math.round(capAccrual(scheduledAccrualAmount({ entitlement: Number(policy.entitlement), accrualFrequency: policy.accrualFrequency, accrualAmount: policy.accrualAmount ? Number(policy.accrualAmount) : null }), available, policy.maximumBalance ? Number(policy.maximumBalance) : null) * 10_000) / 10_000;
+    if (amount <= 0) return { applied: false, amount: 0 };
+    const correlationId = `unit5-accrual:${assignment.id}:${windowKey}`;
+    const posted = await postEntry(tx, { organizationId: input.organizationId, accountPeriodId: period.id, leavePolicyId: policy.id, kind: "ACCRUAL", amount, unit: policy.leaveType.unit, effectiveAt: input.effectiveAt, sourceType: "POLICY_ACCRUAL", sourceId: assignment.id, actorUserId: input.actorUserId, workerKey: windowKey, reason: `${policy.accrualFrequency.toLowerCase()} policy accrual`, correlationId, idempotencyKey: correlationId });
+    if (!posted.applied) return { applied: false, amount };
+    const legacy = await tx.hrLeaveBalance.upsert({ where: { employeeId_leaveTypeId_periodYear: { employeeId: assignment.employeeId, leaveTypeId: policy.leaveTypeId, periodYear: year } }, update: { leavePolicyId: policy.id, accrued: { increment: amount } }, create: { organizationId: input.organizationId, employeeId: assignment.employeeId, leaveTypeId: policy.leaveTypeId, leavePolicyId: policy.id, periodYear: year, accrued: amount } });
+    await tx.hrLeaveLedger.create({ data: { balanceId: legacy.id, type: "ACCRUAL", amount, effectiveAt: input.effectiveAt, reason: `${policy.accrualFrequency.toLowerCase()} policy accrual`, actorUserId: input.actorUserId, idempotencyKey: `leave-accrual:${legacy.id}:${windowKey}` } });
+    await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole, entityType: "HrLeaveAccountPeriod", entityId: period.id, action: "hr.leave.unit5.accrued", newValues: { amount, windowKey, policyId: policy.id }, correlationId });
+    return { applied: true, amount };
+  }, { isolationLevel: "Serializable" });
+}
+
 function amountsByPeriod(segments: Array<{ accountPeriodId: string | null; chargeableAmount: Prisma.Decimal }>) {
   const groups = new Map<string, Prisma.Decimal>();
   for (const segment of segments) if (segment.accountPeriodId) groups.set(segment.accountPeriodId, (groups.get(segment.accountPeriodId) ?? new Prisma.Decimal(0)).plus(segment.chargeableAmount));
@@ -65,21 +108,35 @@ function amountsByPeriod(segments: Array<{ accountPeriodId: string | null; charg
 
 export async function reserveUnit5Request(input: { organizationId: string; requestVersionId: string; reviewerUserId: string; reason?: string; idempotencyKey: string }) {
   return prisma.$transaction(async (tx) => {
-    const version = await tx.hrLeaveRequestVersion.findFirstOrThrow({ where: { id: input.requestVersionId, organizationId: input.organizationId }, include: { segments: true } });
+    const version = await tx.hrLeaveRequestVersion.findFirstOrThrow({ where: { id: input.requestVersionId, organizationId: input.organizationId }, include: { segments: { orderBy: { sequence: "asc" } }, evidence: true, leavePolicy: { include: { leaveType: true } } } });
     assertIndependentLeaveApproval(version.createdById, input.reviewerUserId);
     const status = await latestStatus(tx, version.id);
     if (["APPROVED", "SCHEDULED"].includes(status)) return { applied: false, status };
     if (status !== "UNDER_REVIEW") throw new Error("Only a request under review can receive final approval.");
+    if ((version.leavePolicy.leaveType.requiresAttachment || version.leavePolicy.evidenceClass) && !version.evidence.some(({ status: evidenceStatus }) => evidenceStatus === "SATISFIED")) throw new Error("Required confidential leave evidence must complete secure scanning before final approval.");
     const groups = amountsByPeriod(version.segments);
     for (const accountPeriodId of [...groups.keys()].sort()) {
       await tx.$queryRaw`SELECT id FROM "HrLeaveAccountPeriod" WHERE id = ${accountPeriodId} FOR UPDATE`;
       const period = await tx.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: accountPeriodId }, include: { leavePolicy: true } });
       const available = projectedPeriodBalance({ granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) });
       const amount = groups.get(accountPeriodId)!;
-      if (!period.leavePolicy.allowNegativeBalance && amount.gt(available)) throw new Error("Final approval cannot reserve more than the current spendable entitlement.");
+      const nonNumericEntitlement = ["UNLIMITED", "UNPAID", "STATUTORY", "LONG_TERM"].includes(period.leavePolicy.entitlementModel);
+      if (!period.leavePolicy.allowNegativeBalance && !nonNumericEntitlement && amount.gt(available)) throw new Error("Final approval cannot reserve more than the current spendable entitlement.");
       await postEntry(tx, { organizationId: input.organizationId, accountPeriodId, leavePolicyId: version.leavePolicyId, kind: "RESERVATION", amount, unit: version.unit, effectiveAt: new Date(), sourceType: "LEAVE_REQUEST_VERSION", sourceId: version.id, actorUserId: input.reviewerUserId, reason: input.reason ?? "Final approval reservation", correlationId: version.correlationId, idempotencyKey: `unit5-reservation:${version.id}:${accountPeriodId}` });
     }
     await transition(tx, { requestVersionId: version.id, from: status, to: "APPROVED", actorUserId: input.reviewerUserId, reason: input.reason, idempotencyKey: input.idempotencyKey, correlationId: version.correlationId });
+    if (version.leavePolicy.entitlementModel === "LONG_TERM") {
+      const existing = await tx.hrLeaveLongAbsence.findUnique({ where: { requestVersionId: version.id } });
+      if (!existing) {
+        const relationship = await tx.hrWorkRelationship.findFirstOrThrow({ where: { organizationId: input.organizationId, employeeId: version.employeeId, status: { in: ["ACTIVE", "NOTICE_PERIOD", "SUSPENDED"] } }, orderBy: { startedAt: "desc" } });
+        const start = version.segments[0]?.startsAt;
+        const expectedReturnAt = version.segments.at(-1)?.endsAt;
+        if (!start || !expectedReturnAt) throw new Error("Long-term leave requires an effective schedule calculation.");
+        const event = await createWorkforceEventDraft(tx, { organizationId: input.organizationId, actorUserId: input.reviewerUserId, actorRole: "LEAVE_APPROVER" }, { employeeId: version.employeeId, workRelationshipId: relationship.id, type: "LEAVE_OF_ABSENCE", reason: input.reason ?? "Approved long-term leave", proposedSnapshot: { employmentStatus: "ON_LEAVE" }, requestedEffectiveAt: start, idempotencyKey: `unit5-long-absence-start:${version.id}`, correlationId: version.correlationId });
+        await submitWorkforceEvent(tx, { organizationId: input.organizationId, actorUserId: input.reviewerUserId, actorRole: "LEAVE_APPROVER" }, event.id, event.version);
+        await tx.hrLeaveLongAbsence.create({ data: { organizationId: input.organizationId, employeeId: version.employeeId, requestVersionId: version.id, startWorkforceEventId: event.id, status: "START_EVENT_SUBMITTED", expectedReturnAt, correlationId: version.correlationId } });
+      }
+    }
     await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.reviewerUserId, entityType: "HrLeaveRequestVersion", entityId: version.id, action: "hr.leave.unit5.final_approved", newValues: { reservedPeriods: [...groups.keys()] }, reason: input.reason, correlationId: version.correlationId });
     return { applied: true, status: "APPROVED" as const };
   }, { isolationLevel: "Serializable" });

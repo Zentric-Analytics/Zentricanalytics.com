@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { assertCurrentRequestVersion, assertIndependentLeaveApproval, assertUnit5RequestTransition, calculateUnit5Segments, projectedPeriodBalance, reconstructUnit5Balance, resolveLeavePolicy, usageLabel, validateWeeklyPattern } from "../src/lib/hr/leave/unit5";
 
@@ -22,6 +24,7 @@ describe("Unit 5 leave domain", () => {
     const entries = [{ kind: "GRANT", amount: 20 }, { kind: "RESERVATION", amount: 5 }, { kind: "RESERVATION_RELEASE", amount: 5 }, { kind: "CONSUMPTION", amount: 5 }];
     expect(reconstructUnit5Balance(entries)).toBe(15);
     expect(projectedPeriodBalance({ granted: 20, accrued: 0, carriedOver: 0, adjusted: 0, reserved: 0, consumed: 5, expired: 0 })).toBe(15);
+    expect(reconstructUnit5Balance([{ kind: "ADJUSTMENT", amount: 2, impactSign: -1 }, { kind: "CORRECTION", amount: 1, impactSign: 1 }])).toBe(-1);
   });
 
   it("enforces state, version and separation-of-duties rules", () => {
@@ -40,5 +43,17 @@ describe("Unit 5 leave domain", () => {
     expect(segments.map(({ chargeableAmount }) => chargeableAmount)).toEqual([1, 0, 1]);
     expect(segments.every(({ scheduledMinutes }) => scheduledMinutes === 480)).toBe(true);
     expect(segments[1]).toMatchObject({ excludedMinutes: 480, exclusionReason: "Public holiday" });
+  });
+
+  it("routes effective-dated leave and long absence through governed workers", () => {
+    const accounting = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-accounting.ts"), "utf8");
+    const worker = fs.readFileSync(path.join(process.cwd(), "src/app/api/internal/hr/leave/route.ts"), "utf8");
+    const longAbsence = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-long-absence.ts"), "utf8");
+    expect(accounting).toContain("unit5-start-transition");
+    expect(accounting).toContain("unit5-complete-transition");
+    expect(accounting).toContain('type: "LEAVE_OF_ABSENCE"');
+    expect(worker).toContain("authorizeInternalRequest");
+    expect(longAbsence).toContain('type: "RETURN_FROM_LEAVE"');
+    expect(longAbsence).toContain('employmentStatus: "ACTIVE"');
   });
 });

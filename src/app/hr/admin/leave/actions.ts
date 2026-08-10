@@ -4,8 +4,18 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
-import { availableLeaveBalance, capAccrual, leavePolicyInput, leaveTypeInput, scheduledAccrualAmount } from "@/lib/hr/leave/engine";
+import { availableLeaveBalance, leavePolicyInput, leaveTypeInput } from "@/lib/hr/leave/engine";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { submitUnit5ReturnToWork } from "@/lib/hr/leave/unit5-long-absence";
+import { accrueUnit5Assignment, adjustUnit5BalanceFromLegacy } from "@/lib/hr/leave/unit5-accounting";
+
+export async function submitReturnToWorkAction(formData: FormData) {
+  const auth = await requirePermission("leave.override");
+  const input = z.object({ longAbsenceId: z.string().cuid(), returnAt: z.coerce.date(), reason: z.string().trim().min(3).max(1000) }).parse(Object.fromEntries(formData));
+  await submitUnit5ReturnToWork({ organizationId: auth.user.organizationId, longAbsenceId: input.longAbsenceId, actorUserId: auth.user.id, actorRole: auth.roles[0], returnAt: input.returnAt, reason: input.reason });
+  revalidatePath("/hr/admin/leave");
+  revalidatePath("/hr/admin/workforce-events");
+}
 
 export async function createLeaveTypeAction(formData: FormData) {
   const auth = await requirePermission("leave.policy.manage");
@@ -62,12 +72,7 @@ const adjustmentInput = z.object({ balanceId: z.string().cuid(), amount: z.coerc
 export async function adjustLeaveBalanceAction(formData: FormData) {
   const auth = await requirePermission("leave.override");
   const input = adjustmentInput.parse(Object.fromEntries(formData));
-  const balance = await prisma.hrLeaveBalance.findFirstOrThrow({ where: { id: input.balanceId, organizationId: auth.user.organizationId } });
-  await prisma.$transaction(async (tx) => {
-    await tx.hrLeaveBalance.update({ where: { id: balance.id }, data: { adjusted: { increment: input.amount } } });
-    await tx.hrLeaveLedger.create({ data: { balanceId: balance.id, type: "ADJUSTMENT", amount: input.amount, effectiveAt: new Date(), reason: input.reason, actorUserId: auth.user.id, idempotencyKey: `leave-adjustment:${crypto.randomUUID()}` } });
-    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrLeaveBalance", entityId: balance.id, action: "hr.leave.balance.adjusted", previousValues: { adjusted: balance.adjusted.toString() }, newValues: { adjustment: input.amount }, reason: input.reason });
-  });
+  await adjustUnit5BalanceFromLegacy({ organizationId: auth.user.organizationId, legacyBalanceId: input.balanceId, amount: input.amount, actorUserId: auth.user.id, actorRole: auth.roles[0], reason: input.reason, correlationId: crypto.randomUUID() });
   revalidatePath("/hr/admin/leave");
 }
 
@@ -87,20 +92,7 @@ export async function runLeaveAccrualAction(formData: FormData) {
   const effectiveAt = z.coerce.date().parse(formData.get("effectiveAt"));
   const assignments = await prisma.hrEmployeeLeavePolicy.findMany({ where: { status: "ACTIVE", effectiveFrom: { lte: effectiveAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: effectiveAt } }], employee: { organizationId: auth.user.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } }, leavePolicy: { status: "ACTIVE", accrualFrequency: { in: ["MONTHLY", "QUARTERLY"] } } }, include: { employee: true, leavePolicy: true } });
   for (const assignment of assignments) {
-    const policy = assignment.leavePolicy;
-    const quarter = Math.floor(effectiveAt.getUTCMonth() / 3) + 1;
-    const periodKey = policy.accrualFrequency === "MONTHLY" ? `${effectiveAt.getUTCFullYear()}-${String(effectiveAt.getUTCMonth() + 1).padStart(2, "0")}` : `${effectiveAt.getUTCFullYear()}-Q${quarter}`;
-    await prisma.$transaction(async (tx) => {
-      const balance = await tx.hrLeaveBalance.upsert({ where: { employeeId_leaveTypeId_periodYear: { employeeId: assignment.employeeId, leaveTypeId: policy.leaveTypeId, periodYear: effectiveAt.getUTCFullYear() } }, update: { leavePolicyId: policy.id }, create: { organizationId: auth.user.organizationId, employeeId: assignment.employeeId, leaveTypeId: policy.leaveTypeId, leavePolicyId: policy.id, periodYear: effectiveAt.getUTCFullYear() } });
-      const idempotencyKey = `leave-accrual:${balance.id}:${periodKey}`;
-      if (await tx.hrLeaveLedger.findUnique({ where: { idempotencyKey } })) return;
-      const available = availableLeaveBalance({ opening: Number(balance.opening), accrued: Number(balance.accrued), carriedOver: Number(balance.carriedOver), adjusted: Number(balance.adjusted), reserved: Number(balance.reserved), used: Number(balance.used), expired: Number(balance.expired) });
-      const amount = Math.round(capAccrual(scheduledAccrualAmount({ entitlement: Number(policy.entitlement), accrualFrequency: policy.accrualFrequency, accrualAmount: policy.accrualAmount ? Number(policy.accrualAmount) : null }), available, policy.maximumBalance ? Number(policy.maximumBalance) : null) * 100) / 100;
-      if (amount <= 0) return;
-      await tx.hrLeaveBalance.update({ where: { id: balance.id }, data: { accrued: { increment: amount } } });
-      await tx.hrLeaveLedger.create({ data: { balanceId: balance.id, type: "ACCRUAL", amount, effectiveAt, reason: `${policy.accrualFrequency.toLowerCase()} policy accrual`, actorUserId: auth.user.id, idempotencyKey } });
-      await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrLeaveBalance", entityId: balance.id, action: "hr.leave.balance.accrued", newValues: { amount, periodKey, policyId: policy.id } });
-    }, { isolationLevel: "Serializable" });
+    await accrueUnit5Assignment({ organizationId: auth.user.organizationId, assignmentId: assignment.id, effectiveAt, actorUserId: auth.user.id, actorRole: auth.roles[0] });
   }
   revalidatePath("/hr/admin/leave");
   revalidatePath("/hr/employee/leave");

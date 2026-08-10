@@ -24,6 +24,7 @@ type DraftInput = {
   requestedEffectiveAt: Date;
   idempotencyKey: string;
   ownerUserId?: string;
+  correlationId?: string;
 };
 
 function reference() {
@@ -90,7 +91,7 @@ export async function createWorkforceEventDraft(tx: Prisma.TransactionClient, co
     )) throw new Error(`A conflicting workforce event (${open.id}) already owns one or more proposed fields for this effective date.`);
   }
 
-  const correlationId = crypto.randomUUID();
+  const correlationId = input.correlationId ?? crypto.randomUUID();
   const event = await tx.hrWorkforceEvent.create({
     data: {
       organizationId: context.organizationId,

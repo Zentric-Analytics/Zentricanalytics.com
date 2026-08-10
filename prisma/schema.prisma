@@ -2061,6 +2061,7 @@ model HrLeaveLedgerEntry {
   leavePolicyId   String
   kind            HrLeaveEntryKind
   amount          Decimal              @db.Decimal(12, 4)
+  impactSign      Int                  @default(1)
   unit            HrLeaveUnit
   effectiveAt     DateTime
   sourceType      String

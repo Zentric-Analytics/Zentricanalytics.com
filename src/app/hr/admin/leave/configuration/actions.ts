@@ -16,10 +16,12 @@ export async function createWorkScheduleAction(formData: FormData) {
   assertDateRange(input);
   const weeklyPattern = validateWeeklyPattern(JSON.parse(input.weeklyPattern));
   await prisma.$transaction(async (tx) => {
-    const schedule = await tx.hrWorkSchedule.create({ data: { organizationId: auth.user.organizationId, code: input.code, name: input.name } });
-    const version = await tx.hrWorkScheduleVersion.create({ data: { workScheduleId: schedule.id, version: 1, timezone: input.timezone, weeklyPattern, effectiveFrom: input.effectiveFrom, effectiveTo: input.effectiveTo, publishedAt: new Date(), createdById: auth.user.id } });
-    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrWorkScheduleVersion", entityId: version.id, action: "hr.leave.schedule.published", newValues: { scheduleId: schedule.id, version: 1, timezone: input.timezone, effectiveFrom: input.effectiveFrom } });
-  });
+    const schedule = await tx.hrWorkSchedule.upsert({ where: { organizationId_code: { organizationId: auth.user.organizationId, code: input.code } }, update: {}, create: { organizationId: auth.user.organizationId, code: input.code, name: input.name } });
+    const latest = await tx.hrWorkScheduleVersion.findFirst({ where: { workScheduleId: schedule.id }, orderBy: { version: "desc" } });
+    if (latest && (!latest.effectiveTo || latest.effectiveTo > input.effectiveFrom)) throw new Error("Close the prior schedule version before publishing an overlapping version.");
+    const version = await tx.hrWorkScheduleVersion.create({ data: { workScheduleId: schedule.id, version: (latest?.version ?? 0) + 1, timezone: input.timezone, weeklyPattern, effectiveFrom: input.effectiveFrom, effectiveTo: input.effectiveTo, publishedAt: new Date(), createdById: auth.user.id } });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrWorkScheduleVersion", entityId: version.id, action: "hr.leave.schedule.published", newValues: { scheduleId: schedule.id, version: version.version, timezone: input.timezone, effectiveFrom: input.effectiveFrom } });
+  }, { isolationLevel: "Serializable" });
   revalidatePath("/hr/admin/leave/configuration");
 }
 
@@ -43,9 +45,26 @@ export async function createHolidayCalendarAction(formData: FormData) {
   const input = z.object({ code, name: z.string().trim().min(2).max(120), timezone: z.string().trim().min(3).max(100), ...dateRangeFields }).parse(Object.fromEntries(formData));
   assertDateRange(input);
   await prisma.$transaction(async (tx) => {
-    const calendar = await tx.hrHolidayCalendar.create({ data: { organizationId: auth.user.organizationId, code: input.code, name: input.name } });
-    const version = await tx.hrHolidayCalendarVersion.create({ data: { holidayCalendarId: calendar.id, version: 1, timezone: input.timezone, effectiveFrom: input.effectiveFrom, effectiveTo: input.effectiveTo, publishedAt: new Date(), createdById: auth.user.id } });
-    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrHolidayCalendarVersion", entityId: version.id, action: "hr.leave.calendar.published", newValues: { calendarId: calendar.id, version: 1, timezone: input.timezone } });
+    const calendar = await tx.hrHolidayCalendar.upsert({ where: { organizationId_code: { organizationId: auth.user.organizationId, code: input.code } }, update: {}, create: { organizationId: auth.user.organizationId, code: input.code, name: input.name } });
+    const latest = await tx.hrHolidayCalendarVersion.findFirst({ where: { holidayCalendarId: calendar.id }, orderBy: { version: "desc" } });
+    if (latest && (!latest.effectiveTo || latest.effectiveTo > input.effectiveFrom)) throw new Error("Close the prior calendar version before publishing an overlapping version.");
+    const version = await tx.hrHolidayCalendarVersion.create({ data: { holidayCalendarId: calendar.id, version: (latest?.version ?? 0) + 1, timezone: input.timezone, effectiveFrom: input.effectiveFrom, effectiveTo: input.effectiveTo, publishedAt: new Date(), createdById: auth.user.id } });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrHolidayCalendarVersion", entityId: version.id, action: "hr.leave.calendar.published", newValues: { calendarId: calendar.id, version: version.version, timezone: input.timezone } });
+  }, { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/leave/configuration");
+}
+
+export async function assignHolidayCalendarAction(formData: FormData) {
+  const auth = await requirePermission("leave.policy.manage");
+  const input = z.object({ employeeId: z.string().cuid(), holidayCalendarVersionId: z.string().cuid(), reason: z.string().trim().min(3).max(500), ...dateRangeFields }).parse(Object.fromEntries(formData));
+  assertDateRange(input);
+  const [employee, version] = await Promise.all([
+    prisma.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: auth.user.organizationId } }),
+    prisma.hrHolidayCalendarVersion.findFirstOrThrow({ where: { id: input.holidayCalendarVersionId, holidayCalendar: { organizationId: auth.user.organizationId } } }),
+  ]);
+  await prisma.$transaction(async (tx) => {
+    const assignment = await tx.hrHolidayCalendarAssignment.create({ data: { organizationId: auth.user.organizationId, employeeId: employee.id, holidayCalendarId: version.holidayCalendarId, holidayCalendarVersionId: version.id, effectiveFrom: input.effectiveFrom, effectiveTo: input.effectiveTo, reason: input.reason, assignedById: auth.user.id } });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrHolidayCalendarAssignment", entityId: assignment.id, action: "hr.leave.calendar.assigned", newValues: { employeeId: employee.id, calendarVersionId: version.id, effectiveFrom: input.effectiveFrom }, reason: input.reason });
   });
   revalidatePath("/hr/admin/leave/configuration");
 }

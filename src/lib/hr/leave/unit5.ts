@@ -65,11 +65,10 @@ export function validateWeeklyPattern(input: unknown) {
   return pattern;
 }
 
-export function reconstructUnit5Balance(entries: Array<{ kind: string; amount: number }>) {
+export function reconstructUnit5Balance(entries: Array<{ kind: string; amount: number; impactSign?: number }>) {
   return entries.reduce((total, entry) => {
-    const credit = ["GRANT", "ACCRUAL", "CARRYOVER_IN", "RESERVATION_RELEASE", "REVERSAL", "CORRECTION"].includes(entry.kind);
-    const debit = ["CARRYOVER_OUT", "RESERVATION", "CONSUMPTION", "ADJUSTMENT", "EXPIRY"].includes(entry.kind);
-    return total + (credit ? entry.amount : debit ? -entry.amount : 0);
+    const naturalSign = ["GRANT", "ACCRUAL", "CARRYOVER_IN", "RESERVATION_RELEASE"].includes(entry.kind) ? 1 : ["CARRYOVER_OUT", "RESERVATION", "CONSUMPTION", "EXPIRY"].includes(entry.kind) ? -1 : entry.impactSign ?? 1;
+    return total + entry.amount * naturalSign;
   }, 0);
 }
 

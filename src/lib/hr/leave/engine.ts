@@ -23,6 +23,12 @@ export const leavePolicyInput = z.object({
   probationMonths: z.coerce.number().int().nonnegative().max(60),
   allowNegativeBalance: z.coerce.boolean(),
   requiresApproval: z.coerce.boolean(),
+  entitlementModel: z.enum(["ENTITLEMENT", "EVENT_LIMITED", "UNLIMITED", "UNPAID", "STATUTORY", "LONG_TERM"]).default("ENTITLEMENT"),
+  timezone: z.string().trim().min(3).max(100).default("UTC"),
+  minimumRequest: z.coerce.number().positive().max(10000).optional().or(z.literal("")).transform((value) => value === "" ? undefined : value),
+  evidenceClass: z.string().trim().max(100).optional().transform((value) => value || undefined),
+  evidenceRetentionDays: z.coerce.number().int().positive().max(36500).optional().or(z.literal("")).transform((value) => value === "" ? undefined : value),
+  workflowDefinitionKey: z.string().trim().max(120).optional().transform((value) => value || undefined),
   effectiveFrom: z.coerce.date(),
 });
 
