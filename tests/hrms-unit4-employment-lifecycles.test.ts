@@ -67,6 +67,8 @@ describe("Unit 4 probation, contract, separation, and rehire invariants", () => 
     expect(commands).toContain("assertRehire");
     expect(commands).toContain("personId: prior.personId");
     expect(commands).toContain("rehireOfId: prior.id");
+    expect(commands).toContain('template: "hr-rehire-started"');
+    expect(commands).toContain("rehire-started:${relationship.id}");
   });
 
   it("exposes lifecycle actions without bypassing domain commands", () => {
