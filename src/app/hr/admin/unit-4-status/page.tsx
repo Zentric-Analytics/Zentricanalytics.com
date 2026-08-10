@@ -20,7 +20,7 @@ const statusItems = [
   ["HEAD SHA", deployedHead],
   ["Current deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "578/578 passing; TypeScript, ESLint, Prisma validation, production build, preflight, health, readiness, concurrency, and load pass"],
+  ["Test totals", "580/580 passing; TypeScript, ESLint, Prisma validation, production build, preflight, health, readiness, concurrency, and load pass"],
   ["Browser workflow", "Recipient-backed rehire delivery PASS; Employee/Manager/HR/Auditor field-privacy matrix PASS; coherent lifecycle and rehire assignment verified"],
   ["Defects found", "Rehire assignment, permission-filtered controls, portable restore evidence, and production workforce approval configuration"],
   ["Fixes applied", "Atomic rehire assignment; permission-filtered UI; guarded encrypted restore; active governed workforce-event approval definition"],
