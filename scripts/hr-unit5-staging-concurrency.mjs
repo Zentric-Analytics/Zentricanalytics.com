@@ -26,7 +26,17 @@ async function postReservation(accountPeriodId, organizationId, policyId, unit, 
 try {
   const organization = await prisma.hrOrganization.findFirstOrThrow({ select: { id: true } });
   const employee = await prisma.hrEmployee.findFirstOrThrow({ where: { organizationId: organization.id, employmentStatus: "ACTIVE" }, select: { id: true } });
-  const policy = await prisma.hrLeavePolicy.findFirstOrThrow({ where: { organizationId: organization.id, status: "ACTIVE", entitlementModel: "ENTITLEMENT" }, include: { leaveType: true }, orderBy: { version: "desc" } });
+  const leaveType = await prisma.hrLeaveType.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "UNIT5_CONCURRENCY" } },
+    update: { status: "ACTIVE" },
+    create: { organizationId: organization.id, code: "UNIT5_CONCURRENCY", name: "Unit 5 Concurrency Fixture", unit: "DAYS" },
+  });
+  const policy = await prisma.hrLeavePolicy.upsert({
+    where: { organizationId_leaveTypeId_version: { organizationId: organization.id, leaveTypeId: leaveType.id, version: 1 } },
+    update: { status: "ACTIVE" },
+    create: { organizationId: organization.id, leaveTypeId: leaveType.id, name: "Unit 5 Concurrency Fixture", version: 1, entitlement: 10, effectiveFrom: new Date(Date.UTC(2000, 0, 1)), entitlementModel: "ENTITLEMENT" },
+    include: { leaveType: true },
+  });
   const account = await prisma.hrLeaveAccount.upsert({ where: { organizationId_employeeId_leaveTypeId_unit: { organizationId: organization.id, employeeId: employee.id, leaveTypeId: policy.leaveTypeId, unit: policy.leaveType.unit } }, update: {}, create: { organizationId: organization.id, employeeId: employee.id, leaveTypeId: policy.leaveTypeId, unit: policy.leaveType.unit } });
   const period = await prisma.hrLeaveAccountPeriod.upsert({ where: { accountId_periodStart_periodEnd: { accountId: account.id, periodStart, periodEnd } }, update: {}, create: { accountId: account.id, leavePolicyId: policy.id, periodStart, periodEnd } });
   await prisma.$transaction(async (tx) => {

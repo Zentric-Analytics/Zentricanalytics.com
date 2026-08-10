@@ -100,6 +100,7 @@ describe("Unit 5 leave domain", () => {
     expect(script).toContain('databaseUrl.pathname.slice(1) !== "zentric_analytics_staging"');
     expect(script).toContain('FOR UPDATE`');
     expect(script).toContain('isolationLevel: "Serializable"');
+    expect(script).toContain('code: "UNIT5_CONCURRENCY"');
     expect(script).toContain("winners !== 1 || losers !== 1");
     expect(script).toContain("duplicateEntries !== 1");
   });

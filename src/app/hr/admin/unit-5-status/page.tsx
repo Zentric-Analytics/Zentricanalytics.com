@@ -8,7 +8,7 @@ const items = [
   ["Current phase", "5F — automation, reporting, reconciliation, and staging release validation"],
   ["Migration status", "39 repository migrations expected; three additive Unit 5 migrations await verified staging deployment"],
   ["5A–5F status", "5A policy/calendar built · 5B authoritative ledger built · 5C immutable request revisions built · 5D configured workflow governance built · 5E Unit 4 integration built · 5F operational workers/reporting built"],
-  ["Tests run", "613 automated tests passing locally; TypeScript and ESLint zero-warning gates passing"],
+  ["Tests run", "613 automated tests passing locally; TypeScript and ESLint zero-warning gates passing; first live concurrency run exposed and corrected missing synthetic-policy setup"],
   ["Browser workflow", "Pending exact staging deployment and role-backed lifecycle"],
   ["Defects fixed", "Submission reservation removed; exact carryover-out projection added; reserved carryover protected from expiry; final-stage approval made atomic; returned edits create immutable versions"],
   ["Blockers", "None in local implementation; staging deployment and live evidence remain pending after verified migration"],
