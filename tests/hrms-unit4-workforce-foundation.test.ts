@@ -71,6 +71,20 @@ describe("Unit 4 workforce foundation", () => {
     expect(page).not.toMatch(/previousValues|newValues|actor.*email|form action=|employee\.update|document\.read/);
   });
 
+  it("hides privileged navigation and controls from HR-only users", () => {
+    const layout = readFileSync("src/app/hr/admin/layout.tsx", "utf8");
+    const profile = readFileSync("src/app/hr/admin/employees/[id]/page.tsx", "utf8");
+    const users = readFileSync("src/app/hr/admin/users/page.tsx", "utf8");
+    expect(layout).toContain('"Payroll","/hr/admin/payroll","payroll.read"');
+    expect(layout).toContain('"Settings","/hr/admin/settings","settings.manage"');
+    expect(layout).toContain("auth.permissions.has(permission)");
+    expect(profile).toContain('auth.permissions.has("payroll.read_salary")');
+    expect(profile).toContain('auth.permissions.has("user.update")');
+    expect(users).toContain('auth.permissions.has("user.role.assign")');
+    expect(users).toContain('auth.permissions.has("user.role.revoke")');
+    expect(users).toContain('!user.isPrimaryAdmin');
+  });
+
   it("uses an additive migration that reconciles existing employees", () => {
     const sql = readFileSync("prisma/migrations/20260809090000_hrms_unit4_workforce_foundation/migration.sql", "utf8");
     expect(sql).toContain('CREATE TABLE "HrPerson"');
