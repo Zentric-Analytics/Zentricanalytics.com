@@ -50,11 +50,18 @@ describe("Unit 5 leave domain", () => {
   it("routes effective-dated leave and long absence through governed workers", () => {
     const accounting = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-accounting.ts"), "utf8");
     const worker = fs.readFileSync(path.join(process.cwd(), "src/app/api/internal/hr/leave/route.ts"), "utf8");
+    const operations = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-operations.ts"), "utf8");
     const longAbsence = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-long-absence.ts"), "utf8");
     expect(accounting).toContain("unit5-start-transition");
     expect(accounting).toContain("unit5-complete-transition");
     expect(accounting).toContain('type: "LEAVE_OF_ABSENCE"');
     expect(worker).toContain("authorizeInternalRequest");
+    expect(worker).toContain("runUnit5OperationalWindow");
+    expect(operations).toContain('const jobTypes = ["LIFECYCLE", "ACCRUAL", "CARRYOVER_EXPIRY", "RECONCILIATION", "REMINDERS"]');
+    expect(operations).toContain('status: "PROCESSING", startedAt: { lt: staleBefore }');
+    expect(operations).toContain('run.attemptCount >= 5 ? "ABANDONED" : "FAILED"');
+    expect(operations).toContain("organizations = await prisma.hrOrganization.findMany");
+    expect(accounting).toContain("organizationId?: string");
     expect(longAbsence).toContain('type: "RETURN_FROM_LEAVE"');
     expect(longAbsence).toContain('employmentStatus: "ACTIVE"');
   });

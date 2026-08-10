@@ -76,7 +76,7 @@ export async function adjustUnit5BalanceFromLegacy(input: { organizationId: stri
   }, { isolationLevel: "Serializable" });
 }
 
-export async function accrueUnit5Assignment(input: { organizationId: string; assignmentId: string; effectiveAt: Date; actorUserId: string; actorRole?: string }) {
+export async function accrueUnit5Assignment(input: { organizationId: string; assignmentId: string; effectiveAt: Date; actorUserId?: string; actorRole?: string }) {
   return prisma.$transaction(async (tx) => {
     const assignment = await tx.hrEmployeeLeavePolicy.findFirstOrThrow({ where: { id: input.assignmentId, employee: { organizationId: input.organizationId }, status: "ACTIVE" }, include: { employee: true, leavePolicy: { include: { leaveType: true } } } });
     const policy = assignment.leavePolicy;
@@ -100,7 +100,7 @@ export async function accrueUnit5Assignment(input: { organizationId: string; ass
   }, { isolationLevel: "Serializable" });
 }
 
-export async function processUnit5CarryOver(input: { organizationId: string; effectiveAt: Date; actorUserId: string; actorRole?: string }) {
+export async function processUnit5CarryOver(input: { organizationId: string; effectiveAt: Date; actorUserId?: string; actorRole?: string }) {
   const targetYear = input.effectiveAt.getUTCFullYear();
   const periodStart = new Date(Date.UTC(targetYear, 0, 1));
   const periodEnd = new Date(Date.UTC(targetYear + 1, 0, 1));
@@ -239,9 +239,9 @@ export async function completeUnit5Leave(input: { organizationId: string; reques
   }, { isolationLevel: "Serializable" });
 }
 
-export async function processDueUnit5Leave(now = new Date(), limit = 50) {
+export async function processDueUnit5Leave(now = new Date(), limit = 50, organizationId?: string) {
   const candidates = await prisma.hrLeaveRequestVersion.findMany({
-    where: { AND: [{ transitions: { some: { toStatus: { in: ["APPROVED", "SCHEDULED", "IN_PROGRESS"] } } } }, { transitions: { none: { toStatus: { in: ["COMPLETED", "REJECTED", "CANCELLED", "WITHDRAWN"] } } } }] },
+    where: { organizationId, AND: [{ transitions: { some: { toStatus: { in: ["APPROVED", "SCHEDULED", "IN_PROGRESS"] } } } }, { transitions: { none: { toStatus: { in: ["COMPLETED", "REJECTED", "CANCELLED", "WITHDRAWN"] } } } }] },
     include: { segments: { orderBy: { sequence: "asc" } }, transitions: { orderBy: { createdAt: "desc" }, take: 1 } },
     orderBy: { createdAt: "asc" },
     take: limit,
