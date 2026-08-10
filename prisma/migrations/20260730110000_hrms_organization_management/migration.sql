@@ -150,6 +150,83 @@ CREATE TABLE "HrOrganizationChange" (
 );
 CREATE INDEX "HrOrganizationChange_due_idx" ON "HrOrganizationChange"("organizationId","status","effectiveAt");
 
+CREATE TABLE "HrOrganizationImportBatch" (
+  "id" TEXT PRIMARY KEY, "organizationId" TEXT NOT NULL, "kind" TEXT NOT NULL, "status" TEXT NOT NULL DEFAULT 'VALIDATED',
+  "originalName" TEXT NOT NULL, "rowCount" INTEGER NOT NULL, "validCount" INTEGER NOT NULL, "invalidCount" INTEGER NOT NULL,
+  "createdById" TEXT NOT NULL, "committedById" TEXT, "committedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "HrOrganizationImportBatch_organization_fkey" FOREIGN KEY ("organizationId") REFERENCES "HrOrganization"("id") ON DELETE RESTRICT
+);
+CREATE INDEX "HrOrganizationImportBatch_scope_idx" ON "HrOrganizationImportBatch"("organizationId","status","createdAt");
+CREATE TABLE "HrOrganizationImportRow" (
+  "id" TEXT PRIMARY KEY, "batchId" TEXT NOT NULL, "rowNumber" INTEGER NOT NULL, "payload" JSONB NOT NULL,
+  "valid" BOOLEAN NOT NULL, "errors" JSONB NOT NULL, "committedId" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "HrOrganizationImportRow_batch_fkey" FOREIGN KEY ("batchId") REFERENCES "HrOrganizationImportBatch"("id") ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX "HrOrganizationImportRow_batchId_rowNumber_key" ON "HrOrganizationImportRow"("batchId","rowNumber");
+CREATE INDEX "HrOrganizationImportRow_valid_idx" ON "HrOrganizationImportRow"("batchId","valid");
+CREATE TABLE "HrOrganizationStructureRevision" (
+  "id" TEXT PRIMARY KEY, "organizationId" TEXT NOT NULL, "entityType" TEXT NOT NULL, "entityId" TEXT NOT NULL,
+  "version" INTEGER NOT NULL, "payload" JSONB NOT NULL, "effectiveFrom" TIMESTAMP(3) NOT NULL, "effectiveTo" TIMESTAMP(3),
+  "createdById" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "HrOrganizationStructureRevision_dates_check" CHECK ("effectiveTo" IS NULL OR "effectiveTo" > "effectiveFrom"),
+  CONSTRAINT "HrOrganizationStructureRevision_organization_fkey" FOREIGN KEY ("organizationId") REFERENCES "HrOrganization"("id") ON DELETE RESTRICT
+);
+CREATE UNIQUE INDEX "HrOrganizationStructureRevision_version_key" ON "HrOrganizationStructureRevision"("organizationId","entityType","entityId","version");
+CREATE INDEX "HrOrganizationStructureRevision_effective_idx" ON "HrOrganizationStructureRevision"("organizationId","entityType","effectiveFrom","effectiveTo");
+
+-- Deterministic compatibility backfill for every existing organization.
+INSERT INTO "HrLegalEntity" ("id","organizationId","code","name","registeredName","countryCode","registrationNumber","defaultCurrency","timezone","status","effectiveFrom","createdAt","updatedAt")
+SELECT 'c'||substr(md5(o."id"||':legal-entity'),1,24), o."id", 'DEFAULT', o."name", o."name", 'NG', o."registrationNumber", o."defaultCurrency", 'Africa/Lagos', 'ACTIVE', o."createdAt", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM "HrOrganization" o ON CONFLICT ("organizationId","code") DO NOTHING;
+
+INSERT INTO "HrBusinessUnit" ("id","organizationId","legalEntityId","code","name","description","status","effectiveFrom","createdAt","updatedAt")
+SELECT 'c'||substr(md5(o."id"||':business-unit'),1,24), o."id", 'c'||substr(md5(o."id"||':legal-entity'),1,24), 'DEFAULT', o."name", 'Compatibility business unit for legacy records', 'ACTIVE', o."createdAt", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM "HrOrganization" o ON CONFLICT ("organizationId","code") DO NOTHING;
+
+INSERT INTO "HrDivision" ("id","organizationId","businessUnitId","code","name","status","effectiveFrom","createdAt","updatedAt")
+SELECT 'c'||substr(md5(o."id"||':division'),1,24), o."id", 'c'||substr(md5(o."id"||':business-unit'),1,24), 'DEFAULT', 'General', 'ACTIVE', o."createdAt", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM "HrOrganization" o ON CONFLICT ("organizationId","code") DO NOTHING;
+
+INSERT INTO "HrLocation" ("id","organizationId","legalEntityId","code","name","locationType","countryCode","timezone","workMode","status","effectiveFrom","createdAt","updatedAt")
+SELECT 'c'||substr(md5(o."id"||':location'),1,24), o."id", 'c'||substr(md5(o."id"||':legal-entity'),1,24), 'DEFAULT', 'Primary Location', 'HEAD_OFFICE', 'NG', 'Africa/Lagos', 'HYBRID', 'ACTIVE', o."createdAt", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM "HrOrganization" o ON CONFLICT ("organizationId","code") DO NOTHING;
+
+INSERT INTO "HrCostCenter" ("id","organizationId","legalEntityId","code","name","currency","status","effectiveFrom","createdAt","updatedAt")
+SELECT 'c'||substr(md5(o."id"||':cost-center'),1,24), o."id", 'c'||substr(md5(o."id"||':legal-entity'),1,24), 'DEFAULT', 'General', o."defaultCurrency", 'ACTIVE', o."createdAt", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM "HrOrganization" o ON CONFLICT ("organizationId","code") DO NOTHING;
+
+INSERT INTO "HrJobFamily" ("id","organizationId","code","name","description","status","createdAt","updatedAt")
+SELECT 'c'||substr(md5(o."id"||':job-family'),1,24), o."id", 'DEFAULT', 'General', 'Compatibility job family for legacy positions', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM "HrOrganization" o ON CONFLICT ("organizationId","code") DO NOTHING;
+
+INSERT INTO "HrGrade" ("id","organizationId","code","name","level","currency","status","createdAt","updatedAt")
+SELECT 'c'||substr(md5(o."id"||':grade'),1,24), o."id", 'DEFAULT', 'Unclassified', 1, o."defaultCurrency", 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM "HrOrganization" o ON CONFLICT ("organizationId","code") DO NOTHING;
+
+INSERT INTO "HrJobProfile" ("id","organizationId","jobFamilyId","code","title","description","standardGradeId","status","createdAt","updatedAt")
+SELECT 'c'||substr(md5(o."id"||':job-profile'),1,24), o."id", 'c'||substr(md5(o."id"||':job-family'),1,24), 'DEFAULT', 'Unclassified Role', 'Compatibility job profile for legacy positions', 'c'||substr(md5(o."id"||':grade'),1,24), 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM "HrOrganization" o ON CONFLICT ("organizationId","code") DO NOTHING;
+
+UPDATE "HrPosition" SET
+  "legalEntityId" = 'c'||substr(md5("organizationId"||':legal-entity'),1,24),
+  "businessUnitId" = 'c'||substr(md5("organizationId"||':business-unit'),1,24),
+  "divisionId" = 'c'||substr(md5("organizationId"||':division'),1,24),
+  "locationId" = 'c'||substr(md5("organizationId"||':location'),1,24),
+  "costCenterId" = 'c'||substr(md5("organizationId"||':cost-center'),1,24),
+  "jobProfileId" = 'c'||substr(md5("organizationId"||':job-profile'),1,24),
+  "gradeId" = 'c'||substr(md5("organizationId"||':grade'),1,24)
+WHERE "legalEntityId" IS NULL;
+
+UPDATE "HrEmployeeAssignment" SET
+  "legalEntityId" = 'c'||substr(md5("organizationId"||':legal-entity'),1,24),
+  "businessUnitId" = 'c'||substr(md5("organizationId"||':business-unit'),1,24),
+  "divisionId" = 'c'||substr(md5("organizationId"||':division'),1,24),
+  "locationId" = 'c'||substr(md5("organizationId"||':location'),1,24),
+  "costCenterId" = 'c'||substr(md5("organizationId"||':cost-center'),1,24),
+  "placementSnapshot" = jsonb_build_object('migration','unit-02-default-backfill','departmentId',"departmentId",'positionId',"positionId")
+WHERE "legalEntityId" IS NULL;
+
 -- Preserve legacy behavior while making existing positions immediately usable.
 UPDATE "HrPosition" p SET "lifecycleStatus" =
   CASE WHEN EXISTS (

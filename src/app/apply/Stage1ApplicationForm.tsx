@@ -56,7 +56,7 @@ function ConsentBox({ state, name, children }: { state: Stage1FormState; name: S
   return <label className="flex min-w-0 gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-700 shadow-sm transition focus-within:border-brand focus-within:ring-4 focus-within:ring-brand/10 md:col-span-6"><input className="mt-1 h-4 w-4 accent-brand" name={name} type="checkbox" defaultChecked={state.values[name] === 'on'} required aria-invalid={Boolean(errorFor(state, name))} /><span className="min-w-0"><span>{children}</span> <Required /><FieldError state={state} field={name} /></span></label>;
 }
 
-export function Stage1ApplicationForm() {
+export function Stage1ApplicationForm({ vacancy }: { vacancy?: { publicSlug: string; title: string; vacancyNumber: string; applicationDeadline: Date | null } | null }) {
   const [state, formAction, pending] = useActionState(submitStage1Application, initialStage1FormState);
   const [clearedErrors, setClearedErrors] = useState<Partial<Record<Stage1Field, boolean>>>({});
   const [selectedFile, setSelectedFile] = useState('');
@@ -97,10 +97,13 @@ export function Stage1ApplicationForm() {
   };
   const visibleMessage = state.message && !editedSinceServerError ? state.message : undefined;
   const fileErrorDescription = [errorFor(displayState, 'cv') ? 'cv-error' : '', fileNeedsReselection ? 'cv-reselection-error' : ''].filter(Boolean).join(' ') || undefined;
-  const [selectedRole, setSelectedRole] = useState(values.role || roleAppliedForOptions[0]);
+  const [submissionKey] = useState(() => crypto.randomUUID());
+  const [selectedRole, setSelectedRole] = useState(vacancy ? "Other" : values.role || roleAppliedForOptions[0]);
   const otherRoleIsSelected = selectedRole === 'Other';
 
   return <form action={formAction} className="mx-auto w-full max-w-5xl min-w-0 space-y-6 sm:space-y-8" aria-busy={pending} onSubmit={() => { validateVisibleFileSelection(); }} onChange={(event) => { const name = (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as Stage1Field | undefined; if (name) clearFieldError(name); }}>
+    <input type="hidden" name="submissionKey" value={submissionKey} />
+    {vacancy ? <><input type="hidden" name="vacancySlug" value={vacancy.publicSlug} /><input type="hidden" name="role" value="Other" /><input type="hidden" name="otherRole" value={vacancy.title} /></> : null}
     <p className="sr-only" aria-live="polite">{pending ? 'Submitting application' : ''}</p>
     {visibleMessage ? <div className="min-w-0 break-words rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{visibleMessage}</div> : null}
 
@@ -123,8 +126,8 @@ export function Stage1ApplicationForm() {
     </FormSection>
 
     <FormSection eyebrow="Step 02" title="Role preference" helper="Select the role and work arrangement that best match this application.">
-      <label className={`field ${fieldWidth('wide')}`}><span className="text-sm font-bold text-ink">Role applied for <Required /></span><select className={inputClass(displayState,'role')} name="role" required value={selectedRole} onChange={(event)=>{ setSelectedRole(event.currentTarget.value); clearFieldError('role'); }} aria-invalid={Boolean(errorFor(displayState, 'role'))}>{roleAppliedForOptions.map((role)=><option key={role} value={role}>{role}</option>)}</select><FieldError state={displayState} field="role" /></label>
-      {otherRoleIsSelected ? <TextField state={displayState} name="otherRole" label="Other role" required width="standard" /> : null}
+      {vacancy ? <div className={`rounded-2xl border border-brand/20 bg-brand/5 p-4 ${fieldWidth("full")}`}><p className="text-sm font-bold text-brand">{vacancy.vacancyNumber}</p><p className="mt-1 text-lg font-bold">{vacancy.title}</p><p className="mt-1 text-sm text-slate-600">{vacancy.applicationDeadline ? `Applications close ${vacancy.applicationDeadline.toLocaleString()}.` : "Applications are currently open."}</p></div> : <><label className={`field ${fieldWidth('wide')}`}><span className="text-sm font-bold text-ink">Role applied for <Required /></span><select className={inputClass(displayState,'role')} name="role" required value={selectedRole} onChange={(event)=>{ setSelectedRole(event.currentTarget.value); clearFieldError('role'); }} aria-invalid={Boolean(errorFor(displayState, 'role'))}>{roleAppliedForOptions.map((role)=><option key={role} value={role}>{role}</option>)}</select><FieldError state={displayState} field="role" /></label>
+      {otherRoleIsSelected ? <TextField state={displayState} name="otherRole" label="Other role" required width="standard" /> : null}</>}
       <SelectField state={displayState} name="employmentType" label="Employment type" options={employmentTypeOptions} width="compact" />
       <SelectField state={displayState} name="workMode" label="Preferred work mode" options={stage1WorkModeOptions} width="compact" />
     </FormSection>

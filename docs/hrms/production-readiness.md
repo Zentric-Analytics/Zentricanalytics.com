@@ -14,7 +14,7 @@ Production release is a controlled operation, not an automatic consequence of me
 8. Schedule `POST /api/internal/hr/outbox` at least once per minute with its bearer secret.
 9. Connect monitoring to `/api/health/live`, `/api/health/ready`, and the protected `/api/internal/hr/metrics`.
 10. Run `yarn hr:smoke`, the authorization/IDOR test matrix, accessibility review, and `yarn hr:load-smoke` against non-production.
-11. Complete a backup restore drill and record `BACKUP_LAST_RESTORE_TEST_AT`.
+11. Verify Render's seven-day PITR, the independent 90-day daily/365-day weekly/15-year monthly archive tiers, a quarterly isolated restore drill (`BACKUP_LAST_RESTORE_TEST_AT`) and an annual DR exercise (`BACKUP_LAST_DR_EXERCISE_AT`).
 12. Obtain HR, payroll, security and operations sign-off before production migration.
 
 ## Runtime security

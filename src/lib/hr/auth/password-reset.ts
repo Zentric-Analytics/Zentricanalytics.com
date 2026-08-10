@@ -7,13 +7,14 @@ import { tokenCanBeConsumed } from "./tokens";
 
 export async function requestPasswordReset(organizationId: string, emailInput: string) {
   const email = normalizeHrEmail(emailInput);
-  const user = await prisma.hrUser.findUnique({ where: { organizationId_email: { organizationId, email } } });
+  const user = await prisma.hrUser.findUnique({ where: { organizationId_email: { organizationId, email } }, include: { employee: true } });
   if (!user || user.status !== "ACTIVE") return;
   const rawToken = createOpaqueToken();
   await prisma.$transaction(async (tx) => {
     await tx.hrPasswordResetToken.updateMany({ where: { userId: user.id, status: "ACTIVE" }, data: { status: "REVOKED" } });
     const reset = await tx.hrPasswordResetToken.create({ data: { userId: user.id, tokenHash: hashOpaqueToken(rawToken), expiresAt: new Date(Date.now() + 60 * 60 * 1000) } });
-    await enqueueHrEmail(tx, { organizationId, recipient: user.email, template: "hr-password-reset", subject: "Reset your Zentric HR password", payload: { resetId: reset.id, credentialEnvelope: sealHrCredential(rawToken) }, idempotencyKey: `hr-password-reset:${reset.id}` });
+    const recipientName = user.employee ? `${user.employee.preferredName ?? user.employee.legalFirstName} ${user.employee.lastName}` : undefined;
+    await enqueueHrEmail(tx, { organizationId, recipient: user.email, template: "hr-password-reset", subject: "Reset your Zentric HR password", payload: { resetId: reset.id, credentialEnvelope: sealHrCredential(rawToken), recipientName }, idempotencyKey: `hr-password-reset:${reset.id}` });
     await appendHrAudit(tx, { organizationId, actorUserId: user.id, entityType: "HrUser", entityId: user.id, action: "hr.password.reset_requested" });
   });
 }

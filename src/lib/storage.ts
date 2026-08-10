@@ -1,6 +1,11 @@
 import { constants } from "node:fs";
 import { access, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  hrObjectStorage,
+  s3CompatibleStorageConfigured,
+  validateStorageKey,
+} from "./hr/storage";
 import { randomToken } from "./security";
 
 export const DEFAULT_UPLOAD_MAX_BYTES = 20_971_520;
@@ -35,6 +40,7 @@ const GENERIC_UPLOAD_MIME_TYPES = new Set([
   "binary/octet-stream",
 ]);
 export const LOCAL_PRIVATE_PROVIDER = "local-private";
+export const S3_COMPATIBLE_PROVIDER = "s3-compatible";
 export class PrivateUploadStorageConfigurationError extends Error {
   constructor(message: string) {
     super(message);
@@ -65,7 +71,11 @@ export function validateOnboardingDocumentFile(file: File | null | undefined) {
 }
 
 export function selectedStorageProvider() {
-  return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER || LOCAL_PRIVATE_PROVIDER;
+  return (
+    process.env.PRIVATE_OBJECT_STORAGE_PROVIDER ||
+    process.env.OBJECT_STORAGE_PROVIDER ||
+    LOCAL_PRIVATE_PROVIDER
+  ).trim().toLowerCase();
 }
 
 function assertLocalPrivateProvider(provider: string, operation: string) {
@@ -102,6 +112,14 @@ export function privateUploadRoot() {
 
 export function assertPrivateUploadStorageConfigured() {
   const provider = selectedStorageProvider();
+  if (provider === S3_COMPATIBLE_PROVIDER) {
+    if (!s3CompatibleStorageConfigured()) {
+      throw new PrivateUploadStorageConfigurationError(
+        "S3-compatible private upload storage configuration is incomplete.",
+      );
+    }
+    return;
+  }
   assertLocalPrivateProvider(provider, "object storage");
   if (
     provider === LOCAL_PRIVATE_PROVIDER &&
@@ -117,6 +135,7 @@ export function assertPrivateUploadStorageConfigured() {
 export async function ensurePrivateUploadStorageWritable() {
   assertPrivateUploadStorageConfigured();
   const provider = selectedStorageProvider();
+  if (provider === S3_COMPATIBLE_PROVIDER) return;
   assertLocalPrivateProvider(provider, "write");
   const root = privateUploadRoot();
   try {
@@ -152,10 +171,21 @@ export async function savePrivateUpload(file: File, applicationId: string) {
   await ensurePrivateUploadStorageWritable();
   const safeApplicationId = sanitizeStorageSegment(applicationId);
   const safeName = sanitizeStorageSegment(file.name);
-  const key = path.join(safeApplicationId, `${randomToken(12)}-${safeName}`);
+  const key = path.posix.join(safeApplicationId, `${randomToken(12)}-${safeName}`);
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (provider === S3_COMPATIBLE_PROVIDER) {
+    validateStorageKey(key);
+    const storage = hrObjectStorage();
+    await storage.put(key, bytes, file.type || "application/octet-stream");
+    const metadata = await storage.head(key);
+    if (metadata.sizeBytes !== bytes.length) {
+      await storage.delete(key).catch(() => undefined);
+      throw new Error("Private upload write verification failed.");
+    }
+    return { storageKey: key, provider, restricted: true };
+  }
   const fullPath = resolvePrivateUploadPath(key);
   await mkdir(path.dirname(fullPath), { recursive: true });
-  const bytes = Buffer.from(await file.arrayBuffer());
   await writeFile(fullPath, bytes, { flag: "wx" });
   const verified = await privateUploadExists(key, provider);
   const metadata = verified ? await stat(fullPath) : null;
@@ -183,7 +213,11 @@ export async function deletePrivateUpload(
   storageKey: string,
   provider = LOCAL_PRIVATE_PROVIDER,
 ) {
-  if (provider !== LOCAL_PRIVATE_PROVIDER) return;
+  if (provider === S3_COMPATIBLE_PROVIDER) {
+    await hrObjectStorage().delete(storageKey);
+    return;
+  }
+  assertLocalPrivateProvider(provider, "delete");
   await rm(resolvePrivateUploadPath(storageKey), { force: true });
 }
 
@@ -191,6 +225,14 @@ export async function readPrivateUpload(
   storageKey: string,
   provider = LOCAL_PRIVATE_PROVIDER,
 ) {
+  if (provider === S3_COMPATIBLE_PROVIDER) {
+    const storage = hrObjectStorage();
+    const [buffer, metadata] = await Promise.all([
+      storage.get(storageKey),
+      storage.head(storageKey),
+    ]);
+    return { buffer, metadata, sizeBytes: metadata.sizeBytes };
+  }
   assertLocalPrivateProvider(provider, "read");
   const fullPath = resolvePrivateUploadPath(storageKey);
   const [buffer, metadata] = await Promise.all([
@@ -212,6 +254,9 @@ export async function privateUploadExists(
   storageKey: string,
   provider = LOCAL_PRIVATE_PROVIDER,
 ) {
+  if (provider === S3_COMPATIBLE_PROVIDER) {
+    return hrObjectStorage().exists(storageKey);
+  }
   if (provider !== LOCAL_PRIVATE_PROVIDER) return false;
   try {
     await access(resolvePrivateUploadPath(storageKey), constants.R_OK);
@@ -258,6 +303,15 @@ export async function privateUploadDiagnostic(
       const metadata = await stat(expectedResolvedFilePath);
       fileExists = metadata.isFile();
       fileSizeOnDisk = fileExists ? metadata.size : null;
+    } catch {
+      fileExists = false;
+    }
+  }
+  if (storageKeyPresent && provider === S3_COMPATIBLE_PROVIDER) {
+    try {
+      const metadata = await hrObjectStorage().head(storageKey!);
+      fileExists = true;
+      fileSizeOnDisk = metadata.sizeBytes;
     } catch {
       fileExists = false;
     }

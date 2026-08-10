@@ -40,5 +40,17 @@ export function validateHrDocumentFile(file: File, bytes: Uint8Array, maxBytes =
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 1024 || file.size > maxBytes) throw new Error("The uploaded document exceeds the configured size limit.");
   const detected = detectDocumentContentType(bytes);
   if (!detected || detected !== file.type) throw new Error("Only genuine PDF, JPEG, and PNG documents are accepted.");
+  const extension = path.extname(file.name).toLowerCase();
+  const expectedExtension = new Map([["application/pdf", ".pdf"], ["image/jpeg", ".jpg"], ["image/png", ".png"]]).get(detected);
+  if (extension !== expectedExtension && !(detected === "image/jpeg" && extension === ".jpeg")) throw new Error("The filename extension does not match the verified document type.");
+  if (detected === "application/pdf") {
+    const text = Buffer.from(bytes).toString("latin1");
+    if (!/startxref\s+\d+\s+%%EOF\s*$/.test(text)) throw new Error("The PDF structure is incomplete or contains trailing content.");
+  }
+  if (detected === "image/jpeg" && (bytes.length < 4 || bytes.at(-2) !== 0xff || bytes.at(-1) !== 0xd9)) throw new Error("The JPEG structure is incomplete.");
+  if (detected === "image/png") {
+    const tail = bytes.subarray(Math.max(0, bytes.length - 12));
+    if (tail.length !== 12 || Buffer.from(tail.subarray(4, 8)).toString("ascii") !== "IEND") throw new Error("The PNG structure is incomplete or contains trailing content.");
+  }
   return { contentType: detected, displayFileName: safeDocumentFileName(file.name), sizeBytes: file.size };
 }

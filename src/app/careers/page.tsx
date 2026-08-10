@@ -1,13 +1,8 @@
 import {
   BadgeCheck,
   BookOpenCheck,
-  BrainCircuit,
-  ChartNoAxesCombined,
-  Code2,
   FileUser,
-  FlaskConical,
   MessagesSquare,
-  PanelsTopLeft,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -15,45 +10,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PageShell } from '@/components/PageShell';
 import { Reveal, Stagger } from '@/components/Motion';
+import { prisma } from '@/lib/prisma';
 
-type Role = {
-  Icon: LucideIcon;
-  title: string;
-  description: string;
-};
-
-const roles: Role[] = [
-  {
-    Icon: Code2,
-    title: 'Software Engineer',
-    description: 'Build reliable application features, integrations, and systems with maintainable engineering practices.',
-  },
-  {
-    Icon: PanelsTopLeft,
-    title: 'Web Developer',
-    description: 'Create accessible, responsive web experiences that support practical business and user needs.',
-  },
-  {
-    Icon: BrainCircuit,
-    title: 'AI Solutions Engineer',
-    description: 'Design applied AI workflows that are useful, responsible, measurable, and grounded in real problems.',
-  },
-  {
-    Icon: ChartNoAxesCombined,
-    title: 'Data Analyst',
-    description: 'Turn structured information into clear analysis, reporting, and decisions stakeholders can trust.',
-  },
-  {
-    Icon: FlaskConical,
-    title: 'Research Associate',
-    description: 'Support discovery, market research, documentation, and careful evaluation of technology opportunities.',
-  },
-  {
-    Icon: FileUser,
-    title: 'General Application',
-    description: 'Share your background for future opportunities if your experience does not match a listed role.',
-  },
-];
+export const dynamic = "force-dynamic";
 
 const values: Array<{ Icon: LucideIcon; title: string; description: string }> = [
   {
@@ -78,7 +37,23 @@ const values: Array<{ Icon: LucideIcon; title: string; description: string }> = 
   },
 ];
 
-export default function Careers() {
+export default async function Careers() {
+  const now = new Date();
+  const publishedVacancies = await prisma.hrVacancy.findMany({
+    where: {
+      status: "OPEN",
+      careersVisible: true,
+      OR: [{ opensAt: null }, { opensAt: { lte: now } }],
+      AND: [{ OR: [{ applicationDeadline: null }, { applicationDeadline: { gte: now } }] }],
+    },
+    select: {
+      id: true, vacancyNumber: true, publicSlug: true, title: true, description: true,
+      employmentType: true, workMode: true, locationLabel: true, applicationDeadline: true,
+      publicSalary: true, salaryMinimum: true, salaryMaximum: true, currency: true,
+      department: { select: { name: true } },
+    },
+    orderBy: [{ publishedAt: "desc" }, { title: "asc" }],
+  });
   return (
     <PageShell>
       <div className="bg-[#F3F6F9]">
@@ -117,20 +92,24 @@ export default function Careers() {
           </Reveal>
 
           <Stagger className="mt-8 grid grid-cols-1 gap-x-5 gap-y-[18px] md:grid-cols-2 lg:mt-10 lg:grid-cols-3" delay={120} staggerDelay={90}>
-            {roles.map(({ Icon, title, description }) => (
+            {publishedVacancies.map((vacancy) => (
               <article
-                key={title}
+                key={vacancy.id}
                 className="group flex min-w-0 flex-col rounded-[20px] border border-[#E3EAF1] bg-white p-5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-colors duration-200 ease-out hover:border-[#D4DEE8]"
               >
                 <div className="flex min-w-0 items-center gap-4">
                   <span className="flex size-11 shrink-0 items-center justify-center rounded-[16px] bg-[#EEF8F5] text-[#0B7F60]">
-                    <Icon aria-hidden="true" className="size-[18px] sm:size-5" strokeWidth={1.8} />
+                    <FileUser aria-hidden="true" className="size-[18px] sm:size-5" strokeWidth={1.8} />
                   </span>
-                  <h3 className="min-w-0 text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A]">{title}</h3>
+                  <div><p className="text-xs font-bold text-[#0B7F60]">{vacancy.vacancyNumber}</p><h3 className="min-w-0 text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0B1F3A]">{vacancy.title}</h3></div>
                 </div>
-                <p className="mt-3 text-[14px] font-normal leading-[1.5] text-[#475569]">{description}</p>
+                <p className="mt-3 text-[14px] font-normal leading-[1.5] text-[#475569]">{vacancy.description}</p>
+                <p className="mt-3 text-xs font-semibold text-[#475569]">{vacancy.department.name} · {vacancy.employmentType.replaceAll("_", " ")} · {vacancy.workMode}{vacancy.locationLabel ? ` · ${vacancy.locationLabel}` : ""}</p>
+                {vacancy.publicSalary && vacancy.salaryMinimum && vacancy.salaryMaximum ? <p className="mt-2 text-sm font-semibold">{vacancy.currency} {vacancy.salaryMinimum.toString()}–{vacancy.salaryMaximum.toString()}</p> : null}
+                <Link className="mt-4 font-bold text-[#0B7F60]" href={`/apply?vacancy=${encodeURIComponent(vacancy.publicSlug)}`}>Apply for this role</Link>
               </article>
             ))}
+            {!publishedVacancies.length ? <p className="rounded-[20px] border border-[#E3EAF1] bg-white p-5 text-[#475569] md:col-span-2 lg:col-span-3">There are no open vacancies at this time. You can still submit a general application for future opportunities.</p> : null}
           </Stagger>
 
           <Reveal className="mt-7 flex flex-col items-start" delay={160}>

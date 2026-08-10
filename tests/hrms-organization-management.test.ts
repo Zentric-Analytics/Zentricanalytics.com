@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { assertEffectiveInterval, assertPositionTransition, positionOccupancyStatus, wouldCreateHierarchyCycle } from "../src/lib/hr/organization/validation";
+import { parseOrganizationCsv } from "../src/lib/hr/organization/import";
 
 describe("enterprise organization management", () => {
   it("blocks direct and indirect hierarchy cycles", () => {
@@ -34,14 +35,88 @@ describe("enterprise organization management", () => {
   });
   it("integrates position capacity with assignments and provisioning", () => {
     const assignments = readFileSync("src/app/hr/admin/assignments/actions.ts", "utf8");
+    const positions = readFileSync("src/app/hr/admin/positions/actions.ts", "utf8");
     const provisioning = readFileSync("src/lib/hr/employees/finalize-provisioning.ts", "utf8");
     expect(assignments).toContain("exceed the approved position capacity");
     expect(assignments).toContain("reconcilePositionOccupancy");
     expect(provisioning).toContain("reconcilePositionOccupancy");
     expect(provisioning).toContain('lifecycleStatus: { in: ["OPEN", "PARTIALLY_FILLED"] }');
+    for (const dimension of ["legalEntityId", "businessUnitId", "divisionId", "locationId", "costCenterId", "jobProfileId", "gradeId"]) expect(positions).toContain(dimension);
   });
   it("ships every required organization administration route", () => {
     const workspace = readFileSync("src/app/hr/admin/organization/page.tsx", "utf8");
     for (const route of ["legal-entities", "business-units", "divisions", "departments", "teams", "locations", "cost-centers", "job-families", "jobs", "grades", "positions", "org-chart", "headcount"]) expect(workspace).toContain(`/hr/admin/${route}`);
+  });
+  it("validates imports before any commit", () => {
+    const valid = parseOrganizationCsv("legal-entity", "code,name,countryCode,currency,timezone\nZA,Zentric Analytics,NG,NGN,Africa/Lagos");
+    expect(valid).toMatchObject([{ rowNumber: 2, valid: true }]);
+    const invalid = parseOrganizationCsv("grade", "code,name,level,currency,minimumSalary,midpointSalary,maximumSalary\nG1,Grade 1,1,NGN,200,100,300");
+    expect(invalid[0].valid).toBe(false);
+  });
+  it("provides approval-controlled idempotent restructuring activation", () => {
+    const service = readFileSync("src/lib/hr/organization/restructuring.ts", "utf8");
+    const route = readFileSync("src/app/api/internal/hr/organization-changes/route.ts", "utf8");
+    expect(service).toContain("Organization change requester cannot approve");
+    expect(service).toContain('status: "SCHEDULED"');
+    expect(service).toContain("hrOrganizationStructureRevision.create");
+    expect(service).toContain('isolationLevel: "Serializable"');
+    expect(route).toContain("authorizeInternalRequest");
+    expect(route).toContain("ORGANIZATION_WORKER_SECRET");
+    expect(service).toContain('status: { in: ["SCHEDULED", "FAILED"] }');
+    expect(service).toContain("attempts: { lt: 3 }");
+  });
+  it("keeps the migration additive and records import and revision history", () => {
+    const migration = readFileSync("prisma/migrations/20260730110000_hrms_organization_management/migration.sql", "utf8");
+    const reconciliation = readFileSync("prisma/migrations/20260730120000_hrms_organization_default_backfill/migration.sql", "utf8");
+    expect(migration).not.toMatch(/\bDROP\s+(TABLE|COLUMN)\b/i);
+    expect(reconciliation).not.toMatch(/\b(DROP|DELETE|TRUNCATE)\b/i);
+    expect(reconciliation).toContain('ON CONFLICT ("organizationId","code") DO NOTHING');
+    expect(reconciliation).toContain('"placementSnapshot" = jsonb_build_object');
+    expect(migration).toContain('CREATE TABLE "HrOrganizationImportBatch"');
+    expect(migration).toContain('CREATE TABLE "HrOrganizationStructureRevision"');
+    expect(migration).toContain("HrPosition_headcount_check");
+    const historyRepair = readFileSync("prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql", "utf8");
+    expect(historyRepair).toContain('CREATE TABLE IF NOT EXISTS "HrOrganizationImportBatch"');
+    expect(historyRepair).toContain('CREATE TABLE IF NOT EXISTS "HrOrganizationStructureRevision"');
+    expect(historyRepair).not.toMatch(/\b(DROP|TRUNCATE)\b|\bDELETE\s+FROM\b/i);
+  });
+  it("backfills Unit 2 permissions for existing administrators and keeps bootstrap parity", () => {
+    const migration = readFileSync("prisma/migrations/20260730130000_hrms_organization_permissions/migration.sql", "utf8");
+    const bootstrap = readFileSync("scripts/hr-bootstrap-lib.mjs", "utf8");
+    for (const permission of [
+      "organization.structure.manage", "organization.structure.import", "organization.position.create",
+      "organization.position.approve", "organization.position.manage_state", "organization.position.fill",
+      "organization.assignment.transfer", "organization.report.read", "organization.report.export",
+    ]) {
+      expect(migration).toContain(permission);
+      expect(bootstrap).toContain(permission);
+    }
+    expect(migration).not.toMatch(/\b(DROP|DELETE|TRUNCATE)\b/i);
+    expect(migration).toContain("ON CONFLICT");
+  });
+  it("audits exports without exposing protected employee data", () => {
+    const route = readFileSync("src/app/api/hr/organization/export/route.ts", "utf8");
+    expect(route).toContain('requirePermission("organization.report.export")');
+    expect(route).toContain("hr.organization.report_exported");
+    for (const protectedField of ["accountNumberEncrypted", "taxIdentifierEncrypted", "salaryRecords"]) expect(route).not.toContain(protectedField);
+  });
+  it("reserves destructive invitation and user controls for the primary administrator", () => {
+    const schema = readFileSync("prisma/schema.prisma", "utf8");
+    const actions = readFileSync("src/app/hr/admin/users/actions.ts", "utf8");
+    const page = readFileSync("src/app/hr/admin/users/page.tsx", "utf8");
+    const deletionForm = readFileSync("src/app/hr/admin/users/UserDeletionForm.tsx", "utf8");
+    expect(schema).toContain("isPrimaryAdmin");
+    expect(schema).toContain("DELETED");
+    expect(actions).toContain("Only the primary administrator can perform this action.");
+    expect(actions).toContain('action: "hr.invitation.cancelled"');
+    expect(actions).toContain('action: "hr.invitation.deleted"');
+    expect(actions).toContain('action: "hr.user.soft_deleted"');
+    expect(actions).toContain('action: "hr.user.hard_deleted"');
+    expect(actions).toContain('status: "REVOKED"');
+    expect(actions).toContain('status: "DELETED"');
+    expect(page).toContain("Cancel invitation");
+    expect(page).toContain("UserDeletionForm");
+    expect(deletionForm).toContain("Soft-delete user");
+    expect(deletionForm).toContain("Permanently delete user");
   });
 });

@@ -197,7 +197,8 @@ describe('public layout shell', () => {
     expect(careers).toContain('group flex min-w-0 flex-col rounded-[20px] border border-[#E3EAF1] bg-white p-5');
     expect(careers).toContain('flex min-w-0 items-center gap-4');
     expect(careers).toContain('flex size-11 shrink-0 items-center justify-center rounded-[16px] bg-[#EEF8F5]');
-    expect(careers).not.toContain('Apply for this role');
+    expect(careers).toContain('Apply for this role');
+    expect(careers).toContain('/apply?vacancy=');
     expect(careers).toContain('flex w-full max-w-[280px] flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-start');
     expect(careers).toContain('<Link className="btn hero-cta-secondary w-full sm:w-auto" href="/track">Track Application</Link>');
   });

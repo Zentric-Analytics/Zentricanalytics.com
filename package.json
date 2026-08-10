@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "node scripts/start-with-hr-workers.mjs",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "hr:bootstrap": "node scripts/hr-bootstrap.mjs",
@@ -15,9 +15,12 @@
     "hr:preflight": "node scripts/hr-preflight.mjs",
     "hr:release": "node scripts/hr-release.mjs",
     "hr:backup-readiness": "node scripts/hr-backup-readiness.mjs",
+    "hr:database-archive": "node scripts/hr-database-archive.mjs",
     "hr:restore-drill": "node scripts/hr-restore-drill.mjs",
     "hr:smoke": "node scripts/hr-smoke.mjs",
     "hr:load-smoke": "node scripts/hr-load-smoke.mjs",
+    "hr:staging-concurrency": "node scripts/hr-staging-concurrency.mjs",
+    "hr:staging-document-conflict": "node scripts/hr-staging-document-conflict.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -28,12 +31,14 @@
     "nanoid": "5.1.5",
     "next": "15.5.22",
     "pdf-lib": "1.17.1",
+    "qrcode": "1.5.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "zod": "3.25.67"
   },
   "devDependencies": {
     "@types/node": "22.15.32",
+    "@types/qrcode": "1.5.5",
     "@types/react": "19.0.12",
     "@types/react-dom": "19.0.4",
     "autoprefixer": "10.4.21",

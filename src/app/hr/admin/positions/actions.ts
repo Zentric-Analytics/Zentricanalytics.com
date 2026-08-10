@@ -5,15 +5,41 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { positionInput } from "@/lib/hr/core/invariants";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { positionDecisionErrorMessage } from "@/lib/hr/organization/position-action-errors";
 import { changePositionState, decidePosition, submitPosition } from "@/lib/hr/organization/position-commands";
+
+export type PositionDecisionState = {
+  status: "idle" | "error" | "success";
+  message?: string;
+};
 
 export async function createPositionAction(formData: FormData) {
   const auth = await requirePermission("position.manage");
   const input = positionInput.parse(Object.fromEntries(formData));
-  const department = await prisma.hrDepartment.findFirstOrThrow({ where: { id: input.departmentId, organizationId: auth.user.organizationId, status: "ACTIVE" } });
+  const organizationId = auth.user.organizationId;
+  const [department, legalEntity, businessUnit, division, location, costCenter, jobProfile, grade] = await Promise.all([
+    prisma.hrDepartment.findFirstOrThrow({ where: { id: input.departmentId, organizationId, status: "ACTIVE" } }),
+    prisma.hrLegalEntity.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrBusinessUnit.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrDivision.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrLocation.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrCostCenter.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrJobProfile.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrGrade.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+  ]);
   if (input.teamId) await prisma.hrTeam.findFirstOrThrow({ where: { id: input.teamId, departmentId: department.id, organizationId: auth.user.organizationId, status: "ACTIVE" } });
   await prisma.$transaction(async (tx) => {
-    const position = await tx.hrPosition.create({ data: { ...input, organizationId: auth.user.organizationId } });
+    const position = await tx.hrPosition.create({ data: {
+      ...input,
+      organizationId,
+      legalEntityId: legalEntity.id,
+      businessUnitId: businessUnit.id,
+      divisionId: division.id,
+      locationId: location.id,
+      costCenterId: costCenter.id,
+      jobProfileId: jobProfile.id,
+      gradeId: grade.id,
+    } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrPosition", entityId: position.id, action: "hr.position.created", newValues: input });
   });
   revalidatePath("/hr/admin/positions");
@@ -34,11 +60,35 @@ export async function approvePositionAction(formData: FormData) {
   revalidatePath("/hr/admin/positions");
 }
 
+export async function approvePositionWithStateAction(
+  _previousState: PositionDecisionState,
+  formData: FormData,
+): Promise<PositionDecisionState> {
+  try {
+    await approvePositionAction(formData);
+    return { status: "success", message: "Position approved." };
+  } catch (error) {
+    return { status: "error", message: positionDecisionErrorMessage(error) };
+  }
+}
+
 export async function rejectPositionAction(formData: FormData) {
   const auth = await requirePermission("organization.position.approve");
   const input = positionDecisionInput.parse(Object.fromEntries(formData));
   await prisma.$transaction(tx => decidePosition(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, { positionId: input.id, approve: false, reason: input.reason }), { isolationLevel: "Serializable" });
   revalidatePath("/hr/admin/positions");
+}
+
+export async function rejectPositionWithStateAction(
+  _previousState: PositionDecisionState,
+  formData: FormData,
+): Promise<PositionDecisionState> {
+  try {
+    await rejectPositionAction(formData);
+    return { status: "success", message: "Position rejected." };
+  } catch (error) {
+    return { status: "error", message: positionDecisionErrorMessage(error) };
+  }
 }
 
 export async function openPositionAction(formData: FormData) {

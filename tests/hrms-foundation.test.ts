@@ -39,6 +39,7 @@ describe("HRMS secure foundation", () => {
   });
   it("allows only ADMIN to assign administrative roles", () => {
     expect(canAssignRole(["ADMIN"], "ADMIN")).toBe(true);
+    expect(canAssignRole(["ADMIN"], "AUDITOR")).toBe(true);
     expect(canAssignRole(["HR_ADMIN"], "ADMIN")).toBe(false);
     expect(canAssignRole(["HR_ADMIN"], "PAYROLL_ADMIN")).toBe(false);
     expect(canAssignRole(["HR_ADMIN"], "EMPLOYEE")).toBe(true);
@@ -49,6 +50,10 @@ describe("HRMS secure foundation", () => {
     expect(permissionsForRole("HR_ADMIN")).not.toContain("payroll.read_bank_details");
     expect(permissionsForRole("PAYROLL_ADMIN")).toContain("payroll.read_bank_details");
     expect(permissionsForRole("EMPLOYEE")).toContain("employee.read_self");
+    expect(permissionsForRole("AUDITOR")).toEqual(["audit.read", "report.read"]);
+    expect(permissionsForRole("AUDITOR")).not.toContain("employee.update");
+    expect(permissionsForRole("AUDITOR")).not.toContain("employee.read_all");
+    expect(permissionsForRole("AUDITOR")).not.toContain("document.read_sensitive");
   });
   it("masks sensitive audit fields", () => {
     expect(safeAuditValues({ email: "safe@example.com", password: "secret", accountNumber: "123456", taxIdentifier: "TIN-1", pensionIdentifier: "PEN-1", passport: "P-1" })).toEqual({ email: "safe@example.com", password: "[REDACTED]", accountNumber: "[REDACTED]", taxIdentifier: "[REDACTED]", pensionIdentifier: "[REDACTED]", passport: "[REDACTED]" });

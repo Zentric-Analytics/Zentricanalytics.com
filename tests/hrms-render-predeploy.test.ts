@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import crypto from "node:crypto";
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import fs from "node:fs";
+import path from "node:path";
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { hrEnvironmentChecks } from "../scripts/hr-preflight-lib.mjs";
 import { S3CompatibleHrStorage, validateStorageKey } from "../src/lib/hr/storage";
 import { authorizeInternalRequest, timingSafeSecret } from "../src/lib/hr/internal-auth";
@@ -27,6 +29,14 @@ const baseEnvironment = {
 };
 
 describe("Render HRMS environment validation", () => {
+  it("keeps production migrations out of the build and behind the governed pre-deploy command", () => {
+    const productionBlueprint = fs.readFileSync(path.join(process.cwd(), "render.production.example.yaml"), "utf8");
+    expect(productionBlueprint).toContain("autoDeployTrigger: off");
+    expect(productionBlueprint).toContain("buildCommand: yarn install --frozen-lockfile && yarn build");
+    expect(productionBlueprint).toContain("preDeployCommand: yarn hr:release");
+    expect(productionBlueprint).toContain("healthCheckPath: /api/health/ready");
+    expect(productionBlueprint).not.toContain("buildCommand: yarn install --frozen-lockfile && yarn hr:release");
+  });
   it("accepts local-private in development but rejects it in staging and production", () => {
     expect(hrEnvironmentChecks({ ...baseEnvironment, APP_ENV: "development", OBJECT_STORAGE_PROVIDER: "local-private" }).issues).toEqual([]);
     for (const APP_ENV of ["staging", "production"]) {
@@ -110,6 +120,20 @@ describe("private S3-compatible HR storage", () => {
     } as never);
     await expect(storage.get("documents/org/file.pdf")).rejects.toThrow("Private HR storage operation failed");
     await expect(storage.get("documents/org/file.pdf")).rejects.not.toThrow(credential);
+  });
+
+  it("does not send unsupported version-id parameters to S3-compatible providers", async () => {
+    const send = vi.fn(async (command: object) => {
+      if (command instanceof HeadObjectCommand) return { ContentLength: 5, Metadata: { sha256: "checksum" } };
+      if (command instanceof GetObjectCommand) return { Body: { transformToByteArray: async () => new Uint8Array([1]) } };
+      return {};
+    });
+    const storage = new S3CompatibleHrStorage({ send } as never);
+    const location = { provider: "s3-compatible", bucket: baseEnvironment.OBJECT_STORAGE_BUCKET, key: "quarantine/document.pdf", versionId: "provider-returned-but-unsupported", checksum: "checksum" };
+    await expect(storage.headVersion(location)).resolves.toMatchObject({ sizeBytes: 5, checksum: "checksum" });
+    await expect(storage.getAuthorized(location)).resolves.toEqual(new Uint8Array([1]));
+    await storage.deleteVersion(location);
+    for (const [command] of send.mock.calls) expect((command as { input?: { VersionId?: string } }).input?.VersionId).toBeUndefined();
   });
 });
 
