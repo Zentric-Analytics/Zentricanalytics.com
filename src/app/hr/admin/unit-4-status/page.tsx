@@ -14,11 +14,11 @@ const statusItems = [
   ["HEAD SHA", deployedHead],
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "567/567 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
+  ["Test totals", "568/568 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
   ["Browser workflow", "Unit Pass effective timestamp 2026-08-10T00:00:00.000Z applied by the scheduled worker at 00:00:20.046Z exactly once"],
-  ["Defects found", "Early offboarding termination fixed; two validation-fixture setup defects were isolated and audit-corrected without weakening product constraints"],
-  ["Fixes applied", "Terminal effects are deferred to the worker; concurrency seed is atomic, uses valid enums and non-zero assignment intervals"],
-  ["Next release gate", "Rehire with preserved Person identity, recovery, security, email, restore, and final complete 4A-4F lifecycle"],
+  ["Defects found", "Rehire form rejected preserved legacy relationship IDs after the effective-date boundary passed"],
+  ["Fixes applied", "Rehire accepts bounded legacy relationship IDs while command-layer tenant, employee, ended-state, and concurrency checks remain authoritative"],
+  ["Next release gate", "Rerun Unit Pass rehire, prove identity and relationship history, then recovery, security, email, restore, and final 4A-4F lifecycle"],
 ] as const;
 
 export default function Unit4StatusPage() {

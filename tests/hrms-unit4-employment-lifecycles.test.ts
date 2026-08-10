@@ -80,4 +80,10 @@ describe("Unit 4 probation, contract, separation, and rehire invariants", () => 
     expect(actions).toContain("rehireEmployee");
     expect(actions.match(/isolationLevel: "Serializable"/g)?.length).toBeGreaterThanOrEqual(7);
   });
+
+  it("accepts preserved legacy work-relationship identifiers during rehire", () => {
+    const actions = readFileSync("src/app/hr/admin/employment-lifecycle/actions.ts", "utf8");
+    expect(actions).toContain("priorRelationshipId: z.string().trim().min(1).max(191)");
+    expect(actions).not.toContain("priorRelationshipId: z.string().cuid()");
+  });
 });
