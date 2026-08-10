@@ -14,10 +14,10 @@ const statusItems = [
   ["HEAD SHA", deployedHead],
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "569/569 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
+  ["Test totals", "570/570 passing after focused privacy remediation; TypeScript and ESLint passed; full release rerun pending deployment"],
   ["Browser workflow", "Recipient-backed governed rehire delivered exactly once to the real Gmail Inbox; field-level privacy matrix is now under test"],
-  ["Defects found", "Normal offboarding start duplicated an existing separation; the requested read-only auditor persona was not assignable"],
-  ["Fixes applied", "Offboarding reuses the exact-date open separation; additive AUDITOR role has only audit.read/report.read and a tenant-scoped mutation-free workspace"],
+  ["Defects found", "Normal offboarding duplicated an open separation; auditor persona was absent; denied employee/supervisor routes used a generic error; manager pages incorrectly required a permanent role permission"],
+  ["Fixes applied", "Exact-date separation reuse; read-only AUDITOR; accessible 403 denials; manager authority derives from live supervisor scope with server-side direct-report enforcement"],
   ["Next release gate", "Deploy exact candidate, execute Employee/Supervisor/HR/Auditor browser and direct-route privacy tests, then restore correlation and final 4A-4F lifecycle"],
 ] as const;
 

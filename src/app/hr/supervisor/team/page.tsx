@@ -1,10 +1,11 @@
+import { forbidden } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
 import { supervisedEmployeeIds } from "@/lib/hr/supervisors/scope";
 
 export default async function SupervisorTeamPage() {
   const auth = await requireAuthenticatedUser();
-  if (!auth.user.employee || !auth.permissions.has("supervisor.read_team")) throw new Error("Forbidden");
+  if (!auth.user.employee) forbidden();
   const employeeIds = await supervisedEmployeeIds(prisma, { organizationId: auth.user.organizationId, supervisorEmployeeId: auth.user.employee.id });
   const employees = await prisma.hrEmployee.findMany({
     where: { organizationId: auth.user.organizationId, id: { in: employeeIds } },
