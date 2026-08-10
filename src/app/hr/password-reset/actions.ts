@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { PasswordResetError, consumePasswordReset, requestPasswordReset, resendPasswordReset, verifyPasswordResetCode } from "@/lib/hr/auth/password-reset";
+import { normalizeHrEmail } from "@/lib/hr/auth/crypto";
 const requestSchema = z.object({ email: z.string().email().max(180) });
 const CHALLENGE_COOKIE = "za_hr_reset_challenge"; const RESET_COOKIE = "za_hr_reset"; const COOLDOWN_COOKIE = "za_hr_reset_resend";
 const cookieSecure = () => process.env.NODE_ENV === "production" || /^https:\/\//.test(process.env.APPLICATION_BASE_URL ?? "");
@@ -16,7 +17,7 @@ export async function requestResetAction(formData: FormData) {
   const parsed = requestSchema.safeParse(Object.fromEntries(formData)); const orgId = await organizationId(); const ip = await requestIp();
   await setChallengeCookie(crypto.randomUUID());
   const allowed = await checkRateLimit({ scope: "hr-password-reset-request-ip", key: ip, limit: 10, windowMs: 15 * 60_000 });
-  if (parsed.success && orgId && allowed.allowed) { const accountLimit = await checkRateLimit({ scope: "hr-password-reset-request-account", key: `${orgId}:${parsed.data.email}`, limit: 5, windowMs: 60 * 60_000 }); if (accountLimit.allowed) await setChallengeCookie((await requestPasswordReset(orgId, parsed.data.email)).challengeId); }
+  if (parsed.success && orgId && allowed.allowed) { const normalizedEmail = normalizeHrEmail(parsed.data.email); const accountLimit = await checkRateLimit({ scope: "hr-password-reset-request-account", key: `${orgId}:${normalizedEmail}`, limit: 5, windowMs: 60 * 60_000 }); if (accountLimit.allowed) await setChallengeCookie((await requestPasswordReset(orgId, normalizedEmail)).challengeId); }
   redirect("/hr/password-reset?stage=verify");
 }
 export async function verifyResetCodeAction(formData: FormData) {
