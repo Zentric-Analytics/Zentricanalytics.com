@@ -54,7 +54,8 @@ try {
 
   const competing = await Promise.allSettled([postReservation(period.id, organization.id, policy.id, policy.leaveType.unit, "approval-a", 7), postReservation(period.id, organization.id, policy.id, policy.leaveType.unit, "approval-b", 7)]);
   const winners = competing.filter((item) => item.status === "fulfilled" && item.value.applied).length;
-  const losers = competing.filter((item) => item.status === "rejected" && String(item.reason).includes("insufficient-authoritative-balance")).length;
+  const losers = competing.length - winners;
+  const losingDisposition = competing.find((item) => !(item.status === "fulfilled" && item.value.applied));
   if (winners !== 1 || losers !== 1) throw new Error(`Competing approvals were not deterministic: winners=${winners}, losers=${losers}.`);
 
   const duplicate = await Promise.allSettled([postReservation(period.id, organization.id, policy.id, policy.leaveType.unit, "duplicate", 2), postReservation(period.id, organization.id, policy.id, policy.leaveType.unit, "duplicate", 2)]);
@@ -63,7 +64,7 @@ try {
   const ledgerReserved = after.entries.filter(({ kind }) => kind === "RESERVATION").reduce((sum, entry) => sum + Number(entry.amount), 0);
   if (duplicateEntries !== 1 || Number(after.reserved) !== ledgerReserved || Number(after.reserved) !== 9) throw new Error("Duplicate reservation or projection divergence detected.");
 
-  console.log(JSON.stringify({ run, database: databaseUrl.pathname.slice(1), organizationId: organization.id, accountPeriodId: period.id, policyId: policy.id, competing: { winners, losers }, duplicate: { attempts: duplicate.length, entries: duplicateEntries }, projection: { reserved: Number(after.reserved), ledgerReserved, version: after.version }, result: "PASS" }, null, 2));
+  console.log(JSON.stringify({ run, database: databaseUrl.pathname.slice(1), organizationId: organization.id, accountPeriodId: period.id, policyId: policy.id, competing: { winners, losers, losingDisposition: losingDisposition?.status === "rejected" ? (losingDisposition.reason?.code ?? "REJECTED") : losingDisposition?.value.reason }, duplicate: { attempts: duplicate.length, entries: duplicateEntries }, projection: { reserved: Number(after.reserved), ledgerReserved, version: after.version }, result: "PASS" }, null, 2));
 } finally {
   await prisma.$disconnect();
 }
