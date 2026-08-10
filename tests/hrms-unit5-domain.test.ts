@@ -90,6 +90,7 @@ describe("Unit 5 leave domain", () => {
     expect(workflow).toContain("effectiveTo: { gt: effectiveAt }");
     expect(workflow).toContain("latest._max.version !== input.expectedRequestVersion");
     expect(workflow).toContain("reserveUnit5RequestInTransaction(tx");
+    expect(workflow).toContain("withUnit5SerializableRetry");
     expect(workflow).toContain('FOR UPDATE`');
     expect(managerAction).toContain("expectedRequestVersion");
   });
@@ -101,6 +102,7 @@ describe("Unit 5 leave domain", () => {
     expect(script).toContain('FOR UPDATE`');
     expect(script).toContain('isolationLevel: "Serializable"');
     expect(script).toContain('code: "UNIT5_CONCURRENCY"');
+    expect(script).toContain('error?.code === "P2034"');
     expect(script).toContain("winners !== 1 || losers !== 1");
     expect(script).toContain("duplicateEntries !== 1");
   });

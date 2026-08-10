@@ -1,7 +1,7 @@
 import { Prisma, type HrLeaveEntryKind, type HrLeaveRequestLifecycleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
-import { assertIndependentLeaveApproval, assertUnit5RequestTransition, expirableCarryover, projectedPeriodBalance } from "./unit5";
+import { assertIndependentLeaveApproval, assertUnit5RequestTransition, expirableCarryover, projectedPeriodBalance, withUnit5SerializableRetry } from "./unit5";
 import { createWorkforceEventDraft, submitWorkforceEvent } from "@/lib/hr/workforce/commands";
 import { capAccrual, scheduledAccrualAmount } from "./engine";
 
@@ -205,7 +205,7 @@ export async function reserveUnit5RequestInTransaction(tx: Tx, input: ReserveUni
 }
 
 export async function reserveUnit5Request(input: ReserveUnit5RequestInput) {
-  return prisma.$transaction((tx) => reserveUnit5RequestInTransaction(tx, input), { isolationLevel: "Serializable" });
+  return withUnit5SerializableRetry(() => prisma.$transaction((tx) => reserveUnit5RequestInTransaction(tx, input), { isolationLevel: "Serializable" }));
 }
 
 export async function startUnit5Leave(input: { organizationId: string; requestVersionId: string; effectiveAt: Date; workerKey: string }) {

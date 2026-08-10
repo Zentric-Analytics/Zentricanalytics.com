@@ -5,6 +5,7 @@ import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
 import { conditionMatches, dueAt, requiredApprovals, workflowCondition } from "@/lib/hr/workflow/engine";
 import { reserveUnit5RequestInTransaction } from "./unit5-accounting";
+import { withUnit5SerializableRetry } from "./unit5";
 
 type Tx = Prisma.TransactionClient;
 
@@ -54,7 +55,7 @@ export async function startConfiguredLeaveWorkflow(tx: Tx, input: { organization
 }
 
 export async function decideConfiguredLeaveWorkflow(input: { organizationId: string; requestId: string; expectedRequestVersion: number; reviewerUserId: string; actorRole?: string; decision: HrWorkflowDecision; reason: string }) {
-  return prisma.$transaction(async (tx) => {
+  return withUnit5SerializableRetry(() => prisma.$transaction(async (tx) => {
     const version = await tx.hrLeaveRequestVersion.findFirstOrThrow({ where: { requestId: input.requestId, organizationId: input.organizationId, version: input.expectedRequestVersion }, include: { request: { include: { requestedBy: true } } } });
     const latest = await tx.hrLeaveRequestVersion.aggregate({ where: { requestId: input.requestId }, _max: { version: true } });
     if (latest._max.version !== input.expectedRequestVersion) throw new Error("This leave request changed after the page loaded; review the latest version.");
@@ -99,7 +100,7 @@ export async function decideConfiguredLeaveWorkflow(input: { organizationId: str
     await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: version.request.requestedBy.email, template: "hr-leave-approved", subject: "Leave request approved", payload: { leaveRequestId: version.requestId, requestVersionId: version.id }, idempotencyKey: `hr-leave-decision:${version.requestId}:APPROVED` });
     await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.reviewerUserId, actorRole: input.actorRole, entityType: "HrLeaveRequestVersion", entityId: version.id, action: "hr.leave.workflow.final_approved", newValues: { workflowInstanceId: run.instanceId, requestVersion: version.version }, reason: input.reason, correlationId: version.correlationId });
     return { applied: true, final: true, status: "APPROVED" as const };
-  }, { isolationLevel: "Serializable" });
+  }, { isolationLevel: "Serializable" }));
 }
 
 export async function returnConfiguredLeaveForChanges(input: { organizationId: string; requestId: string; expectedRequestVersion: number; reviewerUserId: string; actorRole?: string; reason: string }) {

@@ -10,17 +10,25 @@ const periodStart = new Date(Date.UTC(year, 0, 1));
 const periodEnd = new Date(Date.UTC(year + 1, 0, 1));
 
 async function postReservation(accountPeriodId, organizationId, policyId, unit, sourceId, amount) {
-  return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "HrLeaveAccountPeriod" WHERE id = ${accountPeriodId} FOR UPDATE`;
-    const existing = await tx.hrLeaveLedgerEntry.findUnique({ where: { organizationId_idempotencyKey: { organizationId, idempotencyKey: `${run}:reservation:${sourceId}` } } });
-    if (existing) return { applied: false, reason: "duplicate" };
-    const period = await tx.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: accountPeriodId } });
-    const available = Number(period.granted) + Number(period.accrued) + Number(period.carriedOver) + Number(period.adjusted) - Number(period.carriedOut) - Number(period.reserved) - Number(period.consumed) - Number(period.expired);
-    if (available < amount) throw new Error("insufficient-authoritative-balance");
-    await tx.hrLeaveAccountPeriod.update({ where: { id: accountPeriodId }, data: { reserved: { increment: amount }, version: { increment: 1 } } });
-    await tx.hrLeaveLedgerEntry.create({ data: { organizationId, accountPeriodId, leavePolicyId: policyId, kind: "RESERVATION", amount, unit, effectiveAt: new Date(), sourceType: "UNIT5_CONCURRENCY_FIXTURE", sourceId, reason: run, correlationId: `${run}:${sourceId}`, idempotencyKey: `${run}:reservation:${sourceId}` } });
-    return { applied: true };
-  }, { isolationLevel: "Serializable" });
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "HrLeaveAccountPeriod" WHERE id = ${accountPeriodId} FOR UPDATE`;
+        const existing = await tx.hrLeaveLedgerEntry.findUnique({ where: { organizationId_idempotencyKey: { organizationId, idempotencyKey: `${run}:reservation:${sourceId}` } } });
+        if (existing) return { applied: false, reason: "duplicate" };
+        const period = await tx.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: accountPeriodId } });
+        const available = Number(period.granted) + Number(period.accrued) + Number(period.carriedOver) + Number(period.adjusted) - Number(period.carriedOut) - Number(period.reserved) - Number(period.consumed) - Number(period.expired);
+        if (available < amount) throw new Error("insufficient-authoritative-balance");
+        await tx.hrLeaveAccountPeriod.update({ where: { id: accountPeriodId }, data: { reserved: { increment: amount }, version: { increment: 1 } } });
+        await tx.hrLeaveLedgerEntry.create({ data: { organizationId, accountPeriodId, leavePolicyId: policyId, kind: "RESERVATION", amount, unit, effectiveAt: new Date(), sourceType: "UNIT5_CONCURRENCY_FIXTURE", sourceId, reason: run, correlationId: `${run}:${sourceId}`, idempotencyKey: `${run}:reservation:${sourceId}` } });
+        return { applied: true };
+      }, { isolationLevel: "Serializable" });
+    } catch (error) {
+      if (error?.code === "P2034" && attempt < 3) continue;
+      throw error;
+    }
+  }
+  throw new Error("Serializable reservation retry budget exhausted.");
 }
 
 try {

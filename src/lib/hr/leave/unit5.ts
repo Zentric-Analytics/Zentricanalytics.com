@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+export async function withUnit5SerializableRetry<T>(operation: () => Promise<T>, maximumAttempts = 3): Promise<T> {
+  for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      const serializationFailure = typeof error === "object" && error !== null && "code" in error && error.code === "P2034";
+      if (!serializationFailure || attempt === maximumAttempts) throw error;
+    }
+  }
+  throw new Error("Unit 5 serializable transaction retry budget exhausted.");
+}
+
 export type Unit5PolicyCandidate = {
   id: string;
   priority: number;
