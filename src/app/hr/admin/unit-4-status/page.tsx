@@ -15,10 +15,10 @@ const statusItems = [
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
   ["Test totals", "567/567 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
-  ["Browser workflow", "Pre-effective separation invariant passed; real PostgreSQL concurrent worker and scheduled-worker recovery passed exactly once"],
+  ["Browser workflow", "Unit Pass effective timestamp 2026-08-10T00:00:00.000Z applied by the scheduled worker at 00:00:20.046Z exactly once"],
   ["Defects found", "Early offboarding termination fixed; two validation-fixture setup defects were isolated and audit-corrected without weakening product constraints"],
   ["Fixes applied", "Terminal effects are deferred to the worker; concurrency seed is atomic, uses valid enums and non-zero assignment intervals"],
-  ["Next release gate", "Unit Pass effective-date worker application, rehire, recovery, security, email, restore, and complete 4A-4F lifecycle"],
+  ["Next release gate", "Rehire with preserved Person identity, recovery, security, email, restore, and final complete 4A-4F lifecycle"],
 ] as const;
 
 export default function Unit4StatusPage() {
