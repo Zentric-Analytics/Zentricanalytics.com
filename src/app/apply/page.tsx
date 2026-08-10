@@ -1,9 +1,16 @@
 import { PageShell } from '@/components/PageShell';
 import { Section } from '@/components/Section';
 import { Stage1ApplicationForm } from './Stage1ApplicationForm';
+import { prisma } from '@/lib/prisma';
 
-export default async function Apply({ searchParams }: { searchParams: Promise<{ submitted?: string }> }) {
+export const dynamic = "force-dynamic";
+
+export default async function Apply({ searchParams }: { searchParams: Promise<{ submitted?: string; vacancy?: string }> }) {
   const params = await searchParams;
+  const vacancy = params.vacancy ? await prisma.hrVacancy.findFirst({
+    where: { publicSlug: params.vacancy, status: "OPEN", careersVisible: true },
+    select: { publicSlug: true, title: true, vacancyNumber: true, applicationDeadline: true },
+  }) : null;
 
   return (
     <PageShell>
@@ -14,7 +21,7 @@ export default async function Apply({ searchParams }: { searchParams: Promise<{ 
             <h2 className="break-words text-2xl font-bold">Application received</h2>
             <p className="mt-3 break-words">Your Application ID is <strong className="break-all">{params.submitted}</strong>. Keep it safe; you will need it with your email to track your application. Recruitment updates and any next steps will be sent to that email.</p>
           </div>
-        ) : <Stage1ApplicationForm />}
+        ) : <Stage1ApplicationForm vacancy={vacancy} />}
       </Section>
     </PageShell>
   );

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
+import { requestProfileChange } from "@/lib/hr/workforce/profile-change-commands";
 
 const selfProfileInput = z.object({
   preferredName: z.string().trim().max(120).optional().transform((value) => value || null),
@@ -32,5 +33,28 @@ export async function updateSelfProfileAction(formData: FormData) {
       reason: "Employee self-service profile update",
     });
   });
+  revalidatePath("/hr/employee/profile");
+}
+
+const governedChangeInput = z.object({
+  fieldKey: z.enum(["address", "legalName", "dateOfBirth", "nationalIdentifier", "workAuthorization", "bankAccount", "taxProfile"]),
+  proposedValue: z.string().trim().min(1).max(2000),
+  expectedEmployeeUpdatedAt: z.coerce.date(),
+  effectiveAt: z.preprocess((value) => value ? value : undefined, z.coerce.date().optional()),
+  evidenceVersionId: z.string().trim().optional(),
+});
+
+export async function requestProfileChangeAction(formData: FormData) {
+  const auth = await requireAuthenticatedUser();
+  if (!auth.permissions.has("employee.profile_change.request") || !auth.user.employee) throw new Error("Forbidden");
+  const input = governedChangeInput.parse(Object.fromEntries(formData));
+  await prisma.$transaction(async (tx) => requestProfileChange(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, {
+    employeeId: auth.user.employee!.id,
+    fieldKey: input.fieldKey,
+    proposedValue: input.proposedValue,
+    expectedEmployeeUpdatedAt: input.expectedEmployeeUpdatedAt,
+    effectiveAt: input.effectiveAt,
+    evidenceVersionIds: input.evidenceVersionId ? [input.evidenceVersionId] : [],
+  }), { isolationLevel: "Serializable" });
   revalidatePath("/hr/employee/profile");
 }

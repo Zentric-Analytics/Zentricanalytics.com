@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { wouldCreateHierarchyCycle } from "@/lib/hr/organization/validation";
+import { organizationImportKind, parseOrganizationCsv } from "@/lib/hr/organization/import";
+import { approveOrganizationChange, requestOrganizationChange } from "@/lib/hr/organization/restructuring";
 
 const base = z.object({
   kind: z.enum(["legal-entity", "business-unit", "division", "location", "cost-center", "job-family", "job", "grade"]),
@@ -78,4 +80,54 @@ export async function validateParentChangeAction(formData: FormData) {
         ? await prisma.hrLocation.findMany({ where: { organizationId }, select: { id: true, parentLocationId: true } }).then(rows => rows.map(row => ({ id: row.id, parentId: row.parentLocationId })))
         : await prisma.hrCostCenter.findMany({ where: { organizationId }, select: { id: true, parentCostCenterId: true } }).then(rows => rows.map(row => ({ id: row.id, parentId: row.parentCostCenterId })));
   if (wouldCreateHierarchyCycle(records, id, parentId)) throw new Error("This parent change would create a circular hierarchy.");
+}
+
+export async function validateOrganizationImportAction(formData: FormData) {
+  const auth = await requirePermission("organization.structure.import");
+  const kind = organizationImportKind.parse(formData.get("kind"));
+  const file = z.instanceof(File).parse(formData.get("file"));
+  if (file.size > 2_000_000 || !file.name.toLowerCase().endsWith(".csv")) throw new Error("Upload a CSV file no larger than 2 MB.");
+  const rows = parseOrganizationCsv(kind, await file.text());
+  const invalidCount = rows.filter(row => !row.valid).length;
+  const batch = await prisma.$transaction(async tx => {
+    const created = await tx.hrOrganizationImportBatch.create({ data: { organizationId: auth.user.organizationId, kind, originalName: file.name, rowCount: rows.length, validCount: rows.length - invalidCount, invalidCount, createdById: auth.user.id, rows: { create: rows.map(row => ({ rowNumber: row.rowNumber, payload: row.payload, valid: row.valid, errors: row.errors })) } } });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrOrganizationImportBatch", entityId: created.id, action: "hr.organization.import.validated", newValues: { kind, rowCount: rows.length, invalidCount }, reason: "Validated organization CSV import" });
+    return created;
+  });
+  revalidatePath(`/hr/admin/organization?batch=${batch.id}`);
+}
+
+export async function commitOrganizationImportAction(formData: FormData) {
+  const auth = await requirePermission("organization.structure.import");
+  const batchId = z.string().cuid().parse(formData.get("batchId"));
+  await prisma.$transaction(async tx => {
+    const batch = await tx.hrOrganizationImportBatch.findFirstOrThrow({ where: { id: batchId, organizationId: auth.user.organizationId, status: "VALIDATED", invalidCount: 0 }, include: { rows: { where: { valid: true }, orderBy: { rowNumber: "asc" } } } });
+    for (const row of batch.rows) {
+      const payload = row.payload as Record<string, string>;
+      let committedId: string;
+      if (batch.kind === "legal-entity") committedId = (await tx.hrLegalEntity.create({ data: { organizationId: auth.user.organizationId, code: payload.code.toUpperCase(), name: payload.name, countryCode: payload.countryCode.toUpperCase(), defaultCurrency: payload.currency.toUpperCase(), timezone: payload.timezone, effectiveFrom: new Date() } })).id;
+      else if (batch.kind === "job-family") committedId = (await tx.hrJobFamily.create({ data: { organizationId: auth.user.organizationId, code: payload.code.toUpperCase(), name: payload.name } })).id;
+      else committedId = (await tx.hrGrade.create({ data: { organizationId: auth.user.organizationId, code: payload.code.toUpperCase(), name: payload.name, level: Number(payload.level), currency: payload.currency.toUpperCase(), minimumSalary: payload.minimumSalary, midpointSalary: payload.midpointSalary, maximumSalary: payload.maximumSalary } })).id;
+      await tx.hrOrganizationImportRow.update({ where: { id: row.id }, data: { committedId } });
+    }
+    await tx.hrOrganizationImportBatch.update({ where: { id: batch.id }, data: { status: "COMMITTED", committedById: auth.user.id, committedAt: new Date() } });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrOrganizationImportBatch", entityId: batch.id, action: "hr.organization.import.committed", newValues: { kind: batch.kind, rowCount: batch.rowCount }, reason: "Committed validated organization CSV import" });
+  }, { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/organization");
+}
+
+const changeInput = z.object({ entityType: z.enum(["DEPARTMENT", "TEAM", "POSITION"]), entityId: z.string().cuid(), effectiveAt: z.coerce.date(), name: z.string().trim().min(2).max(160), reason: z.string().trim().min(3).max(500) });
+export async function requestOrganizationChangeAction(formData: FormData) {
+  const auth = await requirePermission("organization.structure.manage");
+  const input = changeInput.parse(Object.fromEntries(formData));
+  await prisma.$transaction(tx => requestOrganizationChange(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, input), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/organization");
+}
+
+export async function approveOrganizationChangeAction(formData: FormData) {
+  const auth = await requirePermission("organization.position.approve");
+  const changeId = z.string().cuid().parse(formData.get("changeId"));
+  const reason = z.string().trim().min(3).max(500).parse(formData.get("reason"));
+  await prisma.$transaction(tx => approveOrganizationChange(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, changeId, reason), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/organization");
 }

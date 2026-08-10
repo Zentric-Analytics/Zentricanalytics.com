@@ -28,10 +28,12 @@ export async function enableMfaAction(formData: FormData) {
   const step = user.mfaSecretEncrypted ? matchingTotpStep(code, unsealHrCredential(user.mfaSecretEncrypted)) : null;
   if (user.mfaEnabled || step === null) throw new Error("The authenticator code is invalid.");
   await prisma.$transaction(async (tx) => {
-    await tx.hrUser.update({ where: { id: auth.user.id }, data: { mfaEnabled: true, mfaLastUsedStep: step } });
+    const now = new Date();
+    await tx.hrUser.update({ where: { id: auth.user.id }, data: { mfaEnabled: true, mfaLastUsedStep: step, lastLoginAt: now } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrUser", entityId: auth.user.id, action: "hr.auth.mfa.enabled" });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrUser", entityId: auth.user.id, action: "hr.auth.login_succeeded", reason: "Initial authenticated session completed after required MFA enrollment" });
   });
-  revalidatePath("/hr/security");
+  redirect("/hr");
 }
 
 const disableSchema = z.object({ code: codeSchema, password: z.string().min(1).max(256) });

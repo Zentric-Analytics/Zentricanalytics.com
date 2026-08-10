@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { sealHrCredential } from "../src/lib/hr/auth/crypto";
 import { validateHrDocumentFile } from "../src/lib/hr/documents/validation";
 import { assertIndependentPayrollActor } from "../src/lib/hr/payroll/engine";
-import { hrEmailBody } from "../src/lib/hr/notifications/worker";
+import { hrEmailBody, hrEmailContent } from "../src/lib/hr/notifications/worker";
 import { privilegedMfaRequired } from "../src/lib/hr/permissions/mfa-policy";
 import { activeSupervisorForEmployee, supervisedEmployeeIds } from "../src/lib/hr/supervisors/scope";
 
@@ -35,11 +35,34 @@ describe("final HRMS remediation security behavior", () => {
     expect(() => hrEmailBody("hr-password-reset", { credentialEnvelope: sealHrCredential(rawToken) }, "http://insecure.example.test")).toThrow("HTTPS");
   });
 
+  it("records the initial authenticated login when mandatory MFA enrollment completes", () => {
+    const securityActions = read("src/app/hr/security/actions.ts");
+    expect(securityActions).toContain("lastLoginAt: now");
+    expect(securityActions).toContain('action: "hr.auth.login_succeeded"');
+  });
+
+  it("renders offer and handover emails with scoped HTTPS links", () => {
+    const offer = hrEmailBody(
+      "hr-offer-issued",
+      { href: "/track?applicationId=APL-2026-000006&email=applicant%40example.test" },
+      "https://staging.zentricanalytics.com/",
+    );
+    expect(offer).toContain("exact approved offer");
+    expect(offer).toContain("https://staging.zentricanalytics.com/track?applicationId=APL-2026-000006&email=applicant%40example.test");
+    expect(hrEmailContent("hr-offer-issued", { href: "/track?applicationId=APL-2026-000006&email=applicant%40example.test" }, "https://staging.zentricanalytics.com").html).toContain("Review &amp; Accept Offer");
+    const personalized = hrEmailContent("hr-offer-issued", { href: "/track?applicationId=APL-2026-000006&email=applicant%40example.test", recipientName: "Working Email Validation" }, "https://staging.zentricanalytics.com");
+    expect(personalized.body).toContain("Hello Working Email Validation,");
+    expect(personalized.html).toContain("Hello Working Email Validation,");
+    expect(() => hrEmailBody("hr-offer-issued", { href: "//untrusted.example" }, "https://staging.zentricanalytics.com")).toThrow("safe relative link");
+    expect(() => hrEmailBody("hr-handover-created", { href: "/hr/admin/handovers/handover-123" }, "http://staging.example.test")).toThrow("HTTPS");
+  });
+
   it("requires MFA for privileged staging and production accounts only", () => {
     vi.stubEnv("APP_ENV", "staging");
     expect(privilegedMfaRequired({ roles: ["ADMIN"], user: { mfaEnabled: false } })).toBe(true);
     expect(privilegedMfaRequired({ roles: ["EMPLOYEE"], user: { mfaEnabled: false } })).toBe(false);
     expect(privilegedMfaRequired({ roles: ["PAYROLL_ADMIN"], user: { mfaEnabled: true } })).toBe(false);
+    expect(privilegedMfaRequired({ roles: ["AUDITOR"], user: { mfaEnabled: false } })).toBe(true);
   });
 
   it("resolves direct, team, and department supervisor scope without crossing organizations", async () => {
@@ -79,6 +102,28 @@ describe("final HRMS remediation security behavior", () => {
     expect(actions).toMatch(/revokeHrRoleAction[\s\S]*?revokeAllHrSessions\(input\.userId\)/);
   });
 
+  it("renders the accessible 403 boundary and derives manager authority from live scope", () => {
+    for (const path of [
+      "src/app/hr/employee/layout.tsx",
+      "src/app/hr/supervisor/layout.tsx",
+      "src/app/hr/supervisor/team/page.tsx",
+      "src/app/hr/supervisor/tasks/page.tsx",
+      "src/app/hr/supervisor/workforce/page.tsx",
+    ]) {
+      const source = read(path);
+      expect(source).toContain('import { forbidden } from "next/navigation"');
+      expect(source).not.toContain('throw new Error("Forbidden")');
+    }
+    const team = read("src/app/hr/supervisor/team/page.tsx");
+    const workforcePage = read("src/app/hr/supervisor/workforce/page.tsx");
+    const workforceActions = read("src/app/hr/supervisor/workforce/actions.ts");
+    expect(team).not.toContain('permissions.has("supervisor.read_team")');
+    expect(workforcePage).not.toContain('permissions.has("supervisor.review_assigned")');
+    expect(workforceActions).not.toContain('permissions.has("supervisor.review_assigned")');
+    expect(workforceActions).toContain("supervisedEmployeeIds");
+    expect(workforceActions).toContain("outside your active supervisory scope");
+  });
+
   it("provides a guarded non-recurring Render release flow", () => {
     const render = read("render.yaml");
     const release = read("scripts/hr-release.mjs");
@@ -92,7 +137,7 @@ describe("final HRMS remediation security behavior", () => {
 
   it("makes scanner callback retries idempotent while rejecting conflicts", () => {
     const scanner = read("src/app/api/internal/hr/document-scan/route.ts");
-    expect(scanner).toContain("sameResult");
+    expect(scanner).toContain("version.providerScanEventId === result.eventId");
     expect(scanner).toContain("alreadyRecorded: !recorded");
     expect(scanner).toContain("conflicting terminal scan result");
   });

@@ -20,6 +20,16 @@ describe("HRMS documents and assets", () => {
     expect(() => validateHrDocumentFile(new File([pdf], "large.pdf", { type: "application/pdf" }), pdf, 5)).toThrow("size limit");
   });
 
+  it("rejects extension spoofing, malformed structures, and trailing polyglot content", () => {
+    const validPdf = new Uint8Array(Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\nstartxref\n9\n%%EOF\n", "latin1"));
+    expect(validateHrDocumentFile(new File([validPdf], "record.pdf", { type: "application/pdf" }), validPdf).contentType).toBe("application/pdf");
+    expect(() => validateHrDocumentFile(new File([validPdf], "record.png", { type: "application/pdf" }), validPdf)).toThrow("extension");
+    const polyglot = new Uint8Array(Buffer.concat([Buffer.from(validPdf), Buffer.from("<script>")]));
+    expect(() => validateHrDocumentFile(new File([polyglot], "record.pdf", { type: "application/pdf" }), polyglot)).toThrow("trailing");
+    const truncatedJpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+    expect(() => validateHrDocumentFile(new File([truncatedJpeg], "photo.jpg", { type: "image/jpeg" }), truncatedJpeg)).toThrow("JPEG structure");
+  });
+
   it("sanitizes unsafe filenames and always restricts sensitive categories", () => {
     expect(safeDocumentFileName("../../bad\r\nname?.pdf")).toBe("bad-name-.pdf");
     expect(documentMustBeRestricted("IDENTITY_DOCUMENT")).toBe(true);
@@ -64,7 +74,11 @@ describe("HRMS documents and assets", () => {
 
   it("blocks unscanned files and enforces self or permission-bound downloads", () => {
     const route = fs.readFileSync(path.join(process.cwd(), "src/app/api/hr/documents/versions/[id]/route.ts"), "utf8");
+    const releaseMigration = fs.readFileSync(path.join(process.cwd(), "prisma/migrations/20260809190000_document_clean_release_invariant/migration.sql"), "utf8");
     expect(route).toContain('scanStatus: "CLEAN"');
+    expect(route).toContain('releasedAt: { not: null }');
+    expect(releaseMigration).toContain('DISABLE TRIGGER "HrEmployeeDocumentVersion_protected_update"');
+    expect(releaseMigration).toContain('ENABLE TRIGGER "HrEmployeeDocumentVersion_protected_update"');
     expect(route).toContain("auth.user.employee?.id === version.document.employeeId");
     expect(route).toContain('auth.permissions.has("document.read_sensitive")');
     expect(route).toContain("hrDocumentAccessLog.create");
@@ -75,10 +89,12 @@ describe("HRMS documents and assets", () => {
   it("stores uploaded files outside transactions and compensates failed metadata writes", () => {
     const actions = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/documents/actions.ts"), "utf8");
     expect(actions).toContain("validateHrDocumentFile");
-    expect(actions).toContain("storage.head(storageKey)");
-    expect(actions).toContain("storage.delete(storageKey)");
+    expect(actions).toContain("storage.headVersion(location)");
+    expect(actions).toContain("storage.deleteVersion(location)");
+    expect(actions).toContain("hrObjectStorage().deleteVersion(stored.location)");
     expect(actions).toContain("crypto.randomUUID()");
     expect(actions).toContain('scanStatus: "PENDING"');
+    expect(actions).toContain('releasedAt: input.status === "CLEAN" ? scanCompletedAt : null');
     expect(actions).toContain("documentMustBeRestricted");
   });
 

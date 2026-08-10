@@ -22,15 +22,16 @@ async function persistVersion(input: {
 }) {
   const validated = validateHrDocumentFile(input.file, input.bytes);
   const checksum = crypto.createHash("sha256").update(input.bytes).digest("hex");
-  const storageKey = `documents/${input.auth.user.organizationId}/${input.documentId}/v${input.version}-${crypto.randomUUID()}`;
+  const storageKey = `quarantine/documents/${input.auth.user.organizationId}/${input.documentId}/v${input.version}-${crypto.randomUUID()}`;
   const storage = hrObjectStorage();
-  await storage.put(storageKey, input.bytes, validated.contentType);
+  const location = await storage.quarantineUpload(storageKey, input.bytes, validated.contentType, checksum);
   try {
-    const stored = await storage.head(storageKey);
+    const stored = await storage.headVersion(location);
     if (stored.sizeBytes !== input.bytes.byteLength) throw new Error("Stored document size verification failed.");
-    return { ...validated, checksum, storageKey, storageProvider: hrStorageProvider() };
+    if (stored.checksum !== checksum) throw new Error("Stored document checksum metadata verification failed.");
+    return { ...validated, checksum, storageKey, storageProvider: hrStorageProvider(), storageBucket: location.bucket, storageVersionId: location.versionId, storageEtag: location.eTag, location };
   } catch (error) {
-    await storage.delete(storageKey).catch(() => undefined);
+    await storage.deleteVersion(location).catch(() => undefined);
     throw error;
   }
 }
@@ -48,11 +49,11 @@ export async function uploadEmployeeDocumentAction(formData: FormData) {
   try {
     await prisma.$transaction(async (tx) => {
       const document = await tx.hrEmployeeDocument.create({ data: { id: documentId, organizationId: auth.user.organizationId, employeeId: employee.id, category: metadata.category, title: metadata.title, restricted: metadata.restricted || documentMustBeRestricted(metadata.category), expiresAt: metadata.expiresAt, createdById: auth.user.id } });
-      const version = await tx.hrEmployeeDocumentVersion.create({ data: { organizationId: auth.user.organizationId, documentId: document.id, version: 1, originalFileName: file.name.slice(0, 500), displayFileName: stored.displayFileName, contentType: stored.contentType, sizeBytes: stored.sizeBytes, storageProvider: stored.storageProvider, storageKey: stored.storageKey, checksum: stored.checksum, uploadedById: auth.user.id } });
+      const version = await tx.hrEmployeeDocumentVersion.create({ data: { organizationId: auth.user.organizationId, documentId: document.id, version: 1, originalFileName: file.name.slice(0, 500), displayFileName: stored.displayFileName, contentType: stored.contentType, sizeBytes: stored.sizeBytes, storageProvider: stored.storageProvider, storageBucket: stored.storageBucket, storageKey: stored.storageKey, storageVersionId: stored.storageVersionId, storageEtag: stored.storageEtag, checksum: stored.checksum, uploadedById: auth.user.id } });
       await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrEmployeeDocument", entityId: document.id, action: "hr.document.uploaded", newValues: { employeeId: employee.id, category: document.category, restricted: document.restricted, expiresAt: document.expiresAt, version: version.version, checksum: version.checksum } });
     });
   } catch (error) {
-    await hrObjectStorage().delete(stored.storageKey).catch(() => undefined);
+    await hrObjectStorage().deleteVersion(stored.location).catch(() => undefined);
     throw error;
   }
   revalidatePath("/hr/admin/documents");
@@ -71,11 +72,11 @@ export async function uploadEmployeeDocumentVersionAction(formData: FormData) {
   const stored = await persistVersion({ auth, documentId, file, bytes, version: nextVersion });
   try {
     await prisma.$transaction(async (tx) => {
-      const version = await tx.hrEmployeeDocumentVersion.create({ data: { organizationId: auth.user.organizationId, documentId, version: nextVersion, originalFileName: file.name.slice(0, 500), displayFileName: stored.displayFileName, contentType: stored.contentType, sizeBytes: stored.sizeBytes, storageProvider: stored.storageProvider, storageKey: stored.storageKey, checksum: stored.checksum, uploadedById: auth.user.id } });
+      const version = await tx.hrEmployeeDocumentVersion.create({ data: { organizationId: auth.user.organizationId, documentId, version: nextVersion, originalFileName: file.name.slice(0, 500), displayFileName: stored.displayFileName, contentType: stored.contentType, sizeBytes: stored.sizeBytes, storageProvider: stored.storageProvider, storageBucket: stored.storageBucket, storageKey: stored.storageKey, storageVersionId: stored.storageVersionId, storageEtag: stored.storageEtag, checksum: stored.checksum, uploadedById: auth.user.id } });
       await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrEmployeeDocumentVersion", entityId: version.id, action: "hr.document.version.uploaded", newValues: { documentId, version: nextVersion, checksum: stored.checksum } });
     }, { isolationLevel: "Serializable" });
   } catch (error) {
-    await hrObjectStorage().delete(stored.storageKey).catch(() => undefined);
+    await hrObjectStorage().deleteVersion(stored.location).catch(() => undefined);
     throw error;
   }
   revalidatePath("/hr/admin/documents");
@@ -88,7 +89,8 @@ export async function recordDocumentScanAction(formData: FormData) {
   const input = scanInput.parse(Object.fromEntries(formData));
   await prisma.$transaction(async (tx) => {
     const version = await tx.hrEmployeeDocumentVersion.findFirstOrThrow({ where: { id: input.versionId, organizationId: auth.user.organizationId, scanStatus: "PENDING" }, include: { document: { include: { employee: { include: { user: true } } } } } });
-    await tx.hrEmployeeDocumentVersion.update({ where: { id: version.id }, data: { scanStatus: input.status, scanProvider: input.provider, scanReference: input.reference, scanReason: input.reason, scanCompletedAt: new Date(), scanRecordedById: auth.user.id } });
+    const scanCompletedAt = new Date();
+    await tx.hrEmployeeDocumentVersion.update({ where: { id: version.id }, data: { scanStatus: input.status, scanProvider: input.provider, scanReference: input.reference, scanReason: input.reason, scanCompletedAt, releasedAt: input.status === "CLEAN" ? scanCompletedAt : null, scanRecordedById: auth.user.id } });
     if (version.document.employee.user) await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: version.document.employee.user.email, template: input.status === "CLEAN" ? "hr-document-available" : "hr-document-scan-attention", subject: input.status === "CLEAN" ? "An HR document is available" : "An HR document upload needs attention", payload: { documentId: version.documentId }, idempotencyKey: `hr-document-scan:${version.id}:${input.status}` });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrEmployeeDocumentVersion", entityId: version.id, action: "hr.document.scan.recorded", previousValues: { scanStatus: version.scanStatus }, newValues: { scanStatus: input.status, scanProvider: input.provider }, reason: input.reason });
   });

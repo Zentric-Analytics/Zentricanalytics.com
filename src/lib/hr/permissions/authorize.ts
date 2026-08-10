@@ -1,5 +1,5 @@
 import type { HrRoleKey } from "@prisma/client";
-import { redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
 import type { HrPermissionKey } from "./catalog";
@@ -11,31 +11,31 @@ export { privilegedMfaRequired } from "./mfa-policy";
 export async function requireAuthenticatedUser(options: { allowMfaEnrollment?: boolean } = {}) {
   const auth = await getAuthenticatedHrUser();
   if (!auth) redirect("/hr/login");
-  if (!options.allowMfaEnrollment && privilegedMfaRequired(auth)) redirect("/hr/security");
+  if (!options.allowMfaEnrollment && (privilegedMfaRequired(auth) || Boolean(auth.user.mfaSecretEncrypted && !auth.user.mfaEnabled))) redirect("/hr/security");
   return auth;
 }
 
 export async function requireRole(role: HrRoleKey) {
   const auth = await requireAuthenticatedUser();
-  if (!auth.roles.includes(role)) throw new Error("Forbidden");
+  if (!auth.roles.includes(role)) forbidden();
   return auth;
 }
 
 export async function requireAnyRole(roles: HrRoleKey[]) {
   const auth = await requireAuthenticatedUser();
-  if (!roles.some((role) => auth.roles.includes(role))) throw new Error("Forbidden");
+  if (!roles.some((role) => auth.roles.includes(role))) forbidden();
   return auth;
 }
 
 export async function requirePermission(permission: HrPermissionKey) {
   const auth = await requireAuthenticatedUser();
-  if (!auth.permissions.has(permission)) throw new Error("Forbidden");
+  if (!auth.permissions.has(permission)) forbidden();
   return auth;
 }
 
 export async function requireAnyPermission(permissions: HrPermissionKey[]) {
   const auth = await requireAuthenticatedUser();
-  if (!permissions.some((permission) => auth.permissions.has(permission))) throw new Error("Forbidden");
+  if (!permissions.some((permission) => auth.permissions.has(permission))) forbidden();
   return auth;
 }
 

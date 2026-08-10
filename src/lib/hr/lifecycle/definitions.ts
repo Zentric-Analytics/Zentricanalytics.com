@@ -5,6 +5,7 @@ export const startLifecycleInput = z.object({
   employeeId: z.string().cuid(),
   templateId: z.string().cuid(),
   effectiveDate: z.coerce.date(),
+  separationType: z.enum(["RESIGNATION", "TERMINATION", "REDUNDANCY", "RETIREMENT", "CONTRACT_EXPIRY", "DEATH_IN_SERVICE", "OTHER"]).default("OTHER"),
   knowledgeTransferToId: z.string().cuid().optional().or(z.literal("")).transform((value) => value || undefined),
   reason: z.string().trim().max(1000).optional().or(z.literal("")).transform((value) => value || undefined),
   payrollStopDate: z.coerce.date().optional().or(z.literal("")).transform((value) => value === "" ? undefined : value),

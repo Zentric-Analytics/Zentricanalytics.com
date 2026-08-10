@@ -1,4 +1,5 @@
 import { HR_PERMISSION_KEYS, HR_ROLE_KEYS } from "./hr-bootstrap-lib.mjs";
+import { productionBackupPolicyIssues } from "./hr-backup-policy.mjs";
 
 export function hrEnvironmentChecks(env) {
   const appEnv = String(env.APP_ENV ?? "").trim().toLowerCase();
@@ -14,12 +15,15 @@ export function hrEnvironmentChecks(env) {
     if (appEnv === "staging" && !parsed.hostname.toLowerCase().includes("staging")) issues.push("APPLICATION_BASE_URL does not look like a staging URL.");
     if (appEnv === "production" && (parsed.protocol !== "https:" || parsed.hostname.toLowerCase().includes("staging"))) issues.push("APPLICATION_BASE_URL is unsafe for production.");
   } catch { issues.push("APPLICATION_BASE_URL is missing or invalid."); }
-  if (!["local", "local-private", "s3-compatible"].includes(storageProvider)) issues.push("OBJECT_STORAGE_PROVIDER must be local-private or s3-compatible.");
-  if (protectedEnvironment && storageProvider !== "s3-compatible") issues.push("Staging and production HR document storage must use the s3-compatible provider.");
-  if (storageProvider === "s3-compatible") {
-    for (const key of ["OBJECT_STORAGE_ENDPOINT", "OBJECT_STORAGE_BUCKET", "OBJECT_STORAGE_REGION", "OBJECT_STORAGE_ACCESS_KEY_ID", "OBJECT_STORAGE_SECRET_ACCESS_KEY"]) {
+  if (!["local", "local-private", "s3-compatible", "aws-s3"].includes(storageProvider)) issues.push("OBJECT_STORAGE_PROVIDER must be local-private, s3-compatible, or aws-s3.");
+  if (protectedEnvironment && !["s3-compatible", "aws-s3"].includes(storageProvider)) issues.push("Staging and production HR document storage must use the s3-compatible provider or AWS S3 provider.");
+  if (["s3-compatible", "aws-s3"].includes(storageProvider)) {
+    const required = storageProvider === "aws-s3" ? ["OBJECT_STORAGE_BUCKET", "OBJECT_STORAGE_REGION"] : ["OBJECT_STORAGE_ENDPOINT", "OBJECT_STORAGE_BUCKET", "OBJECT_STORAGE_REGION", "OBJECT_STORAGE_ACCESS_KEY_ID", "OBJECT_STORAGE_SECRET_ACCESS_KEY"];
+    for (const key of required) {
       if (!String(env[key] ?? "").trim()) issues.push(`${key} is required for S3-compatible HR storage.`);
     }
+    if (storageProvider === "aws-s3" && env.MALWARE_SCANNER_PROVIDER !== "aws-guardduty-s3") issues.push("AWS S3 HR storage requires MALWARE_SCANNER_PROVIDER=aws-guardduty-s3.");
+    if (storageProvider === "aws-s3" && !String(env.AWS_ACCOUNT_ID ?? "").trim()) issues.push("AWS_ACCOUNT_ID is required to authenticate GuardDuty scan events.");
     const endpoint = String(env.OBJECT_STORAGE_ENDPOINT ?? "");
     if (endpoint) {
       try {
@@ -43,11 +47,7 @@ export function hrEnvironmentChecks(env) {
   }
   if (appEnv === "production") {
     if (env.EMAIL_PROVIDER !== "resend" || !env.RESEND_API_KEY) issues.push("Production email delivery must use the configured Resend provider.");
-    if (!env.DATABASE_BACKUP_PROVIDER) issues.push("DATABASE_BACKUP_PROVIDER is not configured.");
-    if (Number(env.DATABASE_BACKUP_RETENTION_DAYS) < 30) issues.push("Production database backup retention must be at least 30 days.");
-    if (String(env.DATABASE_PITR_ENABLED).toLowerCase() !== "true") issues.push("Production point-in-time recovery must be enabled.");
-    const restoreTest = Date.parse(String(env.BACKUP_LAST_RESTORE_TEST_AT ?? ""));
-    if (!Number.isFinite(restoreTest) || Date.now() - restoreTest > 90 * 24 * 60 * 60 * 1000) issues.push("A successful backup restore test within the last 90 days is required.");
+    issues.push(...productionBackupPolicyIssues(env));
   }
   return { appEnv, issues, emailMode: env.EMAIL_PROVIDER === "resend" && env.RESEND_API_KEY ? "provider configured" : "delivery intentionally disabled or console-only", workerMode: env.EMAIL_WORKER_SECRET ? "configured" : "missing" };
 }

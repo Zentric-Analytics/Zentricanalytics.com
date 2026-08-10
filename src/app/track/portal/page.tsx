@@ -12,7 +12,7 @@ import {
   stage2IdTypeOptions,
   parseStage5RoleSchedule,
 } from "@/lib/hiring";
-import { submitOfferDecision, submitStage2, submitStage3, submitStage5, submitStage6, submitStage7 } from "../actions";
+import { submitGovernedDocumentReplacement, submitOfferDecision, submitStage2, submitStage3, submitStage5, submitStage6, submitStage7 } from "../actions";
 // Backward-compatible source check: import { submitOfferDecision, submitStage2, submitStage3 }
 import { prisma } from "@/lib/prisma";
 import { sha256 } from "@/lib/security";
@@ -23,6 +23,7 @@ type PortalApplication = Prisma.JobApplicationGetPayload<{
     applicant: true;
     offer: true;
     employmentAgreement: true;
+    documents: true;
     stages: {
       include: {
         submissions: {
@@ -116,6 +117,7 @@ export default async function Portal({
               applicant: true,
               offer: true,
               employmentAgreement: true,
+              documents: true,
               stages: {
                 orderBy: { stageOrder: "asc" },
                 include: { submissions: { include: { signature: true } } },
@@ -212,11 +214,62 @@ export default async function Portal({
     selectedStage?.order === 4,
   );
   const stageOneSignature = portalStages[0]?.stage?.submissions[0]?.signature;
+  const governedOffer = await prisma.hrRecruitmentOffer.findUnique({
+    where: { applicationId: application.id },
+    include: { activeVersion: true, acceptedVersion: true },
+  });
+  const governedHandover = await prisma.hrRecruitmentHandover.findFirst({
+    where: { applicationId: application.id, organizationId: application.organizationId ?? undefined },
+    include: { documentReviews: true },
+  });
+  const replacementRequests = governedHandover?.documentReviews.filter((review) => review.status === "REPLACEMENT_REQUESTED") ?? [];
+  const governedLifecycleActive = Boolean(governedOffer?.activeVersion && ["ISSUED", "ACCEPTED", "DECLINED"].includes(governedOffer.status));
+  const governedLifecycleStep = governedOffer?.status === "ISSUED"
+    ? "Offer awaiting your decision"
+    : governedOffer?.status === "DECLINED"
+      ? "Offer declined"
+      : governedHandover?.status === "CONVERTED_TO_PRE_HIRE"
+        ? "Transferred to employee onboarding"
+        : "Accepted offer transferred to HR";
 
   return (
     <PageShell>
       <Section eyebrow="Candidate portal" title="Track your application">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] lg:items-start">
+        {governedOffer?.activeVersion && ["ISSUED", "ACCEPTED", "DECLINED"].includes(governedOffer.status) ? <section className="card mb-5 p-5 sm:p-6" aria-labelledby="governed-offer-title">
+          <p className="text-xs font-bold uppercase tracking-widest text-accent">Governed employment offer · exact version {governedOffer.activeVersion.version}</p>
+          <h2 id="governed-offer-title" className="mt-2 text-2xl font-bold">{governedOffer.activeVersion.positionTitle}</h2>
+          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <p><strong>Compensation:</strong> {governedOffer.activeVersion.currency} {governedOffer.activeVersion.salary.toString()} {governedOffer.activeVersion.payFrequency}</p>
+            <p><strong>Start date:</strong> {formatDate(governedOffer.activeVersion.startDate)}</p>
+            <p><strong>Work arrangement:</strong> {governedOffer.activeVersion.workMode}</p>
+            <p><strong>Expires:</strong> {formatDate(governedOffer.activeVersion.expiresAt)}</p>
+          </div>
+          <div className="mt-4 whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm">{String((governedOffer.activeVersion.terms as { text?: string } | null)?.text ?? "Review the employment terms supplied by HR.")}</div>
+          {governedOffer.status === "ISSUED" ? <form action={submitOfferDecision} className="mt-4 space-y-3">
+            <input type="hidden" name="session" value={session ?? ""} />
+            <textarea className="input" name="candidateDecisionNote" placeholder="Optional decision note" />
+            <label className="flex gap-2 text-sm font-semibold"><input name="confirmation" type="checkbox" required /> I confirm this decision applies to exact offer version {governedOffer.activeVersion.version}.</label>
+            <div className="flex gap-3"><button className="btn btn-primary" name="decision" value="accept">Accept exact offer</button><button className="btn btn-secondary" name="decision" value="decline">Decline offer</button></div>
+          </form> : <p className="mt-4 font-semibold">{governedOffer.status === "ACCEPTED" ? "This exact offer version has been accepted." : "This offer has been declined."}</p>}
+        </section> : null}
+        {replacementRequests.length ? <section className="card mb-5 p-5 sm:p-6" aria-labelledby="replacement-title">
+          <h2 id="replacement-title" className="text-xl font-bold">Document replacement requested</h2>
+          <p className="mt-2 text-sm text-slate-600">Upload a new private version for each requested document. Earlier versions remain preserved for audit history.</p>
+          <div className="mt-4 space-y-4">{replacementRequests.map((review) => {
+            const document = application.documents.find((item) => item.id === review.uploadedDocumentId);
+            return <article className="rounded-2xl border p-4" key={review.id}><strong>{document?.kind ?? "Requested document"}</strong><p className="mt-1 text-sm text-slate-600">{review.reason ?? "HR requested a replacement."}</p>{review.replacedById ? <p className="mt-3 font-semibold text-emerald-700">Replacement submitted and awaiting exact-version review.</p> : <form action={submitGovernedDocumentReplacement} className="mt-3 space-y-3"><input type="hidden" name="session" value={session ?? ""} /><input type="hidden" name="reviewId" value={review.id} /><input className="input" name="replacementFile" type="file" required /><button className="btn btn-primary">Submit private replacement</button></form>}</article>;
+          })}</div>
+        </section> : null}
+        {governedLifecycleActive ? <section className="card p-5 sm:p-6" aria-labelledby="governed-lifecycle-title">
+          <p className="text-xs font-bold uppercase tracking-widest text-accent">Application ID</p>
+          <h2 id="governed-lifecycle-title" className="mt-2 break-all text-2xl font-bold tracking-tight text-ink sm:text-3xl">{application.applicationId}</h2>
+          <p className="mt-2 text-sm text-slate-600">{application.applicant.fullName} Â· {application.roleAppliedFor}</p>
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Governed lifecycle status</p>
+            <p className="mt-2 text-base font-bold text-ink">{governedLifecycleStep}</p>
+            <p className="mt-2 text-sm text-slate-600">The governed recruitment record above is authoritative. Legacy stage percentages are hidden once an immutable offer is issued.</p>
+          </div>
+        </section> : <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] lg:items-start">
           <section
             className="card overflow-hidden p-0 lg:col-start-1 lg:row-start-1"
             aria-labelledby="portal-overview-title"
@@ -1136,7 +1189,7 @@ export default async function Portal({
               </p>
             )}
           </section>
-        </div>
+        </div>}
       </Section>
     </PageShell>
   );

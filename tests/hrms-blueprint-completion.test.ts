@@ -74,6 +74,7 @@ describe("HRMS blueprint completion audit", () => {
 
   it("models every mandatory offboarding control and enforces terminal gates", () => {
     const lifecycle = read("src/app/hr/admin/lifecycle/actions.ts");
+    const commands = read("src/lib/hr/workforce/lifecycle-commands.ts");
     const definitions = read("src/lib/hr/lifecycle/definitions.ts");
     for (const field of ["payrollStopDate", "finalPayrollRequired", "leaveReconciliation", "companyEmailDisabledAt", "finalCommunicationSentAt"]) {
       expect(schema).toContain(field);
@@ -83,8 +84,10 @@ describe("HRMS blueprint completion audit", () => {
       expect(definitions).toContain(task);
       expect(lifecycle).toContain(task);
     }
-    expect(lifecycle).toContain("companyEmailStatus: \"DISABLED\"");
-    expect(lifecycle).toContain("hr-employment-exit");
+    expect(lifecycle).not.toContain("companyEmailStatus: \"DISABLED\"");
+    expect(commands).toContain("companyEmailStatus: \"DISABLED\"");
+    expect(commands).toContain("companyEmailDisabledAt: now");
+    expect(commands).toContain("hr-separation-completed");
   });
 
   it("stores complete immutable workflow approval context and future delegation fields", () => {

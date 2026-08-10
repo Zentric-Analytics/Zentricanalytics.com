@@ -25,6 +25,7 @@ const nextConfig = {
     minimumCacheTTL: 86400,
   },
   experimental: {
+    authInterrupts: true,
     serverActions: {
       bodySizeLimit: '25mb',
     },
