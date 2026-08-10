@@ -29,9 +29,10 @@ describe("Unit 5 blueprint", () => {
 
   it("provides a public, secret-free blueprint status artifact", () => {
     const status = read("src/app/hr/admin/unit-5-status/page.tsx");
-    expect(status).toContain("BLUEPRINT REVIEW");
+    expect(status).toContain("IMPLEMENTATION IN PROGRESS");
+    expect(status).not.toContain("PASS — Unit 5 Production Ready");
     expect(status).toContain("production untouched");
-    expect(status).toContain("Implementation requires product-owner approval");
+    expect(status).toContain("staging deployment and live evidence remain pending");
     expect(read("src/app/unit-5-status/page.tsx")).toContain("unit-5-status/page");
     expect(status).not.toMatch(/DATABASE_URL|SECRET_ACCESS_KEY|AUTH_SECRET/);
   });
