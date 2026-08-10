@@ -72,8 +72,8 @@ export function reconstructUnit5Balance(entries: Array<{ kind: string; amount: n
   }, 0);
 }
 
-export function projectedPeriodBalance(period: { granted: number; accrued: number; carriedOver: number; adjusted: number; reserved: number; consumed: number; expired: number }) {
-  return period.granted + period.accrued + period.carriedOver + period.adjusted - period.reserved - period.consumed - period.expired;
+export function projectedPeriodBalance(period: { granted: number; accrued: number; carriedOver: number; carriedOut?: number; adjusted: number; reserved: number; consumed: number; expired: number }) {
+  return period.granted + period.accrued + period.carriedOver + period.adjusted - (period.carriedOut ?? 0) - period.reserved - period.consumed - period.expired;
 }
 
 export const UNIT5_REQUEST_TRANSITIONS: Record<string, readonly string[]> = {

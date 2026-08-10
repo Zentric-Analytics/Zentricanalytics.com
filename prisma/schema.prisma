@@ -2038,6 +2038,7 @@ model HrLeaveAccountPeriod {
   granted         Decimal                 @default(0) @db.Decimal(12, 4)
   accrued         Decimal                 @default(0) @db.Decimal(12, 4)
   carriedOver     Decimal                 @default(0) @db.Decimal(12, 4)
+  carriedOut      Decimal                 @default(0) @db.Decimal(12, 4)
   adjusted        Decimal                 @default(0) @db.Decimal(12, 4)
   reserved        Decimal                 @default(0) @db.Decimal(12, 4)
   consumed        Decimal                 @default(0) @db.Decimal(12, 4)

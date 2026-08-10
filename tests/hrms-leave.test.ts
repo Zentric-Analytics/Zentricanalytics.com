@@ -71,6 +71,8 @@ describe("HRMS leave engine", () => {
     expect(adminActions).toContain('data: { effectiveTo: input.effectiveFrom }');
     expect(adminActions).not.toContain('data: { status: "ARCHIVED", effectiveTo: input.effectiveFrom }');
     expect(adminActions).toContain("Policy assignment must begin within the policy's effective dates.");
-    expect(adminActions).toContain("const openingKey = `leave-opening:${target.id}:${targetYear}`");
+    const accounting = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-accounting.ts"), "utf8");
+    expect(accounting).toContain('reason: `Opening entitlement for ${targetYear}`');
+    expect(accounting).toContain('idempotencyKey: `unit5-grant:${target.id}`');
   });
 });

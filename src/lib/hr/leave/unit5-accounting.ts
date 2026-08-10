@@ -6,8 +6,8 @@ import { createWorkforceEventDraft, submitWorkforceEvent } from "@/lib/hr/workfo
 import { capAccrual, scheduledAccrualAmount } from "./engine";
 
 type Tx = Prisma.TransactionClient;
-type ProjectionField = "granted" | "accrued" | "carriedOver" | "adjusted" | "reserved" | "consumed" | "expired";
-const projectionField: Partial<Record<HrLeaveEntryKind, ProjectionField>> = { GRANT: "granted", ACCRUAL: "accrued", CARRYOVER_IN: "carriedOver", RESERVATION: "reserved", CONSUMPTION: "consumed", EXPIRY: "expired", ADJUSTMENT: "adjusted", CORRECTION: "adjusted" };
+type ProjectionField = "granted" | "accrued" | "carriedOver" | "carriedOut" | "adjusted" | "reserved" | "consumed" | "expired";
+const projectionField: Partial<Record<HrLeaveEntryKind, ProjectionField>> = { GRANT: "granted", ACCRUAL: "accrued", CARRYOVER_IN: "carriedOver", CARRYOVER_OUT: "carriedOut", RESERVATION: "reserved", CONSUMPTION: "consumed", EXPIRY: "expired", ADJUSTMENT: "adjusted", CORRECTION: "adjusted" };
 
 async function latestStatus(tx: Tx, requestVersionId: string): Promise<HrLeaveRequestLifecycleStatus> {
   const latest = await tx.hrLeaveTransition.findFirst({ where: { requestVersionId }, orderBy: { createdAt: "desc" } });
@@ -87,7 +87,7 @@ export async function accrueUnit5Assignment(input: { organizationId: string; ass
     const account = await tx.hrLeaveAccount.upsert({ where: { organizationId_employeeId_leaveTypeId_unit: { organizationId: input.organizationId, employeeId: assignment.employeeId, leaveTypeId: policy.leaveTypeId, unit: policy.leaveType.unit } }, update: {}, create: { organizationId: input.organizationId, employeeId: assignment.employeeId, leaveTypeId: policy.leaveTypeId, unit: policy.leaveType.unit } });
     const periodStart = new Date(Date.UTC(year, 0, 1)); const periodEnd = new Date(Date.UTC(year + 1, 0, 1));
     const period = await tx.hrLeaveAccountPeriod.upsert({ where: { accountId_periodStart_periodEnd: { accountId: account.id, periodStart, periodEnd } }, update: {}, create: { accountId: account.id, leavePolicyId: policy.id, periodStart, periodEnd } });
-    const available = projectedPeriodBalance({ granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) });
+    const available = projectedPeriodBalance({ granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), carriedOut: Number(period.carriedOut), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) });
     const amount = Math.round(capAccrual(scheduledAccrualAmount({ entitlement: Number(policy.entitlement), accrualFrequency: policy.accrualFrequency, accrualAmount: policy.accrualAmount ? Number(policy.accrualAmount) : null }), available, policy.maximumBalance ? Number(policy.maximumBalance) : null) * 10_000) / 10_000;
     if (amount <= 0) return { applied: false, amount: 0 };
     const correlationId = `unit5-accrual:${assignment.id}:${windowKey}`;
@@ -98,6 +98,68 @@ export async function accrueUnit5Assignment(input: { organizationId: string; ass
     await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole, entityType: "HrLeaveAccountPeriod", entityId: period.id, action: "hr.leave.unit5.accrued", newValues: { amount, windowKey, policyId: policy.id }, correlationId });
     return { applied: true, amount };
   }, { isolationLevel: "Serializable" });
+}
+
+export async function processUnit5CarryOver(input: { organizationId: string; effectiveAt: Date; actorUserId: string; actorRole?: string }) {
+  const targetYear = input.effectiveAt.getUTCFullYear();
+  const periodStart = new Date(Date.UTC(targetYear, 0, 1));
+  const periodEnd = new Date(Date.UTC(targetYear + 1, 0, 1));
+  const priorPeriods = await prisma.hrLeaveAccountPeriod.findMany({
+    where: { account: { organizationId: input.organizationId }, periodStart: new Date(Date.UTC(targetYear - 1, 0, 1)), periodEnd: periodStart },
+    select: { id: true },
+  });
+  const results: Array<{ sourcePeriodId: string; targetPeriodId?: string; carried: number; expired: number }> = [];
+
+  for (const candidate of priorPeriods) {
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "HrLeaveAccountPeriod" WHERE id = ${candidate.id} FOR UPDATE`;
+      const source = await tx.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: candidate.id }, include: { account: true, leavePolicy: { include: { leaveType: true } } } });
+      const limit = source.leavePolicy.carryOverLimit ? Number(source.leavePolicy.carryOverLimit) : 0;
+      const spendable = projectedPeriodBalance({ granted: Number(source.granted), accrued: Number(source.accrued), carriedOver: Number(source.carriedOver), carriedOut: Number(source.carriedOut), adjusted: Number(source.adjusted), reserved: Number(source.reserved), consumed: Number(source.consumed), expired: Number(source.expired) });
+      const amount = Math.round(Math.max(0, Math.min(spendable, limit)) * 10_000) / 10_000;
+      if (amount <= 0) return { sourcePeriodId: source.id, carried: 0, expired: 0 };
+
+      const targetPolicy = await tx.hrLeavePolicy.findFirst({
+        where: { organizationId: input.organizationId, leaveTypeId: source.account.leaveTypeId, status: "ACTIVE", effectiveFrom: { lte: input.effectiveAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.effectiveAt } }] },
+        orderBy: { version: "desc" },
+      }) ?? source.leavePolicy;
+      const target = await tx.hrLeaveAccountPeriod.upsert({
+        where: { accountId_periodStart_periodEnd: { accountId: source.accountId, periodStart, periodEnd } },
+        update: {},
+        create: { accountId: source.accountId, leavePolicyId: targetPolicy.id, periodStart, periodEnd },
+      });
+      if (targetPolicy.accrualFrequency === "ANNUALLY" && Number(targetPolicy.entitlement) > 0) await postEntry(tx, { organizationId: input.organizationId, accountPeriodId: target.id, leavePolicyId: targetPolicy.id, kind: "GRANT", amount: targetPolicy.entitlement, unit: source.account.unit, effectiveAt: periodStart, sourceType: "POLICY_PERIOD", sourceId: target.id, actorUserId: input.actorUserId, workerKey: String(targetYear), reason: `Opening entitlement for ${targetYear}`, correlationId: `unit5-grant:${target.id}`, idempotencyKey: `unit5-grant:${target.id}` });
+      const correlationId = `unit5-carryover:${source.id}:${targetYear}`;
+      const carriedOut = await postEntry(tx, { organizationId: input.organizationId, accountPeriodId: source.id, leavePolicyId: source.leavePolicyId, kind: "CARRYOVER_OUT", amount, unit: source.account.unit, effectiveAt: input.effectiveAt, sourceType: "LEAVE_ACCOUNT_PERIOD", sourceId: target.id, actorUserId: input.actorUserId, workerKey: String(targetYear), reason: `Carryover to ${targetYear}`, correlationId, idempotencyKey: `${correlationId}:out` });
+      await postEntry(tx, { organizationId: input.organizationId, accountPeriodId: target.id, leavePolicyId: targetPolicy.id, kind: "CARRYOVER_IN", amount, unit: source.account.unit, effectiveAt: input.effectiveAt, sourceType: "LEAVE_ACCOUNT_PERIOD", sourceId: source.id, actorUserId: input.actorUserId, workerKey: String(targetYear), reason: `Carryover from ${targetYear - 1}`, correlationId, idempotencyKey: `${correlationId}:in` });
+      if (carriedOut.applied) await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole, entityType: "HrLeaveAccountPeriod", entityId: target.id, action: "hr.leave.unit5.carried_over", newValues: { amount, sourcePeriodId: source.id, targetPeriodId: target.id }, correlationId });
+      return { sourcePeriodId: source.id, targetPeriodId: target.id, carried: carriedOut.applied ? amount : 0, expired: 0 };
+    }, { isolationLevel: "Serializable" });
+    results.push(result);
+  }
+
+  const expiring = await prisma.hrLeaveAccountPeriod.findMany({
+    where: { account: { organizationId: input.organizationId }, periodStart, periodEnd, carriedOver: { gt: 0 }, leavePolicy: { carryOverExpiryMonth: { lte: input.effectiveAt.getUTCMonth() + 1 } } },
+    select: { id: true },
+  });
+  for (const candidate of expiring) {
+    const expired = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "HrLeaveAccountPeriod" WHERE id = ${candidate.id} FOR UPDATE`;
+      const period = await tx.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: candidate.id }, include: { account: true, leavePolicy: true } });
+      const spendable = projectedPeriodBalance({ granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), carriedOut: Number(period.carriedOut), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) });
+      const unexpiredCarryover = Math.max(0, Number(period.carriedOver) - Number(period.expired));
+      const amount = Math.round(Math.max(0, Math.min(unexpiredCarryover, spendable)) * 10_000) / 10_000;
+      if (amount <= 0) return 0;
+      const correlationId = `unit5-carryover-expiry:${period.id}:${targetYear}`;
+      const posted = await postEntry(tx, { organizationId: input.organizationId, accountPeriodId: period.id, leavePolicyId: period.leavePolicyId, kind: "EXPIRY", amount, unit: period.account.unit, effectiveAt: input.effectiveAt, sourceType: "LEAVE_ACCOUNT_PERIOD", sourceId: period.id, actorUserId: input.actorUserId, workerKey: String(targetYear), reason: `Carryover expired under policy version ${period.leavePolicy.version}`, correlationId, idempotencyKey: correlationId });
+      if (posted.applied) await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole, entityType: "HrLeaveAccountPeriod", entityId: period.id, action: "hr.leave.unit5.carryover_expired", newValues: { amount, protectedReservation: Number(period.reserved) }, correlationId });
+      return posted.applied ? amount : 0;
+    }, { isolationLevel: "Serializable" });
+    const existing = results.find((item) => item.targetPeriodId === candidate.id);
+    if (existing) existing.expired = expired;
+    else results.push({ sourcePeriodId: candidate.id, targetPeriodId: candidate.id, carried: 0, expired });
+  }
+  return results;
 }
 
 function amountsByPeriod(segments: Array<{ accountPeriodId: string | null; chargeableAmount: Prisma.Decimal }>) {
@@ -118,7 +180,7 @@ export async function reserveUnit5Request(input: { organizationId: string; reque
     for (const accountPeriodId of [...groups.keys()].sort()) {
       await tx.$queryRaw`SELECT id FROM "HrLeaveAccountPeriod" WHERE id = ${accountPeriodId} FOR UPDATE`;
       const period = await tx.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: accountPeriodId }, include: { leavePolicy: true } });
-      const available = projectedPeriodBalance({ granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) });
+      const available = projectedPeriodBalance({ granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), carriedOut: Number(period.carriedOut), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) });
       const amount = groups.get(accountPeriodId)!;
       const nonNumericEntitlement = ["UNLIMITED", "UNPAID", "STATUTORY", "LONG_TERM"].includes(period.leavePolicy.entitlementModel);
       if (!period.leavePolicy.allowNegativeBalance && !nonNumericEntitlement && amount.gt(available)) throw new Error("Final approval cannot reserve more than the current spendable entitlement.");
@@ -226,9 +288,9 @@ export async function cancelUnit5Leave(input: { organizationId: string; requestV
 
 export async function reconcileUnit5Period(organizationId: string, accountPeriodId: string) {
   const period = await prisma.hrLeaveAccountPeriod.findFirstOrThrow({ where: { id: accountPeriodId, account: { organizationId } }, include: { entries: true } });
-  const ledger = { granted: 0, accrued: 0, carriedOver: 0, adjusted: 0, reserved: 0, consumed: 0, expired: 0 };
-  for (const entry of period.entries) { const amount = Number(entry.amount); if (entry.kind === "GRANT") ledger.granted += amount; if (entry.kind === "ACCRUAL") ledger.accrued += amount; if (entry.kind === "CARRYOVER_IN") ledger.carriedOver += amount; if (["ADJUSTMENT", "CORRECTION"].includes(entry.kind)) ledger.adjusted += amount; if (entry.kind === "RESERVATION") ledger.reserved += amount; if (entry.kind === "RESERVATION_RELEASE") ledger.reserved -= amount; if (entry.kind === "CONSUMPTION") ledger.consumed += amount; if (entry.kind === "EXPIRY") ledger.expired += amount; }
-  const projection = { granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) };
+  const ledger = { granted: 0, accrued: 0, carriedOver: 0, carriedOut: 0, adjusted: 0, reserved: 0, consumed: 0, expired: 0 };
+  for (const entry of period.entries) { const amount = Number(entry.amount); if (entry.kind === "GRANT") ledger.granted += amount; if (entry.kind === "ACCRUAL") ledger.accrued += amount; if (entry.kind === "CARRYOVER_IN") ledger.carriedOver += amount; if (entry.kind === "CARRYOVER_OUT") ledger.carriedOut += amount; if (["ADJUSTMENT", "CORRECTION"].includes(entry.kind)) ledger.adjusted += amount * entry.impactSign; if (entry.kind === "RESERVATION") ledger.reserved += amount; if (entry.kind === "RESERVATION_RELEASE") ledger.reserved -= amount; if (entry.kind === "CONSUMPTION") ledger.consumed += amount; if (entry.kind === "EXPIRY") ledger.expired += amount; }
+  const projection = { granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), carriedOut: Number(period.carriedOut), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) };
   const differences = Object.fromEntries(Object.keys(ledger).map((key) => [key, Number((projection[key as keyof typeof projection] - ledger[key as keyof typeof ledger]).toFixed(4))]));
   return { balanced: Object.values(differences).every((value) => value === 0), ledger, projection, differences };
 }

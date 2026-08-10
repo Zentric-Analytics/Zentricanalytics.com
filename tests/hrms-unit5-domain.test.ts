@@ -25,6 +25,8 @@ describe("Unit 5 leave domain", () => {
     expect(reconstructUnit5Balance(entries)).toBe(15);
     expect(projectedPeriodBalance({ granted: 20, accrued: 0, carriedOver: 0, adjusted: 0, reserved: 0, consumed: 5, expired: 0 })).toBe(15);
     expect(reconstructUnit5Balance([{ kind: "ADJUSTMENT", amount: 2, impactSign: -1 }, { kind: "CORRECTION", amount: 1, impactSign: 1 }])).toBe(-1);
+    expect(reconstructUnit5Balance([{ kind: "GRANT", amount: 20 }, { kind: "RESERVATION", amount: 4 }, { kind: "CARRYOVER_OUT", amount: 10 }])).toBe(6);
+    expect(projectedPeriodBalance({ granted: 20, accrued: 0, carriedOver: 0, carriedOut: 10, adjusted: 0, reserved: 4, consumed: 0, expired: 0 })).toBe(6);
   });
 
   it("enforces state, version and separation-of-duties rules", () => {
@@ -55,5 +57,16 @@ describe("Unit 5 leave domain", () => {
     expect(worker).toContain("authorizeInternalRequest");
     expect(longAbsence).toContain('type: "RETURN_FROM_LEAVE"');
     expect(longAbsence).toContain('employmentStatus: "ACTIVE"');
+  });
+
+  it("uses the authoritative idempotent carryover ledger and protects reservations from expiry", () => {
+    const accounting = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-accounting.ts"), "utf8");
+    const action = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/leave/actions.ts"), "utf8");
+    expect(accounting).toContain('kind: "CARRYOVER_OUT"');
+    expect(accounting).toContain('kind: "CARRYOVER_IN"');
+    expect(accounting).toContain('Math.min(unexpiredCarryover, spendable)');
+    expect(accounting).toContain('protectedReservation: Number(period.reserved)');
+    expect(action).toContain("processUnit5CarryOver");
+    expect(action).not.toContain("leave-carry-over-expiry:");
   });
 });

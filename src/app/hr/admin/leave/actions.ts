@@ -4,10 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
-import { availableLeaveBalance, leavePolicyInput, leaveTypeInput } from "@/lib/hr/leave/engine";
+import { leavePolicyInput, leaveTypeInput } from "@/lib/hr/leave/engine";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { submitUnit5ReturnToWork } from "@/lib/hr/leave/unit5-long-absence";
-import { accrueUnit5Assignment, adjustUnit5BalanceFromLegacy } from "@/lib/hr/leave/unit5-accounting";
+import { accrueUnit5Assignment, adjustUnit5BalanceFromLegacy, processUnit5CarryOver } from "@/lib/hr/leave/unit5-accounting";
 
 export async function submitReturnToWorkAction(formData: FormData) {
   const auth = await requirePermission("leave.override");
@@ -101,39 +101,7 @@ export async function runLeaveAccrualAction(formData: FormData) {
 export async function runLeaveCarryOverAction(formData: FormData) {
   const auth = await requirePermission("leave.override");
   const effectiveAt = z.coerce.date().parse(formData.get("effectiveAt"));
-  const targetYear = effectiveAt.getUTCFullYear();
-  const priorBalances = await prisma.hrLeaveBalance.findMany({ where: { organizationId: auth.user.organizationId, periodYear: targetYear - 1 }, include: { leavePolicy: true } });
-  for (const prior of priorBalances) {
-    const available = availableLeaveBalance({ opening: Number(prior.opening), accrued: Number(prior.accrued), carriedOver: Number(prior.carriedOver), adjusted: Number(prior.adjusted), reserved: Number(prior.reserved), used: Number(prior.used), expired: Number(prior.expired) });
-    const amount = Math.max(0, Math.min(available, prior.leavePolicy.carryOverLimit ? Number(prior.leavePolicy.carryOverLimit) : 0));
-    if (!amount) continue;
-    await prisma.$transaction(async (tx) => {
-      const opening = prior.leavePolicy.accrualFrequency === "ANNUALLY" ? prior.leavePolicy.entitlement : 0;
-      const target = await tx.hrLeaveBalance.upsert({ where: { employeeId_leaveTypeId_periodYear: { employeeId: prior.employeeId, leaveTypeId: prior.leaveTypeId, periodYear: targetYear } }, update: { leavePolicyId: prior.leavePolicyId }, create: { organizationId: auth.user.organizationId, employeeId: prior.employeeId, leaveTypeId: prior.leaveTypeId, leavePolicyId: prior.leavePolicyId, periodYear: targetYear, opening } });
-      const openingKey = `leave-opening:${target.id}:${targetYear}`;
-      if (Number(opening) > 0 && !await tx.hrLeaveLedger.findUnique({ where: { idempotencyKey: openingKey } })) {
-        await tx.hrLeaveLedger.create({ data: { balanceId: target.id, type: "OPENING", amount: opening, effectiveAt: new Date(Date.UTC(targetYear, 0, 1)), reason: `Opening entitlement for ${targetYear}`, actorUserId: auth.user.id, idempotencyKey: openingKey } });
-      }
-      const idempotencyKey = `leave-carry-over:${prior.id}:${targetYear}`;
-      if (await tx.hrLeaveLedger.findUnique({ where: { idempotencyKey } })) return;
-      await tx.hrLeaveBalance.update({ where: { id: target.id }, data: { carriedOver: { increment: amount } } });
-      await tx.hrLeaveLedger.create({ data: { balanceId: target.id, type: "CARRY_OVER", amount, effectiveAt, reason: `Carry-over from ${targetYear - 1}`, actorUserId: auth.user.id, idempotencyKey } });
-      await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrLeaveBalance", entityId: target.id, action: "hr.leave.balance.carried_over", newValues: { amount, fromYear: targetYear - 1, toYear: targetYear } });
-    }, { isolationLevel: "Serializable" });
-  }
-  const expiring = await prisma.hrLeaveBalance.findMany({ where: { organizationId: auth.user.organizationId, periodYear: targetYear, carriedOver: { gt: 0 }, leavePolicy: { carryOverExpiryMonth: { lte: effectiveAt.getUTCMonth() + 1 } } }, include: { leavePolicy: true } });
-  for (const balance of expiring) {
-    await prisma.$transaction(async (tx) => {
-      const idempotencyKey = `leave-carry-over-expiry:${balance.id}:${targetYear}`;
-      if (await tx.hrLeaveLedger.findUnique({ where: { idempotencyKey } })) return;
-      const available = availableLeaveBalance({ opening: Number(balance.opening), accrued: Number(balance.accrued), carriedOver: Number(balance.carriedOver), adjusted: Number(balance.adjusted), reserved: Number(balance.reserved), used: Number(balance.used), expired: Number(balance.expired) });
-      const amount = Math.max(0, Math.min(Number(balance.carriedOver), available));
-      if (!amount) return;
-      await tx.hrLeaveBalance.update({ where: { id: balance.id }, data: { expired: { increment: amount } } });
-      await tx.hrLeaveLedger.create({ data: { balanceId: balance.id, type: "EXPIRY", amount, effectiveAt, reason: `Carry-over expired under policy version ${balance.leavePolicy.version}`, actorUserId: auth.user.id, idempotencyKey } });
-      await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrLeaveBalance", entityId: balance.id, action: "hr.leave.balance.carry_over_expired", newValues: { amount, year: targetYear } });
-    }, { isolationLevel: "Serializable" });
-  }
+  await processUnit5CarryOver({ organizationId: auth.user.organizationId, effectiveAt, actorUserId: auth.user.id, actorRole: auth.roles[0] });
   revalidatePath("/hr/admin/leave");
   revalidatePath("/hr/employee/leave");
 }
