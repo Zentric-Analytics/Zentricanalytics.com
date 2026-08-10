@@ -5,9 +5,9 @@ if (process.env.HR_UNIT5_STAGING_CONCURRENCY_CONFIRM !== "staging-only" || datab
 
 const prisma = new PrismaClient();
 const run = `unit5-concurrency-${Date.now()}`;
-const year = 2090 + new Date().getUTCFullYear() % 5;
-const periodStart = new Date(Date.UTC(year, 0, 1));
-const periodEnd = new Date(Date.UTC(year + 1, 0, 1));
+const fixtureOffset = Date.now() % (300 * 86_400_000);
+const periodStart = new Date(Date.UTC(2090, 0, 1) + fixtureOffset);
+const periodEnd = new Date(periodStart.getTime() + 86_400_000);
 
 async function postReservation(accountPeriodId, organizationId, policyId, unit, sourceId, amount) {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
@@ -48,7 +48,6 @@ try {
   const account = await prisma.hrLeaveAccount.upsert({ where: { organizationId_employeeId_leaveTypeId_unit: { organizationId: organization.id, employeeId: employee.id, leaveTypeId: policy.leaveTypeId, unit: policy.leaveType.unit } }, update: {}, create: { organizationId: organization.id, employeeId: employee.id, leaveTypeId: policy.leaveTypeId, unit: policy.leaveType.unit } });
   const period = await prisma.hrLeaveAccountPeriod.upsert({ where: { accountId_periodStart_periodEnd: { accountId: account.id, periodStart, periodEnd } }, update: {}, create: { accountId: account.id, leavePolicyId: policy.id, periodStart, periodEnd } });
   await prisma.$transaction(async (tx) => {
-    await tx.hrLeaveLedgerEntry.deleteMany({ where: { organizationId: organization.id, accountPeriodId: period.id, sourceType: "UNIT5_CONCURRENCY_FIXTURE" } });
     await tx.hrLeaveAccountPeriod.update({ where: { id: period.id }, data: { granted: 10, accrued: 0, carriedOver: 0, carriedOut: 0, adjusted: 0, reserved: 0, consumed: 0, expired: 0 } });
     await tx.hrLeaveLedgerEntry.create({ data: { organizationId: organization.id, accountPeriodId: period.id, leavePolicyId: policy.id, kind: "GRANT", amount: 10, unit: policy.leaveType.unit, effectiveAt: periodStart, sourceType: "UNIT5_CONCURRENCY_FIXTURE", sourceId: run, reason: run, correlationId: run, idempotencyKey: `${run}:grant` } });
   });

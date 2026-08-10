@@ -103,6 +103,7 @@ describe("Unit 5 leave domain", () => {
     expect(script).toContain('isolationLevel: "Serializable"');
     expect(script).toContain('code: "UNIT5_CONCURRENCY"');
     expect(script).toContain('error?.code === "P2034"');
+    expect(script).not.toContain("hrLeaveLedgerEntry.deleteMany");
     expect(script).toContain("winners !== 1 || losers !== 1");
     expect(script).toContain("duplicateEntries !== 1");
   });
