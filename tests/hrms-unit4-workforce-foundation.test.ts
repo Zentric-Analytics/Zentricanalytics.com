@@ -130,6 +130,20 @@ describe("Unit 4 workforce foundation", () => {
     expect(lifecycleActions).toContain("workRelationshipId,");
   });
 
+  it("creates the rehire relationship and effective-dated assignment atomically", () => {
+    const commands = readFileSync("src/lib/hr/workforce/lifecycle-commands.ts", "utf8");
+    const actions = readFileSync("src/app/hr/admin/employment-lifecycle/actions.ts", "utf8");
+    const page = readFileSync("src/app/hr/admin/employment-lifecycle/page.tsx", "utf8");
+    expect(commands).toContain("hrEmployeeAssignment.create");
+    expect(commands).toContain('source: "REHIRE"');
+    expect(commands).toContain("assignmentId: assignment.id");
+    expect(commands).toContain("does not have enough available FTE capacity");
+    expect(actions).toContain("positionId: z.string().cuid()");
+    expect(actions).toContain("isolationLevel: \"Serializable\"");
+    expect(page).toContain('name="positionId"');
+    expect(page).toContain("Create relationship and assignment");
+  });
+
   it("treats an already-applied worker winner as an idempotent retry", () => {
     const commands = readFileSync("src/lib/hr/workforce/commands.ts", "utf8");
     expect(commands).toContain('if (event.status === "APPLIED") return event;');
