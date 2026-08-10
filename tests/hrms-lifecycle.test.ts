@@ -57,6 +57,8 @@ describe("HRMS onboarding and offboarding", () => {
   it("creates the governed separation case in the same offboarding transaction", () => {
     const actions = read("src/app/hr/admin/lifecycle/actions.ts");
     expect(actions).toContain("createSeparationCase(tx");
+    expect(actions).toContain("existingSeparation.finalWorkingDate.getTime() !== input.effectiveDate.getTime()");
+    expect(actions).toContain("if (!existingSeparation)");
     expect(actions).toContain('template.type === "OFFBOARDING"');
     expect(actions).toContain("finalWorkingDate: input.effectiveDate");
   });

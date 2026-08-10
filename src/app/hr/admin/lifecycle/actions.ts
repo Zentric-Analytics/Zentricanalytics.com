@@ -48,9 +48,22 @@ export async function startLifecycleAction(formData: FormData) {
       await tx.hrEmployee.findFirstOrThrow({ where: { id: input.knowledgeTransferToId, organizationId: auth.user.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] }, archivedAt: null } });
     }
     if (template.type === "OFFBOARDING") {
-      await createSeparationCase(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, {
-        employeeId: employee.id, type: input.separationType, reason: input.reason!, finalWorkingDate: input.effectiveDate,
+      const existingSeparation = await tx.hrSeparationCase.findFirst({
+        where: {
+          organizationId: auth.user.organizationId,
+          employeeId: employee.id,
+          status: { in: ["DRAFT", "SUBMITTED", "APPROVED", "SCHEDULED"] },
+        },
+        orderBy: { createdAt: "desc" },
       });
+      if (existingSeparation && existingSeparation.finalWorkingDate.getTime() !== input.effectiveDate.getTime()) {
+        throw new Error("The offboarding effective date must match the existing separation case.");
+      }
+      if (!existingSeparation) {
+        await createSeparationCase(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, {
+          employeeId: employee.id, type: input.separationType, reason: input.reason!, finalWorkingDate: input.effectiveDate,
+        });
+      }
     }
     const instance = await tx.hrLifecycleInstance.create({ data: {
       organizationId: auth.user.organizationId, templateId: template.id, employeeId: employee.id, type: template.type,
