@@ -1,7 +1,7 @@
 import { Prisma, type HrLeaveEntryKind, type HrLeaveRequestLifecycleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
-import { assertIndependentLeaveApproval, assertUnit5RequestTransition, projectedPeriodBalance } from "./unit5";
+import { assertIndependentLeaveApproval, assertUnit5RequestTransition, expirableCarryover, projectedPeriodBalance } from "./unit5";
 import { createWorkforceEventDraft, submitWorkforceEvent } from "@/lib/hr/workforce/commands";
 import { capAccrual, scheduledAccrualAmount } from "./engine";
 
@@ -147,10 +147,10 @@ export async function processUnit5CarryOver(input: { organizationId: string; eff
       await tx.$queryRaw`SELECT id FROM "HrLeaveAccountPeriod" WHERE id = ${candidate.id} FOR UPDATE`;
       const period = await tx.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: candidate.id }, include: { account: true, leavePolicy: true } });
       const spendable = projectedPeriodBalance({ granted: Number(period.granted), accrued: Number(period.accrued), carriedOver: Number(period.carriedOver), carriedOut: Number(period.carriedOut), adjusted: Number(period.adjusted), reserved: Number(period.reserved), consumed: Number(period.consumed), expired: Number(period.expired) });
-      const unexpiredCarryover = Math.max(0, Number(period.carriedOver) - Number(period.expired));
-      const amount = Math.round(Math.max(0, Math.min(unexpiredCarryover, spendable)) * 10_000) / 10_000;
+      const amount = expirableCarryover(Number(period.carriedOver), Number(period.expired), spendable);
       if (amount <= 0) return 0;
-      const correlationId = `unit5-carryover-expiry:${period.id}:${targetYear}`;
+      const expiryWindow = input.effectiveAt.toISOString().slice(0, 10);
+      const correlationId = `unit5-carryover-expiry:${period.id}:${expiryWindow}`;
       const posted = await postEntry(tx, { organizationId: input.organizationId, accountPeriodId: period.id, leavePolicyId: period.leavePolicyId, kind: "EXPIRY", amount, unit: period.account.unit, effectiveAt: input.effectiveAt, sourceType: "LEAVE_ACCOUNT_PERIOD", sourceId: period.id, actorUserId: input.actorUserId, workerKey: String(targetYear), reason: `Carryover expired under policy version ${period.leavePolicy.version}`, correlationId, idempotencyKey: correlationId });
       if (posted.applied) await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole, entityType: "HrLeaveAccountPeriod", entityId: period.id, action: "hr.leave.unit5.carryover_expired", newValues: { amount, protectedReservation: Number(period.reserved) }, correlationId });
       return posted.applied ? amount : 0;

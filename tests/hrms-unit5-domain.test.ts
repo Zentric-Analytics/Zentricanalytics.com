@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { assertCurrentRequestVersion, assertIndependentLeaveApproval, assertUnit5RequestTransition, calculateUnit5Segments, projectedPeriodBalance, reconstructUnit5Balance, resolveLeavePolicy, usageLabel, validateWeeklyPattern } from "../src/lib/hr/leave/unit5";
+import { assertCurrentRequestVersion, assertIndependentLeaveApproval, assertUnit5RequestTransition, calculateUnit5Segments, expirableCarryover, projectedPeriodBalance, reconstructUnit5Balance, resolveLeavePolicy, usageLabel, validateWeeklyPattern } from "../src/lib/hr/leave/unit5";
 
 describe("Unit 5 leave domain", () => {
   it("resolves policy precedence deterministically and fails closed on ambiguity", () => {
@@ -71,8 +71,11 @@ describe("Unit 5 leave domain", () => {
     const action = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/leave/actions.ts"), "utf8");
     expect(accounting).toContain('kind: "CARRYOVER_OUT"');
     expect(accounting).toContain('kind: "CARRYOVER_IN"');
-    expect(accounting).toContain('Math.min(unexpiredCarryover, spendable)');
+    expect(expirableCarryover(10, 0, 4)).toBe(4);
+    expect(expirableCarryover(10, 4, 6)).toBe(6);
+    expect(expirableCarryover(10, 10, 3)).toBe(0);
     expect(accounting).toContain('protectedReservation: Number(period.reserved)');
+    expect(accounting).toContain('const expiryWindow = input.effectiveAt.toISOString().slice(0, 10)');
     expect(action).toContain("processUnit5CarryOver");
     expect(action).not.toContain("leave-carry-over-expiry:");
   });

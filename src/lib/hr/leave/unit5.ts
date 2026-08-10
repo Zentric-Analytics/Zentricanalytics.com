@@ -76,6 +76,10 @@ export function projectedPeriodBalance(period: { granted: number; accrued: numbe
   return period.granted + period.accrued + period.carriedOver + period.adjusted - (period.carriedOut ?? 0) - period.reserved - period.consumed - period.expired;
 }
 
+export function expirableCarryover(carriedOver: number, alreadyExpired: number, spendableBalance: number) {
+  return Math.round(Math.max(0, Math.min(Math.max(0, carriedOver - alreadyExpired), spendableBalance)) * 10_000) / 10_000;
+}
+
 export const UNIT5_REQUEST_TRANSITIONS: Record<string, readonly string[]> = {
   DRAFT: ["SUBMITTED", "WITHDRAWN"],
   SUBMITTED: ["UNDER_REVIEW", "RETURNED", "WITHDRAWN"],
