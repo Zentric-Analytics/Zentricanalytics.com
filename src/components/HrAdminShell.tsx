@@ -34,7 +34,6 @@ const groups: Array<{ label?: string; items: Item[] }> = [
     { label: "Payroll", href: "/hr/admin/payroll", icon: WalletCards },
     { label: "Documents", href: "/hr/admin/documents", icon: FileText },
     { label: "Assets", href: "/hr/admin/assets", icon: Package },
-    { label: "Onboarding & Offboarding", href: "/hr/admin/lifecycle", icon: GitBranch },
     { label: "Workflows", href: "/hr/admin/workflows", icon: ClipboardCheck },
   ]},
   { label: "INTELLIGENCE", items: [
