@@ -62,6 +62,7 @@ describe("final HRMS remediation security behavior", () => {
     expect(privilegedMfaRequired({ roles: ["ADMIN"], user: { mfaEnabled: false } })).toBe(true);
     expect(privilegedMfaRequired({ roles: ["EMPLOYEE"], user: { mfaEnabled: false } })).toBe(false);
     expect(privilegedMfaRequired({ roles: ["PAYROLL_ADMIN"], user: { mfaEnabled: true } })).toBe(false);
+    expect(privilegedMfaRequired({ roles: ["AUDITOR"], user: { mfaEnabled: false } })).toBe(true);
   });
 
   it("resolves direct, team, and department supervisor scope without crossing organizations", async () => {

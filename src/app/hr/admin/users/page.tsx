@@ -13,7 +13,7 @@ import {
 } from "./actions";
 import { UserDeletionForm } from "./UserDeletionForm";
 
-const roleKeys = ["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN", "EMPLOYEE"] as const;
+const roleKeys = ["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN", "EMPLOYEE", "AUDITOR"] as const;
 
 export default async function UsersPage() {
   const auth = await requirePermission("user.read");

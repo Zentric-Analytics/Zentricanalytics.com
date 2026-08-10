@@ -32,6 +32,7 @@ const rolePermissions: Record<HrRoleKey, readonly HrPermissionKey[]> = {
   HR_ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("payroll.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(permission)),
   PAYROLL_ADMIN: HR_PERMISSIONS.filter((permission) => permission.startsWith("payroll.") || ["employee.read_all", "workflow.task.complete", "report.read", "report.export"].includes(permission)),
   EMPLOYEE: ["employee.read_self", "employee.update_self", "employee.profile_change.request", "workforce_event.read_self", "leave.request", "leave.read_self", "document.read_self", "asset.read_self", "workflow.task.complete"],
+  AUDITOR: ["audit.read", "report.read"],
 };
 
 export function permissionsForRole(role: HrRoleKey) {

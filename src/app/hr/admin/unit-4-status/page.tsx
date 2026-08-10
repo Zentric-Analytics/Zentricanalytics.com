@@ -4,8 +4,8 @@ const deploymentStatus = isRenderStaging
   ? `Live staging candidate ${deployedHead}`
   : "Local validation candidate; not a staging deployment";
 const migrationStatus = isRenderStaging
-  ? "33 migrations applied; Unit 4 workforce foundation, employment lifecycles, and document release invariant current"
-  : "Two additive Unit 4 migrations prepared; verify against staging before release";
+  ? "35 migrations expected; additive auditor enum/seed migrations must be confirmed on this deployment"
+  : "Four additive Unit 4 migrations prepared; verify against staging before release";
 
 const statusItems = [
   ["Current Unit 4 subsection", "4F — Lifecycle integration and release hardening"],
@@ -14,11 +14,11 @@ const statusItems = [
   ["HEAD SHA", deployedHead],
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
-  ["Test totals", "568/568 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
-  ["Browser workflow", "Unit Pass boundary and identity-preserving rehire passed; post-fix governed rehire passed on a separate staging employee"],
-  ["Defects found", "Legacy relationship IDs were rejected; rehire notification was omitted. The available synthetic rerun employee has no notification address"],
-  ["Fixes applied", "Legacy IDs remain bounded and command-layer validated; recipient-backed rehires now queue one idempotent hr-rehire-started notification"],
-  ["Next release gate", "Validate recipient-backed rehire delivery without fabricating data, then finish field privacy, restore correlation, and final 4A-4F browser evidence"],
+  ["Test totals", "569/569 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
+  ["Browser workflow", "Recipient-backed governed rehire delivered exactly once to the real Gmail Inbox; field-level privacy matrix is now under test"],
+  ["Defects found", "Normal offboarding start duplicated an existing separation; the requested read-only auditor persona was not assignable"],
+  ["Fixes applied", "Offboarding reuses the exact-date open separation; additive AUDITOR role has only audit.read/report.read and a tenant-scoped mutation-free workspace"],
+  ["Next release gate", "Deploy exact candidate, execute Employee/Supervisor/HR/Auditor browser and direct-route privacy tests, then restore correlation and final 4A-4F lifecycle"],
 ] as const;
 
 export default function Unit4StatusPage() {

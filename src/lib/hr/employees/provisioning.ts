@@ -56,7 +56,7 @@ export const provisioningPayloadSchema = z.object({
   access: z.object({
     createUser: z.boolean().optional(),
     email: z.string().trim().email().optional(),
-    role: z.enum(["EMPLOYEE", "ADMIN", "HR_ADMIN", "PAYROLL_ADMIN"]).optional(),
+    role: z.enum(["EMPLOYEE", "ADMIN", "HR_ADMIN", "PAYROLL_ADMIN", "AUDITOR"]).optional(),
     sendInvitation: z.boolean().optional(),
     requireMfa: z.boolean().optional(),
   }).partial().optional(),

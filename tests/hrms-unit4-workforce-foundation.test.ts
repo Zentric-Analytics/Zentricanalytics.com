@@ -58,6 +58,19 @@ describe("Unit 4 workforce foundation", () => {
     expect(visibleProfileFieldsFor("MANAGER")).not.toContain("nationalIdentifier");
   });
 
+  it("gives auditors a tenant-scoped read-only workspace without protected values or mutations", () => {
+    const migration = readFileSync("prisma/migrations/20260810153000_hrms_unit4_auditor_role/migration.sql", "utf8");
+    const seedMigration = readFileSync("prisma/migrations/20260810153100_hrms_unit4_auditor_role_seed/migration.sql", "utf8");
+    const page = readFileSync("src/app/hr/auditor/page.tsx", "utf8");
+    const layout = readFileSync("src/app/hr/auditor/layout.tsx", "utf8");
+    expect(migration).toContain("ALTER TYPE \"HrRoleKey\" ADD VALUE IF NOT EXISTS 'AUDITOR'");
+    expect(seedMigration).toContain("p.\"key\" IN ('audit.read', 'report.read')");
+    expect(layout).toContain('requireAnyRole(["AUDITOR"])');
+    expect(page).toContain('organizationId: auth.user.organizationId');
+    expect(page).toContain('requirePermission("audit.read")');
+    expect(page).not.toMatch(/previousValues|newValues|actor.*email|form action=|employee\.update|document\.read/);
+  });
+
   it("uses an additive migration that reconciles existing employees", () => {
     const sql = readFileSync("prisma/migrations/20260809090000_hrms_unit4_workforce_foundation/migration.sql", "utf8");
     expect(sql).toContain('CREATE TABLE "HrPerson"');
