@@ -82,6 +82,8 @@ describe("Unit 4 workforce foundation", () => {
     expect(profile).toContain('auth.permissions.has("user.update")');
     expect(users).toContain('auth.permissions.has("user.role.assign")');
     expect(users).toContain('auth.permissions.has("user.role.revoke")');
+    expect(users).toContain("canAssignRole(auth.roles, role)");
+    expect(users).toContain("assignableRoleKeys.map");
     expect(users).toContain('!user.isPrimaryAdmin');
   });
 

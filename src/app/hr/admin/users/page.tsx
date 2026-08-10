@@ -12,6 +12,7 @@ import {
   suspendHrUserAction,
 } from "./actions";
 import { UserDeletionForm } from "./UserDeletionForm";
+import { canAssignRole } from "@/lib/hr/permissions/catalog";
 
 const roleKeys = ["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN", "EMPLOYEE", "AUDITOR"] as const;
 
@@ -19,6 +20,7 @@ export default async function UsersPage() {
   const auth = await requirePermission("user.read");
   const mayAssignRoles = auth.permissions.has("user.role.assign");
   const mayRevokeRoles = auth.permissions.has("user.role.revoke");
+  const assignableRoleKeys = roleKeys.filter((role) => canAssignRole(auth.roles, role));
   const [users, employees] = await Promise.all([
     prisma.hrUser.findMany({
       where: { organizationId: auth.user.organizationId },
@@ -40,7 +42,7 @@ export default async function UsersPage() {
       <h2 className="font-bold">Invite user</h2>
       <form action={createHrUserAction} className="mt-4 grid gap-3 md:grid-cols-[1fr_220px_auto]">
         <input className="input" name="email" type="email" placeholder="Work email" required />
-        <select className="input" name="role" defaultValue="EMPLOYEE">{roleKeys.map((role) => <option key={role}>{role}</option>)}</select>
+        <select className="input" name="role" defaultValue="EMPLOYEE">{assignableRoleKeys.map((role) => <option key={role}>{role}</option>)}</select>
         <button className="btn btn-primary">Create and invite</button>
       </form>
     </section>
@@ -65,7 +67,7 @@ export default async function UsersPage() {
           <section>
             <h2 className="text-sm font-bold">Roles</h2>
             <div className="mt-2 flex flex-wrap gap-2">{user.roles.map(({ id, role }) => mayRevokeRoles ? <form action={revokeHrRoleAction} key={id}><input type="hidden" name="userId" value={user.id} /><input type="hidden" name="role" value={role.key} /><button className="rounded-full bg-slate-100 px-3 py-1 text-sm">{role.name} <span aria-hidden>×</span><span className="sr-only">Revoke</span></button></form> : <span className="rounded-full bg-slate-100 px-3 py-1 text-sm" key={id}>{role.name}</span>)}</div>
-            {mayAssignRoles && <form action={assignHrRoleAction} className="mt-3 flex gap-2"><input type="hidden" name="userId" value={user.id} /><select className="input" name="role">{roleKeys.map((role) => <option key={role}>{role}</option>)}</select><button className="btn btn-secondary">Assign</button></form>}
+            {mayAssignRoles && <form action={assignHrRoleAction} className="mt-3 flex gap-2"><input type="hidden" name="userId" value={user.id} /><select className="input" name="role">{assignableRoleKeys.map((role) => <option key={role}>{role}</option>)}</select><button className="btn btn-secondary">Assign</button></form>}
           </section>
           <section>
             <h2 className="text-sm font-bold">Employee identity</h2>
