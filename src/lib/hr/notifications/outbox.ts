@@ -2,7 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 
 type OutboxClient = PrismaClient | Prisma.TransactionClient;
 const forbiddenPayloadKey = /password|token|salary|bank|account|identity/i;
-const mandatoryEmailTemplates = new Set(["hr-account-invitation", "hr-password-reset"]);
+const mandatoryEmailTemplates = new Set(["hr-account-invitation", "hr-password-reset", "hr-password-reset-complete"]);
 
 export function assertSafeOutboxPayload(payload: Record<string, unknown>) {
   const keys = (value: unknown): string[] => value && typeof value === "object" ? Object.entries(value).flatMap(([key, child]) => [key, ...keys(child)]) : [];

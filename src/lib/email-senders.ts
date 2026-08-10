@@ -49,7 +49,7 @@ const hrTemplates = [
   "hr-separation-submitted", "hr-separation-approved", "hr-separation-completed", "hr-rehire-started",
 ] as const;
 
-const accountSecurityTemplates = ["hr-account-invitation", "hr-password-reset", "hr-mfa-enrollment", "hr-employee-activated"] as const;
+const accountSecurityTemplates = ["hr-account-invitation", "hr-password-reset", "hr-password-reset-complete", "hr-mfa-enrollment", "hr-employee-activated"] as const;
 
 export const emailTemplateSenderRegistry: Readonly<Record<string, EmailSenderCategory>> = Object.freeze({
   ...Object.fromEntries(recruitmentTemplates.map((template) => [template, "recruitment"])),

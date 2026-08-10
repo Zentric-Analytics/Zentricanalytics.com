@@ -37,7 +37,7 @@ const expected = {
     "hr-contract-review", "hr-contract-active", "hr-contract-expiring",
     "hr-separation-submitted", "hr-separation-approved", "hr-separation-completed", "hr-rehire-started",
   ],
-  "account-security": ["hr-account-invitation", "hr-password-reset", "hr-mfa-enrollment", "hr-employee-activated"],
+  "account-security": ["hr-account-invitation", "hr-password-reset", "hr-password-reset-complete", "hr-mfa-enrollment", "hr-employee-activated"],
 } as const;
 
 const senderByCategory = {

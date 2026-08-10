@@ -793,8 +793,8 @@ model HrOrganization {
   workforceEvents            HrWorkforceEvent[]
   profileChangeRequests      HrProfileChangeRequest[]
   probationCases             HrProbationCase[]
-  employmentContracts       HrEmploymentContract[]
-  separationCases           HrSeparationCase[]
+  employmentContracts        HrEmploymentContract[]
+  separationCases            HrSeparationCase[]
 }
 
 model HrUser {
@@ -820,6 +820,7 @@ model HrUser {
   invitationsCreated               HrAccountInvitation[]           @relation("InvitationCreator")
   invitationsReceived              HrAccountInvitation[]           @relation("InvitationRecipient")
   passwordResets                   HrPasswordResetToken[]
+  passwordResetChallenges          HrPasswordResetChallenge[]
   loginAttempts                    HrLoginAttempt[]
   employee                         HrEmployee?
   assignmentsGranted               HrSupervisorAssignment[]        @relation("SupervisorAssignmentGrantor")
@@ -981,6 +982,21 @@ model HrPasswordResetToken {
   @@index([userId, status, expiresAt])
 }
 
+model HrPasswordResetChallenge {
+  id           String        @id @default(cuid())
+  userId       String
+  codeHash     String        @unique
+  status       HrTokenStatus @default(ACTIVE)
+  expiresAt    DateTime
+  attemptCount Int           @default(0)
+  verifiedAt   DateTime?
+  usedAt       DateTime?
+  createdAt    DateTime      @default(now())
+  user         HrUser        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, expiresAt])
+}
+
 model HrLoginAttempt {
   id             String   @id @default(cuid())
   organizationId String
@@ -1058,8 +1074,8 @@ model HrEmployee {
   workforceEvents              HrWorkforceEvent[]
   profileChangeRequests        HrProfileChangeRequest[]
   probationCases               HrProbationCase[]
-  employmentContracts         HrEmploymentContract[]
-  separationCases             HrSeparationCase[]
+  employmentContracts          HrEmploymentContract[]
+  separationCases              HrSeparationCase[]
 
   @@unique([organizationId, employeeNumber])
   @@unique([organizationId, companyEmail])
@@ -1314,7 +1330,7 @@ model HrWorkRelationship {
   person          HrPerson                 @relation(fields: [personId], references: [id], onDelete: Restrict)
   employee        HrEmployee               @relation(fields: [employeeId], references: [id], onDelete: Restrict)
   rehireOf        HrWorkRelationship?      @relation("WorkRelationshipRehire", fields: [rehireOfId], references: [id], onDelete: Restrict)
-  rehires         HrWorkRelationship[]      @relation("WorkRelationshipRehire")
+  rehires         HrWorkRelationship[]     @relation("WorkRelationshipRehire")
   workforceEvents HrWorkforceEvent[]
   contracts       HrEmploymentContract[]
   separationCases HrSeparationCase[]
@@ -1325,14 +1341,14 @@ model HrWorkRelationship {
 }
 
 model HrWorkforceEvent {
-  id                   String                 @id @default(cuid())
+  id                   String                             @id @default(cuid())
   organizationId       String
   employeeId           String
   workRelationshipId   String?
   reference            String
   type                 HrWorkforceEventType
-  status               HrWorkforceEventStatus @default(DRAFT)
-  version              Int                    @default(1)
+  status               HrWorkforceEventStatus             @default(DRAFT)
+  version              Int                                @default(1)
   reason               String
   currentSnapshot      Json
   proposedSnapshot     Json
@@ -1349,11 +1365,11 @@ model HrWorkforceEvent {
   cancelledAt          DateTime?
   failedAt             DateTime?
   failureReason        String?
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  organization         HrOrganization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  employee             HrEmployee             @relation(fields: [employeeId], references: [id], onDelete: Restrict)
-  workRelationship     HrWorkRelationship?    @relation(fields: [workRelationshipId], references: [id], onDelete: Restrict)
+  createdAt            DateTime                           @default(now())
+  updatedAt            DateTime                           @updatedAt
+  organization         HrOrganization                     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee             HrEmployee                         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  workRelationship     HrWorkRelationship?                @relation(fields: [workRelationshipId], references: [id], onDelete: Restrict)
   versions             HrWorkforceEventVersion[]
   executionAttempts    HrWorkforceEventExecutionAttempt[]
 
@@ -1427,66 +1443,66 @@ model HrProfileChangeRequest {
 }
 
 model HrProbationCase {
-  id                    String                @id @default(cuid())
-  organizationId        String
-  employeeId            String
-  workforceEventId      String?
-  status                HrProbationCaseStatus @default(ACTIVE)
-  version               Int                   @default(1)
-  startedAt             DateTime
-  scheduledEndAt        DateTime
+  id                     String                @id @default(cuid())
+  organizationId         String
+  employeeId             String
+  workforceEventId       String?
+  status                 HrProbationCaseStatus @default(ACTIVE)
+  version                Int                   @default(1)
+  startedAt              DateTime
+  scheduledEndAt         DateTime
   configuredDurationDays Int
-  objectives            Json
-  extensionCount        Int                   @default(0)
-  confirmedAt           DateTime?
-  unsuccessfulAt        DateTime?
-  decisionReason        String?
-  createdById           String
-  decidedById           String?
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  organization          HrOrganization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  employee              HrEmployee            @relation(fields: [employeeId], references: [id], onDelete: Restrict)
-  reviews               HrProbationReview[]
+  objectives             Json
+  extensionCount         Int                   @default(0)
+  confirmedAt            DateTime?
+  unsuccessfulAt         DateTime?
+  decisionReason         String?
+  createdById            String
+  decidedById            String?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  organization           HrOrganization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee               HrEmployee            @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  reviews                HrProbationReview[]
 
   @@index([organizationId, status, scheduledEndAt])
   @@index([employeeId, status, startedAt])
 }
 
 model HrProbationReview {
-  id               String                     @id @default(cuid())
-  probationCaseId  String
-  type             HrProbationReviewType
-  checkpointAt     DateTime
-  managerUserId    String?
-  employeeComment  String?
-  managerComment   String?
-  recommendation   HrProbationRecommendation?
-  submittedAt      DateTime?
-  createdAt        DateTime                   @default(now())
-  updatedAt        DateTime                   @updatedAt
-  probationCase    HrProbationCase            @relation(fields: [probationCaseId], references: [id], onDelete: Restrict)
+  id              String                     @id @default(cuid())
+  probationCaseId String
+  type            HrProbationReviewType
+  checkpointAt    DateTime
+  managerUserId   String?
+  employeeComment String?
+  managerComment  String?
+  recommendation  HrProbationRecommendation?
+  submittedAt     DateTime?
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+  probationCase   HrProbationCase            @relation(fields: [probationCaseId], references: [id], onDelete: Restrict)
 
   @@unique([probationCaseId, type, checkpointAt])
   @@index([checkpointAt, submittedAt])
 }
 
 model HrEmploymentContract {
-  id                 String                     @id @default(cuid())
+  id                 String                        @id @default(cuid())
   organizationId     String
   employeeId         String
   workRelationshipId String
   contractRef        String
-  status             HrEmploymentContractStatus @default(DRAFT)
-  currentVersion     Int                        @default(1)
+  status             HrEmploymentContractStatus    @default(DRAFT)
+  currentVersion     Int                           @default(1)
   effectiveFrom      DateTime
   effectiveTo        DateTime?
   createdById        String
-  createdAt          DateTime                   @default(now())
-  updatedAt          DateTime                   @updatedAt
-  organization       HrOrganization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  employee           HrEmployee                 @relation(fields: [employeeId], references: [id], onDelete: Restrict)
-  workRelationship   HrWorkRelationship         @relation(fields: [workRelationshipId], references: [id], onDelete: Restrict)
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @updatedAt
+  organization       HrOrganization                @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee           HrEmployee                    @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  workRelationship   HrWorkRelationship            @relation(fields: [workRelationshipId], references: [id], onDelete: Restrict)
   versions           HrEmploymentContractVersion[]
 
   @@unique([organizationId, contractRef])
@@ -1494,20 +1510,20 @@ model HrEmploymentContract {
 }
 
 model HrEmploymentContractVersion {
-  id                    String               @id @default(cuid())
-  contractId            String
-  version               Int
-  termsSnapshot         Json
-  effectiveFrom         DateTime
-  effectiveTo           DateTime?
-  documentVersionId     String?
-  approvedById          String?
-  approvedAt            DateTime?
-  signedAt              DateTime?
-  supersededAt          DateTime?
-  createdById           String
-  createdAt             DateTime             @default(now())
-  contract              HrEmploymentContract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  id                String               @id @default(cuid())
+  contractId        String
+  version           Int
+  termsSnapshot     Json
+  effectiveFrom     DateTime
+  effectiveTo       DateTime?
+  documentVersionId String?
+  approvedById      String?
+  approvedAt        DateTime?
+  signedAt          DateTime?
+  supersededAt      DateTime?
+  createdById       String
+  createdAt         DateTime             @default(now())
+  contract          HrEmploymentContract @relation(fields: [contractId], references: [id], onDelete: Restrict)
 
   @@unique([contractId, version])
   @@index([contractId, effectiveFrom, effectiveTo])
@@ -2172,37 +2188,37 @@ model HrEmployeeDocument {
 }
 
 model HrEmployeeDocumentVersion {
-  id               String                @id @default(cuid())
-  organizationId   String
-  documentId       String
-  version          Int
-  originalFileName String
-  displayFileName  String
-  contentType      String
-  sizeBytes        Int
-  storageProvider  String
-  storageBucket    String?
-  storageKey       String                @unique
-  storageVersionId String?
-  storageEtag      String?
-  checksum         String
-  scanStatus       HrDocumentScanStatus  @default(PENDING)
-  scanProvider     String?
-  scanReference    String?
-  scanReason       String?
-  scanCompletedAt  DateTime?
-  scanRequestedAt  DateTime              @default(now())
-  providerScanEventId String?             @unique
-  providerScanStatus String?
-  releasedAt       DateTime?
-  scanRecordedById String?
-  uploadedById     String
-  uploadedAt       DateTime              @default(now())
-  organization     HrOrganization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  document         HrEmployeeDocument    @relation(fields: [documentId], references: [id], onDelete: Restrict)
-  uploadedBy       HrUser                @relation("DocumentVersionUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
-  scanRecordedBy   HrUser?               @relation("DocumentScanRecorder", fields: [scanRecordedById], references: [id], onDelete: Restrict)
-  accessLogs       HrDocumentAccessLog[]
+  id                  String                @id @default(cuid())
+  organizationId      String
+  documentId          String
+  version             Int
+  originalFileName    String
+  displayFileName     String
+  contentType         String
+  sizeBytes           Int
+  storageProvider     String
+  storageBucket       String?
+  storageKey          String                @unique
+  storageVersionId    String?
+  storageEtag         String?
+  checksum            String
+  scanStatus          HrDocumentScanStatus  @default(PENDING)
+  scanProvider        String?
+  scanReference       String?
+  scanReason          String?
+  scanCompletedAt     DateTime?
+  scanRequestedAt     DateTime              @default(now())
+  providerScanEventId String?               @unique
+  providerScanStatus  String?
+  releasedAt          DateTime?
+  scanRecordedById    String?
+  uploadedById        String
+  uploadedAt          DateTime              @default(now())
+  organization        HrOrganization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  document            HrEmployeeDocument    @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  uploadedBy          HrUser                @relation("DocumentVersionUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+  scanRecordedBy      HrUser?               @relation("DocumentScanRecorder", fields: [scanRecordedById], references: [id], onDelete: Restrict)
+  accessLogs          HrDocumentAccessLog[]
 
   @@unique([documentId, version])
   @@index([organizationId, scanStatus, uploadedAt])
