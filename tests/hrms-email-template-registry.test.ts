@@ -11,7 +11,7 @@ const namedTemplates = [
   "hr-document-requested", "hr-document-available", "hr-document-rejected", "hr-document-scan-attention",
   "hr-document-expiring", "hr-lifecycle-started", "hr-lifecycle-task-due", "hr-employee-activated",
   "hr-mfa-enrollment", "hr-asset-assigned", "hr-asset-return-recorded", "hr-asset-return-reminder",
-  "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected", "hr-leave-cancelled",
+  "hr-leave-submitted", "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected", "hr-leave-returned", "hr-leave-cancelled", "hr-leave-upcoming", "hr-leave-evidence-required", "hr-leave-expiring-entitlement", "hr-leave-return-to-work",
   "hr-payroll-review-ready", "hr-payroll-approval-ready", "hr-payroll-approved", "hr-payslip-ready",
   "hr-workflow-approval", "hr-employment-exit", "hr-vacancy-open", "hr-vacancy-approved",
 ];

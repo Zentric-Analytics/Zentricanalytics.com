@@ -69,4 +69,18 @@ describe("Unit 5 leave domain", () => {
     expect(action).toContain("processUnit5CarryOver");
     expect(action).not.toContain("leave-carry-over-expiry:");
   });
+
+  it("attaches configured multi-stage workflows with scoped delegation and stale-version protection", () => {
+    const workflow = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-workflow.ts"), "utf8");
+    const employeeAction = fs.readFileSync(path.join(process.cwd(), "src/app/hr/employee/leave/actions.ts"), "utf8");
+    const managerAction = fs.readFileSync(path.join(process.cwd(), "src/app/hr/supervisor/leave/actions.ts"), "utf8");
+    expect(employeeAction).toContain("startConfiguredLeaveWorkflow");
+    expect(workflow).toContain('subjectType: "HrLeaveRequestVersion"');
+    expect(workflow).toContain("delegationAllowsLeave");
+    expect(workflow).toContain("effectiveTo: { gt: effectiveAt }");
+    expect(workflow).toContain("latest._max.version !== input.expectedRequestVersion");
+    expect(workflow).toContain("reserveUnit5RequestInTransaction(tx");
+    expect(workflow).toContain('FOR UPDATE`');
+    expect(managerAction).toContain("expectedRequestVersion");
+  });
 });

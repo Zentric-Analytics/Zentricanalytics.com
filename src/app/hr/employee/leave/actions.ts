@@ -12,6 +12,7 @@ import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
 import { validateHrDocumentFile } from "@/lib/hr/documents/validation";
 import { calculateUnit5Segments } from "@/lib/hr/leave/unit5";
 import { transitionUnit5Request } from "@/lib/hr/leave/unit5-accounting";
+import { startConfiguredLeaveWorkflow } from "@/lib/hr/leave/unit5-workflow";
 
 export async function createLeaveRequestAction(formData: FormData) {
   const auth = await requirePermission("leave.request");
@@ -75,6 +76,11 @@ export async function createLeaveRequestAction(formData: FormData) {
     const grantKey = `unit5-grant:${accountPeriod.id}`;
     if (grant > 0 && !await tx.hrLeaveLedgerEntry.findUnique({ where: { organizationId_idempotencyKey: { organizationId: auth.user.organizationId, idempotencyKey: grantKey } } })) { await tx.hrLeaveAccountPeriod.update({ where: { id: accountPeriod.id }, data: { granted: { increment: grant }, version: { increment: 1 } } }); await tx.hrLeaveLedgerEntry.create({ data: { organizationId: auth.user.organizationId, accountPeriodId: accountPeriod.id, leavePolicyId: policy.id, kind: "GRANT", amount: grant, unit: policy.leaveType.unit, effectiveAt: periodStart, sourceType: "POLICY_PERIOD", sourceId: accountPeriod.id, actorUserId: auth.user.id, reason: "Unit 5 opening entitlement grant", correlationId: request.id, idempotencyKey: grantKey } }); }
     const requestVersion = await tx.hrLeaveRequestVersion.create({ data: { organizationId: auth.user.organizationId, requestId: request.id, version: 1, employeeId: auth.user.employee!.id, leavePolicyId: policy.id, workScheduleVersionId: scheduleAssignment.workScheduleVersionId, holidayCalendarVersionId: calendarAssignment.holidayCalendarVersionId, lifecycleStatus: "SUBMITTED", unit: policy.leaveType.unit, requestedAmount: amount, operationalReason: input.reason, calculationSnapshot: { calendarDays: Math.floor((input.endDate.getTime()-input.startDate.getTime())/86_400_000)+1, chargeableAmount: amount, scheduleVersionId: scheduleAssignment.workScheduleVersionId, calendarVersionId: calendarAssignment.holidayCalendarVersionId }, correlationId: crypto.randomUUID(), createdById: auth.user.id } });
+    const workflow = await startConfiguredLeaveWorkflow(tx, { organizationId: auth.user.organizationId, workflowKey: policy.workflowDefinitionKey, requestVersionId: requestVersion.id, employeeId: auth.user.employee!.id, requesterUserId: auth.user.id, correlationId: requestVersion.correlationId, effectiveAt: input.startDate, context: { entitlementModel: policy.entitlementModel, leaveTypeCode: policy.leaveType.code, requiresEvidence: Boolean(policy.leaveType.requiresAttachment || policy.evidenceClass), requestedAmount: amount } });
+    if (workflow) {
+      await tx.hrLeaveRequestVersion.update({ where: { id: requestVersion.id }, data: { workflowInstanceId: workflow.instanceId } });
+      await tx.hrLeaveRequest.update({ where: { id: request.id }, data: { currentReviewerId: workflow.firstApproverId } });
+    }
     if (file && validatedFile && storedLocation && checksum && evidenceDocumentId && storageKey) {
       const document = await tx.hrEmployeeDocument.create({ data: { id: evidenceDocumentId, organizationId: auth.user.organizationId, employeeId: auth.user.employee!.id, category: "LEAVE_SUPPORT", title: `${policy.leaveType.name} evidence`, restricted: true, createdById: auth.user.id } });
       const documentVersion = await tx.hrEmployeeDocumentVersion.create({ data: { organizationId: auth.user.organizationId, documentId: document.id, version: 1, originalFileName: file.name.slice(0, 500), displayFileName: validatedFile.displayFileName, contentType: validatedFile.contentType, sizeBytes: validatedFile.sizeBytes, storageProvider: hrStorageProvider(), storageBucket: storedLocation.bucket, storageKey, storageVersionId: storedLocation.versionId, storageEtag: storedLocation.eTag, checksum, uploadedById: auth.user.id } });
@@ -84,7 +90,8 @@ export async function createLeaveRequestAction(formData: FormData) {
     await tx.hrLeaveRequestSegment.createMany({ data: segments.map((segment, sequence) => ({ requestVersionId: requestVersion.id, accountPeriodId: accountPeriod.id, sequence, ...segment })) });
     await tx.hrLeaveTransition.create({ data: { requestVersionId: requestVersion.id, fromStatus: null, toStatus: "SUBMITTED", actorUserId: auth.user.id, idempotencyKey: `unit5-submitted:${requestVersion.id}`, correlationId: requestVersion.correlationId } });
     if (!autoApprove) await tx.hrLeaveTransition.create({ data: { requestVersionId: requestVersion.id, fromStatus: "SUBMITTED", toStatus: "UNDER_REVIEW", actorUserId: auth.user.id, idempotencyKey: `unit5-review:${requestVersion.id}`, correlationId: requestVersion.correlationId } });
-    if (reviewer) await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: reviewer.email, template: "hr-leave-review-requested", subject: "Leave request awaiting review", payload: { leaveRequestId: request.id, requestVersionId: requestVersion.id }, idempotencyKey: `hr-leave-review:${request.id}` });
+    if (!workflow && reviewer) await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: reviewer.email, template: "hr-leave-review-requested", subject: "Leave request awaiting review", payload: { leaveRequestId: request.id, requestVersionId: requestVersion.id }, idempotencyKey: `hr-leave-review:${request.id}` });
+    await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: auth.user.email, template: "hr-leave-submitted", subject: "Leave request submitted", payload: { leaveRequestId: request.id, requestVersionId: requestVersion.id }, idempotencyKey: `hr-leave-submitted:${request.id}:${requestVersion.version}` });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrLeaveRequest", entityId: request.id, action: autoApprove ? "hr.leave.request.auto_approved" : "hr.leave.request.submitted", newValues: { leaveTypeId: input.leaveTypeId, startDate: input.startDate, endDate: input.endDate, amount, status: request.status }, reason: input.reason });
     }, { isolationLevel: "Serializable" });
   } catch (error) {
@@ -94,6 +101,49 @@ export async function createLeaveRequestAction(formData: FormData) {
   revalidatePath("/hr/employee/leave");
   revalidatePath("/hr/supervisor/leave");
   revalidatePath("/hr/admin/leave");
+}
+
+const returnedRequestInput = z.intersection(leaveRequestInput, z.object({ requestId: z.string().cuid(), expectedVersion: z.coerce.number().int().positive() }));
+export async function resubmitReturnedLeaveRequestAction(formData: FormData) {
+  const auth = await requirePermission("leave.request");
+  if (!auth.user.employee) throw new Error("An employee profile is required.");
+  const input = returnedRequestInput.parse(Object.fromEntries(formData));
+  if (input.startDate.getUTCFullYear() !== input.endDate.getUTCFullYear()) throw new Error("A leave request cannot cross a calendar-year balance boundary.");
+  const previous = await prisma.hrLeaveRequestVersion.findFirstOrThrow({ where: { requestId: input.requestId, organizationId: auth.user.organizationId, employeeId: auth.user.employee.id, version: input.expectedVersion }, include: { evidence: true } });
+  const [latest, latestTransition] = await Promise.all([
+    prisma.hrLeaveRequestVersion.aggregate({ where: { requestId: input.requestId }, _max: { version: true } }),
+    prisma.hrLeaveTransition.findFirst({ where: { requestVersionId: previous.id }, orderBy: { createdAt: "desc" } }),
+  ]);
+  if (latest._max.version !== input.expectedVersion || latestTransition?.toStatus !== "RETURNED") throw new Error("Only the latest returned request version can be edited and resubmitted.");
+  const assignment = await prisma.hrEmployeeLeavePolicy.findFirst({ where: { employeeId: auth.user.employee.id, status: "ACTIVE", effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }], leavePolicy: { leaveTypeId: input.leaveTypeId, status: "ACTIVE", effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }] } }, include: { leavePolicy: { include: { leaveType: true } } }, orderBy: { effectiveFrom: "desc" } });
+  if (!assignment) throw new Error("No active leave policy covers the revised request.");
+  const policy = assignment.leavePolicy;
+  const [scheduleAssignment, calendarAssignment] = await Promise.all([
+    prisma.hrWorkScheduleAssignment.findFirst({ where: { organizationId: auth.user.organizationId, employeeId: auth.user.employee.id, effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }] }, include: { workScheduleVersion: true }, orderBy: { effectiveFrom: "desc" } }),
+    prisma.hrHolidayCalendarAssignment.findFirst({ where: { organizationId: auth.user.organizationId, employeeId: auth.user.employee.id, effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }] }, include: { holidayCalendarVersion: { include: { occurrences: { where: { localDate: { gte: input.startDate, lte: input.endDate } } } } } }, orderBy: { effectiveFrom: "desc" } }),
+  ]);
+  if (!scheduleAssignment || !calendarAssignment) throw new Error("An effective work schedule and holiday calendar are required.");
+  const segments = calculateUnit5Segments({ startDate: input.startDate, endDate: input.endDate, unit: policy.leaveType.unit, requestedHours: input.hours, weeklyPattern: scheduleAssignment.workScheduleVersion.weeklyPattern, holidays: calendarAssignment.holidayCalendarVersion.occurrences });
+  const amount = segments.reduce((total, segment) => total + segment.chargeableAmount, 0);
+  if (amount <= 0) throw new Error("The revised period contains no chargeable working time.");
+  await prisma.$transaction(async (tx) => {
+    const current = await tx.hrLeaveRequestVersion.aggregate({ where: { requestId: input.requestId }, _max: { version: true } });
+    if (current._max.version !== input.expectedVersion) throw new Error("The leave request changed while it was being edited.");
+    const overlap = await tx.hrLeaveRequest.findFirst({ where: { id: { not: input.requestId }, employeeId: auth.user.employee!.id, status: { in: ["PENDING", "APPROVED"] }, startDate: { lte: input.endDate }, endDate: { gte: input.startDate } }, select: { id: true } });
+    if (overlap) throw new Error("The revised request overlaps another pending or approved leave request.");
+    const account = await tx.hrLeaveAccount.findUniqueOrThrow({ where: { organizationId_employeeId_leaveTypeId_unit: { organizationId: auth.user.organizationId, employeeId: auth.user.employee!.id, leaveTypeId: policy.leaveTypeId, unit: policy.leaveType.unit } } });
+    const periodStart = new Date(Date.UTC(input.startDate.getUTCFullYear(), 0, 1)); const periodEnd = new Date(Date.UTC(input.startDate.getUTCFullYear() + 1, 0, 1));
+    const accountPeriod = await tx.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { accountId_periodStart_periodEnd: { accountId: account.id, periodStart, periodEnd } } });
+    const version = await tx.hrLeaveRequestVersion.create({ data: { organizationId: auth.user.organizationId, requestId: input.requestId, version: input.expectedVersion + 1, employeeId: auth.user.employee!.id, leavePolicyId: policy.id, workScheduleVersionId: scheduleAssignment.workScheduleVersionId, holidayCalendarVersionId: calendarAssignment.holidayCalendarVersionId, lifecycleStatus: "SUBMITTED", unit: policy.leaveType.unit, requestedAmount: amount, operationalReason: input.reason, calculationSnapshot: { calendarDays: Math.floor((input.endDate.getTime()-input.startDate.getTime())/86_400_000)+1, chargeableAmount: amount, scheduleVersionId: scheduleAssignment.workScheduleVersionId, calendarVersionId: calendarAssignment.holidayCalendarVersionId, replacesVersionId: previous.id }, correlationId: crypto.randomUUID(), createdById: auth.user.id, segments: { create: segments.map((segment, sequence) => ({ accountPeriodId: accountPeriod.id, sequence, ...segment })) }, evidence: { create: previous.evidence.map((item) => ({ documentVersionId: item.documentVersionId, classification: item.classification, status: item.status, retentionUntil: item.retentionUntil })) } } });
+    const workflow = await startConfiguredLeaveWorkflow(tx, { organizationId: auth.user.organizationId, workflowKey: policy.workflowDefinitionKey, requestVersionId: version.id, employeeId: auth.user.employee!.id, requesterUserId: auth.user.id, correlationId: version.correlationId, effectiveAt: input.startDate, context: { entitlementModel: policy.entitlementModel, leaveTypeCode: policy.leaveType.code, requiresEvidence: Boolean(policy.leaveType.requiresAttachment || policy.evidenceClass), requestedAmount: amount } });
+    if (!workflow) throw new Error("A returned Unit 5 request requires a configured approval workflow before resubmission.");
+    await tx.hrLeaveRequestVersion.update({ where: { id: version.id }, data: { workflowInstanceId: workflow.instanceId } });
+    await tx.hrLeaveRequest.update({ where: { id: input.requestId }, data: { leaveTypeId: policy.leaveTypeId, leavePolicyId: policy.id, startDate: input.startDate, endDate: input.endDate, amount, reason: input.reason, status: "PENDING", currentReviewerId: workflow.firstApproverId, submittedAt: new Date(), decidedAt: null } });
+    await tx.hrLeaveTransition.createMany({ data: [{ requestVersionId: version.id, fromStatus: null, toStatus: "SUBMITTED", actorUserId: auth.user.id, idempotencyKey: `unit5-resubmitted:${version.id}`, correlationId: version.correlationId }, { requestVersionId: version.id, fromStatus: "SUBMITTED", toStatus: "UNDER_REVIEW", actorUserId: auth.user.id, idempotencyKey: `unit5-review:${version.id}`, correlationId: version.correlationId }] });
+    await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: auth.user.email, template: "hr-leave-submitted", subject: "Revised leave request submitted", payload: { leaveRequestId: input.requestId, requestVersionId: version.id }, idempotencyKey: `hr-leave-submitted:${input.requestId}:${version.version}` });
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrLeaveRequestVersion", entityId: version.id, action: "hr.leave.request.resubmitted", previousValues: { requestVersionId: previous.id, version: previous.version, status: "RETURNED" }, newValues: { version: version.version, requestedAmount: amount }, reason: input.reason, correlationId: version.correlationId });
+  }, { isolationLevel: "Serializable" });
+  revalidatePath("/hr/employee/leave"); revalidatePath("/hr/supervisor/leave"); revalidatePath("/hr/admin/leave");
 }
 
 export async function withdrawLeaveRequestAction(formData: FormData) {

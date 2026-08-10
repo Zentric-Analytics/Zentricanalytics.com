@@ -5,7 +5,7 @@ import { markAllNotificationsReadAction, markNotificationReadAction, updateNotif
 
 const standardCategories = [
   "hr-lifecycle-started", "hr-lifecycle-task-due", "hr-workflow-approval",
-  "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected",
+  "hr-leave-submitted", "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected", "hr-leave-returned", "hr-leave-cancelled", "hr-leave-upcoming", "hr-leave-evidence-required", "hr-leave-expiring-entitlement", "hr-leave-return-to-work",
   "hr-payroll-approved", "hr-payslip-ready", "hr-document-available",
   "hr-document-expiring", "hr-asset-assigned", "hr-asset-return-reminder",
 ];

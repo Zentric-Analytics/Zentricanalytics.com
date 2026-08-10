@@ -168,8 +168,9 @@ function amountsByPeriod(segments: Array<{ accountPeriodId: string | null; charg
   return groups;
 }
 
-export async function reserveUnit5Request(input: { organizationId: string; requestVersionId: string; reviewerUserId: string; reason?: string; idempotencyKey: string }) {
-  return prisma.$transaction(async (tx) => {
+export type ReserveUnit5RequestInput = { organizationId: string; requestVersionId: string; reviewerUserId: string; reason?: string; idempotencyKey: string };
+
+export async function reserveUnit5RequestInTransaction(tx: Tx, input: ReserveUnit5RequestInput) {
     const version = await tx.hrLeaveRequestVersion.findFirstOrThrow({ where: { id: input.requestVersionId, organizationId: input.organizationId }, include: { segments: { orderBy: { sequence: "asc" } }, evidence: true, leavePolicy: { include: { leaveType: true } } } });
     assertIndependentLeaveApproval(version.createdById, input.reviewerUserId);
     const status = await latestStatus(tx, version.id);
@@ -201,7 +202,10 @@ export async function reserveUnit5Request(input: { organizationId: string; reque
     }
     await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.reviewerUserId, entityType: "HrLeaveRequestVersion", entityId: version.id, action: "hr.leave.unit5.final_approved", newValues: { reservedPeriods: [...groups.keys()] }, reason: input.reason, correlationId: version.correlationId });
     return { applied: true, status: "APPROVED" as const };
-  }, { isolationLevel: "Serializable" });
+}
+
+export async function reserveUnit5Request(input: ReserveUnit5RequestInput) {
+  return prisma.$transaction((tx) => reserveUnit5RequestInTransaction(tx, input), { isolationLevel: "Serializable" });
 }
 
 export async function startUnit5Leave(input: { organizationId: string; requestVersionId: string; effectiveAt: Date; workerKey: string }) {
