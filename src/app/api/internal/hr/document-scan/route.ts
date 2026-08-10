@@ -44,6 +44,7 @@ export async function POST(request: Request) {
         scanReference: result.eventId, scanReason: result.reason, providerScanEventId: result.eventId,
         providerScanStatus: result.providerStatus, releasedAt: result.status === "CLEAN" ? new Date() : null,
       } });
+      await tx.hrLeaveEvidence.updateMany({ where: { documentVersionId: version.id, status: "PENDING_SCAN" }, data: { status: result.status === "CLEAN" ? "SATISFIED" : result.status === "QUARANTINED" ? "REJECTED_MALWARE" : "SCAN_FAILED" } });
       if (version.document.employee.user) await enqueueHrEmail(tx, {
         organizationId: version.organizationId, recipient: version.document.employee.user.email,
         template: "hr-document-scan-result", subject: "Employee document scan completed",
