@@ -93,4 +93,14 @@ describe("Unit 5 leave domain", () => {
     expect(workflow).toContain('FOR UPDATE`');
     expect(managerAction).toContain("expectedRequestVersion");
   });
+
+  it("ships a staging-only real PostgreSQL concurrency gate", () => {
+    const script = fs.readFileSync(path.join(process.cwd(), "scripts/hr-unit5-staging-concurrency.mjs"), "utf8");
+    expect(script).toContain('HR_UNIT5_STAGING_CONCURRENCY_CONFIRM !== "staging-only"');
+    expect(script).toContain('databaseUrl.pathname.slice(1) !== "zentric_analytics_staging"');
+    expect(script).toContain('FOR UPDATE`');
+    expect(script).toContain('isolationLevel: "Serializable"');
+    expect(script).toContain("winners !== 1 || losers !== 1");
+    expect(script).toContain("duplicateEntries !== 1");
+  });
 });
