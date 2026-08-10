@@ -15,10 +15,10 @@ const statusItems = [
   ["Current staging deployment", deploymentStatus],
   ["Database / migration", migrationStatus],
   ["Test totals", "568/568 passing; TypeScript, ESLint, Prisma validation, and production build passed"],
-  ["Browser workflow", "Unit Pass boundary and rehire passed: same Person preserved, ended relationship retained, and one new linked relationship created"],
-  ["Defects found", "Rehire rejected legacy relationship IDs; successful rehire then exposed a missing employee notification"],
-  ["Fixes applied", "Legacy IDs remain bounded and command-layer validated; rehire now queues one idempotent hr-rehire-started notification"],
-  ["Next release gate", "Deploy exact notification fix, validate delivery on a governed staging rehire, then finish recovery, security, restore, and final 4A-4F lifecycle"],
+  ["Browser workflow", "Unit Pass boundary and identity-preserving rehire passed; post-fix governed rehire passed on a separate staging employee"],
+  ["Defects found", "Legacy relationship IDs were rejected; rehire notification was omitted. The available synthetic rerun employee has no notification address"],
+  ["Fixes applied", "Legacy IDs remain bounded and command-layer validated; recipient-backed rehires now queue one idempotent hr-rehire-started notification"],
+  ["Next release gate", "Validate recipient-backed rehire delivery without fabricating data, then finish field privacy, restore correlation, and final 4A-4F browser evidence"],
 ] as const;
 
 export default function Unit4StatusPage() {
