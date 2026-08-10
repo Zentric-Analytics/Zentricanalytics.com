@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 
 function blocked(message) {
   console.error(`BLOCKED ${message}`);
@@ -19,13 +20,33 @@ const root = path.resolve(process.env.BACKUP_ARCHIVE_ROOT ?? "");
 const encryptionKey = Buffer.from(String(process.env.BACKUP_ENCRYPTION_KEY_B64 ?? ""), "base64");
 if (encryptionKey.length !== 32) blocked("The staging archive encryption key is unavailable or invalid.");
 
+await fs.mkdir(root, { recursive: true, mode: 0o700 });
 const entries = await fs.readdir(root);
 const manifestName = entries.find((name) => name.endsWith(`-${correlation}.manifest.json`));
-if (!manifestName) blocked("The requested archive manifest is unavailable on the staging archive volume.");
-const manifest = JSON.parse(await fs.readFile(path.join(root, manifestName), "utf8"));
+let manifest;
+let encrypted;
+if (manifestName) {
+  manifest = JSON.parse(await fs.readFile(path.join(root, manifestName), "utf8"));
+  encrypted = await fs.readFile(path.join(root, manifest.archiveFile));
+} else {
+  const bucket = String(process.env.BACKUP_OBJECT_STORAGE_BUCKET ?? "");
+  const region = String(process.env.BACKUP_OBJECT_STORAGE_REGION ?? "");
+  if (!bucket || !region) blocked("The requested archive is unavailable locally and remote archive configuration is incomplete.");
+  const credentials = process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID && process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY
+    ? { accessKeyId: process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID, secretAccessKey: process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY }
+    : undefined;
+  const client = new S3Client({ region, credentials });
+  const prefix = `database-archives/daily/${new Date().getUTCFullYear()}/`;
+  const listed = await client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix }));
+  const manifestKey = listed.Contents?.find(({ Key }) => Key?.endsWith(`-${correlation}.manifest.json`))?.Key;
+  if (!manifestKey) blocked("The requested archive manifest is unavailable in the configured staging archive store.");
+  const manifestObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: manifestKey }));
+  manifest = JSON.parse(await manifestObject.Body.transformToString());
+  const archiveKey = `${prefix}${manifest.archiveFile}`;
+  const archiveObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: archiveKey, VersionId: manifest.remote?.versionId }));
+  encrypted = Buffer.from(await archiveObject.Body.transformToByteArray());
+}
 if (manifest.correlation !== correlation || manifest.encryption?.algorithm !== "aes-256-gcm") blocked("Archive manifest correlation or encryption metadata is invalid.");
-const encryptedPath = path.join(root, manifest.archiveFile);
-const encrypted = await fs.readFile(encryptedPath);
 if (crypto.createHash("sha256").update(encrypted).digest("hex") !== manifest.sha256) blocked("Encrypted archive checksum verification failed.");
 
 const plaintextPath = path.join(root, `.restore-${correlation}.dump`);
