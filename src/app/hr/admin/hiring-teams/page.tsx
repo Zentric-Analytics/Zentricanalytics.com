@@ -2,6 +2,7 @@ import { HIRING_TEAM_MEMBER_PERMISSIONS } from "@/lib/hr/recruitment/hiring-team
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { prisma } from "@/lib/prisma";
 import { addHiringTeamMemberAction, createHiringTeamAction, deactivateHiringTeamAction, endHiringTeamMemberAction } from "./actions";
+import { CalendarDays, ShieldCheck, UserRoundCheck, Users } from "lucide-react";
 
 export default async function HiringTeamsPage() {
   const auth = await requirePermission("hiring_team.view");
@@ -20,11 +21,15 @@ export default async function HiringTeamsPage() {
   const canCreate = auth.permissions.has("hiring_team.create");
   const canManageMembers = auth.permissions.has("hiring_team.manage_members");
   const canDeactivate = auth.permissions.has("hiring_team.deactivate");
+  const activeTeams = teams.filter(team => team.status === "ACTIVE");
+  const activeMembers = teams.reduce((sum, team) => sum + team.members.filter(member => member.status === "ACTIVE").length, 0);
+  const lastUpdated = teams.reduce<Date | null>((latest, team) => !latest || team.updatedAt > latest ? team.updatedAt : latest, null);
 
   return <main>
     <p className="text-sm font-bold uppercase tracking-widest text-teal-700">Recruitment administration</p>
     <h1 className="mt-2 text-3xl font-bold">Hiring Teams</h1>
     <p className="mt-2 text-slate-600">Membership and capability grants are separate. Every action remains organization-scoped and server-authorized.</p>
+    <div className="hr-grid-4">{[{label:"Total teams",value:teams.length,icon:Users},{label:"Active teams",value:activeTeams.length,icon:UserRoundCheck},{label:"Total members",value:activeMembers,icon:ShieldCheck},{label:"Last updated",value:lastUpdated?.toLocaleDateString() ?? "No activity",icon:CalendarDays}].map(({label,value,icon:Icon}) => <article className="hr-card hr-stat" key={label}><span className="hr-icon"><Icon /></span><span><strong>{value}</strong><p>{label}</p></span></article>)}</div>
 
     {canCreate ? <form action={createHiringTeamAction} className="mt-7 grid gap-3 rounded-2xl border bg-white p-5 md:grid-cols-2">
       <h2 className="text-xl font-bold md:col-span-2">Create Hiring Team</h2>
