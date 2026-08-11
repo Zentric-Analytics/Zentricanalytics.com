@@ -73,6 +73,54 @@ async function interpretApprovedTimesheets(organizationId: string) {
   return processed;
 }
 
+async function interpretClosedClockSessions(organizationId: string) {
+  const sessions = await prisma.hrClockSession.findMany({
+    where: { organizationId, status: "CLOCKED_OUT", endedAt: { not: null }, closedByEventId: { not: null } },
+    orderBy: { endedAt: "asc" },
+    take: 500,
+  });
+  let processed = 0;
+  for (const session of sessions) {
+    const inputSnapshot = {
+      sourceType: "CLOCK_SESSION",
+      sessionId: session.id,
+      sessionVersion: session.version,
+      openedByEventId: session.openedByEventId,
+      closedByEventId: session.closedByEventId,
+      startedAt: session.startedAt.toISOString(),
+      endedAt: session.endedAt?.toISOString(),
+      breakMinutes: session.breakMinutes,
+    } as Prisma.InputJsonObject;
+    const existing = await prisma.hrAttendanceInterpretation.findFirst({
+      where: {
+        attendanceDay: { organizationId, assignmentId: session.assignmentId, businessDate: session.businessDate },
+        inputSnapshot: { equals: inputSnapshot },
+      },
+      select: { id: true },
+    });
+    if (existing) continue;
+    const closingEvent = await prisma.hrTimeEvent.findUnique({ where: { id: session.closedByEventId! }, select: { actorUserId: true } });
+    if (!closingEvent?.actorUserId) continue;
+    const workedMinutes = session.workedMinutes ?? 0;
+    await recordAttendanceInterpretation(
+      { organizationId, actorUserId: closingEvent.actorUserId, actorRole: "WORKER" },
+      {
+        employeeId: session.employeeId,
+        workRelationshipId: session.workRelationshipId,
+        assignmentId: session.assignmentId,
+        businessDate: session.businessDate,
+        trackingMode: "CLOCK",
+        scheduledMinutes: workedMinutes,
+        workedMinutes,
+        inputSnapshot,
+        correlationId: session.correlationId,
+      },
+    );
+    processed += 1;
+  }
+  return processed;
+}
+
 export async function runTimeOperationalWindow(now = new Date()) {
   const organizations = await prisma.hrOrganization.findMany({ select: { id: true } });
   const windowKey = now.toISOString().slice(0, 13);
@@ -96,7 +144,7 @@ export async function runTimeOperationalWindow(now = new Date()) {
     const interpretationRun = await claimRun(organization.id, "TIME_INTERPRETATION_SWEEP", interpretationWindowKey, now);
     if (!interpretationRun) continue;
     try {
-      const processed = await interpretApprovedTimesheets(organization.id);
+      const processed = await interpretApprovedTimesheets(organization.id) + await interpretClosedClockSessions(organization.id);
       await prisma.hrTimeWorkerRun.update({ where: { id: interpretationRun.id }, data: { status: "SUCCEEDED", completedAt: new Date(), leaseToken: null, leaseExpiresAt: null, checkpoint: { processed } } });
       results.push({ organizationId: organization.id, status: "INTERPRETED", processed });
     } catch (error) {
