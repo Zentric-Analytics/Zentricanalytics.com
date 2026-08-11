@@ -17,6 +17,6 @@ export async function reviewTimesheetAction(formData: FormData) {
       && assignment.capabilities.includes("supervisor.review_assigned");
   }
   if (!privileged && !assignmentScoped) throw new Error("Timesheet is outside the active supervisory review scope.");
-  await transitionTimesheet({ organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "MANAGER" }, { timesheetId: sheet.id, expectedVersion: Number(formData.get("expectedVersion")), to: String(formData.get("decision")) as "APPROVED" | "RETURNED" | "REJECTED" });
+  await transitionTimesheet({ organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "MANAGER" }, { timesheetId: sheet.id, expectedVersion: Number(formData.get("expectedVersion")), to: String(formData.get("decision")) as "IN_REVIEW" | "APPROVED" | "RETURNED" | "REJECTED" });
   revalidatePath("/hr/supervisor/time");
 }

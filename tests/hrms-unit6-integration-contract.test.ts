@@ -63,6 +63,10 @@ describe("Unit 6 integration contract", () => {
     expect(managerActions).toContain("activeSupervisorForEmployee");
     expect(managerActions).toContain('capabilities.includes("supervisor.review_assigned")');
     expect(managerActions).toContain("outside the active supervisory review scope");
+    expect(managerActions).toContain('"IN_REVIEW" | "APPROVED"');
+    expect(managerPage).toContain('sheet.status === "SUBMITTED"');
+    expect(managerPage).toContain('value="IN_REVIEW"');
+    expect(managerPage).toContain("Start review");
     expect(read("src/app/hr/admin/time/page.tsx")).toContain('requirePermission("time.read_all")');
     expect(read("src/app/hr/admin/time/page.tsx")).toContain("assignTimePolicyAction");
     const policyCommands = read("src/lib/hr/time/policy-commands.ts");
