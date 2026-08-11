@@ -29,6 +29,13 @@ export async function createLeaveRequestAction(formData: FormData) {
   });
   if (!assignment) throw new Error("No active leave policy covers this request.");
   const policy = assignment.leavePolicy;
+  if (policy.entitlementModel === "LONG_TERM") {
+    const primaryAssignment = await prisma.hrEmployeeAssignment.findFirst({
+      where: { organizationId: auth.user.organizationId, employeeId: auth.user.employee.id, status: "ACTIVE", isPrimary: true, effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }] },
+      select: { id: true },
+    });
+    if (!primaryAssignment) throw new Error("Long-term absence requires an active primary employment assignment covering the requested start date.");
+  }
   if (policy.leaveType.unit === "HOURS" && !input.hours) throw new Error("Enter the number of leave hours requested.");
   const attachment = formData.get("attachment");
   const file = attachment instanceof File && attachment.size > 0 ? attachment : null;
@@ -118,6 +125,13 @@ export async function resubmitReturnedLeaveRequestAction(formData: FormData) {
   const assignment = await prisma.hrEmployeeLeavePolicy.findFirst({ where: { employeeId: auth.user.employee.id, status: "ACTIVE", effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }], leavePolicy: { leaveTypeId: input.leaveTypeId, status: "ACTIVE", effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }] } }, include: { leavePolicy: { include: { leaveType: true } } }, orderBy: { effectiveFrom: "desc" } });
   if (!assignment) throw new Error("No active leave policy covers the revised request.");
   const policy = assignment.leavePolicy;
+  if (policy.entitlementModel === "LONG_TERM") {
+    const primaryAssignment = await prisma.hrEmployeeAssignment.findFirst({
+      where: { organizationId: auth.user.organizationId, employeeId: auth.user.employee.id, status: "ACTIVE", isPrimary: true, effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }] },
+      select: { id: true },
+    });
+    if (!primaryAssignment) throw new Error("Long-term absence requires an active primary employment assignment covering the requested start date.");
+  }
   const [scheduleAssignment, calendarAssignment] = await Promise.all([
     prisma.hrWorkScheduleAssignment.findFirst({ where: { organizationId: auth.user.organizationId, employeeId: auth.user.employee.id, effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }] }, include: { workScheduleVersion: true }, orderBy: { effectiveFrom: "desc" } }),
     prisma.hrHolidayCalendarAssignment.findFirst({ where: { organizationId: auth.user.organizationId, employeeId: auth.user.employee.id, effectiveFrom: { lte: input.startDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.startDate } }] }, include: { holidayCalendarVersion: { include: { occurrences: { where: { localDate: { gte: input.startDate, lte: input.endDate } } } } } }, orderBy: { effectiveFrom: "desc" } }),
