@@ -72,6 +72,7 @@ describe("Unit 6 integration contract", () => {
     expect(script).toContain("openSessionAttempts");
     expect(script).toContain("occupiedAssignments");
     expect(script).toContain('status: "CORRECTION_REQUIRED"');
+    expect(script).toContain('checkpoint: { processed: 1, fixture: true }');
     expect(script).toContain("correctionClaims");
     expect(script).toContain("lockClaims");
     expect(script).toContain("workerClaims");

@@ -88,5 +88,9 @@ try {
     where: { correlationId: run, status: { in: ["CLOCKED_IN", "ON_BREAK"] } },
     data: { status: "CORRECTION_REQUIRED", version: { increment: 1 } },
   });
+  await prisma.hrTimeWorkerRun.updateMany({
+    where: { correlationId: `${run}:worker`, status: "RUNNING" },
+    data: { status: "SUCCEEDED", completedAt: new Date(), leaseToken: null, leaseExpiresAt: null, checkpoint: { processed: 1, fixture: true } },
+  });
   await prisma.$disconnect();
 }

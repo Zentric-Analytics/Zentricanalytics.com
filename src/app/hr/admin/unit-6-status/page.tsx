@@ -8,11 +8,11 @@ const items = [
   ["Current phase", "Unit 6A–6F staging validation: governed lifecycle, concurrency, workers, privacy, load, and recovery"],
   ["Implemented", "Effective policies and schedules, immutable event capture, clock sessions, timesheets, attendance interpretation, corrections, period locks, export claims, worker leases, and scoped workspaces"],
   ["Locked scope", "Exception-based salaried, clock-based hourly, and timesheet contractors; kiosk, GPS, geofencing, facial, and biometric capture excluded"],
-  ["Tests", "660/660 automated tests passing; TypeScript, ESLint, Prisma validation, and production build pass"],
-  ["Defects fixed", "Migration BOM and canonical event-source fixture corrected; open-session uniqueness, conflicting replay, invalid clock sequences, self-approval, overlaps, stale versions, and duplicate worker claims fail closed"],
-  ["Staging deployment", "dep-d9tk5f2d0e5s739d5ptg — exact SHA live; 40 migrations applied; preflight ready"],
-  ["Passed staging gates", "Real PostgreSQL concurrency, governed admin policy/period lifecycle, correlated audit, worker authentication/idempotency, integrity checks, and 250-request load smoke"],
-  ["Next gate", "Employee/manager/auditor browser privacy, recipient-backed notifications, failure recovery, and fresh encrypted isolated restore correlation"],
+  ["Tests", "663/663 automated tests passing; TypeScript and ESLint pass; final candidate validation is in progress"],
+  ["Defects fixed", "Closed-session interpretation, effective schedule resolution, governed correction ownership and exact-version application, concurrency-fixture cleanup, and dead-letter recovery now fail closed and retain correlated audit evidence"],
+  ["Staging deployment", "dep-d9tn2fejc75c73aotms0 — exact SHA 4ddcaa5 live; 40 migrations applied; preflight ready"],
+  ["Passed staging gates", "Real PostgreSQL concurrency, recipient-backed Gmail delivery, schedule-backed clock interpretation, correction application, worker retry/dead-letter recovery, HR/manager/employee/auditor privacy boundaries, and 250-request load smoke"],
+  ["Next gate", "Unit 4/5 boundary integrity, final load and reconciliation, encrypted backup, and isolated restore correlation"],
 ] as const;
 
 export default function Unit6StatusPage() {
