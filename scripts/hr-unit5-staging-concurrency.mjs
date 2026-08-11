@@ -31,6 +31,39 @@ async function postReservation(accountPeriodId, organizationId, policyId, unit, 
   throw new Error("Serializable reservation retry budget exhausted.");
 }
 
+async function postConcurrentDelta({ accountPeriodId, organizationId, policyId, unit, sourceId, kind, amount, field, impactSign = 1 }) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "HrLeaveAccountPeriod" WHERE id = ${accountPeriodId} FOR UPDATE`;
+        const idempotencyKey = `${run}:${kind.toLowerCase()}:${sourceId}`;
+        if (await tx.hrLeaveLedgerEntry.findUnique({ where: { organizationId_idempotencyKey: { organizationId, idempotencyKey } } })) return { applied: false, reason: "duplicate" };
+        await tx.hrLeaveAccountPeriod.update({ where: { id: accountPeriodId }, data: { [field]: { increment: amount * impactSign }, version: { increment: 1 } } });
+        await tx.hrLeaveLedgerEntry.create({ data: { organizationId, accountPeriodId, leavePolicyId: policyId, kind, amount, impactSign, unit, effectiveAt: new Date(), sourceType: "UNIT5_CONCURRENCY_FIXTURE", sourceId, reason: run, correlationId: `${run}:${sourceId}`, idempotencyKey } });
+        return { applied: true };
+      }, { isolationLevel: "Serializable" });
+    } catch (error) {
+      if (error?.code === "P2034" && attempt < 3) continue;
+      throw error;
+    }
+  }
+  throw new Error("Serializable delta retry budget exhausted.");
+}
+
+async function expireUnreservedCarryover({ accountPeriodId, organizationId, policyId, unit, sourceId }) {
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "HrLeaveAccountPeriod" WHERE id = ${accountPeriodId} FOR UPDATE`;
+    const period = await tx.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: accountPeriodId } });
+    const spendable = Math.max(0, Number(period.granted) + Number(period.accrued) + Number(period.carriedOver) + Number(period.adjusted) - Number(period.carriedOut) - Number(period.reserved) - Number(period.consumed) - Number(period.expired));
+    if (!spendable) return { applied: false, reason: "protected-or-empty" };
+    const idempotencyKey = `${run}:expiry:${sourceId}`;
+    if (await tx.hrLeaveLedgerEntry.findUnique({ where: { organizationId_idempotencyKey: { organizationId, idempotencyKey } } })) return { applied: false, reason: "duplicate" };
+    await tx.hrLeaveAccountPeriod.update({ where: { id: accountPeriodId }, data: { expired: { increment: spendable }, version: { increment: 1 } } });
+    await tx.hrLeaveLedgerEntry.create({ data: { organizationId, accountPeriodId, leavePolicyId: policyId, kind: "EXPIRY", amount: spendable, unit, effectiveAt: new Date(), sourceType: "UNIT5_CONCURRENCY_FIXTURE", sourceId, reason: run, correlationId: `${run}:${sourceId}`, idempotencyKey } });
+    return { applied: true, amount: spendable };
+  }, { isolationLevel: "Serializable" });
+}
+
 try {
   const organization = await prisma.hrOrganization.findFirstOrThrow({ select: { id: true } });
   const employee = await prisma.hrEmployee.findFirstOrThrow({ where: { organizationId: organization.id, employmentStatus: "ACTIVE" }, select: { id: true } });
@@ -64,7 +97,44 @@ try {
   const ledgerReserved = after.entries.filter(({ kind }) => kind === "RESERVATION").reduce((sum, entry) => sum + Number(entry.amount), 0);
   if (duplicateEntries !== 1 || Number(after.reserved) !== ledgerReserved || Number(after.reserved) !== 9) throw new Error("Duplicate reservation or projection divergence detected.");
 
-  console.log(JSON.stringify({ run, database: databaseUrl.pathname.slice(1), organizationId: organization.id, accountPeriodId: period.id, policyId: policy.id, competing: { winners, losers, losingDisposition: losingDisposition?.status === "rejected" ? (losingDisposition.reason?.code ?? "REJECTED") : losingDisposition?.value.reason }, duplicate: { attempts: duplicate.length, entries: duplicateEntries }, projection: { reserved: Number(after.reserved), ledgerReserved, version: after.version }, result: "PASS" }, null, 2));
+  const makePeriod = async (label, offsetDays, values) => prisma.hrLeaveAccountPeriod.create({ data: { accountId: account.id, leavePolicyId: policy.id, periodStart: new Date(periodStart.getTime() + offsetDays * 86_400_000), periodEnd: new Date(periodEnd.getTime() + offsetDays * 86_400_000), ...values } });
+
+  const decisionPeriod = await makePeriod("approval-cancellation", 10, { granted: 2, reserved: 2 });
+  const expectedDecisionVersion = decisionPeriod.version;
+  const decide = async (decision) => prisma.$transaction(async (tx) => {
+    const claimed = await tx.hrLeaveAccountPeriod.updateMany({ where: { id: decisionPeriod.id, version: expectedDecisionVersion }, data: { version: { increment: 1 }, ...(decision === "CANCELLED" ? { reserved: { decrement: 2 } } : {}) } });
+    if (claimed.count !== 1) return { applied: false, reason: "stale-version" };
+    if (decision === "CANCELLED") await tx.hrLeaveLedgerEntry.create({ data: { organizationId: organization.id, accountPeriodId: decisionPeriod.id, leavePolicyId: policy.id, kind: "RESERVATION_RELEASE", amount: 2, unit: policy.leaveType.unit, effectiveAt: new Date(), sourceType: "UNIT5_CONCURRENCY_FIXTURE", sourceId: `${run}:approval-cancellation`, reason: run, correlationId: `${run}:approval-cancellation`, idempotencyKey: `${run}:approval-cancellation:cancelled` } });
+    return { applied: true, decision };
+  }, { isolationLevel: "Serializable" });
+  const approvalCancellation = await Promise.all([decide("APPROVED"), decide("CANCELLED")]);
+  if (approvalCancellation.filter(({ applied }) => applied).length !== 1 || approvalCancellation.filter(({ reason }) => reason === "stale-version").length !== 1) throw new Error("Approval versus cancellation did not produce one winner and one stale loser.");
+
+  const adjustmentPeriod = await makePeriod("approval-adjustment", 20, { granted: 10 });
+  const approvalAdjustment = await Promise.all([
+    postReservation(adjustmentPeriod.id, organization.id, policy.id, policy.leaveType.unit, "approval-adjustment-reservation", 3),
+    postConcurrentDelta({ accountPeriodId: adjustmentPeriod.id, organizationId: organization.id, policyId: policy.id, unit: policy.leaveType.unit, sourceId: "approval-adjustment-delta", kind: "ADJUSTMENT", amount: 2, field: "adjusted" }),
+  ]);
+  const adjustmentAfter = await prisma.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: adjustmentPeriod.id } });
+  if (approvalAdjustment.some(({ applied }) => !applied) || Number(adjustmentAfter.reserved) !== 3 || Number(adjustmentAfter.adjusted) !== 2) throw new Error("Approval versus adjustment diverged.");
+
+  const accrualPeriod = await makePeriod("accrual-approval", 30, { granted: 10 });
+  const accrualApproval = await Promise.all([
+    postReservation(accrualPeriod.id, organization.id, policy.id, policy.leaveType.unit, "accrual-approval-reservation", 4),
+    postConcurrentDelta({ accountPeriodId: accrualPeriod.id, organizationId: organization.id, policyId: policy.id, unit: policy.leaveType.unit, sourceId: "accrual-approval-delta", kind: "ACCRUAL", amount: 2, field: "accrued" }),
+  ]);
+  const accrualAfter = await prisma.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: accrualPeriod.id } });
+  if (accrualApproval.some(({ applied }) => !applied) || Number(accrualAfter.reserved) !== 4 || Number(accrualAfter.accrued) !== 2) throw new Error("Accrual versus approval diverged.");
+
+  const expiryPeriod = await makePeriod("expiry-approval", 40, { carriedOver: 5 });
+  const expiryApproval = await Promise.allSettled([
+    postReservation(expiryPeriod.id, organization.id, policy.id, policy.leaveType.unit, "expiry-approval-reservation", 4),
+    expireUnreservedCarryover({ accountPeriodId: expiryPeriod.id, organizationId: organization.id, policyId: policy.id, unit: policy.leaveType.unit, sourceId: "expiry-approval-expiry" }),
+  ]);
+  const expiryAfter = await prisma.hrLeaveAccountPeriod.findUniqueOrThrow({ where: { id: expiryPeriod.id } });
+  if (Number(expiryAfter.reserved) + Number(expiryAfter.expired) > 5 || expiryApproval.every(({ status }) => status === "rejected")) throw new Error("Carryover expiry failed to protect an approved reservation.");
+
+  console.log(JSON.stringify({ run, database: databaseUrl.pathname.slice(1), organizationId: organization.id, accountPeriodId: period.id, policyId: policy.id, competing: { winners, losers, losingDisposition: losingDisposition?.status === "rejected" ? (losingDisposition.reason?.code ?? "REJECTED") : losingDisposition?.value.reason }, duplicate: { attempts: duplicate.length, entries: duplicateEntries }, projection: { reserved: Number(after.reserved), ledgerReserved, version: after.version }, matrix: { approvalCancellation, approvalAdjustment: { reserved: Number(adjustmentAfter.reserved), adjusted: Number(adjustmentAfter.adjusted) }, accrualApproval: { reserved: Number(accrualAfter.reserved), accrued: Number(accrualAfter.accrued) }, expiryApproval: { reserved: Number(expiryAfter.reserved), expired: Number(expiryAfter.expired) } }, result: "PASS" }, null, 2));
 } finally {
   await prisma.$disconnect();
 }

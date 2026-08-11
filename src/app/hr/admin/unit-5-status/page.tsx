@@ -9,10 +9,10 @@ const items = [
   ["Migration status", "39 migrations applied on staging; none pending"],
   ["5A–5F status", "5A policy/calendar built · 5B authoritative ledger built · 5C immutable request revisions built · 5D configured workflow governance built · 5E Unit 4 integration built · 5F operational workers/reporting built"],
   ["Tests run", "615 automated tests passing; TypeScript, ESLint, Prisma validation, and production build passing"],
-  ["Browser workflow", "Request through completion, governed cancellation/reversal, and HR adjustment passed; long-term absence, governed return, exactly-once replay, employee, manager, and auditor privacy also passed"],
+  ["Browser workflow", "Full leave lifecycle including governed cancellation/reversal, and HR adjustment passed; long-term absence/return, privacy, notifications, reservation contention, worker replay, and integrity reconciliation also passed"],
   ["Defects fixed", "Submission reservation, authoritative projection, long-term eligibility, return-event correlation, and linked absence terminal-state defects corrected with regression coverage"],
-  ["Blockers", "None currently; production remains untouched"],
-  ["Next gate", "Remaining concurrency races, recipient-backed notifications, and encrypted restore correlation; safe load passed at 250 requests, zero failures, p95 300.9 ms"],
+  ["Blockers", "Isolated staging restore target requires explicit temporary paid Render database approval; production remains untouched"],
+  ["Next gate", "Complete the remaining named race combinations, restore correlation into an isolated target, clean it up, then rerun final release gates; safe load passed at 250 requests, zero failures, p95 300.9 ms"],
 ] as const;
 
 export default function Unit5StatusPage() {

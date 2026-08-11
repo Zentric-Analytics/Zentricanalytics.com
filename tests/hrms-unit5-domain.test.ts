@@ -118,6 +118,10 @@ describe("Unit 5 leave domain", () => {
     expect(script).toContain("winners !== 1 || losers !== 1");
     expect(script).toContain("competing.length - winners");
     expect(script).toContain("duplicateEntries !== 1");
+    expect(script).toContain("Approval versus cancellation did not produce one winner and one stale loser");
+    expect(script).toContain("Approval versus adjustment diverged");
+    expect(script).toContain("Accrual versus approval diverged");
+    expect(script).toContain("Carryover expiry failed to protect an approved reservation");
   });
 
   it("ships a staging-only effective-date boundary and replay gate", () => {
