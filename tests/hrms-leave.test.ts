@@ -77,8 +77,13 @@ describe("HRMS leave engine", () => {
   });
   it("renders the canonical immutable Unit 5 transition instead of a stale legacy request status", () => {
     const employeePage = fs.readFileSync(path.join(process.cwd(), "src/app/hr/employee/leave/page.tsx"), "utf8");
+    const adminPage = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/leave/page.tsx"), "utf8");
     expect(employeePage).toContain("version?.transitions[0]?.toStatus ?? request.status");
     expect(employeePage).toContain("<td>{currentStatus}</td>");
     expect(employeePage).toContain('!version && request.status === "PENDING"');
+    expect(adminPage).toContain("prisma.hrLeaveAccountPeriod.findMany");
+    expect(adminPage).toContain("projectedPeriodBalance");
+    expect(adminPage).toContain("version?.transitions[0]?.toStatus ?? request.status");
+    expect(adminPage).toContain("<td>{period.consumed.toString()}</td>");
   });
 });
