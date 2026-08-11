@@ -8,11 +8,11 @@ const items = [
   ["Current phase", "5F — automation, reporting, reconciliation, and staging release validation"],
   ["Migration status", "39 migrations applied on staging; none pending"],
   ["5A–5F status", "5A policy/calendar built · 5B authoritative ledger built · 5C immutable request revisions built · 5D configured workflow governance built · 5E Unit 4 integration built · 5F operational workers/reporting built"],
-  ["Tests run", "614 automated tests passing; TypeScript, ESLint, Prisma validation, and production build passing"],
-  ["Browser workflow", "Request, approval, reservation, start, consumption, completion, governed cancellation/reversal, and HR adjustment passed"],
-  ["Defects fixed", "Submission reservation removed; carryover projections corrected; final approval made atomic; immutable revisions preserved; employee history now renders the canonical Unit 5 transition"],
+  ["Tests run", "615 automated tests passing; TypeScript, ESLint, Prisma validation, and production build passing"],
+  ["Browser workflow", "Request through completion, cancellation/reversal, HR adjustment, long-term absence, governed return, and exactly-once replay passed"],
+  ["Defects fixed", "Submission reservation, authoritative projection, long-term eligibility, return-event correlation, and linked absence terminal-state defects corrected with regression coverage"],
   ["Blockers", "None currently; production remains untouched"],
-  ["Next gate", "Privacy/tenant matrix, remaining concurrency races, long-term absence/return, load, and restore correlation"],
+  ["Next gate", "Privacy/tenant matrix, remaining concurrency races, recipient-backed notifications, safe load, and encrypted restore correlation"],
 ] as const;
 
 export default function Unit5StatusPage() {
