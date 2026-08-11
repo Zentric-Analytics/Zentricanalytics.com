@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { recordAttendanceInterpretation, withTimeSerializableRetry } from "./commands";
+import { scheduledMinutesForBusinessDate } from "./domain";
 
 async function claimRun(organizationId: string, jobType: string, windowKey: string, now: Date) {
   const leaseToken = crypto.randomUUID();
@@ -101,7 +102,20 @@ async function interpretClosedClockSessions(organizationId: string) {
     if (existing) continue;
     const closingEvent = await prisma.hrTimeEvent.findUnique({ where: { id: session.closedByEventId! }, select: { actorUserId: true } });
     if (!closingEvent?.actorUserId) continue;
+    const scheduleAssignment = await prisma.hrWorkScheduleAssignment.findFirst({
+      where: {
+        organizationId,
+        employeeId: session.employeeId,
+        effectiveFrom: { lte: session.businessDate },
+        OR: [{ effectiveTo: null }, { effectiveTo: { gt: session.businessDate } }],
+      },
+      include: { workScheduleVersion: true },
+      orderBy: { effectiveFrom: "desc" },
+    });
     const workedMinutes = session.workedMinutes ?? 0;
+    const scheduledMinutes = scheduleAssignment
+      ? scheduledMinutesForBusinessDate(scheduleAssignment.workScheduleVersion.weeklyPattern, session.businessDate)
+      : 0;
     await recordAttendanceInterpretation(
       { organizationId, actorUserId: closingEvent.actorUserId, actorRole: "WORKER" },
       {
@@ -110,7 +124,7 @@ async function interpretClosedClockSessions(organizationId: string) {
         assignmentId: session.assignmentId,
         businessDate: session.businessDate,
         trackingMode: "CLOCK",
-        scheduledMinutes: workedMinutes,
+        scheduledMinutes,
         workedMinutes,
         inputSnapshot,
         correlationId: session.correlationId,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertIdempotentReplay, assertIndependentApproval, assertNoScheduleOverlap, assertPeriodLock, assertTimesheetTransition, classifyOvertime, interpretAttendance, resolveTimePolicy, stableJsonStringify, transitionClock, validateTimeEvent } from "../src/lib/hr/time/domain";
+import { assertIdempotentReplay, assertIndependentApproval, assertNoScheduleOverlap, assertPeriodLock, assertTimesheetTransition, classifyOvertime, interpretAttendance, resolveTimePolicy, scheduledMinutesForBusinessDate, stableJsonStringify, transitionClock, validateTimeEvent } from "../src/lib/hr/time/domain";
 
 describe("Unit 6 time and attendance domain", () => {
   it("compares persisted JSON snapshots independently of object key order", () => {
@@ -21,6 +21,16 @@ describe("Unit 6 time and attendance domain", () => {
     expect(assertNoScheduleOverlap([{ weekday: 1, startLocalMinute: 540, endLocalMinute: 720, expectedMinutes: 180 }, { weekday: 1, startLocalMinute: 780, endLocalMinute: 1020, expectedMinutes: 240 }])).toHaveLength(2);
     expect(assertNoScheduleOverlap([{ weekday: 5, startLocalMinute: 1320, endLocalMinute: 360, endDayOffset: 1, expectedMinutes: 420, unpaidBreakMinutes: 60 }])[0].endDayOffset).toBe(1);
     expect(() => assertNoScheduleOverlap([{ weekday: 1, startLocalMinute: 540, endLocalMinute: 720, expectedMinutes: 180 }, { weekday: 1, startLocalMinute: 600, endLocalMinute: 800, expectedMinutes: 200 }])).toThrow(/overlap/);
+  });
+
+  it("derives expected minutes from the effective weekly schedule day", () => {
+    const pattern = [
+      { weekday: 1, start: "09:00", end: "12:00" },
+      { weekday: 1, start: "13:00", end: "17:30" },
+      { weekday: 2, start: "09:00", end: "17:00" },
+    ];
+    expect(scheduledMinutesForBusinessDate(pattern, new Date("2026-08-10T00:00:00.000Z"))).toBe(450);
+    expect(scheduledMinutesForBusinessDate(pattern, new Date("2026-08-12T00:00:00.000Z"))).toBe(0);
   });
 
   it("preserves invalid clock evidence as correction-required state", () => {

@@ -1,5 +1,18 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import { validateWeeklyPattern } from "../leave/unit5";
+
+function localScheduleMinute(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+export function scheduledMinutesForBusinessDate(weeklyPattern: unknown, businessDate: Date) {
+  const weekday = businessDate.getUTCDay();
+  return validateWeeklyPattern(weeklyPattern)
+    .filter((interval) => interval.weekday === weekday)
+    .reduce((total, interval) => total + localScheduleMinute(interval.end) - localScheduleMinute(interval.start), 0);
+}
 
 export const trackingModes = ["NONE", "EXCEPTION_BASED", "CLOCK", "TIMESHEET"] as const;
 export type TrackingMode = (typeof trackingModes)[number];
