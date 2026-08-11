@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertIdempotentReplay, assertIndependentApproval, assertNoScheduleOverlap, assertPeriodLock, assertTimesheetTransition, classifyOvertime, interpretAttendance, resolveTimePolicy, scheduledMinutesForBusinessDate, stableJsonStringify, transitionClock, validateTimeEvent } from "../src/lib/hr/time/domain";
+import { assertCorrectionSourceVersion, assertIdempotentReplay, assertIndependentApproval, assertNoScheduleOverlap, assertPeriodLock, assertTimesheetTransition, classifyOvertime, interpretAttendance, resolveTimePolicy, scheduledMinutesForBusinessDate, stableJsonStringify, transitionClock, validateTimeEvent } from "../src/lib/hr/time/domain";
 
 describe("Unit 6 time and attendance domain", () => {
   it("compares persisted JSON snapshots independently of object key order", () => {
@@ -31,6 +31,12 @@ describe("Unit 6 time and attendance domain", () => {
     ];
     expect(scheduledMinutesForBusinessDate(pattern, new Date("2026-08-10T00:00:00.000Z"))).toBe(450);
     expect(scheduledMinutesForBusinessDate(pattern, new Date("2026-08-12T00:00:00.000Z"))).toBe(0);
+  });
+
+  it("rejects a correction that no longer targets the exact attendance version", () => {
+    expect(() => assertCorrectionSourceVersion(2, 2)).not.toThrow();
+    expect(() => assertCorrectionSourceVersion(1, 2)).toThrow(/stale/);
+    expect(() => assertCorrectionSourceVersion(undefined, 2)).toThrow(/stale/);
   });
 
   it("preserves invalid clock evidence as correction-required state", () => {

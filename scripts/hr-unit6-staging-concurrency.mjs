@@ -13,8 +13,13 @@ const businessDate = new Date(Date.UTC(2095, 0, 1) + (Date.now() % (300 * 86_400
 
 try {
   const organization = await prisma.hrOrganization.findFirstOrThrow({ select: { id: true } });
+  const occupiedAssignments = await prisma.hrClockSession.findMany({
+    where: { organizationId: organization.id, status: { in: ["CLOCKED_IN", "ON_BREAK"] } },
+    distinct: ["assignmentId"],
+    select: { assignmentId: true },
+  });
   const assignment = await prisma.hrEmployeeAssignment.findFirstOrThrow({
-    where: { organizationId: organization.id, status: "ACTIVE" },
+    where: { organizationId: organization.id, status: "ACTIVE", id: { notIn: occupiedAssignments.map(({ assignmentId }) => assignmentId) } },
     select: { id: true, employeeId: true, createdById: true },
   });
   const relationship = await prisma.hrWorkRelationship.findFirstOrThrow({
@@ -79,5 +84,9 @@ try {
 
   console.log(JSON.stringify({ run, database: databaseUrl.pathname.slice(1), organizationId: organization.id, assignmentId: assignment.id, results: { duplicateEvent: { attempts: 2, durable: eventCount, winnerCount: 1 }, openSession: { attempts: 2, durableOpenSessions: openSessionCount, winnerCount: 1 }, correctionDecision: { claims: correctionClaims.map(({ count }) => count) }, periodLock: { claims: lockClaims.map(({ count }) => count) }, workerLease: { claims: workerClaims.map(({ count }) => count), attemptCount: workerAfter.attemptCount } }, result: "PASS" }, null, 2));
 } finally {
+  await prisma.hrClockSession.updateMany({
+    where: { correlationId: run, status: { in: ["CLOCKED_IN", "ON_BREAK"] } },
+    data: { status: "CORRECTION_REQUIRED", version: { increment: 1 } },
+  });
   await prisma.$disconnect();
 }

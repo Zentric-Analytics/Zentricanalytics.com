@@ -14,6 +14,12 @@ export function scheduledMinutesForBusinessDate(weeklyPattern: unknown, business
     .reduce((total, interval) => total + localScheduleMinute(interval.end) - localScheduleMinute(interval.start), 0);
 }
 
+export function assertCorrectionSourceVersion(expected: unknown, actual: number) {
+  if (!Number.isInteger(expected) || expected !== actual) {
+    throw new Error("This correction is stale because the attendance record changed. Submit a new correction against the current version.");
+  }
+}
+
 export const trackingModes = ["NONE", "EXCEPTION_BASED", "CLOCK", "TIMESHEET"] as const;
 export type TrackingMode = (typeof trackingModes)[number];
 

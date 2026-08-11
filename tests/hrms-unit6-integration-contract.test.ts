@@ -32,7 +32,8 @@ describe("Unit 6 integration contract", () => {
     expect(commands).toContain("A correction requester cannot approve their own correction");
     expect(commands).toContain("employeeId: input.employeeId");
     expect(commands).toContain("An open correction already exists for this exact time record");
-    expect(commands).toContain("This correction is stale because the attendance record changed");
+    expect(commands).toContain("assertCorrectionSourceVersion(changes.sourceAttendanceVersion, day.currentVersion)");
+    expect(read("src/lib/hr/time/domain.ts")).toContain("This correction is stale because the attendance record changed");
     expect(commands).toContain('sourceType: "CORRECTION"');
     expect(commands).toContain('status: "APPLIED"');
     expect(commands).toContain('action: "hr.time.correction.applied"');
@@ -68,6 +69,8 @@ describe("Unit 6 integration contract", () => {
     expect(script).toContain("duplicateEventAttempts");
     expect(script).toContain('source: "EMPLOYEE_WEB"');
     expect(script).toContain("openSessionAttempts");
+    expect(script).toContain("occupiedAssignments");
+    expect(script).toContain('status: "CORRECTION_REQUIRED"');
     expect(script).toContain("correctionClaims");
     expect(script).toContain("lockClaims");
     expect(script).toContain("workerClaims");

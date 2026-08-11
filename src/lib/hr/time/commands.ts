@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
-import { assertIndependentApproval, assertPeriodLock, assertTimesheetTransition, interpretAttendance, stableJsonStringify, transitionClock, validateTimeEvent } from "./domain";
+import { assertCorrectionSourceVersion, assertIndependentApproval, assertPeriodLock, assertTimesheetTransition, interpretAttendance, stableJsonStringify, transitionClock, validateTimeEvent } from "./domain";
 
 type Context = { organizationId: string; actorUserId: string; actorRole?: string };
 
@@ -145,7 +145,7 @@ export async function reviewTimeCorrection(context: Context, input: { correction
     if (input.decision === "APPROVED" && correction.attendanceDayId) {
       const day = await tx.hrAttendanceDay.findFirstOrThrow({ where: { id: correction.attendanceDayId, organizationId: context.organizationId, employeeId: correction.employeeId } });
       const changes = correction.requestedChanges as { requestedClockIn?: unknown; requestedClockOut?: unknown; sourceAttendanceVersion?: unknown };
-      if (changes.sourceAttendanceVersion !== day.currentVersion) throw new Error("This correction is stale because the attendance record changed. Submit a new correction against the current version.");
+      assertCorrectionSourceVersion(changes.sourceAttendanceVersion, day.currentVersion);
       if (typeof changes.requestedClockIn !== "string" || typeof changes.requestedClockOut !== "string") throw new Error("Approved attendance corrections require governed clock-in and clock-out values.");
       const requestedClockIn = new Date(changes.requestedClockIn);
       const requestedClockOut = new Date(changes.requestedClockOut);
