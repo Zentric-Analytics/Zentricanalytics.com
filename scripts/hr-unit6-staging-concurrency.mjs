@@ -35,7 +35,7 @@ try {
 
   const eventInput = {
     organizationId: organization.id, employeeId: assignment.employeeId, workRelationshipId: relationship.id,
-    assignmentId: assignment.id, eventType: "CLOCK_IN", source: "WEB", occurredAt: now, receivedAt: now,
+    assignmentId: assignment.id, eventType: "CLOCK_IN", source: "EMPLOYEE_WEB", occurredAt: now, receivedAt: now,
     timezone: "UTC", localDate: businessDate, localTime: "09:00", utcOffsetMinutes: 0,
     idempotencyKey: `${run}:event`, payloadHash: crypto.createHash("sha256").update(run).digest("hex"),
     authoritative: true, actorUserId: assignment.createdById, correlationId: run,

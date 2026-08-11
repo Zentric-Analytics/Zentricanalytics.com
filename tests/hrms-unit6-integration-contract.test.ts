@@ -46,6 +46,7 @@ describe("Unit 6 integration contract", () => {
     expect(script).toContain("HR_UNIT6_STAGING_CONCURRENCY_CONFIRM");
     expect(script).toContain("zentric_analytics_staging");
     expect(script).toContain("duplicateEventAttempts");
+    expect(script).toContain('source: "EMPLOYEE_WEB"');
     expect(script).toContain("openSessionAttempts");
     expect(script).toContain("correctionClaims");
     expect(script).toContain("lockClaims");
