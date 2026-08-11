@@ -54,7 +54,7 @@ try {
 
   const sessionData = { organizationId: organization.id, employeeId: assignment.employeeId, workRelationshipId: relationship.id, assignmentId: assignment.id, timePolicyVersionId: policyVersion.id, businessDate, openedByEventId: openedByEvent.id, status: "CLOCKED_IN", startedAt: now, correlationId: run };
   const openSessionAttempts = await Promise.allSettled([
-    prisma.hrClockSession.create({ data: sessionData }), prisma.hrClockSession.create({ data: { ...sessionData, openedByEventId: `${openedByEvent.id}-duplicate` } }),
+    prisma.hrClockSession.create({ data: sessionData }), prisma.hrClockSession.create({ data: sessionData }),
   ]);
   const openSessionCount = await prisma.hrClockSession.count({ where: { organizationId: organization.id, assignmentId: assignment.id, status: { in: ["CLOCKED_IN", "ON_BREAK"] } } });
   if (openSessionAttempts.filter(({ status }) => status === "fulfilled").length !== 1 || openSessionCount !== 1) throw new Error("Open-session uniqueness did not produce exactly one active session.");

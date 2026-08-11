@@ -73,10 +73,14 @@ describe("Unit 6 integration contract", () => {
     expect(script).toContain("occupiedAssignments");
     expect(script).toContain('status: "CORRECTION_REQUIRED"');
     expect(script).toContain('checkpoint: { processed: 1, fixture: true }');
+    expect(script).not.toContain('openedByEventId: `${openedByEvent.id}-duplicate`');
     expect(script).toContain("correctionClaims");
     expect(script).toContain("lockClaims");
     expect(script).toContain("workerClaims");
     expect(read("package.json")).toContain('"hr:unit6-staging-concurrency"');
+    const repair = read("scripts/hr-unit6-repair-synthetic-lineage.mjs");
+    expect(repair).toContain('HR_UNIT6_REPAIR_CONFIRM !== "staging-synthetic-only"');
+    expect(repair).toContain('action: "hr.time.synthetic_lineage.repaired"');
   });
 
   it("exposes permission-scoped employee, manager, and HR workspaces", () => {

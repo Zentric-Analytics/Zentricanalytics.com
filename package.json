@@ -22,6 +22,7 @@
     "hr:staging-concurrency": "node scripts/hr-staging-concurrency.mjs",
     "hr:unit5-staging-concurrency": "node scripts/hr-unit5-staging-concurrency.mjs",
     "hr:unit6-staging-concurrency": "node scripts/hr-unit6-staging-concurrency.mjs",
+    "hr:unit6-repair-synthetic-lineage": "node scripts/hr-unit6-repair-synthetic-lineage.mjs",
     "hr:staging-document-conflict": "node scripts/hr-staging-document-conflict.mjs",
     "postinstall": "prisma generate"
   },
