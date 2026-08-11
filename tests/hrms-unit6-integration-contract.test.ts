@@ -56,7 +56,13 @@ describe("Unit 6 integration contract", () => {
 
   it("exposes permission-scoped employee, manager, and HR workspaces", () => {
     expect(read("src/app/hr/employee/time/page.tsx")).toContain('requirePermission("time.read_self")');
-    expect(read("src/app/hr/supervisor/time/page.tsx")).toContain("supervisedEmployeeIds");
+    const managerPage = read("src/app/hr/supervisor/time/page.tsx");
+    const managerActions = read("src/app/hr/supervisor/time/actions.ts");
+    expect(managerPage).toContain("supervisedEmployeeIds");
+    expect(managerPage).not.toContain('permissions.has("time.read_team")');
+    expect(managerActions).toContain("activeSupervisorForEmployee");
+    expect(managerActions).toContain('capabilities.includes("supervisor.review_assigned")');
+    expect(managerActions).toContain("outside the active supervisory review scope");
     expect(read("src/app/hr/admin/time/page.tsx")).toContain('requirePermission("time.read_all")');
   });
 

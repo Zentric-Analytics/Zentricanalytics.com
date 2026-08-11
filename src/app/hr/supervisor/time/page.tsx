@@ -5,7 +5,6 @@ import { reviewTimesheetAction } from "./actions";
 
 export default async function SupervisorTimePage() {
   const auth = await requireAuthenticatedUser();
-  if (!auth.permissions.has("time.read_team") && !auth.permissions.has("time.read_all")) throw new Error("Forbidden");
   if (!auth.user.employee) throw new Error("A supervisor employee profile is required.");
   const employeeIds = auth.permissions.has("time.read_all") ? undefined : await supervisedEmployeeIds(prisma, { organizationId: auth.user.organizationId, supervisorEmployeeId: auth.user.employee.id });
   const [days, timesheets] = await Promise.all([
