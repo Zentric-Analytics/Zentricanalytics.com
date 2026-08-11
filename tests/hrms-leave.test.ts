@@ -75,4 +75,10 @@ describe("HRMS leave engine", () => {
     expect(accounting).toContain('reason: `Opening entitlement for ${targetYear}`');
     expect(accounting).toContain('idempotencyKey: `unit5-grant:${target.id}`');
   });
+  it("renders the canonical immutable Unit 5 transition instead of a stale legacy request status", () => {
+    const employeePage = fs.readFileSync(path.join(process.cwd(), "src/app/hr/employee/leave/page.tsx"), "utf8");
+    expect(employeePage).toContain("version?.transitions[0]?.toStatus ?? request.status");
+    expect(employeePage).toContain("<td>{currentStatus}</td>");
+    expect(employeePage).toContain('!version && request.status === "PENDING"');
+  });
 });
