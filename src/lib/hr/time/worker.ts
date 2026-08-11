@@ -152,7 +152,7 @@ export async function runTimeOperationalWindow(now = new Date()) {
         await prisma.hrTimeWorkerRun.update({ where: { id: run.id }, data: { status: "SUCCEEDED", completedAt: new Date(), leaseToken: null, leaseExpiresAt: null, checkpoint: { processed: stale.length } } });
         results.push({ organizationId: organization.id, status: "COMPLETED", processed: stale.length });
       } catch (error) {
-        await prisma.hrTimeWorkerRun.update({ where: { id: run.id }, data: { status: run.attemptCount >= 5 ? "DEAD_LETTER" : "FAILED", safeError: (error instanceof Error ? error.message : "Time worker failed").slice(0, 1000), leaseToken: null, leaseExpiresAt: null } });
+        await prisma.hrTimeWorkerRun.update({ where: { id: run.id }, data: { status: run.attemptCount + 1 >= 5 ? "DEAD_LETTER" : "FAILED", safeError: (error instanceof Error ? error.message : "Time worker failed").slice(0, 1000), leaseToken: null, leaseExpiresAt: null } });
         results.push({ organizationId: organization.id, status: "FAILED", processed: 0 });
       }
     const interpretationRun = await claimRun(organization.id, "TIME_INTERPRETATION_SWEEP", interpretationWindowKey, now);
@@ -162,7 +162,7 @@ export async function runTimeOperationalWindow(now = new Date()) {
       await prisma.hrTimeWorkerRun.update({ where: { id: interpretationRun.id }, data: { status: "SUCCEEDED", completedAt: new Date(), leaseToken: null, leaseExpiresAt: null, checkpoint: { processed } } });
       results.push({ organizationId: organization.id, status: "INTERPRETED", processed });
     } catch (error) {
-      await prisma.hrTimeWorkerRun.update({ where: { id: interpretationRun.id }, data: { status: interpretationRun.attemptCount >= 5 ? "DEAD_LETTER" : "FAILED", safeError: (error instanceof Error ? error.message : "Time interpretation worker failed").slice(0, 1000), leaseToken: null, leaseExpiresAt: null } });
+      await prisma.hrTimeWorkerRun.update({ where: { id: interpretationRun.id }, data: { status: interpretationRun.attemptCount + 1 >= 5 ? "DEAD_LETTER" : "FAILED", safeError: (error instanceof Error ? error.message : "Time interpretation worker failed").slice(0, 1000), leaseToken: null, leaseExpiresAt: null } });
       results.push({ organizationId: organization.id, status: "FAILED", processed: 0 });
     }
   }

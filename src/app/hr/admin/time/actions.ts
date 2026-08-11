@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { prisma } from "@/lib/prisma";
-import { approveAttendancePeriod, createOrSubmitAttendancePeriod, lockAttendancePeriod, reviewTimeCorrection } from "@/lib/hr/time/commands";
+import { approveAttendancePeriod, createOrSubmitAttendancePeriod, lockAttendancePeriod, recoverDeadLetterTimeRun, reviewTimeCorrection } from "@/lib/hr/time/commands";
 import { assignTimePolicy, createTimePolicyVersion } from "@/lib/hr/time/policy-commands";
 
 export async function createTimePolicyAction(formData: FormData) {
@@ -40,5 +40,11 @@ export async function transitionAttendancePeriodAction(formData: FormData) {
 export async function reviewTimeCorrectionAction(formData: FormData) {
   const auth = await requirePermission("time.correction.review");
   await reviewTimeCorrection({ organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "HR" }, { correctionId: String(formData.get("correctionId")), expectedVersion: Number(formData.get("expectedVersion")), decision: String(formData.get("decision")) as "APPROVED" | "RETURNED" | "REJECTED", reason: String(formData.get("reason")) });
+  revalidatePath("/hr/admin/time");
+}
+
+export async function recoverTimeWorkerAction(formData: FormData) {
+  const auth = await requirePermission("time.policy.manage");
+  await recoverDeadLetterTimeRun({ organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "HR" }, { runId: String(formData.get("runId")), expectedAttemptCount: Number(formData.get("expectedAttemptCount")), reason: String(formData.get("reason")) });
   revalidatePath("/hr/admin/time");
 }

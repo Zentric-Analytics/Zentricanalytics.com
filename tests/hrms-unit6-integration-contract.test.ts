@@ -48,6 +48,7 @@ describe("Unit 6 integration contract", () => {
     const worker = read("src/lib/hr/time/worker.ts");
     expect(worker).toContain("leaseExpiresAt");
     expect(worker).toContain('"DEAD_LETTER"');
+    expect(worker).toContain("attemptCount + 1 >= 5");
     expect(worker).toContain('"TIME_INTERPRETATION_SWEEP"');
     expect(worker).toContain("interpretApprovedTimesheets");
     expect(worker).toContain("interpretClosedClockSessions");
@@ -91,6 +92,8 @@ describe("Unit 6 integration contract", () => {
     expect(managerPage).toContain('value="IN_REVIEW"');
     expect(managerPage).toContain("Start review");
     expect(read("src/app/hr/admin/time/page.tsx")).toContain('requirePermission("time.read_all")');
+    expect(read("src/app/hr/admin/time/page.tsx")).toContain("recoverTimeWorkerAction");
+    expect(read("src/lib/hr/time/commands.ts")).toContain("hr.time.worker.dead_letter_recovered");
     expect(read("src/app/hr/admin/time/page.tsx")).toContain("assignTimePolicyAction");
     const policyCommands = read("src/lib/hr/time/policy-commands.ts");
     expect(policyCommands).toContain("Effective time-policy assignments cannot overlap");

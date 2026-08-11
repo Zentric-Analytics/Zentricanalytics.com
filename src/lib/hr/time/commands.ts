@@ -216,3 +216,13 @@ export async function claimAuthoritativeTimeExport(context: Context, input: { pe
     return { period, entries };
   }, { isolationLevel: "Serializable" }));
 }
+
+export async function recoverDeadLetterTimeRun(context: Context, input: { runId: string; expectedAttemptCount: number; reason: string }) {
+  if (!input.reason.trim()) throw new Error("Dead-letter recovery requires an explicit reason.");
+  return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
+    const run = await tx.hrTimeWorkerRun.findFirstOrThrow({ where: { id: input.runId, organizationId: context.organizationId, status: "DEAD_LETTER", attemptCount: input.expectedAttemptCount } });
+    const recovered = await tx.hrTimeWorkerRun.update({ where: { id: run.id }, data: { status: "FAILED", safeError: null, leaseToken: null, leaseExpiresAt: null } });
+    await appendHrAudit(tx, { ...context, entityType: "HrTimeWorkerRun", entityId: run.id, action: "hr.time.worker.dead_letter_recovered", previousValues: { status: run.status, attemptCount: run.attemptCount, safeErrorPresent: Boolean(run.safeError) }, newValues: { status: recovered.status, attemptCount: recovered.attemptCount }, reason: input.reason, correlationId: run.correlationId });
+    return recovered;
+  }, { isolationLevel: "Serializable" }));
+}
