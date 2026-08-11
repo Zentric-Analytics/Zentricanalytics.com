@@ -24,7 +24,7 @@ describe("Unit 6 integration contract", () => {
     expect(commands).toContain("active tenant-scoped employment assignment");
     expect(commands).toContain("time-timesheet-submitted:");
     expect(commands).toContain('template: "hr-time-timesheet-submitted"');
-    expect(commands).toContain("JSON.stringify(previous.inputSnapshot) === JSON.stringify(input.inputSnapshot)");
+    expect(commands).toContain("stableJsonStringify(previous.inputSnapshot) === stableJsonStringify(input.inputSnapshot)");
   });
 
   it("fails closed for self approval, stale versions, unlocked exports, and duplicate claims", () => {

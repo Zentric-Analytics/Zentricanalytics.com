@@ -4,6 +4,19 @@ import { z } from "zod";
 export const trackingModes = ["NONE", "EXCEPTION_BASED", "CLOCK", "TIMESHEET"] as const;
 export type TrackingMode = (typeof trackingModes)[number];
 
+export function stableJsonStringify(value: unknown): string {
+  const normalize = (item: unknown): unknown => {
+    if (Array.isArray(item)) return item.map(normalize);
+    if (item !== null && typeof item === "object") {
+      return Object.fromEntries(Object.entries(item as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, child]) => [key, normalize(child)]));
+    }
+    return item;
+  };
+  return JSON.stringify(normalize(value));
+}
+
 export type PolicyContext = {
   employeeId: string;
   workRelationshipId: string;

@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { assertIdempotentReplay, assertIndependentApproval, assertNoScheduleOverlap, assertPeriodLock, assertTimesheetTransition, classifyOvertime, interpretAttendance, resolveTimePolicy, transitionClock, validateTimeEvent } from "../src/lib/hr/time/domain";
+import { assertIdempotentReplay, assertIndependentApproval, assertNoScheduleOverlap, assertPeriodLock, assertTimesheetTransition, classifyOvertime, interpretAttendance, resolveTimePolicy, stableJsonStringify, transitionClock, validateTimeEvent } from "../src/lib/hr/time/domain";
 
 describe("Unit 6 time and attendance domain", () => {
+  it("compares persisted JSON snapshots independently of object key order", () => {
+    const submitted = { sourceType: "TIMESHEET", entry: { date: "2096-03-10", source: "EMPLOYEE", minutes: 2400 }, entryIndex: 0 };
+    const persisted = { entry: { minutes: 2400, source: "EMPLOYEE", date: "2096-03-10" }, entryIndex: 0, sourceType: "TIMESHEET" };
+    expect(stableJsonStringify(submitted)).toBe(stableJsonStringify(persisted));
+  });
+
   it("resolves explicit and more-specific policy deterministically and rejects ambiguity", () => {
     const at = new Date("2026-08-11T00:00:00Z");
     const context = { employeeId: "e1", workRelationshipId: "w1", assignmentId: "a1", legalEntityId: "le1", departmentId: "d1" };

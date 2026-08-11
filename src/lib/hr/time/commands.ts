@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
-import { assertIndependentApproval, assertPeriodLock, assertTimesheetTransition, interpretAttendance, transitionClock, validateTimeEvent } from "./domain";
+import { assertIndependentApproval, assertPeriodLock, assertTimesheetTransition, interpretAttendance, stableJsonStringify, transitionClock, validateTimeEvent } from "./domain";
 
 type Context = { organizationId: string; actorUserId: string; actorRole?: string };
 
@@ -99,7 +99,7 @@ export async function recordAttendanceInterpretation(context: Context, input: { 
     const result = interpretAttendance(input) as ReturnType<typeof interpretAttendance> & { outcome: HrAttendanceOutcome };
     const day = await tx.hrAttendanceDay.upsert({ where: { organizationId_assignmentId_businessDate: { organizationId: context.organizationId, assignmentId: input.assignmentId, businessDate: input.businessDate } }, update: {}, create: { organizationId: context.organizationId, employeeId: input.employeeId, workRelationshipId: input.workRelationshipId, assignmentId: input.assignmentId, businessDate: input.businessDate, currentOutcome: result.outcome, correlationId: input.correlationId ?? crypto.randomUUID() } });
     const previous = await tx.hrAttendanceInterpretation.findFirst({ where: { attendanceDayId: day.id }, orderBy: { version: "desc" } });
-    if (previous && JSON.stringify(previous.inputSnapshot) === JSON.stringify(input.inputSnapshot)
+    if (previous && stableJsonStringify(previous.inputSnapshot) === stableJsonStringify(input.inputSnapshot)
       && previous.outcome === result.outcome && previous.scheduledMinutes === result.scheduledMinutes
       && previous.workedMinutes === result.workedMinutes && previous.paidLeaveMinutes === result.paidLeaveMinutes) return previous;
     const nextVersion = previous ? day.currentVersion + 1 : 1;
