@@ -66,6 +66,10 @@ async function interpretApprovedTimesheets(organizationId: string) {
 export async function runTimeOperationalWindow(now = new Date()) {
   const organizations = await prisma.hrOrganization.findMany({ select: { id: true } });
   const windowKey = now.toISOString().slice(0, 13);
+  // Interpretation must be eligible on every scheduler invocation. Reusing the
+  // hourly exception window can strand timesheets approved after that hour's
+  // first successful run until the next hour.
+  const interpretationWindowKey = now.toISOString().slice(0, 16);
   const results: Array<{ organizationId: string; status: string; processed: number }> = [];
   for (const organization of organizations) {
     const run = await claimRun(organization.id, "TIME_EXCEPTION_SWEEP", windowKey, now);
@@ -79,7 +83,7 @@ export async function runTimeOperationalWindow(now = new Date()) {
         await prisma.hrTimeWorkerRun.update({ where: { id: run.id }, data: { status: run.attemptCount >= 5 ? "DEAD_LETTER" : "FAILED", safeError: (error instanceof Error ? error.message : "Time worker failed").slice(0, 1000), leaseToken: null, leaseExpiresAt: null } });
         results.push({ organizationId: organization.id, status: "FAILED", processed: 0 });
       }
-    const interpretationRun = await claimRun(organization.id, "TIME_INTERPRETATION_SWEEP", windowKey, now);
+    const interpretationRun = await claimRun(organization.id, "TIME_INTERPRETATION_SWEEP", interpretationWindowKey, now);
     if (!interpretationRun) continue;
     try {
       const processed = await interpretApprovedTimesheets(organization.id);
