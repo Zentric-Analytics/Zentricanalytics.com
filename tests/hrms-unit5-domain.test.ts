@@ -64,6 +64,9 @@ describe("Unit 5 leave domain", () => {
     expect(accounting).toContain("organizationId?: string");
     expect(longAbsence).toContain('type: "RETURN_FROM_LEAVE"');
     expect(longAbsence).toContain('employmentStatus: "ACTIVE"');
+    expect(longAbsence).toContain('unit5-long-absence-return:${absence.correlationId}');
+    expect(longAbsence).toContain("returnCorrelationId");
+    expect(longAbsence).toContain("correlationId: returnCorrelationId");
     const employeeAction = fs.readFileSync(path.join(process.cwd(), "src/app/hr/employee/leave/actions.ts"), "utf8");
     expect(employeeAction.match(/Long-term absence requires an active primary employment assignment/g)).toHaveLength(2);
     expect(employeeAction).toContain('status: "ACTIVE", isPrimary: true');
