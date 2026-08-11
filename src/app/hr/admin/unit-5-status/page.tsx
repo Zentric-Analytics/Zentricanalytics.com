@@ -9,10 +9,10 @@ const items = [
   ["Migration status", "39 migrations applied on staging; none pending"],
   ["5A–5F status", "5A policy/calendar built · 5B authoritative ledger built · 5C immutable request revisions built · 5D configured workflow governance built · 5E Unit 4 integration built · 5F operational workers/reporting built"],
   ["Tests run", "614 automated tests passing; TypeScript, ESLint, Prisma validation, and production build passing"],
-  ["Browser workflow", "Request and manager approval passed; reservation converted to consumption exactly once; completion and worker replay passed"],
+  ["Browser workflow", "Request, approval, reservation, start, consumption, completion, governed cancellation/reversal, and HR adjustment passed"],
   ["Defects fixed", "Submission reservation removed; carryover projections corrected; final approval made atomic; immutable revisions preserved; employee history now renders the canonical Unit 5 transition"],
   ["Blockers", "None currently; production remains untouched"],
-  ["Next gate", "Cancellation/reversal, governed HR adjustment, privacy/tenant matrix, concurrency, notifications, load, and restore correlation"],
+  ["Next gate", "Privacy/tenant matrix, remaining concurrency races, long-term absence/return, load, and restore correlation"],
 ] as const;
 
 export default function Unit5StatusPage() {

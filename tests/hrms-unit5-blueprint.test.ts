@@ -32,7 +32,7 @@ describe("Unit 5 blueprint", () => {
     expect(status).toContain("STAGING VALIDATION IN PROGRESS");
     expect(status).not.toContain("PASS — Unit 5 Production Ready");
     expect(status).toContain("production untouched");
-    expect(status).toContain("Cancellation/reversal, governed HR adjustment");
+    expect(status).toContain("governed cancellation/reversal, and HR adjustment passed");
     expect(read("src/app/unit-5-status/page.tsx")).toContain("unit-5-status/page");
     expect(status).not.toMatch(/DATABASE_URL|SECRET_ACCESS_KEY|AUTH_SECRET/);
   });
