@@ -119,4 +119,14 @@ describe("Unit 5 leave domain", () => {
     expect(script).toContain("competing.length - winners");
     expect(script).toContain("duplicateEntries !== 1");
   });
+
+  it("ships a staging-only effective-date boundary and replay gate", () => {
+    const boundary = fs.readFileSync(path.join(process.cwd(), "scripts/hr-unit5-staging-boundary.ts"), "utf8");
+    expect(boundary).toContain('HR_UNIT5_BOUNDARY_CONFIRM !== "staging-only"');
+    expect(boundary).toContain('HR_ENVIRONMENT ?? ""');
+    expect(boundary).toContain("applyWorkforceEvent");
+    expect(boundary).toContain("runUnit5OperationalWindow");
+    expect(boundary.match(/applyWorkforceEvent/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(boundary.match(/runUnit5OperationalWindow/g)?.length).toBeGreaterThanOrEqual(3);
+  });
 });
