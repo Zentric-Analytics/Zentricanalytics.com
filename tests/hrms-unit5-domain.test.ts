@@ -127,7 +127,7 @@ describe("Unit 5 leave domain", () => {
 
   it("permits only isolated Unit 4, Unit 5, or Unit 6 restore targets", () => {
     const script = fs.readFileSync(path.join(process.cwd(), "scripts/hr-unit4-restore-correlation.mjs"), "utf8");
-    expect(script).toContain("unit6_restore");
+    expect(script).toContain("unit6_restore(?:_|$)");
     expect(script).toContain("6_restore");
     expect(script).toContain('DR_RESTORE_CONFIRM !== "isolated-restore"');
     expect(script).toContain("temporary plaintext cleanup");
