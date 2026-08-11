@@ -5,12 +5,13 @@ const items = [
   ["Environment", `${environment} — staging implementation only; production unchanged`],
   ["Branch", "feature/hrms-unit-06-time-attendance-blueprint"],
   ["HEAD SHA", deployedHead],
-  ["Current phase", "Unit 6A–6F implementation: corrections, approvals, authoritative handoff, and staging readiness"],
+  ["Current phase", "Unit 6A–6F staging validation: governed lifecycle, concurrency, workers, privacy, load, and recovery"],
   ["Implemented", "Effective policies and schedules, immutable event capture, clock sessions, timesheets, attendance interpretation, corrections, period locks, export claims, worker leases, and scoped workspaces"],
   ["Locked scope", "Exception-based salaried, clock-based hourly, and timesheet contractors; kiosk, GPS, geofencing, facial, and biometric capture excluded"],
-  ["Tests", "653/653 automated tests passing at the foundation milestone; TypeScript, ESLint, Prisma validation, and production build pass"],
+  ["Tests", "659/659 automated tests passing; TypeScript, ESLint, Prisma validation, and production build pass"],
   ["Defects fixed", "Open-session uniqueness, conflicting idempotency replay, invalid clock sequences, self-approval, schedule overlap, stale versions, and worker duplicate claims fail closed"],
-  ["Next gate", "Complete correction/export UI and regression coverage, then deploy the exact candidate to staging for real database and browser validation"],
+  ["Staging deployment", "dep-d9tjugqjobas73d6knu0 — exact SHA live; 40 migrations applied; preflight ready"],
+  ["Next gate", "Real PostgreSQL lifecycle/concurrency, browser authorization, notifications, worker recovery, safe load, and isolated restore correlation"],
 ] as const;
 
 export default function Unit6StatusPage() {
