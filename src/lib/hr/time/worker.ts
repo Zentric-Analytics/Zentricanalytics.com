@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
@@ -43,6 +44,15 @@ async function interpretApprovedTimesheets(organizationId: string) {
       const businessDate = new Date(`${entry.date}T00:00:00.000Z`);
       if (Number.isNaN(businessDate.getTime())) continue;
       const scheduledMinutes = typeof entry.scheduledMinutes === "number" ? entry.scheduledMinutes : entry.minutes;
+      const inputSnapshot = { sourceType: "TIMESHEET", timesheetId: sheet.id, timesheetVersion: sheet.version, evidenceVersion: evidence.version, entryIndex, entry: rawEntry } as Prisma.InputJsonObject;
+      const existing = await prisma.hrAttendanceInterpretation.findFirst({
+        where: {
+          attendanceDay: { organizationId, assignmentId: sheet.assignmentId, businessDate },
+          inputSnapshot: { equals: inputSnapshot },
+        },
+        select: { id: true },
+      });
+      if (existing) continue;
       await recordAttendanceInterpretation(
         { organizationId, actorUserId: sheet.approvedById ?? evidence.createdById, actorRole: "WORKER" },
         {
@@ -53,7 +63,7 @@ async function interpretApprovedTimesheets(organizationId: string) {
           trackingMode: "TIMESHEET",
           scheduledMinutes,
           workedMinutes: entry.minutes,
-          inputSnapshot: { sourceType: "TIMESHEET", timesheetId: sheet.id, timesheetVersion: sheet.version, evidenceVersion: evidence.version, entryIndex, entry: rawEntry },
+          inputSnapshot,
           correlationId: sheet.correlationId,
         },
       );

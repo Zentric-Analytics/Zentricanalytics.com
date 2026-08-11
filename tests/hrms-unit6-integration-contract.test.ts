@@ -46,6 +46,8 @@ describe("Unit 6 integration contract", () => {
     expect(worker).toContain("organizationId_jobType_windowKey");
     expect(worker).toContain("const interpretationWindowKey = now.toISOString().slice(0, 16)");
     expect(worker).toContain('claimRun(organization.id, "TIME_INTERPRETATION_SWEEP", interpretationWindowKey, now)');
+    expect(worker).toContain("inputSnapshot: { equals: inputSnapshot }");
+    expect(worker).toContain("if (existing) continue");
   });
 
   it("ships a staging-only PostgreSQL concurrency gate", () => {
