@@ -101,12 +101,22 @@ try {
 
   const decisionPeriod = await makePeriod("approval-cancellation", 10, { granted: 2, reserved: 2 });
   const expectedDecisionVersion = decisionPeriod.version;
-  const decide = async (decision) => prisma.$transaction(async (tx) => {
-    const claimed = await tx.hrLeaveAccountPeriod.updateMany({ where: { id: decisionPeriod.id, version: expectedDecisionVersion }, data: { version: { increment: 1 }, ...(decision === "CANCELLED" ? { reserved: { decrement: 2 } } : {}) } });
-    if (claimed.count !== 1) return { applied: false, reason: "stale-version" };
-    if (decision === "CANCELLED") await tx.hrLeaveLedgerEntry.create({ data: { organizationId: organization.id, accountPeriodId: decisionPeriod.id, leavePolicyId: policy.id, kind: "RESERVATION_RELEASE", amount: 2, unit: policy.leaveType.unit, effectiveAt: new Date(), sourceType: "UNIT5_CONCURRENCY_FIXTURE", sourceId: `${run}:approval-cancellation`, reason: run, correlationId: `${run}:approval-cancellation`, idempotencyKey: `${run}:approval-cancellation:cancelled` } });
-    return { applied: true, decision };
-  }, { isolationLevel: "Serializable" });
+  const decide = async (decision) => {
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        return await prisma.$transaction(async (tx) => {
+          const claimed = await tx.hrLeaveAccountPeriod.updateMany({ where: { id: decisionPeriod.id, version: expectedDecisionVersion }, data: { version: { increment: 1 }, ...(decision === "CANCELLED" ? { reserved: { decrement: 2 } } : {}) } });
+          if (claimed.count !== 1) return { applied: false, reason: "stale-version" };
+          if (decision === "CANCELLED") await tx.hrLeaveLedgerEntry.create({ data: { organizationId: organization.id, accountPeriodId: decisionPeriod.id, leavePolicyId: policy.id, kind: "RESERVATION_RELEASE", amount: 2, unit: policy.leaveType.unit, effectiveAt: new Date(), sourceType: "UNIT5_CONCURRENCY_FIXTURE", sourceId: `${run}:approval-cancellation`, reason: run, correlationId: `${run}:approval-cancellation`, idempotencyKey: `${run}:approval-cancellation:cancelled` } });
+          return { applied: true, decision };
+        }, { isolationLevel: "Serializable" });
+      } catch (error) {
+        if (error?.code === "P2034" && attempt < 3) continue;
+        throw error;
+      }
+    }
+    throw new Error("Approval versus cancellation retry budget exhausted.");
+  };
   const approvalCancellation = await Promise.all([decide("APPROVED"), decide("CANCELLED")]);
   if (approvalCancellation.filter(({ applied }) => applied).length !== 1 || approvalCancellation.filter(({ reason }) => reason === "stale-version").length !== 1) throw new Error("Approval versus cancellation did not produce one winner and one stale loser.");
 
