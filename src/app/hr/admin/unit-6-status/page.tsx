@@ -8,10 +8,11 @@ const items = [
   ["Current phase", "Unit 6A–6F staging validation: governed lifecycle, concurrency, workers, privacy, load, and recovery"],
   ["Implemented", "Effective policies and schedules, immutable event capture, clock sessions, timesheets, attendance interpretation, corrections, period locks, export claims, worker leases, and scoped workspaces"],
   ["Locked scope", "Exception-based salaried, clock-based hourly, and timesheet contractors; kiosk, GPS, geofencing, facial, and biometric capture excluded"],
-  ["Tests", "659/659 automated tests passing; TypeScript, ESLint, Prisma validation, and production build pass"],
-  ["Defects fixed", "Open-session uniqueness, conflicting idempotency replay, invalid clock sequences, self-approval, schedule overlap, stale versions, and worker duplicate claims fail closed"],
-  ["Staging deployment", "dep-d9tjugqjobas73d6knu0 — exact SHA live; 40 migrations applied; preflight ready"],
-  ["Next gate", "Real PostgreSQL lifecycle/concurrency, browser authorization, notifications, worker recovery, safe load, and isolated restore correlation"],
+  ["Tests", "660/660 automated tests passing; TypeScript, ESLint, Prisma validation, and production build pass"],
+  ["Defects fixed", "Migration BOM and canonical event-source fixture corrected; open-session uniqueness, conflicting replay, invalid clock sequences, self-approval, overlaps, stale versions, and duplicate worker claims fail closed"],
+  ["Staging deployment", "dep-d9tk5f2d0e5s739d5ptg — exact SHA live; 40 migrations applied; preflight ready"],
+  ["Passed staging gates", "Real PostgreSQL concurrency, governed admin policy/period lifecycle, correlated audit, worker authentication/idempotency, integrity checks, and 250-request load smoke"],
+  ["Next gate", "Employee/manager/auditor browser privacy, recipient-backed notifications, failure recovery, and fresh encrypted isolated restore correlation"],
 ] as const;
 
 export default function Unit6StatusPage() {
