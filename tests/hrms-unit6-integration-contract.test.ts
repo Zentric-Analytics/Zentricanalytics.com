@@ -30,6 +30,12 @@ describe("Unit 6 integration contract", () => {
   it("fails closed for self approval, stale versions, unlocked exports, and duplicate claims", () => {
     const commands = read("src/lib/hr/time/commands.ts");
     expect(commands).toContain("A correction requester cannot approve their own correction");
+    expect(commands).toContain("employeeId: input.employeeId");
+    expect(commands).toContain("An open correction already exists for this exact time record");
+    expect(commands).toContain("This correction is stale because the attendance record changed");
+    expect(commands).toContain('sourceType: "CORRECTION"');
+    expect(commands).toContain('status: "APPLIED"');
+    expect(commands).toContain('action: "hr.time.correction.applied"');
     expect(commands).toContain("version: input.expectedVersion");
     expect(commands).toContain('status: { in: ["LOCKED", "CORRECTED_AFTER_LOCK"] }');
     expect(commands).toContain("already claimed by another export");

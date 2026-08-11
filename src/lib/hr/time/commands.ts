@@ -124,18 +124,45 @@ export async function lockAttendancePeriod(context: Context, input: { periodId: 
 
 export async function requestTimeCorrection(context: Context, input: { employeeId: string; attendanceDayId?: string; timesheetId?: string; sourceEventId?: string; requestedChanges: Prisma.InputJsonValue; reason: string }) {
   if (!input.attendanceDayId && !input.timesheetId && !input.sourceEventId) throw new Error("A correction must identify the governed time record being corrected.");
-  return prisma.$transaction(async (tx) => {
+  return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
     await tx.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: context.organizationId } });
-    const correction = await tx.hrTimeCorrection.create({ data: { organizationId: context.organizationId, employeeId: input.employeeId, attendanceDayId: input.attendanceDayId, timesheetId: input.timesheetId, sourceEventId: input.sourceEventId, status: "SUBMITTED", requestedChanges: input.requestedChanges, reason: input.reason, requestedById: context.actorUserId, correlationId: crypto.randomUUID() } });
+    const attendanceDay = input.attendanceDayId ? await tx.hrAttendanceDay.findFirstOrThrow({ where: { id: input.attendanceDayId, organizationId: context.organizationId, employeeId: input.employeeId } }) : null;
+    if (input.timesheetId) await tx.hrTimesheet.findFirstOrThrow({ where: { id: input.timesheetId, organizationId: context.organizationId, employeeId: input.employeeId } });
+    if (input.sourceEventId) await tx.hrTimeEvent.findFirstOrThrow({ where: { id: input.sourceEventId, organizationId: context.organizationId, employeeId: input.employeeId } });
+    const existingOpen = await tx.hrTimeCorrection.findFirst({ where: { organizationId: context.organizationId, employeeId: input.employeeId, attendanceDayId: input.attendanceDayId, timesheetId: input.timesheetId, sourceEventId: input.sourceEventId, status: { in: ["DRAFT", "SUBMITTED", "IN_REVIEW", "RETURNED", "APPROVED"] } } });
+    if (existingOpen) throw new Error("An open correction already exists for this exact time record.");
+    const requestedChanges = { ...(input.requestedChanges as Prisma.InputJsonObject), sourceAttendanceVersion: attendanceDay?.currentVersion } as Prisma.InputJsonObject;
+    const correction = await tx.hrTimeCorrection.create({ data: { organizationId: context.organizationId, employeeId: input.employeeId, attendanceDayId: input.attendanceDayId, timesheetId: input.timesheetId, sourceEventId: input.sourceEventId, status: "SUBMITTED", requestedChanges, reason: input.reason, requestedById: context.actorUserId, correlationId: crypto.randomUUID() } });
     await appendHrAudit(tx, { ...context, entityType: "HrTimeCorrection", entityId: correction.id, action: "hr.time.correction.submitted", newValues: { employeeId: input.employeeId, attendanceDayId: input.attendanceDayId, timesheetId: input.timesheetId, sourceEventId: input.sourceEventId, version: correction.version }, reason: input.reason, correlationId: correction.correlationId });
     return correction;
-  }, { isolationLevel: "Serializable" });
+  }, { isolationLevel: "Serializable" }));
 }
 
 export async function reviewTimeCorrection(context: Context, input: { correctionId: string; expectedVersion: number; decision: "APPROVED" | "RETURNED" | "REJECTED"; reason: string }) {
   return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
     const correction = await tx.hrTimeCorrection.findFirstOrThrow({ where: { id: input.correctionId, organizationId: context.organizationId, status: { in: ["SUBMITTED", "IN_REVIEW"] }, version: input.expectedVersion } });
     if (correction.requestedById === context.actorUserId) throw new Error("A correction requester cannot approve their own correction.");
+    if (input.decision === "APPROVED" && correction.attendanceDayId) {
+      const day = await tx.hrAttendanceDay.findFirstOrThrow({ where: { id: correction.attendanceDayId, organizationId: context.organizationId, employeeId: correction.employeeId } });
+      const changes = correction.requestedChanges as { requestedClockIn?: unknown; requestedClockOut?: unknown; sourceAttendanceVersion?: unknown };
+      if (changes.sourceAttendanceVersion !== day.currentVersion) throw new Error("This correction is stale because the attendance record changed. Submit a new correction against the current version.");
+      if (typeof changes.requestedClockIn !== "string" || typeof changes.requestedClockOut !== "string") throw new Error("Approved attendance corrections require governed clock-in and clock-out values.");
+      const requestedClockIn = new Date(changes.requestedClockIn);
+      const requestedClockOut = new Date(changes.requestedClockOut);
+      if (Number.isNaN(requestedClockIn.getTime()) || Number.isNaN(requestedClockOut.getTime()) || requestedClockOut <= requestedClockIn) throw new Error("Correction clock-out must be after clock-in.");
+      const previous = await tx.hrAttendanceInterpretation.findFirstOrThrow({ where: { attendanceDayId: day.id, version: day.currentVersion } });
+      const workedMinutes = Math.max(0, Math.round((requestedClockOut.getTime() - requestedClockIn.getTime()) / 60_000));
+      const result = interpretAttendance({ trackingMode: "CLOCK", scheduledMinutes: previous.scheduledMinutes, workedMinutes }) as ReturnType<typeof interpretAttendance> & { outcome: HrAttendanceOutcome };
+      const approved = await tx.hrTimeCorrection.update({ where: { id: correction.id }, data: { status: "APPROVED", version: { increment: 1 }, reviewedById: context.actorUserId, reviewedAt: new Date() } });
+      await appendHrAudit(tx, { ...context, entityType: "HrTimeCorrection", entityId: correction.id, action: "hr.time.correction.approved", previousValues: { status: correction.status, version: correction.version }, newValues: { status: "APPROVED", version: approved.version }, reason: input.reason, correlationId: correction.correlationId });
+      const interpretation = await tx.hrAttendanceInterpretation.create({ data: { attendanceDayId: day.id, version: day.currentVersion + 1, outcome: result.outcome, scheduledMinutes: result.scheduledMinutes, workedMinutes: result.workedMinutes, paidLeaveMinutes: result.paidLeaveMinutes, unpaidAbsenceMinutes: result.outcome === "ABSENT" ? result.scheduledMinutes : 0, underTimeMinutes: result.underTimeMinutes, overtimeMinutes: result.overtimeMinutes, breakMinutes: 0, inputSnapshot: { sourceType: "CORRECTION", correctionId: correction.id, sourceAttendanceVersion: day.currentVersion, requestedClockIn: requestedClockIn.toISOString(), requestedClockOut: requestedClockOut.toISOString() }, supersedesId: previous.id, createdById: context.actorUserId } });
+      await tx.hrAttendanceDay.update({ where: { id: day.id }, data: { currentVersion: { increment: 1 }, currentOutcome: result.outcome } });
+      const lockedPeriod = await tx.hrAttendancePeriod.findFirst({ where: { organizationId: context.organizationId, status: "LOCKED", startsOn: { lte: day.businessDate }, endsOn: { gt: day.businessDate } } });
+      const applied = await tx.hrTimeCorrection.update({ where: { id: correction.id }, data: { status: "APPLIED", version: { increment: 1 }, appliedInterpretationId: interpretation.id, payrollImpact: Boolean(lockedPeriod) } });
+      if (lockedPeriod) await tx.hrAttendancePeriod.update({ where: { id: lockedPeriod.id }, data: { status: "CORRECTED_AFTER_LOCK", version: { increment: 1 } } });
+      await appendHrAudit(tx, { ...context, entityType: "HrAttendanceInterpretation", entityId: interpretation.id, action: "hr.time.correction.applied", previousValues: { attendanceVersion: day.currentVersion, outcome: previous.outcome }, newValues: { attendanceVersion: day.currentVersion + 1, outcome: result.outcome, workedMinutes, correctionId: correction.id, payrollImpact: Boolean(lockedPeriod) }, reason: input.reason, correlationId: correction.correlationId });
+      return applied;
+    }
     const updated = await tx.hrTimeCorrection.update({ where: { id: correction.id }, data: { status: input.decision, version: { increment: 1 }, reviewedById: context.actorUserId, reviewedAt: new Date() } });
     await appendHrAudit(tx, { ...context, entityType: "HrTimeCorrection", entityId: correction.id, action: `hr.time.correction.${input.decision.toLowerCase()}`, previousValues: { status: correction.status, version: correction.version }, newValues: { status: input.decision, version: correction.version + 1 }, reason: input.reason, correlationId: correction.correlationId });
     return updated;
