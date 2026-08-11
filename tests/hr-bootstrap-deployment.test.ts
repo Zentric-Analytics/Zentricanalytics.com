@@ -61,7 +61,7 @@ function makeDatabase(initial?: Partial<State>, failAudit = false) {
     hrEmployeeDocument: { count: vi.fn(async () => 0) },
     hrAsset: { count: vi.fn(async () => 0) },
     hrLifecycleTemplate: { count: vi.fn(async () => 0) },
-    hrWorkflowDefinition: { count: vi.fn(async () => 0) },
+    hrWorkflowDefinition: { count: vi.fn(async () => 0), findFirst: vi.fn(async (): Promise<{ id: string } | null> => ({ id: "workflow-definition-1" })) },
     $transaction: vi.fn(async (operation: (tx: object) => Promise<void>) => {
       const snapshot = { organization: state.organization, users: [...state.users], roles: new Map(state.roles), permissions: new Map(state.permissions), adminUserId: state.adminUserId, auditCount: state.auditCount, writes: state.writes };
       const tx = {
@@ -153,6 +153,14 @@ describe("read-only HRMS preflight", () => {
     const writes = db.state.writes;
     await expect(runHrPreflight(db, validEnv)).resolves.toMatchObject({ ready: true, issues: [] });
     expect(db.state.writes).toBe(writes);
+  });
+
+  it("blocks production when the Unit 4 workforce approval definition is missing", async () => {
+    const db = makeDatabase();
+    await runHrBootstrap(db, validEnv);
+    db.hrWorkflowDefinition.findFirst.mockResolvedValueOnce(null);
+    const result = await runHrPreflight(db, { ...validEnv, APP_ENV: "production", APPLICATION_BASE_URL: "https://www.example.test" });
+    expect(result.issues).toContain("No active production HrWorkforceEvent approval workflow definition exists.");
   });
 
   it("leaves legacy recruitment authentication untouched", () => {

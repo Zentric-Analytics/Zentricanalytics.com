@@ -80,15 +80,19 @@ export async function runHrPreflight(prisma, env, report = () => undefined, opti
   }
   if (!organization) issues.push("HRMS organization is not initialized.");
   if (organization) {
-    const [roleCount, permissionCount, activeAdmin, privilegedWithoutMfa] = await Promise.all([
+    const [roleCount, permissionCount, activeAdmin, privilegedWithoutMfa, workforceApprovalDefinition] = await Promise.all([
       prisma.hrRole.count({ where: { organizationId: organization.id, key: { in: HR_ROLE_KEYS } } }),
       prisma.hrPermission.count({ where: { organizationId: organization.id, key: { in: HR_PERMISSION_KEYS } } }),
       prisma.hrUserRole.findFirst({ where: { revokedAt: null, role: { organizationId: organization.id, key: "ADMIN" }, user: { status: "ACTIVE" } }, select: { id: true } }),
       prisma.hrUser.count({ where: { organizationId: organization.id, status: "ACTIVE", mfaEnabled: false, roles: { some: { revokedAt: null, role: { key: { in: ["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN"] } } } } } }),
+      configuration.appEnv === "production"
+        ? prisma.hrWorkflowDefinition.findFirst({ where: { organizationId: organization.id, subjectType: "HrWorkforceEvent", active: true }, select: { id: true } })
+        : Promise.resolve({ id: "not-required-outside-production" }),
     ]);
     if (roleCount !== HR_ROLE_KEYS.length) issues.push("HRMS role initialization is incomplete.");
     if (permissionCount !== HR_PERMISSION_KEYS.length) issues.push("HRMS permission initialization is incomplete.");
     if (!activeAdmin) issues.push("HRMS is not initialized: no active ADMIN account exists. Run the documented one-time bootstrap procedure.");
+    if (configuration.appEnv === "production" && !workforceApprovalDefinition) issues.push("No active production HrWorkforceEvent approval workflow definition exists.");
     if (["staging", "production"].includes(configuration.appEnv) && privilegedWithoutMfa && !options.allowInitialMfaEnrollment) issues.push(`${privilegedWithoutMfa} active privileged account(s) do not have MFA enabled.`);
     if (privilegedWithoutMfa && options.allowInitialMfaEnrollment) report(`INITIALIZATION ONLY ${privilegedWithoutMfa} privileged account(s) must enroll MFA before the next release.`);
   }

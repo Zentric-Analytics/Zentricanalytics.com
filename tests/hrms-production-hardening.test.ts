@@ -86,7 +86,14 @@ describe("HRMS production hardening", () => {
   });
   it("requires production storage, workers, monitoring, backups, PITR, restore drills, and privileged MFA", () => {
     const preflight = read("scripts/hr-preflight-lib.mjs");
-    for (const key of ["OBJECT_STORAGE_PROVIDER", "DOCUMENT_SCANNER_SECRET", "MONITORING_SECRET", "productionBackupPolicyIssues", "privilegedWithoutMfa"]) expect(preflight).toContain(key);
+    for (const key of ["OBJECT_STORAGE_PROVIDER", "DOCUMENT_SCANNER_SECRET", "MONITORING_SECRET", "productionBackupPolicyIssues", "privilegedWithoutMfa", "HrWorkforceEvent approval workflow definition"]) expect(preflight).toContain(key);
+  });
+  it("renders environment-specific Unit 4 release status without a stale staging boundary in production", () => {
+    const status = read("src/app/hr/admin/unit-4-status/page.tsx");
+    expect(status).toContain('isRenderProduction');
+    expect(status).toContain('Live production release');
+    expect(status).toContain('Unit 5 remains unauthorized');
+    expect(status).toContain('GoDaddy automatic-Inbox deliverability exception is not marked passed');
   });
   it("adds immutable delivery history and monitoring indexes non-destructively", () => {
     const migration = read("prisma/migrations/20260730070000_hrms_production_hardening/migration.sql");
