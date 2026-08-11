@@ -9,6 +9,10 @@ const fixtureOffset = Date.now() % (300 * 86_400_000);
 const periodStart = new Date(Date.UTC(2090, 0, 1) + fixtureOffset);
 const periodEnd = new Date(periodStart.getTime() + 86_400_000);
 
+function isSerializableConflict(error) {
+  return error?.code === "P2034" || (error?.code === "P2010" && error?.meta?.code === "40001");
+}
+
 async function postReservation(accountPeriodId, organizationId, policyId, unit, sourceId, amount) {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
@@ -24,7 +28,7 @@ async function postReservation(accountPeriodId, organizationId, policyId, unit, 
         return { applied: true };
       }, { isolationLevel: "Serializable" });
     } catch (error) {
-      if (error?.code === "P2034" && attempt < 3) continue;
+      if (isSerializableConflict(error) && attempt < 3) continue;
       throw error;
     }
   }
@@ -43,7 +47,7 @@ async function postConcurrentDelta({ accountPeriodId, organizationId, policyId, 
         return { applied: true };
       }, { isolationLevel: "Serializable" });
     } catch (error) {
-      if (error?.code === "P2034" && attempt < 3) continue;
+      if (isSerializableConflict(error) && attempt < 3) continue;
       throw error;
     }
   }
@@ -111,7 +115,7 @@ try {
           return { applied: true, decision };
         }, { isolationLevel: "Serializable" });
       } catch (error) {
-        if (error?.code === "P2034" && attempt < 3) continue;
+        if (isSerializableConflict(error) && attempt < 3) continue;
         throw error;
       }
     }
