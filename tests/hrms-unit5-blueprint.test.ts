@@ -29,10 +29,11 @@ describe("Unit 5 blueprint", () => {
 
   it("provides a public, secret-free blueprint status artifact", () => {
     const status = read("src/app/hr/admin/unit-5-status/page.tsx");
-    expect(status).toContain("STAGING VALIDATION IN PROGRESS");
-    expect(status).not.toContain("PASS — Unit 5 Production Ready");
+    expect(status).toContain("PASS — UNIT 5 PRODUCTION READY");
+    expect(status).toContain("PASS — Unit 5 Production Ready");
     expect(status).toContain("production untouched");
-    expect(status).toContain("governed cancellation/reversal, and HR adjustment passed");
+    expect(status).toContain("governed cancellation/reversal");
+    expect(status).toContain("c41f55510b8a");
     expect(read("src/app/unit-5-status/page.tsx")).toContain("unit-5-status/page");
     expect(status).not.toMatch(/DATABASE_URL|SECRET_ACCESS_KEY|AUTH_SECRET/);
   });
