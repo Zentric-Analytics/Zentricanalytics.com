@@ -41,6 +41,18 @@ describe("Unit 6 integration contract", () => {
     expect(worker).toContain("organizationId_jobType_windowKey");
   });
 
+  it("ships a staging-only PostgreSQL concurrency gate", () => {
+    const script = read("scripts/hr-unit6-staging-concurrency.mjs");
+    expect(script).toContain("HR_UNIT6_STAGING_CONCURRENCY_CONFIRM");
+    expect(script).toContain("zentric_analytics_staging");
+    expect(script).toContain("duplicateEventAttempts");
+    expect(script).toContain("openSessionAttempts");
+    expect(script).toContain("correctionClaims");
+    expect(script).toContain("lockClaims");
+    expect(script).toContain("workerClaims");
+    expect(read("package.json")).toContain('"hr:unit6-staging-concurrency"');
+  });
+
   it("exposes permission-scoped employee, manager, and HR workspaces", () => {
     expect(read("src/app/hr/employee/time/page.tsx")).toContain('requirePermission("time.read_self")');
     expect(read("src/app/hr/supervisor/time/page.tsx")).toContain("supervisedEmployeeIds");
