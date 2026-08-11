@@ -125,6 +125,13 @@ describe("Unit 5 leave domain", () => {
     expect(script).toContain("Carryover expiry failed to protect an approved reservation");
   });
 
+  it("permits only isolated Unit 4 or Unit 5 restore targets", () => {
+    const script = fs.readFileSync(path.join(process.cwd(), "scripts/hr-unit4-restore-correlation.mjs"), "utf8");
+    expect(script).toContain("zentric_unit(?:4_restore_|5_restore(?:_|$))");
+    expect(script).toContain('DR_RESTORE_CONFIRM !== "isolated-restore"');
+    expect(script).toContain("temporary plaintext cleanup");
+  });
+
   it("ships a staging-only effective-date boundary and replay gate", () => {
     const boundary = fs.readFileSync(path.join(process.cwd(), "scripts/hr-unit5-staging-boundary.ts"), "utf8");
     const runnerConfig = fs.readFileSync(path.join(process.cwd(), "scripts/vite.staging.config.ts"), "utf8");
