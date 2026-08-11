@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Bell, BriefcaseBusiness, Building2, CalendarDays, ChevronDown, CircleUserRound,
+  Bell, BriefcaseBusiness, Building2, CalendarClock, CalendarDays, ChevronDown, CircleUserRound,
   ClipboardCheck, FileText, FolderLock, Gauge, GitBranch, Landmark, LayoutDashboard,
   LogOut, Menu, Network, Package, ScrollText, Settings, UserRoundPlus, Users, WalletCards, X,
 } from "lucide-react";
@@ -21,6 +21,7 @@ const groups: Array<{ label?: string; items: Item[] }> = [
     { label: "Users", href: "/hr/admin/users", icon: CircleUserRound },
     { label: "Assignments", href: "/hr/admin/assignments", icon: Users },
     { label: "Leave", href: "/hr/admin/leave", icon: CalendarDays },
+    { label: "Time & Attendance", href: "/hr/admin/time", icon: CalendarClock },
   ]},
   { label: "PEOPLE & WORKFORCE", items: [
     { label: "Employees", href: "/hr/admin/employees", icon: Users },

@@ -853,6 +853,20 @@ model HrOrganization {
   leaveJobRuns                HrLeaveJobRun[]
   HrWorkScheduleAssignment    HrWorkScheduleAssignment[]
   HrHolidayCalendarAssignment HrHolidayCalendarAssignment[]
+  timePolicies                HrTimePolicy[]
+  timePolicyApplicability     HrTimePolicyApplicability[]
+  timePolicyAssignments       HrTimePolicyAssignment[]
+  scheduleIntervals           HrScheduleInterval[]
+  shiftTemplates              HrShiftTemplate[]
+  shiftAssignments            HrShiftAssignment[]
+  timeEvents                  HrTimeEvent[]
+  clockSessions               HrClockSession[]
+  timesheets                  HrTimesheet[]
+  attendanceDays              HrAttendanceDay[]
+  timeCorrections             HrTimeCorrection[]
+  attendancePeriods           HrAttendancePeriod[]
+  authoritativeTimeEntries    HrAuthoritativeTimeEntry[]
+  timeWorkerRuns              HrTimeWorkerRun[]
 }
 
 model HrUser {
@@ -3246,6 +3260,492 @@ model HrOrganizationStructureRevision {
 
   @@unique([organizationId, entityType, entityId, version])
   @@index([organizationId, entityType, effectiveFrom, effectiveTo])
+}
+
+enum HrTimeTrackingMode {
+  NONE
+  EXCEPTION_BASED
+  CLOCK
+  TIMESHEET
+}
+
+enum HrTimeEventType {
+  CLOCK_IN
+  CLOCK_OUT
+  BREAK_START
+  BREAK_END
+  INVALID_EVIDENCE
+  CORRECTION
+}
+
+enum HrTimeEventSource {
+  EMPLOYEE_WEB
+  MANAGER
+  HR
+  OFFLINE_REPLAY
+  WORKER
+}
+
+enum HrClockSessionStatus {
+  CLOCKED_IN
+  ON_BREAK
+  CLOCKED_OUT
+  CORRECTION_REQUIRED
+}
+
+enum HrTimesheetStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  RETURNED
+  REJECTED
+  APPROVED
+  LOCKED
+  WITHDRAWN
+  CORRECTED_AFTER_LOCK
+}
+
+enum HrAttendanceOutcome {
+  PRESENT
+  LATE
+  EARLY_DEPARTURE
+  MISSED_CLOCK_IN
+  MISSED_CLOCK_OUT
+  ABSENT
+  APPROVED_LEAVE
+  HOLIDAY
+  NON_WORKING_DAY
+  OVERTIME_CANDIDATE
+  UNDER_TIME
+  BREAK_EXCEPTION
+  SCHEDULE_EXCEPTION
+  PENDING_CORRECTION
+}
+
+enum HrTimeCorrectionStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  RETURNED
+  REJECTED
+  APPROVED
+  APPLIED
+  WITHDRAWN
+}
+
+enum HrAttendancePeriodStatus {
+  OPEN
+  SUBMITTED
+  APPROVED
+  LOCKED
+  CORRECTED_AFTER_LOCK
+}
+
+enum HrTimeWorkerStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  DEAD_LETTER
+}
+
+model HrTimePolicy {
+  id             String                      @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  status         HrRecordStatus              @default(ACTIVE)
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+  organization   HrOrganization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions       HrTimePolicyVersion[]
+  applicability  HrTimePolicyApplicability[]
+  assignments    HrTimePolicyAssignment[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+}
+
+model HrTimePolicyVersion {
+  id                     String             @id @default(cuid())
+  timePolicyId           String
+  version                Int
+  trackingMode           HrTimeTrackingMode
+  timezone               String
+  graceBeforeMinutes     Int                @default(0)
+  graceAfterMinutes      Int                @default(0)
+  maximumOfflineDelayMin Int                @default(1440)
+  maximumFutureSkewMin   Int                @default(5)
+  dailyOvertimeMinutes   Int?
+  weeklyOvertimeMinutes  Int?
+  allowCategoryStacking  Boolean            @default(false)
+  breakRules             Json?
+  effectiveFrom          DateTime
+  effectiveTo            DateTime?
+  publishedAt            DateTime?
+  createdById            String
+  createdAt              DateTime           @default(now())
+  timePolicy             HrTimePolicy       @relation(fields: [timePolicyId], references: [id], onDelete: Restrict)
+
+  @@unique([timePolicyId, version])
+  @@index([timePolicyId, effectiveFrom, effectiveTo])
+}
+
+model HrTimePolicyApplicability {
+  id               String                 @id @default(cuid())
+  organizationId   String
+  timePolicyId     String
+  legalEntityId    String?
+  countryCode      String?
+  employeeType     HrEmploymentType?
+  positionId       String?
+  gradeId          String?
+  departmentId     String?
+  locationId       String?
+  workMode         HrWorkMode?
+  priority         Int                    @default(0)
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+  organization     HrOrganization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  timePolicy       HrTimePolicy           @relation(fields: [timePolicyId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, effectiveFrom, effectiveTo, priority])
+  @@index([timePolicyId, effectiveFrom, effectiveTo])
+}
+
+model HrTimePolicyAssignment {
+  id                  String                @id @default(cuid())
+  organizationId      String
+  employeeId          String
+  workRelationshipId  String
+  assignmentId        String
+  timePolicyId        String
+  timePolicyVersionId String
+  effectiveFrom       DateTime
+  effectiveTo         DateTime?
+  reason              String
+  assignedById        String
+  createdAt           DateTime              @default(now())
+  organization        HrOrganization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  timePolicy          HrTimePolicy          @relation(fields: [timePolicyId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+  @@index([workRelationshipId, assignmentId, effectiveFrom, effectiveTo])
+}
+
+model HrScheduleInterval {
+  id                    String         @id @default(cuid())
+  organizationId        String
+  workScheduleVersionId String
+  sequence              Int
+  weekday               Int
+  startLocalMinute      Int
+  endLocalMinute        Int
+  endDayOffset          Int            @default(0)
+  expectedMinutes       Int
+  flexibleStartMinute   Int?
+  flexibleEndMinute     Int?
+  paidBreakMinutes      Int            @default(0)
+  unpaidBreakMinutes    Int            @default(0)
+  createdAt             DateTime       @default(now())
+  organization          HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([workScheduleVersionId, sequence])
+  @@index([organizationId, workScheduleVersionId, weekday])
+}
+
+model HrShiftTemplate {
+  id             String                   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  status         HrRecordStatus           @default(ACTIVE)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  organization   HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions       HrShiftTemplateVersion[]
+  assignments    HrShiftAssignment[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+}
+
+model HrShiftTemplateVersion {
+  id                  String          @id @default(cuid())
+  shiftTemplateId     String
+  version             Int
+  timezone            String
+  segments            Json
+  graceBeforeMinutes  Int             @default(0)
+  graceAfterMinutes   Int             @default(0)
+  effectiveFrom       DateTime
+  effectiveTo         DateTime?
+  publishedAt         DateTime?
+  createdById         String
+  createdAt           DateTime        @default(now())
+  shiftTemplate       HrShiftTemplate @relation(fields: [shiftTemplateId], references: [id], onDelete: Restrict)
+
+  @@unique([shiftTemplateId, version])
+  @@index([shiftTemplateId, effectiveFrom, effectiveTo])
+}
+
+model HrShiftAssignment {
+  id                     String          @id @default(cuid())
+  organizationId         String
+  employeeId             String
+  workRelationshipId     String
+  assignmentId           String
+  shiftTemplateId        String
+  shiftTemplateVersionId String
+  businessDate           DateTime
+  startsAt               DateTime
+  endsAt                 DateTime
+  status                 String          @default("PUBLISHED")
+  version                Int             @default(1)
+  publishedAt            DateTime
+  assignedById           String
+  reason                 String
+  createdAt              DateTime        @default(now())
+  organization           HrOrganization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shiftTemplate          HrShiftTemplate @relation(fields: [shiftTemplateId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, employeeId, startsAt, endsAt])
+  @@index([organizationId, employeeId, businessDate, status])
+  @@index([assignmentId, startsAt, endsAt])
+}
+
+model HrTimeEvent {
+  id                 String            @id @default(cuid())
+  organizationId     String
+  employeeId         String
+  workRelationshipId String
+  assignmentId       String
+  eventType          HrTimeEventType
+  source             HrTimeEventSource
+  occurredAt         DateTime
+  receivedAt         DateTime          @default(now())
+  timezone           String
+  localDate          DateTime
+  localTime          String
+  utcOffsetMinutes   Int
+  idempotencyKey     String
+  payloadHash        String
+  userAgentHash      String?
+  replayed           Boolean           @default(false)
+  authoritative      Boolean           @default(false)
+  invalidReason      String?
+  correctsEventId    String?
+  actorUserId        String?
+  correlationId      String
+  createdAt          DateTime          @default(now())
+  organization       HrOrganization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, employeeId, occurredAt])
+  @@index([assignmentId, localDate, occurredAt])
+  @@index([correlationId])
+}
+
+model HrClockSession {
+  id                 String               @id @default(cuid())
+  organizationId     String
+  employeeId         String
+  workRelationshipId String
+  assignmentId       String
+  timePolicyVersionId String
+  businessDate       DateTime
+  openedByEventId    String
+  closedByEventId    String?
+  status             HrClockSessionStatus
+  startedAt          DateTime
+  endedAt            DateTime?
+  workedMinutes      Int?
+  breakMinutes       Int                  @default(0)
+  version            Int                  @default(1)
+  correlationId      String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  organization       HrOrganization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, employeeId, status, startedAt])
+  @@index([assignmentId, businessDate])
+}
+
+model HrTimesheet {
+  id                 String             @id @default(cuid())
+  organizationId     String
+  employeeId         String
+  workRelationshipId String
+  assignmentId       String
+  periodStart        DateTime
+  periodEnd          DateTime
+  status             HrTimesheetStatus  @default(DRAFT)
+  version            Int                @default(1)
+  submittedAt        DateTime?
+  approvedAt         DateTime?
+  approvedById       String?
+  lockedAt           DateTime?
+  correlationId      String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  organization       HrOrganization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions           HrTimesheetVersion[]
+
+  @@unique([organizationId, employeeId, workRelationshipId, periodStart, periodEnd])
+  @@index([organizationId, status, periodEnd])
+}
+
+model HrTimesheetVersion {
+  id             String             @id @default(cuid())
+  timesheetId    String
+  version        Int
+  entries        Json
+  totalMinutes   Int
+  comment        String?
+  createdById    String
+  createdAt      DateTime           @default(now())
+  submittedAt    DateTime?
+  timesheet      HrTimesheet        @relation(fields: [timesheetId], references: [id], onDelete: Restrict)
+
+  @@unique([timesheetId, version])
+}
+
+model HrAttendanceDay {
+  id                 String                        @id @default(cuid())
+  organizationId     String
+  employeeId         String
+  workRelationshipId String
+  assignmentId       String
+  businessDate       DateTime
+  currentVersion     Int                           @default(1)
+  currentOutcome     HrAttendanceOutcome
+  correlationId      String
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @updatedAt
+  organization       HrOrganization                @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  interpretations    HrAttendanceInterpretation[]
+
+  @@unique([organizationId, assignmentId, businessDate])
+  @@index([organizationId, employeeId, businessDate])
+}
+
+model HrAttendanceInterpretation {
+  id                   String              @id @default(cuid())
+  attendanceDayId      String
+  version              Int
+  outcome              HrAttendanceOutcome
+  scheduledMinutes     Int
+  workedMinutes        Int
+  paidLeaveMinutes     Int                 @default(0)
+  unpaidAbsenceMinutes Int                 @default(0)
+  underTimeMinutes     Int                 @default(0)
+  overtimeMinutes      Int                 @default(0)
+  breakMinutes         Int                 @default(0)
+  inputSnapshot        Json
+  supersedesId         String?
+  createdById          String?
+  createdAt            DateTime            @default(now())
+  attendanceDay        HrAttendanceDay     @relation(fields: [attendanceDayId], references: [id], onDelete: Restrict)
+
+  @@unique([attendanceDayId, version])
+  @@index([outcome, createdAt])
+}
+
+model HrTimeCorrection {
+  id                       String                 @id @default(cuid())
+  organizationId           String
+  employeeId               String
+  attendanceDayId          String?
+  timesheetId              String?
+  sourceEventId            String?
+  status                   HrTimeCorrectionStatus @default(DRAFT)
+  requestedChanges         Json
+  reason                   String
+  version                  Int                    @default(1)
+  requestedById            String
+  reviewedById             String?
+  reviewedAt               DateTime?
+  appliedInterpretationId  String?
+  payrollImpact            Boolean                @default(false)
+  correlationId            String
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  organization             HrOrganization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, employeeId, status, createdAt])
+  @@index([correlationId])
+}
+
+model HrAttendancePeriod {
+  id                 String                   @id @default(cuid())
+  organizationId     String
+  periodType         String                   @default("WEEKLY")
+  timezone           String
+  startsOn           DateTime
+  endsOn             DateTime
+  status             HrAttendancePeriodStatus @default(OPEN)
+  version            Int                      @default(1)
+  submittedAt        DateTime?
+  approvedAt         DateTime?
+  approvedById       String?
+  lockedAt           DateTime?
+  lockedById         String?
+  lockHash           String?
+  correlationId      String
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  organization       HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  authoritativeEntries HrAuthoritativeTimeEntry[]
+
+  @@unique([organizationId, periodType, timezone, startsOn, endsOn])
+  @@index([organizationId, status, endsOn])
+}
+
+model HrAuthoritativeTimeEntry {
+  id                 String             @id @default(cuid())
+  organizationId     String
+  attendancePeriodId String
+  employeeId         String
+  workRelationshipId String
+  assignmentId       String
+  businessDate       DateTime
+  category           String
+  minutes            Int
+  sourceType         String
+  sourceId           String
+  correctionDelta    Boolean            @default(false)
+  exportedAt         DateTime?
+  exportClaimKey     String?
+  correlationId      String
+  createdAt          DateTime           @default(now())
+  organization       HrOrganization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  attendancePeriod   HrAttendancePeriod @relation(fields: [attendancePeriodId], references: [id], onDelete: Restrict)
+
+  @@unique([attendancePeriodId, employeeId, assignmentId, businessDate, category, sourceId])
+  @@index([organizationId, attendancePeriodId, employeeId])
+  @@index([exportClaimKey])
+}
+
+model HrTimeWorkerRun {
+  id             String             @id @default(cuid())
+  organizationId String
+  jobType        String
+  windowKey      String
+  status         HrTimeWorkerStatus @default(PENDING)
+  leaseToken     String?
+  leaseExpiresAt DateTime?
+  attemptCount   Int                @default(0)
+  checkpoint     Json?
+  safeError      String?
+  correlationId  String
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  organization   HrOrganization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, jobType, windowKey])
+  @@index([status, leaseExpiresAt, createdAt])
 }
 
 model HrNotification {
