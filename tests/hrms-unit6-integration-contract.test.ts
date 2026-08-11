@@ -10,6 +10,7 @@ describe("Unit 6 integration contract", () => {
     const schema = read("prisma/schema.prisma");
     for (const model of ["HrTimePolicy", "HrScheduleInterval", "HrShiftAssignment", "HrTimeEvent", "HrClockSession", "HrTimesheet", "HrAttendanceDay", "HrTimeCorrection", "HrAttendancePeriod", "HrAuthoritativeTimeEntry", "HrTimeWorkerRun"]) expect(schema).toContain(`model ${model}`);
     const migration = read("prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql");
+    expect(migration.charCodeAt(0)).not.toBe(0xfeff);
     expect(migration).toContain("HrClockSession_one_open_assignment_key");
     expect(migration).toContain("HrTimeEvent_assignmentId_fkey");
     expect(migration).toContain("HrAuthoritativeTimeEntry_assignmentId_fkey");

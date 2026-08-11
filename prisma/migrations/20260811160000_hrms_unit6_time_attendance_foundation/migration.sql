@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "HrTimeTrackingMode" AS ENUM ('NONE', 'EXCEPTION_BASED', 'CLOCK', 'TIMESHEET');
 
 -- CreateEnum
