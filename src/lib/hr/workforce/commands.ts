@@ -223,6 +223,26 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
     await tx.hrEmployeeStatusHistory.create({ data: { organizationId: context.organizationId, employeeId: employee.id, previousStatus: employee.employmentStatus, newStatus: proposed.employmentStatus as typeof employee.employmentStatus, effectiveAt: appliedEffectiveAt, reason: event.reason, changedById: context.actorUserId } });
   }
 
+  const linkedAbsence = event.type === "LEAVE_OF_ABSENCE"
+    ? await tx.hrLeaveLongAbsence.findUnique({ where: { startWorkforceEventId: event.id } })
+    : event.type === "RETURN_FROM_LEAVE"
+      ? await tx.hrLeaveLongAbsence.findUnique({ where: { returnWorkforceEventId: event.id } })
+      : null;
+  if (linkedAbsence) {
+    const nextAbsenceStatus = event.type === "RETURN_FROM_LEAVE" ? "COMPLETED" : "ON_LEAVE";
+    await tx.hrLeaveLongAbsence.update({ where: { id: linkedAbsence.id }, data: { status: nextAbsenceStatus } });
+    await appendHrAudit(tx, {
+      ...context,
+      entityType: "HrLeaveLongAbsence",
+      entityId: linkedAbsence.id,
+      action: event.type === "RETURN_FROM_LEAVE" ? "hr.leave.long_absence.completed" : "hr.leave.long_absence.started",
+      previousValues: { status: linkedAbsence.status },
+      newValues: { status: nextAbsenceStatus, workforceEventId: event.id, effectiveAt: appliedEffectiveAt },
+      reason: event.reason,
+      correlationId: linkedAbsence.correlationId,
+    });
+  }
+
   await tx.hrWorkforceEventExecutionAttempt.update({ where: { id: attempt.id }, data: { status: "COMPLETED", completedAt: now } });
   await tx.hrWorkforceEvent.update({ where: { id: event.id }, data: { status: "APPLIED", appliedAt: now } });
   await appendHrAudit(tx, { ...context, entityType: "HrWorkforceEvent", entityId: event.id, action: "hr.workforce_event.applied", previousValues: { status: event.status }, newValues: { status: "APPLIED", version: event.version, requestedEffectiveAt: event.requestedEffectiveAt, appliedEffectiveAt, changedFields: Object.keys(proposed) }, reason: event.reason, correlationId: event.correlationId });

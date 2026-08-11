@@ -52,6 +52,7 @@ describe("Unit 5 leave domain", () => {
     const worker = fs.readFileSync(path.join(process.cwd(), "src/app/api/internal/hr/leave/route.ts"), "utf8");
     const operations = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-operations.ts"), "utf8");
     const longAbsence = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-long-absence.ts"), "utf8");
+    const workforceCommands = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/workforce/commands.ts"), "utf8");
     expect(accounting).toContain("unit5-start-transition");
     expect(accounting).toContain("unit5-complete-transition");
     expect(accounting).toContain('type: "LEAVE_OF_ABSENCE"');
@@ -67,6 +68,10 @@ describe("Unit 5 leave domain", () => {
     expect(longAbsence).toContain('unit5-long-absence-return:${absence.correlationId}');
     expect(longAbsence).toContain("returnCorrelationId");
     expect(longAbsence).toContain("correlationId: returnCorrelationId");
+    expect(workforceCommands).toContain('event.type === "LEAVE_OF_ABSENCE"');
+    expect(workforceCommands).toContain('event.type === "RETURN_FROM_LEAVE"');
+    expect(workforceCommands).toContain('nextAbsenceStatus = event.type === "RETURN_FROM_LEAVE" ? "COMPLETED" : "ON_LEAVE"');
+    expect(workforceCommands).toContain('correlationId: linkedAbsence.correlationId');
     const employeeAction = fs.readFileSync(path.join(process.cwd(), "src/app/hr/employee/leave/actions.ts"), "utf8");
     expect(employeeAction.match(/Long-term absence requires an active primary employment assignment/g)).toHaveLength(2);
     expect(employeeAction).toContain('status: "ACTIVE", isPrimary: true');
