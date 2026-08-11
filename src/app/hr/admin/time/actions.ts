@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { prisma } from "@/lib/prisma";
 import { approveAttendancePeriod, createOrSubmitAttendancePeriod, lockAttendancePeriod, reviewTimeCorrection } from "@/lib/hr/time/commands";
-import { createTimePolicyVersion } from "@/lib/hr/time/policy-commands";
+import { assignTimePolicy, createTimePolicyVersion } from "@/lib/hr/time/policy-commands";
 
 export async function createTimePolicyAction(formData: FormData) {
   const auth = await requirePermission("time.policy.manage");
@@ -11,6 +11,12 @@ export async function createTimePolicyAction(formData: FormData) {
     const policy = await tx.hrTimePolicy.create({ data: { organizationId: auth.user.organizationId, code: String(formData.get("code")).trim().toUpperCase(), name: String(formData.get("name")).trim() } });
     await createTimePolicyVersion(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "HR" }, { policyId: policy.id, trackingMode: String(formData.get("trackingMode")) as "NONE" | "EXCEPTION_BASED" | "CLOCK" | "TIMESHEET", timezone: String(formData.get("timezone")), graceBeforeMinutes: Number(formData.get("graceBeforeMinutes") || 0), graceAfterMinutes: Number(formData.get("graceAfterMinutes") || 0), maximumOfflineDelayMin: Number(formData.get("maximumOfflineDelayMin") || 1440), maximumFutureSkewMin: Number(formData.get("maximumFutureSkewMin") || 5), effectiveFrom: new Date(String(formData.get("effectiveFrom"))) });
   }, { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/time");
+}
+
+export async function assignTimePolicyAction(formData: FormData) {
+  const auth = await requirePermission("time.policy.manage");
+  await prisma.$transaction((tx) => assignTimePolicy(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "HR" }, { employeeId: String(formData.get("employeeId")), timePolicyVersionId: String(formData.get("timePolicyVersionId")), effectiveFrom: new Date(String(formData.get("effectiveFrom"))), reason: String(formData.get("reason")).trim() }), { isolationLevel: "Serializable" });
   revalidatePath("/hr/admin/time");
 }
 

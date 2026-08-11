@@ -64,6 +64,10 @@ describe("Unit 6 integration contract", () => {
     expect(managerActions).toContain('capabilities.includes("supervisor.review_assigned")');
     expect(managerActions).toContain("outside the active supervisory review scope");
     expect(read("src/app/hr/admin/time/page.tsx")).toContain('requirePermission("time.read_all")');
+    expect(read("src/app/hr/admin/time/page.tsx")).toContain("assignTimePolicyAction");
+    const policyCommands = read("src/lib/hr/time/policy-commands.ts");
+    expect(policyCommands).toContain("Effective time-policy assignments cannot overlap");
+    expect(policyCommands).toContain('action: "hr.time.policy.assigned"');
   });
 
   it("keeps prohibited capture technologies out of executable Unit 6 code", () => {
