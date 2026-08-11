@@ -99,6 +99,13 @@ describe("Unit 6 integration contract", () => {
     const policyCommands = read("src/lib/hr/time/policy-commands.ts");
     expect(policyCommands).toContain("Effective time-policy assignments cannot overlap");
     expect(policyCommands).toContain('action: "hr.time.policy.assigned"');
+    const shiftCommands = read("src/lib/hr/time/shift-commands.ts");
+    expect(shiftCommands).toContain("createShiftTemplateVersion");
+    expect(shiftCommands).toContain("assignPublishedShift");
+    expect(shiftCommands).toContain('action: "hr.time.shift.published"');
+    expect(shiftCommands).toContain('action: "hr.time.shift.assigned"');
+    expect(shiftCommands).toContain('status: "ACTIVE"');
+    expect(read("src/app/hr/admin/time/page.tsx")).toContain("assignShiftAction");
   });
 
   it("keeps prohibited capture technologies out of executable Unit 6 code", () => {
