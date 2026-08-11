@@ -70,6 +70,18 @@ export async function transitionTimesheet(context: Context, input: { timesheetId
   }, { isolationLevel: "Serializable" }));
 }
 
+export async function createDraftTimesheet(context: Context, input: { employeeId: string; workRelationshipId: string; assignmentId: string; periodStart: Date; periodEnd: Date; entries: Prisma.InputJsonValue; totalMinutes: number; comment?: string }) {
+  if (input.periodEnd <= input.periodStart || input.totalMinutes < 0) throw new Error("Timesheet period and minutes must be valid.");
+  return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
+    await tx.hrEmployeeAssignment.findFirstOrThrow({ where: { id: input.assignmentId, organizationId: context.organizationId, employeeId: input.employeeId, status: "ACTIVE" } });
+    const correlationId = crypto.randomUUID();
+    const sheet = await tx.hrTimesheet.create({ data: { organizationId: context.organizationId, employeeId: input.employeeId, workRelationshipId: input.workRelationshipId, assignmentId: input.assignmentId, periodStart: input.periodStart, periodEnd: input.periodEnd, correlationId } });
+    await tx.hrTimesheetVersion.create({ data: { timesheetId: sheet.id, version: 1, entries: input.entries, totalMinutes: input.totalMinutes, comment: input.comment, createdById: context.actorUserId } });
+    await appendHrAudit(tx, { ...context, entityType: "HrTimesheet", entityId: sheet.id, action: "hr.time.timesheet.created", newValues: { employeeId: input.employeeId, assignmentId: input.assignmentId, periodStart: input.periodStart, periodEnd: input.periodEnd, version: 1, totalMinutes: input.totalMinutes }, correlationId });
+    return sheet;
+  }, { isolationLevel: "Serializable" }));
+}
+
 export async function recordAttendanceInterpretation(context: Context, input: { employeeId: string; workRelationshipId: string; assignmentId: string; businessDate: Date; trackingMode: "NONE" | "EXCEPTION_BASED" | "CLOCK" | "TIMESHEET"; scheduledMinutes: number; workedMinutes: number; approvedPaidLeaveMinutes?: number; isHoliday?: boolean; graceMinutes?: number; missedClockIn?: boolean; missedClockOut?: boolean; breakException?: boolean; inputSnapshot: Prisma.InputJsonValue; correlationId?: string }) {
   return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
     const result = interpretAttendance(input) as ReturnType<typeof interpretAttendance> & { outcome: HrAttendanceOutcome };
@@ -92,5 +104,73 @@ export async function lockAttendancePeriod(context: Context, input: { periodId: 
     const updated = await tx.hrAttendancePeriod.update({ where: { id: period.id }, data: { status: "LOCKED", version: { increment: 1 }, lockedAt: new Date(), lockedById: context.actorUserId, lockHash } });
     await appendHrAudit(tx, { ...context, entityType: "HrAttendancePeriod", entityId: period.id, action: "hr.time.period.locked", previousValues: { status: period.status, version: period.version }, newValues: { status: "LOCKED", version: period.version + 1, lockHash, entryCount: entries.length }, correlationId: period.correlationId });
     return updated;
+  }, { isolationLevel: "Serializable" }));
+}
+
+export async function requestTimeCorrection(context: Context, input: { employeeId: string; attendanceDayId?: string; timesheetId?: string; sourceEventId?: string; requestedChanges: Prisma.InputJsonValue; reason: string }) {
+  if (!input.attendanceDayId && !input.timesheetId && !input.sourceEventId) throw new Error("A correction must identify the governed time record being corrected.");
+  return prisma.$transaction(async (tx) => {
+    await tx.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: context.organizationId } });
+    const correction = await tx.hrTimeCorrection.create({ data: { organizationId: context.organizationId, employeeId: input.employeeId, attendanceDayId: input.attendanceDayId, timesheetId: input.timesheetId, sourceEventId: input.sourceEventId, status: "SUBMITTED", requestedChanges: input.requestedChanges, reason: input.reason, requestedById: context.actorUserId, correlationId: crypto.randomUUID() } });
+    await appendHrAudit(tx, { ...context, entityType: "HrTimeCorrection", entityId: correction.id, action: "hr.time.correction.submitted", newValues: { employeeId: input.employeeId, attendanceDayId: input.attendanceDayId, timesheetId: input.timesheetId, sourceEventId: input.sourceEventId, version: correction.version }, reason: input.reason, correlationId: correction.correlationId });
+    return correction;
+  }, { isolationLevel: "Serializable" });
+}
+
+export async function reviewTimeCorrection(context: Context, input: { correctionId: string; expectedVersion: number; decision: "APPROVED" | "RETURNED" | "REJECTED"; reason: string }) {
+  return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
+    const correction = await tx.hrTimeCorrection.findFirstOrThrow({ where: { id: input.correctionId, organizationId: context.organizationId, status: { in: ["SUBMITTED", "IN_REVIEW"] }, version: input.expectedVersion } });
+    if (correction.requestedById === context.actorUserId) throw new Error("A correction requester cannot approve their own correction.");
+    const updated = await tx.hrTimeCorrection.update({ where: { id: correction.id }, data: { status: input.decision, version: { increment: 1 }, reviewedById: context.actorUserId, reviewedAt: new Date() } });
+    await appendHrAudit(tx, { ...context, entityType: "HrTimeCorrection", entityId: correction.id, action: `hr.time.correction.${input.decision.toLowerCase()}`, previousValues: { status: correction.status, version: correction.version }, newValues: { status: input.decision, version: correction.version + 1 }, reason: input.reason, correlationId: correction.correlationId });
+    return updated;
+  }, { isolationLevel: "Serializable" }));
+}
+
+export async function approveAttendancePeriod(context: Context, input: { periodId: string; expectedVersion: number }) {
+  return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
+    const period = await tx.hrAttendancePeriod.findFirstOrThrow({ where: { id: input.periodId, organizationId: context.organizationId, status: "SUBMITTED", version: input.expectedVersion } });
+    const days = await tx.hrAttendanceDay.findMany({ where: { organizationId: context.organizationId, businessDate: { gte: period.startsOn, lt: period.endsOn } }, include: { interpretations: { orderBy: { version: "desc" }, take: 1 } } });
+    for (const day of days) {
+      const interpretation = day.interpretations[0];
+      if (!interpretation) continue;
+      for (const [category, minutes] of [["REGULAR", interpretation.workedMinutes], ["PAID_LEAVE", interpretation.paidLeaveMinutes], ["UNDER_TIME", -interpretation.underTimeMinutes], ["OVERTIME_CANDIDATE", interpretation.overtimeMinutes]] as const) {
+        if (!minutes) continue;
+        await tx.hrAuthoritativeTimeEntry.upsert({ where: { attendancePeriodId_employeeId_assignmentId_businessDate_category_sourceId: { attendancePeriodId: period.id, employeeId: day.employeeId, assignmentId: day.assignmentId, businessDate: day.businessDate, category, sourceId: interpretation.id } }, update: {}, create: { organizationId: context.organizationId, attendancePeriodId: period.id, employeeId: day.employeeId, workRelationshipId: day.workRelationshipId, assignmentId: day.assignmentId, businessDate: day.businessDate, category, minutes, sourceType: "ATTENDANCE_INTERPRETATION", sourceId: interpretation.id, correlationId: day.correlationId } });
+      }
+    }
+    const updated = await tx.hrAttendancePeriod.update({ where: { id: period.id }, data: { status: "APPROVED", version: { increment: 1 }, approvedAt: new Date(), approvedById: context.actorUserId } });
+    await appendHrAudit(tx, { ...context, entityType: "HrAttendancePeriod", entityId: period.id, action: "hr.time.period.approved", previousValues: { status: period.status, version: period.version }, newValues: { status: "APPROVED", version: period.version + 1, attendanceDays: days.length }, correlationId: period.correlationId });
+    return updated;
+  }, { isolationLevel: "Serializable" }));
+}
+
+export async function createOrSubmitAttendancePeriod(context: Context, input: { periodId?: string; expectedVersion?: number; timezone?: string; startsOn?: Date; endsOn?: Date }) {
+  return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
+    if (!input.periodId) {
+      if (!input.timezone || !input.startsOn || !input.endsOn || input.endsOn <= input.startsOn) throw new Error("A valid timezone and period range are required.");
+      try { new Intl.DateTimeFormat("en", { timeZone: input.timezone }).format(input.startsOn); } catch { throw new Error("Attendance period timezone must be a valid IANA timezone."); }
+      const period = await tx.hrAttendancePeriod.create({ data: { organizationId: context.organizationId, timezone: input.timezone, startsOn: input.startsOn, endsOn: input.endsOn, correlationId: crypto.randomUUID() } });
+      await appendHrAudit(tx, { ...context, entityType: "HrAttendancePeriod", entityId: period.id, action: "hr.time.period.created", newValues: { startsOn: period.startsOn, endsOn: period.endsOn, timezone: period.timezone, status: period.status }, correlationId: period.correlationId });
+      return period;
+    }
+    const period = await tx.hrAttendancePeriod.findFirstOrThrow({ where: { id: input.periodId, organizationId: context.organizationId, status: "OPEN", version: input.expectedVersion } });
+    const unresolved = await tx.hrAttendanceDay.count({ where: { organizationId: context.organizationId, businessDate: { gte: period.startsOn, lt: period.endsOn }, currentOutcome: { in: ["MISSED_CLOCK_IN", "MISSED_CLOCK_OUT", "PENDING_CORRECTION", "SCHEDULE_EXCEPTION"] } } });
+    if (unresolved) throw new Error("Attendance period has unresolved exceptions and cannot be submitted.");
+    const updated = await tx.hrAttendancePeriod.update({ where: { id: period.id }, data: { status: "SUBMITTED", version: { increment: 1 }, submittedAt: new Date() } });
+    await appendHrAudit(tx, { ...context, entityType: "HrAttendancePeriod", entityId: period.id, action: "hr.time.period.submitted", previousValues: { status: period.status, version: period.version }, newValues: { status: "SUBMITTED", version: period.version + 1 }, correlationId: period.correlationId });
+    return updated;
+  }, { isolationLevel: "Serializable" }));
+}
+
+export async function claimAuthoritativeTimeExport(context: Context, input: { periodId: string; claimKey: string }) {
+  return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
+    const period = await tx.hrAttendancePeriod.findFirstOrThrow({ where: { id: input.periodId, organizationId: context.organizationId, status: { in: ["LOCKED", "CORRECTED_AFTER_LOCK"] } } });
+    const conflicting = await tx.hrAuthoritativeTimeEntry.count({ where: { attendancePeriodId: period.id, exportClaimKey: { not: null, notIn: [input.claimKey] } } });
+    if (conflicting) throw new Error("Authoritative time entries were already claimed by another export.");
+    await tx.hrAuthoritativeTimeEntry.updateMany({ where: { attendancePeriodId: period.id, exportClaimKey: null }, data: { exportClaimKey: input.claimKey, exportedAt: new Date() } });
+    const entries = await tx.hrAuthoritativeTimeEntry.findMany({ where: { attendancePeriodId: period.id, exportClaimKey: input.claimKey }, orderBy: [{ employeeId: "asc" }, { businessDate: "asc" }, { category: "asc" }] });
+    await appendHrAudit(tx, { ...context, entityType: "HrAttendancePeriod", entityId: period.id, action: "hr.time.authoritative_export.claimed", newValues: { claimKey: input.claimKey, entries: entries.length, lockHash: period.lockHash }, correlationId: period.correlationId });
+    return { period, entries };
   }, { isolationLevel: "Serializable" }));
 }

@@ -618,4 +618,26 @@ ALTER TABLE "HrAuthoritativeTimeEntry" ADD CONSTRAINT "HrAuthoritativeTimeEntry_
 ALTER TABLE "HrAuthoritativeTimeEntry" ADD CONSTRAINT "HrAuthoritativeTimeEntry_workRelationshipId_fkey" FOREIGN KEY ("workRelationshipId") REFERENCES "HrWorkRelationship"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "HrAuthoritativeTimeEntry" ADD CONSTRAINT "HrAuthoritativeTimeEntry_assignmentId_fkey" FOREIGN KEY ("assignmentId") REFERENCES "HrEmployeeAssignment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+-- Seed Unit 6 authorization keys into every existing tenant without broadening payroll authority.
+WITH permission_keys("key") AS (VALUES
+  ('time.capture_self'), ('time.read_self'), ('time.read_team'), ('time.read_all'),
+  ('time.schedule.manage'), ('time.policy.manage'), ('time.correction.request'), ('time.correction.review'),
+  ('time.timesheet.submit'), ('time.timesheet.approve'), ('time.period.lock'),
+  ('time.authoritative.read'), ('time.authoritative.export')
+)
+INSERT INTO "HrPermission" ("id", "organizationId", "key", "description", "createdAt")
+SELECT 'unit6_permission_' || md5(o."id" || ':' || p."key"), o."id", p."key", 'Unit 6 time and attendance permission', CURRENT_TIMESTAMP
+FROM "HrOrganization" o CROSS JOIN permission_keys p
+ON CONFLICT ("organizationId", "key") DO NOTHING;
+
+INSERT INTO "HrRolePermission" ("id", "roleId", "permissionId", "createdAt")
+SELECT 'unit6_role_permission_' || md5(r."id" || ':' || p."id"), r."id", p."id", CURRENT_TIMESTAMP
+FROM "HrRole" r JOIN "HrPermission" p ON p."organizationId" = r."organizationId"
+WHERE p."key" LIKE 'time.%' AND (
+  r."key" IN ('ADMIN', 'HR_ADMIN')
+  OR (r."key" = 'EMPLOYEE' AND p."key" IN ('time.capture_self', 'time.read_self', 'time.correction.request', 'time.timesheet.submit'))
+  OR (r."key" = 'PAYROLL_ADMIN' AND p."key" IN ('time.authoritative.read', 'time.authoritative.export'))
+)
+ON CONFLICT ("roleId", "permissionId") DO NOTHING;
+
 

@@ -31,7 +31,7 @@ export type HrPermissionKey = (typeof HR_PERMISSIONS)[number];
 const rolePermissions: Record<HrRoleKey, readonly HrPermissionKey[]> = {
   ADMIN: HR_PERMISSIONS,
   HR_ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("payroll.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(permission)),
-  PAYROLL_ADMIN: HR_PERMISSIONS.filter((permission) => permission.startsWith("payroll.") || ["employee.read_all", "workflow.task.complete", "report.read", "report.export"].includes(permission)),
+  PAYROLL_ADMIN: HR_PERMISSIONS.filter((permission) => permission.startsWith("payroll.") || ["employee.read_all", "workflow.task.complete", "report.read", "report.export", "time.authoritative.read", "time.authoritative.export"].includes(permission)),
   EMPLOYEE: ["employee.read_self", "employee.update_self", "employee.profile_change.request", "workforce_event.read_self", "leave.request", "leave.read_self", "time.capture_self", "time.read_self", "time.correction.request", "time.timesheet.submit", "document.read_self", "asset.read_self", "workflow.task.complete"],
   AUDITOR: ["audit.read", "report.read"],
 };
