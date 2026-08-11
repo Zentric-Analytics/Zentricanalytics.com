@@ -11,7 +11,7 @@ const namedTemplates = [
   "hr-document-requested", "hr-document-available", "hr-document-rejected", "hr-document-scan-attention",
   "hr-document-expiring", "hr-lifecycle-started", "hr-lifecycle-task-due", "hr-employee-activated",
   "hr-mfa-enrollment", "hr-asset-assigned", "hr-asset-return-recorded", "hr-asset-return-reminder",
-  "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected", "hr-leave-cancelled",
+  "hr-leave-submitted", "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected", "hr-leave-returned", "hr-leave-cancelled", "hr-leave-upcoming", "hr-leave-evidence-required", "hr-leave-expiring-entitlement", "hr-leave-return-to-work",
   "hr-payroll-review-ready", "hr-payroll-approval-ready", "hr-payroll-approved", "hr-payslip-ready",
   "hr-workflow-approval", "hr-employment-exit", "hr-vacancy-open", "hr-vacancy-approved",
 ];
@@ -30,14 +30,14 @@ describe("HR outbound email template registry", () => {
     expect(result.body).not.toContain("You have a new HRMS notification");
   });
 
-  it("renders personalized invitation and password-reset templates without exposing tokens in query parameters", () => {
+  it("renders invitation fragment links and password-reset verification codes", () => {
     vi.stubEnv("AUTH_SECRET", "email-template-registry-secret-with-at-least-thirty-two-characters");
-    for (const template of ["hr-account-invitation", "hr-password-reset"]) {
-      const result = hrEmailContent(template, { credentialEnvelope: sealHrCredential("single-use-opaque-token"), recipientName: "Working Email Validation" }, baseUrl);
-      expect(result.body).toContain("Hello Working Email Validation,");
-      expect(result.body).toContain("#token=");
-      expect(result.body).not.toContain("?token=");
-    }
+    const invitation = hrEmailContent("hr-account-invitation", { credentialEnvelope: sealHrCredential("single-use-opaque-token"), recipientName: "Working Email Validation" }, baseUrl);
+    expect(invitation.body).toContain("#token=");
+    const reset = hrEmailContent("hr-password-reset", { credentialEnvelope: sealHrCredential("123456"), recipientName: "Working Email Validation" }, baseUrl);
+    expect(reset.body).toContain("Hello Working Email Validation,");
+    expect(reset.body).toContain("123456");
+    expect(reset.body).not.toContain("#token=");
   });
 
   it("fails closed for unknown identifiers and insecure origins", () => {

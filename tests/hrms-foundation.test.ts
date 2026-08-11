@@ -14,7 +14,8 @@ describe("HRMS secure foundation", () => {
     await expect(verifyHrPassword("WrongPassword123", hash)).resolves.toBe(false);
   });
   it("enforces the password policy", () => {
-    expect(passwordMeetsPolicy("StrongPassword123")).toBe(true);
+    expect(passwordMeetsPolicy("12345678")).toBe(true);
+    expect(passwordMeetsPolicy("1234567")).toBe(false);
     expect(passwordMeetsPolicy("short")).toBe(false);
   });
   it("normalizes emails and hashes random opaque tokens", () => {

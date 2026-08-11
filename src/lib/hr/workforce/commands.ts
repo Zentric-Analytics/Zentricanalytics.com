@@ -24,6 +24,7 @@ type DraftInput = {
   requestedEffectiveAt: Date;
   idempotencyKey: string;
   ownerUserId?: string;
+  correlationId?: string;
 };
 
 function reference() {
@@ -90,7 +91,7 @@ export async function createWorkforceEventDraft(tx: Prisma.TransactionClient, co
     )) throw new Error(`A conflicting workforce event (${open.id}) already owns one or more proposed fields for this effective date.`);
   }
 
-  const correlationId = crypto.randomUUID();
+  const correlationId = input.correlationId ?? crypto.randomUUID();
   const event = await tx.hrWorkforceEvent.create({
     data: {
       organizationId: context.organizationId,
@@ -220,6 +221,26 @@ export async function applyWorkforceEvent(tx: Prisma.TransactionClient, context:
     const employee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: event.employeeId } });
     await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: proposed.employmentStatus as typeof employee.employmentStatus } });
     await tx.hrEmployeeStatusHistory.create({ data: { organizationId: context.organizationId, employeeId: employee.id, previousStatus: employee.employmentStatus, newStatus: proposed.employmentStatus as typeof employee.employmentStatus, effectiveAt: appliedEffectiveAt, reason: event.reason, changedById: context.actorUserId } });
+  }
+
+  const linkedAbsence = event.type === "LEAVE_OF_ABSENCE"
+    ? await tx.hrLeaveLongAbsence.findUnique({ where: { startWorkforceEventId: event.id } })
+    : event.type === "RETURN_FROM_LEAVE"
+      ? await tx.hrLeaveLongAbsence.findUnique({ where: { returnWorkforceEventId: event.id } })
+      : null;
+  if (linkedAbsence) {
+    const nextAbsenceStatus = event.type === "RETURN_FROM_LEAVE" ? "COMPLETED" : "ON_LEAVE";
+    await tx.hrLeaveLongAbsence.update({ where: { id: linkedAbsence.id }, data: { status: nextAbsenceStatus } });
+    await appendHrAudit(tx, {
+      ...context,
+      entityType: "HrLeaveLongAbsence",
+      entityId: linkedAbsence.id,
+      action: event.type === "RETURN_FROM_LEAVE" ? "hr.leave.long_absence.completed" : "hr.leave.long_absence.started",
+      previousValues: { status: linkedAbsence.status },
+      newValues: { status: nextAbsenceStatus, workforceEventId: event.id, effectiveAt: appliedEffectiveAt },
+      reason: event.reason,
+      correlationId: linkedAbsence.correlationId,
+    });
   }
 
   await tx.hrWorkforceEventExecutionAttempt.update({ where: { id: attempt.id }, data: { status: "COMPLETED", completedAt: now } });

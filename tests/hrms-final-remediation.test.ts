@@ -25,14 +25,14 @@ describe("final HRMS remediation security behavior", () => {
     expect(() => validateHrDocumentFile(fakePdf, spoofedBytes)).toThrow("genuine PDF");
   });
 
-  it("builds credential links with fragments rather than server-visible query parameters", () => {
+  it("keeps invitation fragment credentials while password reset uses a six-digit code", () => {
     vi.stubEnv("AUTH_SECRET", "local-test-auth-secret-with-more-than-thirty-two-characters");
-    const rawToken = "opaque-random-single-use-token-value";
-    const body = hrEmailBody("hr-password-reset", { credentialEnvelope: sealHrCredential(rawToken) }, "https://staging.example.test/");
-    expect(body).toContain("/hr/password-reset/redeem#token=");
-    expect(body).not.toContain("?token=");
-    expect(body).not.toContain(`\n${rawToken}\n`);
-    expect(() => hrEmailBody("hr-password-reset", { credentialEnvelope: sealHrCredential(rawToken) }, "http://insecure.example.test")).toThrow("HTTPS");
+    const invitation = hrEmailBody("hr-account-invitation", { credentialEnvelope: sealHrCredential("opaque-random-single-use-token-value") }, "https://staging.example.test/");
+    expect(invitation).toContain("/hr/invitation/redeem#token=");
+    const body = hrEmailBody("hr-password-reset", { credentialEnvelope: sealHrCredential("123456") }, "https://staging.example.test/");
+    expect(body).toContain("123456");
+    expect(body).not.toContain("#token=");
+    expect(body).not.toContain("/redeem");
   });
 
   it("records the initial authenticated login when mandatory MFA enrollment completes", () => {

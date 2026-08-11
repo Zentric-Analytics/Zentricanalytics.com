@@ -40,8 +40,8 @@ const hrTemplates = [
   "hr-handover-created", "hr-document-requested", "hr-document-available", "hr-document-rejected",
   "hr-document-scan-attention", "hr-document-scan-result", "hr-document-expiring", "hr-lifecycle-started",
   "hr-lifecycle-task-due", "hr-asset-assigned", "hr-asset-return-recorded",
-  "hr-asset-return-reminder", "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected",
-  "hr-leave-cancelled", "hr-payroll-review-ready", "hr-payroll-approval-ready", "hr-payroll-approved",
+  "hr-asset-return-reminder", "hr-leave-submitted", "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected",
+  "hr-leave-returned", "hr-leave-cancelled", "hr-leave-upcoming", "hr-leave-evidence-required", "hr-leave-expiring-entitlement", "hr-leave-return-to-work", "hr-payroll-review-ready", "hr-payroll-approval-ready", "hr-payroll-approved",
   "hr-payslip-ready", "hr-workflow-approval", "hr-employment-exit",
   "hr-workforce-event-submitted", "hr-workforce-event-approved", "hr-workforce-event-applied",
   "hr-probation-review-due", "hr-probation-confirmed", "hr-probation-extended",
@@ -49,7 +49,7 @@ const hrTemplates = [
   "hr-separation-submitted", "hr-separation-approved", "hr-separation-completed", "hr-rehire-started",
 ] as const;
 
-const accountSecurityTemplates = ["hr-account-invitation", "hr-password-reset", "hr-mfa-enrollment", "hr-employee-activated"] as const;
+const accountSecurityTemplates = ["hr-account-invitation", "hr-password-reset", "hr-password-reset-complete", "hr-mfa-enrollment", "hr-employee-activated"] as const;
 
 export const emailTemplateSenderRegistry: Readonly<Record<string, EmailSenderCategory>> = Object.freeze({
   ...Object.fromEntries(recruitmentTemplates.map((template) => [template, "recruitment"])),

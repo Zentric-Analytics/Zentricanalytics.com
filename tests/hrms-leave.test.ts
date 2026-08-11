@@ -51,23 +51,39 @@ describe("HRMS leave engine", () => {
     expect(download).toContain('"Cache-Control": "private, no-store"');
     expect(download).toContain('auth.permissions.has("leave.read_all")');
   });
-  it("uses serializable transitions and releases reservations on every terminal path", () => {
+  it("reserves only at final approval and releases authoritative accounting on terminal paths", () => {
     const requestActions = fs.readFileSync(path.join(process.cwd(), "src/app/hr/employee/leave/actions.ts"), "utf8");
     const reviewActions = fs.readFileSync(path.join(process.cwd(), "src/app/hr/supervisor/leave/actions.ts"), "utf8");
+    const accounting = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-accounting.ts"), "utf8");
     expect(requestActions).toContain('isolationLevel: "Serializable"');
     expect(requestActions.indexOf("const overlap = await tx.hrLeaveRequest")).toBeGreaterThan(requestActions.indexOf("prisma.$transaction"));
     expect(requestActions).toContain("update: { leavePolicyId: policy.id }");
-    expect(requestActions).toContain('type: "REQUEST_RESERVED"');
-    expect(requestActions).toContain('type: "REQUEST_RELEASED"');
-    expect(reviewActions).toContain('used: { increment: fresh.amount }');
-    expect(reviewActions).toContain('used: { decrement: request.amount }');
-    expect(reviewActions).toContain('type: "LEAVE_RESTORED"');
+    expect(requestActions).toContain("UNIT5_NO_SUBMISSION_RESERVATION");
+    expect(reviewActions).toContain("reserveUnit5Request");
+    expect(accounting).toContain('kind: "RESERVATION"');
+    expect(accounting).toContain('kind: "RESERVATION_RELEASE"');
+    expect(accounting).toContain('kind: "CONSUMPTION"');
+    expect(accounting).toContain('kind: "REVERSAL"');
+    expect(accounting).toContain('isolationLevel: "Serializable"');
   });
   it("keeps policy versions date-effective and records annual opening balances during carry-over", () => {
     const adminActions = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/leave/actions.ts"), "utf8");
     expect(adminActions).toContain('data: { effectiveTo: input.effectiveFrom }');
     expect(adminActions).not.toContain('data: { status: "ARCHIVED", effectiveTo: input.effectiveFrom }');
     expect(adminActions).toContain("Policy assignment must begin within the policy's effective dates.");
-    expect(adminActions).toContain("const openingKey = `leave-opening:${target.id}:${targetYear}`");
+    const accounting = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/leave/unit5-accounting.ts"), "utf8");
+    expect(accounting).toContain('reason: `Opening entitlement for ${targetYear}`');
+    expect(accounting).toContain('idempotencyKey: `unit5-grant:${target.id}`');
+  });
+  it("renders the canonical immutable Unit 5 transition instead of a stale legacy request status", () => {
+    const employeePage = fs.readFileSync(path.join(process.cwd(), "src/app/hr/employee/leave/page.tsx"), "utf8");
+    const adminPage = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/leave/page.tsx"), "utf8");
+    expect(employeePage).toContain("version?.transitions[0]?.toStatus ?? request.status");
+    expect(employeePage).toContain("<td>{currentStatus}</td>");
+    expect(employeePage).toContain('!version && request.status === "PENDING"');
+    expect(adminPage).toContain("prisma.hrLeaveAccountPeriod.findMany");
+    expect(adminPage).toContain("projectedPeriodBalance");
+    expect(adminPage).toContain("version?.transitions[0]?.toStatus ?? request.status");
+    expect(adminPage).toContain("<td>{period.consumed.toString()}</td>");
   });
 });

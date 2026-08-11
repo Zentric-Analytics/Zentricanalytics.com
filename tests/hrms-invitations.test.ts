@@ -110,7 +110,7 @@ describe("HR account invitation acceptance", () => {
 
   it("reports password-policy failures separately without consuming the invitation", async () => {
     state.invitation = invitation("fresh-token");
-    await expect(consumeHrInvitation("fresh-token", "twelveletters"))
+    await expect(consumeHrInvitation("fresh-token", "1234567"))
       .rejects.toEqual(new HrInvitationAcceptanceError("PASSWORD_POLICY"));
     expect(state.invitation.status).toBe("ACTIVE");
     expect(tx.hrAccountInvitation.updateMany).not.toHaveBeenCalled();

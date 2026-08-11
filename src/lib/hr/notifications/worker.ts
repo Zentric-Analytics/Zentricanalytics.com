@@ -51,10 +51,16 @@ const notificationTemplates: Record<string, NotificationTemplate> = {
   "hr-asset-assigned": { title: "Asset assigned", body: "An asset has been assigned to you. Review the assignment details securely.", ctaLabel: "View Assets", defaultHref: "/hr/employee/assets" },
   "hr-asset-return-recorded": { title: "Asset return recorded", body: "Your asset return has been recorded in the HR workspace.", ctaLabel: "View Assets", defaultHref: "/hr/employee/assets" },
   "hr-asset-return-reminder": { title: "Asset return reminder", body: "An assigned asset is due for return. Review the return requirements securely.", ctaLabel: "View Assets", defaultHref: "/hr/employee/assets" },
+  "hr-leave-submitted": { title: "Leave request submitted", body: "Your leave request was submitted for governed review.", ctaLabel: "View Leave", defaultHref: "/hr/employee/leave" },
   "hr-leave-review-requested": { title: "Leave request awaiting review", body: "A leave request is ready for your secure review.", ctaLabel: "Review Leave", defaultHref: "/hr/supervisor/leave" },
   "hr-leave-approved": { title: "Leave request approved", body: "Your leave request has been approved.", ctaLabel: "View Leave", defaultHref: "/hr/employee/leave" },
   "hr-leave-rejected": { title: "Leave request update", body: "Your leave request was not approved. Review the decision securely.", ctaLabel: "View Decision", defaultHref: "/hr/employee/leave" },
+  "hr-leave-returned": { title: "Leave request returned", body: "Your leave request needs changes before it can continue through approval.", ctaLabel: "Update Request", defaultHref: "/hr/employee/leave" },
   "hr-leave-cancelled": { title: "Approved leave cancelled", body: "A previously approved leave request has been cancelled.", ctaLabel: "View Leave", defaultHref: "/hr/employee/leave" },
+  "hr-leave-upcoming": { title: "Upcoming leave reminder", body: "Approved leave is approaching. Review the dates and status securely.", ctaLabel: "View Leave", defaultHref: "/hr/employee/leave" },
+  "hr-leave-evidence-required": { title: "Leave evidence required", body: "Your leave request requires confidential evidence. Upload it through the secure HR workspace.", ctaLabel: "Provide Evidence", defaultHref: "/hr/employee/leave" },
+  "hr-leave-expiring-entitlement": { title: "Leave entitlement expiring", body: "Some unreserved leave entitlement is approaching expiry. Review your leave account securely.", ctaLabel: "View Balance", defaultHref: "/hr/employee/leave" },
+  "hr-leave-return-to-work": { title: "Return-to-work action", body: "A return-to-work action is due for a long-term absence.", ctaLabel: "Review Absence", defaultHref: "/hr/admin/leave" },
   "hr-payroll-review-ready": { title: "Payroll ready for review", body: "A payroll run is awaiting authorized review.", ctaLabel: "Review Payroll", defaultHref: "/hr/admin/payroll" },
   "hr-payroll-approval-ready": { title: "Payroll ready for approval", body: "A reviewed payroll run is awaiting independent approval.", ctaLabel: "Approve Payroll", defaultHref: "/hr/admin/payroll" },
   "hr-payroll-approved": { title: "Payroll run approved", body: "The payroll run has completed its approval gate.", ctaLabel: "View Payroll", defaultHref: "/hr/admin/payroll" },
@@ -104,7 +110,7 @@ export function hrEmailContent(template: string, payload: unknown, applicationBa
     ? emailPayload.recipientName.trim()
     : null;
   const greeting = recipientName ? `Hello ${recipientName},\n\n` : "";
-  if (template === "hr-account-invitation" || template === "hr-password-reset") {
+  if (template === "hr-account-invitation") {
     if (!/^https:\/\//.test(baseUrl)) throw new Error("APPLICATION_BASE_URL must be HTTPS for credential email delivery.");
     const credentialEnvelope = emailPayload?.credentialEnvelope;
     if (typeof credentialEnvelope !== "string") throw new Error("Credential email payload is invalid.");
@@ -123,6 +129,19 @@ export function hrEmailContent(template: string, payload: unknown, applicationBa
   if (template === "hr-handover-created") {
     const href = secureHrEmailLink(emailPayload, baseUrl);
     return brandedHrEmail("HR handover requires review", `${greeting}A candidate has accepted an employment offer and requires HR review.`, { label: "Review HR Handover", href });
+  }
+
+  if (template === "hr-password-reset") {
+    const credentialEnvelope = emailPayload?.credentialEnvelope;
+    if (typeof credentialEnvelope !== "string") throw new Error("Password reset code payload is invalid.");
+    const code = unsealHrCredential(credentialEnvelope);
+    if (!/^\d{6}$/.test(code)) throw new Error("Password reset code payload is invalid.");
+    return brandedHrEmail("Your Zentric HR password reset code", `${greeting}Use this verification code to reset your Zentric HR password:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once. If you did not request a password reset, ignore this message.`, { label: "Return to Password Reset", href: `${baseUrl}/hr/password-reset` });
+  }
+
+  if (template === "hr-password-reset-complete") {
+    const href = secureHrEmailLink({ href: "/hr/login" }, baseUrl);
+    return brandedHrEmail("Your Zentric HR password was changed", `${greeting}Your HR password was successfully changed and all existing HR sessions were signed out.\n\nIf you did not make this change, contact Zentric Analytics HR or Security immediately.`, { label: "Sign In to Zentric HR", href });
   }
   const definition = notificationTemplates[template] ?? (template.startsWith("hr-vacancy-") ? vacancyTemplate : null);
   if (!definition) throw new Error(`Unknown HR email template: ${template}`);

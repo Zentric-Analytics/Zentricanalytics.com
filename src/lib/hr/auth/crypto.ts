@@ -24,7 +24,12 @@ export function verifyHrPassword(password: string, hash: string) {
 }
 
 export function passwordMeetsPolicy(password: string) {
-  return password.length >= 12 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
+  return password.length >= 8 && password.length <= 128;
+}
+
+export function hashPasswordResetCode(userId: string, code: string, secret = process.env.AUTH_SECRET ?? "") {
+  if (secret.length < 32) throw new Error("AUTH_SECRET must be at least 32 characters.");
+  return crypto.createHmac("sha256", secret).update(`hr-password-reset:${userId}:${code}`).digest("hex");
 }
 
 export function sealHrCredential(value: string, secret = process.env.AUTH_SECRET ?? "") {

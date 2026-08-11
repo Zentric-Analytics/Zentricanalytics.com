@@ -13,7 +13,7 @@ if (process.env.APP_ENV !== "staging" || process.env.DR_RESTORE_CONFIRM !== "iso
   blocked("Unit 4 restore correlation requires an explicitly confirmed staging-only restore.");
 }
 const target = new URL(process.env.RESTORE_DATABASE_URL ?? "postgresql://missing/missing");
-if (!/^zentric_unit4_restore_/.test(target.pathname.slice(1))) blocked("The target database must use the isolated Unit 4 restore naming convention.");
+if (!/^zentric_unit(?:4_restore_|5_restore(?:_|$))/.test(target.pathname.slice(1))) blocked("The target database must use an isolated Unit 4 or Unit 5 restore naming convention.");
 const correlation = String(process.env.RESTORE_ARCHIVE_CORRELATION ?? "");
 if (!/^[a-f0-9]{12}$/.test(correlation)) blocked("A valid archive correlation is required.");
 const root = path.resolve(process.env.BACKUP_ARCHIVE_ROOT ?? "");

@@ -20,6 +20,7 @@
     "hr:smoke": "node scripts/hr-smoke.mjs",
     "hr:load-smoke": "node scripts/hr-load-smoke.mjs",
     "hr:staging-concurrency": "node scripts/hr-staging-concurrency.mjs",
+    "hr:unit5-staging-concurrency": "node scripts/hr-unit5-staging-concurrency.mjs",
     "hr:staging-document-conflict": "node scripts/hr-staging-document-conflict.mjs",
     "postinstall": "prisma generate"
   },
