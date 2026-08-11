@@ -22,6 +22,9 @@ describe("Unit 6 integration contract", () => {
     expect(commands).toContain("organizationId_idempotencyKey");
     expect(commands).toContain("Conflicting payload reused an existing time-event idempotency key");
     expect(commands).toContain("active tenant-scoped employment assignment");
+    expect(commands).toContain("time-timesheet-submitted:");
+    expect(commands).toContain('template: "hr-time-timesheet-submitted"');
+    expect(commands).toContain("JSON.stringify(previous.inputSnapshot) === JSON.stringify(input.inputSnapshot)");
   });
 
   it("fails closed for self approval, stale versions, unlocked exports, and duplicate claims", () => {
@@ -38,6 +41,8 @@ describe("Unit 6 integration contract", () => {
     const worker = read("src/lib/hr/time/worker.ts");
     expect(worker).toContain("leaseExpiresAt");
     expect(worker).toContain('"DEAD_LETTER"');
+    expect(worker).toContain('"TIME_INTERPRETATION_SWEEP"');
+    expect(worker).toContain("interpretApprovedTimesheets");
     expect(worker).toContain("organizationId_jobType_windowKey");
   });
 

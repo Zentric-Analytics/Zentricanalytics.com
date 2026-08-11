@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
-import { withTimeSerializableRetry } from "./commands";
+import { recordAttendanceInterpretation, withTimeSerializableRetry } from "./commands";
 
 async function claimRun(organizationId: string, jobType: string, windowKey: string, now: Date) {
   const leaseToken = crypto.randomUUID();
@@ -25,20 +25,68 @@ async function notifyMissedClockOut(organizationId: string, sessionId: string) {
   }, { isolationLevel: "Serializable" }));
 }
 
+async function interpretApprovedTimesheets(organizationId: string) {
+  const sheets = await prisma.hrTimesheet.findMany({
+    where: { organizationId, status: "APPROVED" },
+    include: { versions: { orderBy: { version: "desc" }, take: 1 } },
+    orderBy: { approvedAt: "asc" },
+    take: 500,
+  });
+  let processed = 0;
+  for (const sheet of sheets) {
+    const evidence = sheet.versions[0];
+    if (!evidence || !Array.isArray(evidence.entries)) continue;
+    for (const [entryIndex, rawEntry] of evidence.entries.entries()) {
+      if (!rawEntry || typeof rawEntry !== "object" || Array.isArray(rawEntry)) continue;
+      const entry = rawEntry as { date?: unknown; minutes?: unknown; scheduledMinutes?: unknown };
+      if (typeof entry.date !== "string" || typeof entry.minutes !== "number") continue;
+      const businessDate = new Date(`${entry.date}T00:00:00.000Z`);
+      if (Number.isNaN(businessDate.getTime())) continue;
+      const scheduledMinutes = typeof entry.scheduledMinutes === "number" ? entry.scheduledMinutes : entry.minutes;
+      await recordAttendanceInterpretation(
+        { organizationId, actorUserId: sheet.approvedById ?? evidence.createdById, actorRole: "WORKER" },
+        {
+          employeeId: sheet.employeeId,
+          workRelationshipId: sheet.workRelationshipId,
+          assignmentId: sheet.assignmentId,
+          businessDate,
+          trackingMode: "TIMESHEET",
+          scheduledMinutes,
+          workedMinutes: entry.minutes,
+          inputSnapshot: { sourceType: "TIMESHEET", timesheetId: sheet.id, timesheetVersion: sheet.version, evidenceVersion: evidence.version, entryIndex, entry: rawEntry },
+          correlationId: sheet.correlationId,
+        },
+      );
+      processed += 1;
+    }
+  }
+  return processed;
+}
+
 export async function runTimeOperationalWindow(now = new Date()) {
   const organizations = await prisma.hrOrganization.findMany({ select: { id: true } });
   const windowKey = now.toISOString().slice(0, 13);
   const results: Array<{ organizationId: string; status: string; processed: number }> = [];
   for (const organization of organizations) {
     const run = await claimRun(organization.id, "TIME_EXCEPTION_SWEEP", windowKey, now);
-    if (!run) { results.push({ organizationId: organization.id, status: "SKIPPED", processed: 0 }); continue; }
+    if (!run) results.push({ organizationId: organization.id, status: "SKIPPED", processed: 0 });
+    else try {
+        const stale = await prisma.hrClockSession.findMany({ where: { organizationId: organization.id, status: { in: ["CLOCKED_IN", "ON_BREAK"] }, startedAt: { lt: new Date(now.getTime() - 20 * 60 * 60_000) } }, select: { id: true }, take: 500 });
+        for (const session of stale) await notifyMissedClockOut(organization.id, session.id);
+        await prisma.hrTimeWorkerRun.update({ where: { id: run.id }, data: { status: "SUCCEEDED", completedAt: new Date(), leaseToken: null, leaseExpiresAt: null, checkpoint: { processed: stale.length } } });
+        results.push({ organizationId: organization.id, status: "COMPLETED", processed: stale.length });
+      } catch (error) {
+        await prisma.hrTimeWorkerRun.update({ where: { id: run.id }, data: { status: run.attemptCount >= 5 ? "DEAD_LETTER" : "FAILED", safeError: (error instanceof Error ? error.message : "Time worker failed").slice(0, 1000), leaseToken: null, leaseExpiresAt: null } });
+        results.push({ organizationId: organization.id, status: "FAILED", processed: 0 });
+      }
+    const interpretationRun = await claimRun(organization.id, "TIME_INTERPRETATION_SWEEP", windowKey, now);
+    if (!interpretationRun) continue;
     try {
-      const stale = await prisma.hrClockSession.findMany({ where: { organizationId: organization.id, status: { in: ["CLOCKED_IN", "ON_BREAK"] }, startedAt: { lt: new Date(now.getTime() - 20 * 60 * 60_000) } }, select: { id: true }, take: 500 });
-      for (const session of stale) await notifyMissedClockOut(organization.id, session.id);
-      await prisma.hrTimeWorkerRun.update({ where: { id: run.id }, data: { status: "SUCCEEDED", completedAt: new Date(), leaseToken: null, leaseExpiresAt: null, checkpoint: { processed: stale.length } } });
-      results.push({ organizationId: organization.id, status: "COMPLETED", processed: stale.length });
+      const processed = await interpretApprovedTimesheets(organization.id);
+      await prisma.hrTimeWorkerRun.update({ where: { id: interpretationRun.id }, data: { status: "SUCCEEDED", completedAt: new Date(), leaseToken: null, leaseExpiresAt: null, checkpoint: { processed } } });
+      results.push({ organizationId: organization.id, status: "INTERPRETED", processed });
     } catch (error) {
-      await prisma.hrTimeWorkerRun.update({ where: { id: run.id }, data: { status: run.attemptCount >= 5 ? "DEAD_LETTER" : "FAILED", safeError: (error instanceof Error ? error.message : "Time worker failed").slice(0, 1000), leaseToken: null, leaseExpiresAt: null } });
+      await prisma.hrTimeWorkerRun.update({ where: { id: interpretationRun.id }, data: { status: interpretationRun.attemptCount >= 5 ? "DEAD_LETTER" : "FAILED", safeError: (error instanceof Error ? error.message : "Time interpretation worker failed").slice(0, 1000), leaseToken: null, leaseExpiresAt: null } });
       results.push({ organizationId: organization.id, status: "FAILED", processed: 0 });
     }
   }

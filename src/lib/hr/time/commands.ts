@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 import { Prisma, type HrAttendanceOutcome, type HrTimeEventSource, type HrTimeEventType, type HrTimesheetStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
+import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
+import { activeSupervisorForEmployee } from "@/lib/hr/supervisors/scope";
 import { assertIndependentApproval, assertPeriodLock, assertTimesheetTransition, interpretAttendance, transitionClock, validateTimeEvent } from "./domain";
 
 type Context = { organizationId: string; actorUserId: string; actorRole?: string };
@@ -65,6 +67,16 @@ export async function transitionTimesheet(context: Context, input: { timesheetId
     const nextVersion = sheet.version + 1;
     if (input.entries) await tx.hrTimesheetVersion.create({ data: { timesheetId: sheet.id, version: nextVersion, entries: input.entries, totalMinutes: input.totalMinutes ?? 0, comment: input.comment, createdById: context.actorUserId, submittedAt: input.to === "SUBMITTED" ? new Date() : undefined } });
     const updated = await tx.hrTimesheet.update({ where: { id: sheet.id }, data: { status: input.to, version: nextVersion, submittedAt: input.to === "SUBMITTED" ? new Date() : sheet.submittedAt, approvedAt: input.to === "APPROVED" ? new Date() : sheet.approvedAt, approvedById: input.to === "APPROVED" ? context.actorUserId : sheet.approvedById } });
+    const employee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: sheet.employeeId } });
+    if (input.to === "SUBMITTED") {
+      const supervisor = await activeSupervisorForEmployee(tx, { organizationId: context.organizationId, employeeId: sheet.employeeId });
+      const manager = supervisor?.supervisorEmployee;
+      const recipient = manager?.preferredNotificationEmail ?? manager?.companyEmail ?? manager?.personalEmail ?? manager?.user?.email;
+      if (recipient) await enqueueHrEmail(tx, { organizationId: context.organizationId, recipient, template: "hr-time-timesheet-submitted", subject: "Timesheet ready for review", payload: { recipientName: manager?.preferredName ?? manager?.legalFirstName ?? "Manager", href: "/hr/supervisor/time" }, idempotencyKey: `time-timesheet-submitted:${sheet.id}:v${nextVersion}` });
+    } else if (input.to === "RETURNED" || input.to === "REJECTED") {
+      const recipient = employee.preferredNotificationEmail ?? employee.companyEmail ?? employee.personalEmail;
+      if (recipient) await enqueueHrEmail(tx, { organizationId: context.organizationId, recipient, template: input.to === "RETURNED" ? "hr-time-returned" : "hr-time-rejected", subject: input.to === "RETURNED" ? "Timesheet returned for changes" : "Timesheet decision recorded", payload: { recipientName: employee.preferredName ?? employee.legalFirstName, href: "/hr/employee/time" }, idempotencyKey: `time-timesheet-${input.to.toLowerCase()}:${sheet.id}:v${nextVersion}` });
+    }
     await appendHrAudit(tx, { ...context, entityType: "HrTimesheet", entityId: sheet.id, action: `hr.time.timesheet.${input.to.toLowerCase()}`, previousValues: { status: sheet.status, version: sheet.version }, newValues: { status: input.to, version: nextVersion }, correlationId: sheet.correlationId });
     return updated;
   }, { isolationLevel: "Serializable" }));
@@ -86,8 +98,11 @@ export async function recordAttendanceInterpretation(context: Context, input: { 
   return withTimeSerializableRetry(() => prisma.$transaction(async (tx) => {
     const result = interpretAttendance(input) as ReturnType<typeof interpretAttendance> & { outcome: HrAttendanceOutcome };
     const day = await tx.hrAttendanceDay.upsert({ where: { organizationId_assignmentId_businessDate: { organizationId: context.organizationId, assignmentId: input.assignmentId, businessDate: input.businessDate } }, update: {}, create: { organizationId: context.organizationId, employeeId: input.employeeId, workRelationshipId: input.workRelationshipId, assignmentId: input.assignmentId, businessDate: input.businessDate, currentOutcome: result.outcome, correlationId: input.correlationId ?? crypto.randomUUID() } });
-    const nextVersion = day.currentVersion + (await tx.hrAttendanceInterpretation.count({ where: { attendanceDayId: day.id } }) ? 1 : 0);
     const previous = await tx.hrAttendanceInterpretation.findFirst({ where: { attendanceDayId: day.id }, orderBy: { version: "desc" } });
+    if (previous && JSON.stringify(previous.inputSnapshot) === JSON.stringify(input.inputSnapshot)
+      && previous.outcome === result.outcome && previous.scheduledMinutes === result.scheduledMinutes
+      && previous.workedMinutes === result.workedMinutes && previous.paidLeaveMinutes === result.paidLeaveMinutes) return previous;
+    const nextVersion = previous ? day.currentVersion + 1 : 1;
     const interpretation = await tx.hrAttendanceInterpretation.create({ data: { attendanceDayId: day.id, version: nextVersion, outcome: result.outcome, scheduledMinutes: result.scheduledMinutes, workedMinutes: result.workedMinutes, paidLeaveMinutes: result.paidLeaveMinutes, unpaidAbsenceMinutes: result.outcome === "ABSENT" ? result.scheduledMinutes : 0, underTimeMinutes: result.underTimeMinutes, overtimeMinutes: result.overtimeMinutes, breakMinutes: 0, inputSnapshot: input.inputSnapshot, supersedesId: previous?.id, createdById: context.actorUserId } });
     await tx.hrAttendanceDay.update({ where: { id: day.id }, data: { currentVersion: nextVersion, currentOutcome: result.outcome } });
     await appendHrAudit(tx, { ...context, entityType: "HrAttendanceInterpretation", entityId: interpretation.id, action: "hr.time.attendance.interpreted", previousValues: previous ? { version: previous.version, outcome: previous.outcome } : undefined, newValues: { version: nextVersion, outcome: result.outcome, scheduledMinutes: result.scheduledMinutes, workedMinutes: result.workedMinutes, paidLeaveMinutes: result.paidLeaveMinutes }, correlationId: day.correlationId });
