@@ -44,10 +44,17 @@ describe("Unit 7 integration contracts", () => {
     expect(commands).toContain("A current session-specific calibration grant is required.");
     expect(commands).toContain("Every snapshotted review requires a calibration decision before finalization.");
     expect(commands).toContain('status: "FINALIZED"');
+    expect(commands).toContain('action: "hr.performance.review.finalized"');
+    expect(commands).toContain('employeeFacingRationale: "Finalized through the governed review and calibration process."');
+    expect(commands).not.toContain("employeeFacingRationale: decision.rationale");
     expect(page).toContain("Record version-bound decision");
     expect(page).toContain("Finalize calibrated reviews");
     expect(page).toContain('role="alert"');
     expect(readFileSync("src/app/hr/admin/performance/actions.ts", "utf8")).toContain("calibrationError=");
+    const remediation = readFileSync("prisma/migrations/20260812181000_hrms_unit7_calibration_finalization_audit/migration.sql", "utf8");
+    expect(remediation).toContain("hr.performance.review.finalized");
+    expect(remediation).toContain("remediatedAudit");
+    expect(remediation).toContain("r.\"employeeFacingRationale\" = d.\"rationale\"");
   });
   it("maps every Unit 7 template to the HR sender and fails closed for unknown templates", () => {
     for (const template of unit7Templates) {

@@ -143,9 +143,10 @@ export async function transitionCalibrationSession(tx: Prisma.TransactionClient,
       if (review.status === "FINALIZED") continue;
       if (review.status !== "CALIBRATION") throw new Error("Only calibration-stage reviews can be finalized.");
       const decision = latest.get(reviewId)!;
-      const updatedReview = await tx.hrPerformanceReview.updateMany({ where: { id: review.id, status: "CALIBRATION", version: review.version }, data: { status: "FINALIZED", version: { increment: 1 }, finalizedRatingItemId: decision.calibratedRatingItemId, employeeFacingRationale: decision.rationale, finalizedAt } });
+      const updatedReview = await tx.hrPerformanceReview.updateMany({ where: { id: review.id, status: "CALIBRATION", version: review.version }, data: { status: "FINALIZED", version: { increment: 1 }, finalizedRatingItemId: decision.calibratedRatingItemId, employeeFacingRationale: "Finalized through the governed review and calibration process.", finalizedAt } });
       if (updatedReview.count !== 1) throw new Error("Another request changed a calibrated review first.");
       await tx.hrCalibrationDecision.update({ where: { id: decision.id }, data: { finalizedAt } });
+      await appendHrAudit(tx, { ...context, entityType: "HrPerformanceReview", entityId: review.id, action: "hr.performance.review.finalized", previousValues: { status: review.status, version: review.version }, newValues: { status: "FINALIZED", version: review.version + 1, calibratedDecisionId: decision.id, calibratedDecisionVersion: decision.version, finalizedRatingItemId: decision.calibratedRatingItemId }, correlationId: review.correlationId });
     }
   }
   const result = await tx.hrCalibrationSession.updateMany({ where: { id: session.id, status: session.status, version: session.version }, data: { status: input.to, version: { increment: 1 }, finalizedAt } });
