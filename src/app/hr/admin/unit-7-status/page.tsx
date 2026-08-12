@@ -10,10 +10,10 @@ const items = [
   ["Deployment", deploymentId],
   ["Current subsection", "Unit 7D–7F — development, target readiness, and governed promotion"],
   ["Database / migrations", "43 migrations applied to staging PostgreSQL; none pending"],
-  ["Automated tests", "692/692 passing at the latest completed full-suite checkpoint; focused Unit 7 regression passing"],
-  ["Browser workflow", "Self-review, manager review, calibration, privacy remediation, and finalization audit passed; target-specific career workflow is next"],
-  ["Defects found", "Calibration finalization exposed restricted rationale and omitted the correlated audit; career commands lacked governed browser surfaces"],
-  ["Fixes applied", "Neutral employee rationale, idempotent audit backfill, explicit calibration errors, and permission-scoped career workflow surfaces"],
+  ["Automated tests", "708/708 passing across 61 files; TypeScript and focused Unit 7 notification regression passing"],
+  ["Browser workflow", "Calibration, governed career target, development plan, truthful DEVELOPING readiness, manager feedback, check-in, and evidence sealing passed"],
+  ["Defects found", "Unit 7 notification sender mappings existed without renderer definitions, causing the recipient-backed feedback delivery to fail closed"],
+  ["Fixes applied", "All Unit 7 templates now have branded, personalized HTML/plain-text renderers with HTTPS CTAs and exhaustive registry regression coverage"],
   ["Next release gate", "Deploy 7D–7F surfaces, validate target architecture and sustained evidence, then execute the Unit 4 exactly-once handoff"],
 ] as const;
 
