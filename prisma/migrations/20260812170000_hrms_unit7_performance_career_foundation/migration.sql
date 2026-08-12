@@ -889,3 +889,34 @@ CREATE UNIQUE INDEX "HrPerformanceJobRun_organizationId_jobType_windowKey_key" O
 
 -- CreateIndex
 CREATE UNIQUE INDEX "HrPerformanceJobRun_organizationId_correlationId_key" ON "HrPerformanceJobRun"("organizationId", "correlationId");
+
+-- Unit 7 references are deliberately restrictive: published/history records
+-- cannot cascade away when a parent aggregate is retired.
+ALTER TABLE "HrCompanyLevelVersion" ADD CONSTRAINT "HrCompanyLevelVersion_companyLevelId_fkey" FOREIGN KEY ("companyLevelId") REFERENCES "HrCompanyLevel"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrJobProfileVersion" ADD CONSTRAINT "HrJobProfileVersion_jobFunctionId_fkey" FOREIGN KEY ("jobFunctionId") REFERENCES "HrJobFunction"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrJobProfileVersion" ADD CONSTRAINT "HrJobProfileVersion_careerTrackId_fkey" FOREIGN KEY ("careerTrackId") REFERENCES "HrCareerTrack"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrJobProfileVersion" ADD CONSTRAINT "HrJobProfileVersion_companyLevelVersionId_fkey" FOREIGN KEY ("companyLevelVersionId") REFERENCES "HrCompanyLevelVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrCompetencyVersion" ADD CONSTRAINT "HrCompetencyVersion_competencyId_fkey" FOREIGN KEY ("competencyId") REFERENCES "HrCompetency"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrCompetencyExpectation" ADD CONSTRAINT "HrCompetencyExpectation_jobProfileVersionId_fkey" FOREIGN KEY ("jobProfileVersionId") REFERENCES "HrJobProfileVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrCompetencyExpectation" ADD CONSTRAINT "HrCompetencyExpectation_competencyVersionId_fkey" FOREIGN KEY ("competencyVersionId") REFERENCES "HrCompetencyVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrRatingScaleVersion" ADD CONSTRAINT "HrRatingScaleVersion_ratingScaleId_fkey" FOREIGN KEY ("ratingScaleId") REFERENCES "HrRatingScale"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrRatingScaleItem" ADD CONSTRAINT "HrRatingScaleItem_ratingScaleVersionId_fkey" FOREIGN KEY ("ratingScaleVersionId") REFERENCES "HrRatingScaleVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrReviewTemplateVersion" ADD CONSTRAINT "HrReviewTemplateVersion_reviewTemplateId_fkey" FOREIGN KEY ("reviewTemplateId") REFERENCES "HrReviewTemplate"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrReviewTemplateVersion" ADD CONSTRAINT "HrReviewTemplateVersion_ratingScaleVersionId_fkey" FOREIGN KEY ("ratingScaleVersionId") REFERENCES "HrRatingScaleVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrPerformanceCycle" ADD CONSTRAINT "HrPerformanceCycle_reviewTemplateVersionId_fkey" FOREIGN KEY ("reviewTemplateVersionId") REFERENCES "HrReviewTemplateVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrPerformanceGoalVersion" ADD CONSTRAINT "HrPerformanceGoalVersion_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "HrPerformanceGoal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrGoalMilestone" ADD CONSTRAINT "HrGoalMilestone_goalVersionId_fkey" FOREIGN KEY ("goalVersionId") REFERENCES "HrPerformanceGoalVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrGoalProgress" ADD CONSTRAINT "HrGoalProgress_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "HrPerformanceGoal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrPerformanceReviewSubmission" ADD CONSTRAINT "HrPerformanceReviewSubmission_reviewId_fkey" FOREIGN KEY ("reviewId") REFERENCES "HrPerformanceReview"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrCalibrationGrant" ADD CONSTRAINT "HrCalibrationGrant_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "HrCalibrationSession"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrCalibrationDecision" ADD CONSTRAINT "HrCalibrationDecision_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "HrCalibrationSession"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrCalibrationDecision" ADD CONSTRAINT "HrCalibrationDecision_reviewId_fkey" FOREIGN KEY ("reviewId") REFERENCES "HrPerformanceReview"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrDevelopmentPlanVersion" ADD CONSTRAINT "HrDevelopmentPlanVersion_planId_fkey" FOREIGN KEY ("planId") REFERENCES "HrDevelopmentPlan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrDevelopmentAction" ADD CONSTRAINT "HrDevelopmentAction_planVersionId_fkey" FOREIGN KEY ("planVersionId") REFERENCES "HrDevelopmentPlanVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrPromotionCase" ADD CONSTRAINT "HrPromotionCase_readinessAssessmentId_fkey" FOREIGN KEY ("readinessAssessmentId") REFERENCES "HrPromotionReadinessAssessment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrPromotionDecision" ADD CONSTRAINT "HrPromotionDecision_promotionCaseId_fkey" FOREIGN KEY ("promotionCaseId") REFERENCES "HrPromotionCase"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HrPromotionDecision" ADD CONSTRAINT "HrPromotionDecision_readinessAssessmentId_fkey" FOREIGN KEY ("readinessAssessmentId") REFERENCES "HrPromotionReadinessAssessment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+CREATE UNIQUE INDEX "HrPromotionCase_active_target_effective_key"
+ON "HrPromotionCase" ("organizationId", "employeeId", "targetJobProfileVersionId", "targetLevelVersionId", "proposedEffectiveAt")
+WHERE "status" NOT IN ('APPLIED', 'REJECTED', 'WITHDRAWN', 'FAILED');
