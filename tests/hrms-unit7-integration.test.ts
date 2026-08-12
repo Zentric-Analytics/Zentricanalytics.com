@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { emailTemplateSenderRegistry, resolveEmailSender, senderCategoryForTemplate } from "../src/lib/email-senders";
 import { permissionsForRole } from "../src/lib/hr/permissions/catalog";
@@ -11,6 +12,15 @@ const unit7Templates = [
 ];
 
 describe("Unit 7 integration contracts", () => {
+  it("backfills Unit 7 permissions for initialized installations", () => {
+    const migration = readFileSync("prisma/migrations/20260812175500_hrms_unit7_permission_backfill/migration.sql", "utf8");
+    const bootstrap = readFileSync("scripts/hr-bootstrap-lib.mjs", "utf8");
+    expect(migration).toContain("performance.framework.manage");
+    expect(migration).toContain("performance.audit.read");
+    expect(migration).toContain("ON CONFLICT");
+    expect(bootstrap).toContain("performance.review.submit_self");
+    expect(bootstrap).toContain('AUDITOR: ["audit.read", "report.read", "performance.audit.read"]');
+  });
   it("maps every Unit 7 template to the HR sender and fails closed for unknown templates", () => {
     for (const template of unit7Templates) {
       expect(emailTemplateSenderRegistry[template]).toBe("hr");
