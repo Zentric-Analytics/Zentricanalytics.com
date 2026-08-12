@@ -81,6 +81,18 @@ describe("Unit 7 integration contracts", () => {
     expect(page).toContain("calibrationSessions.length > 0 && calibrationCyclesWithoutSession.length > 0");
   });
 
+  it("requires an available position mapped to the exact target profile for Unit 4 handoff", () => {
+    const page = readFileSync("src/app/hr/admin/performance/page.tsx", "utf8");
+    const actions = readFileSync("src/app/hr/admin/performance/actions.ts", "utf8");
+    expect(page).toContain('name="targetPositionId"');
+    expect(page).toContain("position.jobProfileId === targetProfile?.jobProfileId");
+    expect(page).toContain("exact target job profile before handoff");
+    expect(actions).toContain('id: text(form, "targetPositionId")');
+    expect(actions).toContain('jobProfileId: target.jobProfileId');
+    expect(actions).toContain('lifecycleStatus: { in: ["OPEN", "PARTIALLY_FILLED"] }');
+    expect(actions).toContain('positionId: targetPosition.id');
+  });
+
   it("keeps employee, HR, payroll, and auditor performance powers separated", () => {
     expect(permissionsForRole("EMPLOYEE")).toEqual(expect.arrayContaining(["performance.goal.manage_self", "performance.review.submit_self", "performance.career.manage_self"]));
     expect(permissionsForRole("EMPLOYEE")).not.toContain("performance.calibration.admin");
