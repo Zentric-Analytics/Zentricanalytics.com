@@ -42,3 +42,11 @@ Integrity results: broken clock lineage 0; orphan shifts 0; orphan authoritative
 - Health/live: HTTP 200.
 - Health/ready: HTTP 200 with database ready.
 - Load smoke: 250 requests, concurrency 10, zero failures, p50 87.9 ms, p95 280.9 ms.
+
+## Branch reconciliation
+
+The immutable staging tag `hrms-unit-06-v1.0.0` points to functional SHA `2a9bdfc5b51636d10a778ca247657958072b2c13`; evidence closure SHA `81071a75159ac2878e6a32590ceee6ff3a6022d9` remains separate.
+
+The Unit 6 branch was missing `2a62e09702527cca57f5b70ed9c388dc4922524e` (approved HR admin UI blueprints) and merge wrapper `5de5b5ebcc9b78982171b30cd242b65e21e25882`. Their eleven changed files are presentation components and styles. They contain no migrations, production configuration, worker changes, Unit 5 domain changes, or Unit 6 domain changes. The history was incorporated with normal merge `c35efb413e2f83c194c1469c85ac3bcf566987e2`.
+
+Revalidation exposed one real UI regression: the new department modal had omitted the governed team-archive control. The control was restored with its existing permission-checked, tenant-scoped server action. Two source-text assertions were updated to recognize the equivalent notification query and role-filter implementation introduced by the UI merge; authorization behavior was not weakened.
