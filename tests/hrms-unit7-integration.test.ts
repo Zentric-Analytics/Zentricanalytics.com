@@ -73,6 +73,14 @@ describe("Unit 7 integration contracts", () => {
     expect(() => senderCategoryForTemplate("hr-performance-unknown")).toThrow(/Unknown or unmapped/);
   });
 
+  it("offers a cycle-scoped calibration session when historical sessions already exist", () => {
+    const page = readFileSync("src/app/hr/admin/performance/page.tsx", "utf8");
+    expect(page).toContain("calibrationCyclesWithoutSession");
+    expect(page).toContain("!calibrationSessions.some((session) => session.cycleId === cycle.id)");
+    expect(page).toContain("A completed historical calibration does not block a new cycle");
+    expect(page).toContain("calibrationSessions.length > 0 && calibrationCyclesWithoutSession.length > 0");
+  });
+
   it("keeps employee, HR, payroll, and auditor performance powers separated", () => {
     expect(permissionsForRole("EMPLOYEE")).toEqual(expect.arrayContaining(["performance.goal.manage_self", "performance.review.submit_self", "performance.career.manage_self"]));
     expect(permissionsForRole("EMPLOYEE")).not.toContain("performance.calibration.admin");
