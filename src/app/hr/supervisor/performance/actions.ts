@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
 import { createPerformanceFeedback, recordPerformanceCheckIn, submitPerformanceReview, transitionGoalStatus } from "@/lib/hr/performance/commands";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 
 async function managerContext(employeeId: string) {
-  const auth = await requirePermission("supervisor.review_assigned");
+  const auth = await requireAuthenticatedUser();
   if (!auth.user.employee) throw new Error("A manager employee profile is required.");
   await prisma.hrSupervisorAssignment.findFirstOrThrow({ where: { organizationId: auth.user.organizationId, supervisorEmployeeId: auth.user.employee.id, assignedEmployeeId: employeeId, status: "ACTIVE", effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] } });
   return auth;

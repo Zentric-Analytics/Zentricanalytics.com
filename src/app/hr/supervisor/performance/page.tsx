@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
 import { addTeamFeedbackAction, approveTeamGoalAction, recordTeamCheckInAction, submitManagerReviewAction } from "./actions";
 
 export default async function SupervisorPerformancePage() {
-  const auth = await requirePermission("supervisor.review_assigned");
+  const auth = await requireAuthenticatedUser();
   if (!auth.user.employee) throw new Error("A manager employee profile is required.");
   const assignments = await prisma.hrSupervisorAssignment.findMany({
     where: { organizationId: auth.user.organizationId, supervisorEmployeeId: auth.user.employee.id, assignedEmployeeId: { not: null }, status: "ACTIVE", effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] },

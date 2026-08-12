@@ -28,6 +28,15 @@ describe("Unit 7 integration contracts", () => {
     expect(administration).toContain("snapshotted review");
     expect(commands).toContain("Date.UTC(effectiveFrom.getUTCFullYear()");
   });
+  it("derives manager performance authority from the effective reporting line", () => {
+    const page = readFileSync("src/app/hr/supervisor/performance/page.tsx", "utf8");
+    const actions = readFileSync("src/app/hr/supervisor/performance/actions.ts", "utf8");
+    expect(page).toContain("requireAuthenticatedUser");
+    expect(actions).toContain("requireAuthenticatedUser");
+    expect(page).toContain("supervisorEmployeeId: auth.user.employee.id");
+    expect(actions).toContain("assignedEmployeeId: employeeId");
+    expect(page).not.toContain('requirePermission("supervisor.review_assigned")');
+  });
   it("maps every Unit 7 template to the HR sender and fails closed for unknown templates", () => {
     for (const template of unit7Templates) {
       expect(emailTemplateSenderRegistry[template]).toBe("hr");
