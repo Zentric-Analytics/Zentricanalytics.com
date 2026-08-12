@@ -10,10 +10,10 @@ const items = [
   ["Deployment", deploymentId],
   ["Current subsection", "Unit 7C — employee self-review and manager review"],
   ["Database / migrations", "42 migrations applied to staging PostgreSQL; none pending"],
-  ["Automated tests", "690/690 passing at the latest completed full-suite checkpoint"],
-  ["Browser workflow", "Framework initialized; effective-dated cycle open with two immutable review snapshots"],
-  ["Defects found", "Established-role permission drift; silent empty-cycle opening; same-day framework/cycle boundary"],
-  ["Fixes applied", "Permission backfill; empty populations fail closed; framework versions normalize to the effective UTC day"],
+  ["Automated tests", "691/691 passing at the latest completed full-suite checkpoint"],
+  ["Browser workflow", "Effective-dated cycle open with two immutable snapshots; reporting-line-scoped manager feedback and check-in exercised"],
+  ["Defects found", "Established-role permission drift; silent empty-cycle opening; same-day framework/cycle boundary; role-only manager performance gate"],
+  ["Fixes applied", "Permission backfill; empty populations fail closed; UTC-day effective boundaries; manager access derives from the active reporting line"],
   ["Next release gate", "Complete recipient-backed employee self-review, manager review, calibration, development, and promotion"],
 ] as const;
 
