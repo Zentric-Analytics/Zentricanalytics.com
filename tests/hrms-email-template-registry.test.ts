@@ -17,6 +17,11 @@ const namedTemplates = [
   "hr-time-schedule-published", "hr-time-schedule-changed", "hr-time-missed-clock-out", "hr-time-correction-required",
   "hr-time-timesheet-due", "hr-time-timesheet-submitted", "hr-time-approval-required", "hr-time-returned", "hr-time-rejected",
   "hr-time-overtime-decided", "hr-time-period-closing", "hr-time-period-locked",
+  "hr-performance-goal-action", "hr-performance-goal-due", "hr-performance-feedback-received",
+  "hr-performance-checkin-due", "hr-performance-self-review-open", "hr-performance-self-review-due",
+  "hr-performance-manager-review-due", "hr-performance-calibration-action", "hr-performance-development-action-due",
+  "hr-promotion-submitted", "hr-promotion-approved", "hr-promotion-deferred", "hr-promotion-rejected",
+  "hr-performance-review-finalized",
 ];
 
 describe("HR outbound email template registry", () => {
