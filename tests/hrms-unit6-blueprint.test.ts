@@ -26,11 +26,12 @@ describe("Unit 6 blueprint", () => {
     for (const value of ["Real PostgreSQL", "Full staging E2E", "Recovery correlation", "Production-readiness gates"]) expect(validation).toContain(value);
   });
 
-  it("provides a public secret-free implementation status without claiming readiness", () => {
+  it("provides a public secret-free final staging readiness status", () => {
     const status = read("src/app/hr/admin/unit-6-status/page.tsx");
-    expect(status).toContain("IN PROGRESS — NOT YET UNIT 6 PRODUCTION READY");
-    expect(status).toContain("IMPLEMENTATION IN PROGRESS");
+    expect(status).toContain("PASS — Unit 6 Production Ready");
+    expect(status).toContain("STAGING RELEASE GATES PASSED");
     expect(status).toContain("production unchanged");
+    expect(status).toContain("does not deploy or modify production");
     expect(status).not.toMatch(/DATABASE_URL|SECRET_ACCESS_KEY|AUTH_SECRET/);
     expect(read("src/app/unit-6-status/page.tsx")).toContain("unit-6-status/page");
   });
