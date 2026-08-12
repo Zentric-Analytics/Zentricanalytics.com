@@ -8,9 +8,10 @@ const links: Array<[string, string, HrPermissionKey?]> = [["Dashboard","/hr/admi
 export default async function HrAdminLayout({ children }: { children: React.ReactNode }) {
   const auth = await requireAnyRole(["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN"]);
   const visibleLinks = links.filter(([, , permission]) => !permission || auth.permissions.has(permission));
-  const [organization, unread] = await Promise.all([
+  const [organization, notifications] = await Promise.all([
     prisma.hrOrganization.findUnique({ where: { id: auth.user.organizationId }, select: { name: true } }),
-    prisma.hrNotification.count({ where: { organizationId: auth.user.organizationId, userId: auth.user.id, readAt: null } }),
+    prisma.hrNotification.findMany({ where: { organizationId: auth.user.organizationId, userId: auth.user.id }, orderBy: { createdAt: "desc" }, take: 100, select: { id: true, category: true, title: true, body: true, href: true, readAt: true, createdAt: true } }),
   ]);
-  return <HrAdminShell email={auth.user.email} role={auth.roles[0] ?? "Administrator"} organization={organization?.name ?? "Zentric Analytics"} unread={unread} allowedLinks={visibleLinks.map(([, href]) => href)}>{children}</HrAdminShell>;
+  const serialized = notifications.map(item => ({ ...item, readAt: item.readAt?.toISOString() ?? null, createdAt: item.createdAt.toISOString() }));
+  return <HrAdminShell email={auth.user.email} role={auth.roles[0] ?? "Administrator"} organization={organization?.name ?? "Zentric Analytics"} unread={notifications.filter(item => !item.readAt).length} notifications={serialized} allowedLinks={visibleLinks.map(([, href]) => href)}>{children}</HrAdminShell>;
 }
