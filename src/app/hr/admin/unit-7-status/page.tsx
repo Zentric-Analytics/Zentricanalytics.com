@@ -8,13 +8,13 @@ const items = [
   ["Branch", "feature/hrms-unit-07-performance-career-blueprint"],
   ["HEAD SHA", deployedHead],
   ["Deployment", deploymentId],
-  ["Current subsection", "Unit 7C — employee self-review and manager review"],
-  ["Database / migrations", "42 migrations applied to staging PostgreSQL; none pending"],
-  ["Automated tests", "691/691 passing at the latest completed full-suite checkpoint"],
-  ["Browser workflow", "Effective-dated cycle open with two immutable snapshots; reporting-line-scoped manager feedback and check-in exercised"],
-  ["Defects found", "Established-role permission drift; silent empty-cycle opening; same-day framework/cycle boundary; role-only manager performance gate"],
-  ["Fixes applied", "Permission backfill; empty populations fail closed; UTC-day effective boundaries; manager access derives from the active reporting line"],
-  ["Next release gate", "Complete recipient-backed employee self-review, manager review, calibration, development, and promotion"],
+  ["Current subsection", "Unit 7D–7F — development, target readiness, and governed promotion"],
+  ["Database / migrations", "43 migrations applied to staging PostgreSQL; none pending"],
+  ["Automated tests", "692/692 passing at the latest completed full-suite checkpoint; focused Unit 7 regression passing"],
+  ["Browser workflow", "Self-review, manager review, calibration, privacy remediation, and finalization audit passed; target-specific career workflow is next"],
+  ["Defects found", "Calibration finalization exposed restricted rationale and omitted the correlated audit; career commands lacked governed browser surfaces"],
+  ["Fixes applied", "Neutral employee rationale, idempotent audit backfill, explicit calibration errors, and permission-scoped career workflow surfaces"],
+  ["Next release gate", "Deploy 7D–7F surfaces, validate target architecture and sustained evidence, then execute the Unit 4 exactly-once handoff"],
 ] as const;
 
 export default function Unit7StatusPage() {

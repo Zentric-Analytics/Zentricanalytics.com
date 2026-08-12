@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
-import { createCalibrationSession, createPerformanceCycle, openPerformanceCycle, recordCalibrationDecision, seedPerformanceFramework, transitionCalibrationSession } from "@/lib/hr/performance/commands";
+import { activateDevelopmentPlan, createCalibrationSession, createDevelopmentPlan, createPerformanceCycle, createPromotionWorkforceHandoff, decidePromotionCase, finalizeReadinessAssessment, openPerformanceCycle, recordCalibrationDecision, seedPerformanceFramework, transitionCalibrationSession, transitionPromotionCaseStatus } from "@/lib/hr/performance/commands";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 
@@ -48,5 +48,52 @@ export async function transitionCalibrationSessionAction(form: FormData) {
 export async function recordCalibrationDecisionAction(form: FormData) {
   const auth = await requirePermission("performance.calibration.participate");
   await prisma.$transaction((tx) => recordCalibrationDecision(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "CALIBRATION_PARTICIPANT" }, { sessionId: text(form, "sessionId"), reviewId: text(form, "reviewId"), reviewVersion: Number(text(form, "reviewVersion")), managerRatingItemId: text(form, "managerRatingItemId"), calibratedRatingItemId: text(form, "calibratedRatingItemId"), rationale: text(form, "rationale") }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/performance");
+}
+
+export async function createDevelopmentPlanAction(form: FormData) {
+  const auth = await requirePermission("performance.development.admin");
+  const targetDate = new Date(`${text(form, "targetDate")}T12:00:00Z`);
+  await prisma.$transaction(async (tx) => {
+    const review = await tx.hrPerformanceReview.findFirstOrThrow({ where: { id: text(form, "reviewId"), organizationId: auth.user.organizationId, status: "FINALIZED" } });
+    const manager = await tx.hrEmployee.findFirstOrThrow({ where: { id: review.managerEmployeeId, organizationId: auth.user.organizationId, userId: { not: null } } });
+    const employee = await tx.hrEmployee.findFirstOrThrow({ where: { id: review.employeeId, organizationId: auth.user.organizationId, userId: { not: null } } });
+    const expectationIds = form.getAll("expectationVersionIds").map(String).filter(Boolean);
+    const plan = await createDevelopmentPlan(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { employeeId: review.employeeId, managerEmployeeId: review.managerEmployeeId, summary: text(form, "summary"), expectationVersionIds: expectationIds, actions: [{ gap: text(form, "gap"), targetCapability: text(form, "targetCapability"), actionType: text(form, "actionType"), ownerUserId: employee.userId!, mentorUserId: manager.userId!, targetDate, evidenceRequired: { description: text(form, "evidenceRequired"), targetJobProfileVersionId: text(form, "targetJobProfileVersionId") } }] });
+    await activateDevelopmentPlan(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { planId: plan.id, expectedVersion: plan.currentVersion, reason: "Employee and manager agreed the version-bound Unit 7 development plan." });
+  }, { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/performance");
+}
+
+export async function finalizeReadinessAssessmentAction(form: FormData) {
+  const auth = await requirePermission("performance.readiness.assess");
+  await prisma.$transaction(async (tx) => {
+    const review = await tx.hrPerformanceReview.findFirstOrThrow({ where: { id: text(form, "reviewId"), organizationId: auth.user.organizationId, status: "FINALIZED" } });
+    await finalizeReadinessAssessment(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { employeeId: review.employeeId, workRelationshipId: review.workRelationshipId, assignmentId: review.assignmentId, currentJobProfileVersionId: review.jobProfileVersionId, currentLevelVersionId: review.companyLevelVersionId, targetJobProfileVersionId: text(form, "targetJobProfileVersionId"), targetLevelVersionId: text(form, "targetLevelVersionId"), cycleId: review.cycleId, state: text(form, "state") as "NOT_YET_READY" | "DEVELOPING" | "APPROACHING_READY" | "READY_NOW", evidenceIds: form.getAll("evidenceIds").map(String).filter(Boolean), gaps: text(form, "gaps").split("\n").map((value) => value.trim()).filter(Boolean), rationale: text(form, "rationale"), employeeFacingRationale: text(form, "employeeFacingRationale") });
+  }, { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/performance");
+}
+
+export async function transitionPromotionCaseAction(form: FormData) {
+  const auth = await requirePermission(text(form, "to") === "BUSINESS_APPROVAL" ? "performance.promotion.approve" : "performance.promotion.review");
+  await prisma.$transaction((tx) => transitionPromotionCaseStatus(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { promotionCaseId: text(form, "promotionCaseId"), expectedVersion: Number(text(form, "expectedVersion")), to: text(form, "to") as "CALIBRATION" | "HR_REVIEW" | "BUSINESS_APPROVAL", reason: text(form, "reason") }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/performance");
+}
+
+export async function decidePromotionCaseAction(form: FormData) {
+  const auth = await requirePermission("performance.promotion.approve");
+  await prisma.$transaction((tx) => decidePromotionCase(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "BUSINESS_APPROVER" }, { promotionCaseId: text(form, "promotionCaseId"), expectedVersion: Number(text(form, "expectedVersion")), decision: text(form, "decision") as "APPROVED" | "REJECTED" | "DEFERRED", rationale: text(form, "rationale"), approverUserIds: [auth.user.id] }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/performance");
+}
+
+export async function createPromotionHandoffAction(form: FormData) {
+  const auth = await requirePermission("performance.promotion.approve");
+  await prisma.$transaction(async (tx) => {
+    const promotionCase = await tx.hrPromotionCase.findFirstOrThrow({ where: { id: text(form, "promotionCaseId"), organizationId: auth.user.organizationId } });
+    const decision = await tx.hrPromotionDecision.findUniqueOrThrow({ where: { promotionCaseId: promotionCase.id } });
+    const assignment = await tx.hrEmployeeAssignment.findFirstOrThrow({ where: { id: promotionCase.assignmentId, organizationId: auth.user.organizationId, status: "ACTIVE" }, include: { position: true } });
+    const target = await tx.hrJobProfileVersion.findFirstOrThrow({ where: { id: promotionCase.targetJobProfileVersionId, organizationId: auth.user.organizationId, status: "PUBLISHED" } });
+    await createPromotionWorkforceHandoff(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { promotionCaseId: promotionCase.id, decisionId: decision.id, expectedCaseVersion: promotionCase.version, currentWorkRelationshipId: promotionCase.workRelationshipId, currentAssignmentId: promotionCase.assignmentId, currentJobProfileVersionId: promotionCase.currentJobProfileVersionId, targetJobProfileVersionId: target.id, targetLevelVersionId: promotionCase.targetLevelVersionId, proposedSnapshot: { jobProfileId: target.jobProfileId, positionId: assignment.positionId, departmentId: assignment.departmentId, teamId: assignment.teamId, locationId: assignment.locationId, legalEntityId: assignment.legalEntityId, gradeId: assignment.position.gradeId, employmentType: assignment.employmentType } });
+  }, { isolationLevel: "Serializable" });
   revalidatePath("/hr/admin/performance");
 }
