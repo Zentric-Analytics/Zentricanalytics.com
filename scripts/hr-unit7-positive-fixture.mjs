@@ -7,7 +7,13 @@ if (process.env.HR_UNIT7_POSITIVE_FIXTURE_CONFIRM !== "staging-only" || database
 }
 
 const prisma = new PrismaClient();
-const fixtureKey = "unit7-positive-promotion-v1";
+const fixtureVariant = process.env.HR_UNIT7_FIXTURE_VARIANT === "immediate" ? "immediate" : "positive";
+const fixtureKey = fixtureVariant === "immediate" ? "unit7-immediate-promotion-v1" : "unit7-positive-promotion-v1";
+const employeeNumber = fixtureVariant === "immediate" ? "U7-IMMEDIATE-001" : "U7-POSITIVE-001";
+const relationshipRef = fixtureVariant === "immediate" ? "WR-U7-IMMEDIATE-001" : "WR-U7-POSITIVE-001";
+const employeeIdentity = fixtureVariant === "immediate"
+  ? { legalFirstName: "UnitSeven", lastName: "Immediate Promotion", preferredName: "Unit Seven Immediate", preferredNotificationEmail: "sweetcathytelano+unit7immediate@gmail.com" }
+  : { legalFirstName: "UnitSeven", lastName: "Positive Promotion", preferredName: "Unit Seven Positive", preferredNotificationEmail: "workingemail20266@gmail.com" };
 const identityKeyHash = crypto.createHash("sha256").update(fixtureKey).digest("hex");
 const effectiveFrom = new Date("2025-01-01T00:00:00.000Z");
 
@@ -30,14 +36,13 @@ try {
     });
     let employee = await tx.hrEmployee.findFirst({ where: { organizationId: organization.id, personId: person.id } });
     if (!employee) employee = await tx.hrEmployee.create({ data: {
-      organizationId: organization.id, personId: person.id, employeeNumber: "U7-POSITIVE-001",
-      legalFirstName: "UnitSeven", lastName: "Positive Promotion", preferredName: "Unit Seven Positive",
-      preferredNotificationEmail: "workingemail20266@gmail.com", employmentStatus: "ACTIVE",
+      organizationId: organization.id, personId: person.id, employeeNumber,
+      ...employeeIdentity, employmentStatus: "ACTIVE",
       hireDate: effectiveFrom, startDate: effectiveFrom, workMode: "HYBRID",
     } });
     const relationship = await tx.hrWorkRelationship.upsert({
-      where: { organizationId_relationshipRef: { organizationId: organization.id, relationshipRef: "WR-U7-POSITIVE-001" } },
-      update: {}, create: { organizationId: organization.id, personId: person.id, employeeId: employee.id, relationshipRef: "WR-U7-POSITIVE-001", status: "ACTIVE", startedAt: effectiveFrom },
+      where: { organizationId_relationshipRef: { organizationId: organization.id, relationshipRef } },
+      update: {}, create: { organizationId: organization.id, personId: person.id, employeeId: employee.id, relationshipRef, status: "ACTIVE", startedAt: effectiveFrom },
     });
     let assignment = await tx.hrEmployeeAssignment.findFirst({ where: { organizationId: organization.id, employeeId: employee.id, status: "ACTIVE", isPrimary: true } });
     if (!assignment) assignment = await tx.hrEmployeeAssignment.create({ data: {
