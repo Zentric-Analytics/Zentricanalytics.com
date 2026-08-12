@@ -72,4 +72,25 @@ describe("Unit 7 integration contracts", () => {
     expect(permissionsForRole("PAYROLL_ADMIN")).not.toContain("performance.readiness.assess");
     expect(permissionsForRole("AUDITOR")).toEqual(["audit.read", "report.read", "performance.audit.read"]);
   });
+
+  it("exposes only employee-facing development and readiness narratives", () => {
+    const page = readFileSync("src/app/hr/employee/performance/page.tsx", "utf8");
+    expect(page).toContain("Exact target expectations");
+    expect(page).toContain("employeeFacingRationale");
+    expect(page).not.toContain("item.rationale");
+    expect(page).not.toContain("HrCalibrationDecision");
+    expect(page).toContain("Restricted calibration discussion");
+  });
+
+  it("runs idempotent goal, review, check-in, development, and calibration reminders", () => {
+    const worker = readFileSync("src/lib/hr/performance/worker.ts", "utf8");
+    expect(worker).toContain("sendDueDevelopmentReminders");
+    expect(worker).toContain("sendDueCheckInReminders");
+    expect(worker).toContain("sendReviewActionReminders");
+    expect(worker).toContain("unit7-development-due:");
+    expect(worker).toContain("unit7-checkin-due:");
+    expect(worker).toContain("unit7-self-review-due:");
+    expect(worker).toContain("unit7-manager-review-due:");
+    expect(worker).toContain("unit7-calibration-action:");
+  });
 });

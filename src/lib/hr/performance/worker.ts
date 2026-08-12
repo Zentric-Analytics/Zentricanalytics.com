@@ -33,6 +33,63 @@ async function sendDueGoalReminders(organizationId: string, now: Date) {
   return queued;
 }
 
+async function sendDueDevelopmentReminders(organizationId: string, now: Date) {
+  const horizon = new Date(now.getTime() + 7 * 86_400_000);
+  const actions = await prisma.hrDevelopmentAction.findMany({ where: { organizationId, status: "PENDING", targetDate: { gte: now, lte: horizon } }, orderBy: { targetDate: "asc" }, take: 500 });
+  let queued = 0;
+  for (const action of actions) {
+    const owner = await prisma.hrUser.findFirst({ where: { id: action.ownerUserId, organizationId, status: "ACTIVE" }, include: { employee: true } });
+    if (!owner) continue;
+    await enqueueHrEmail(prisma, { organizationId, recipient: owner.email, template: "hr-performance-development-action-due", subject: "Development action due soon", payload: { recipientName: owner.employee?.preferredName ?? owner.employee?.legalFirstName ?? owner.email.split("@")[0], href: "/hr/employee/performance", developmentActionId: action.id }, idempotencyKey: `unit7-development-due:${action.id}:${action.targetDate.toISOString().slice(0, 10)}` });
+    queued += 1;
+  }
+  return queued;
+}
+
+async function sendDueCheckInReminders(organizationId: string, now: Date) {
+  const horizon = new Date(now.getTime() + 7 * 86_400_000);
+  const checkIns = await prisma.hrPerformanceCheckIn.findMany({ where: { organizationId, followUpAt: { gte: now, lte: horizon } }, orderBy: { followUpAt: "asc" }, take: 500 });
+  let queued = 0;
+  for (const checkIn of checkIns) {
+    const manager = await prisma.hrEmployee.findFirst({ where: { id: checkIn.managerEmployeeId, organizationId, userId: { not: null } }, include: { user: true } });
+    if (!manager?.user || manager.user.status !== "ACTIVE") continue;
+    await enqueueHrEmail(prisma, { organizationId, recipient: manager.user.email, template: "hr-performance-checkin-due", subject: "Performance check-in follow-up due", payload: { recipientName: manager.preferredName ?? manager.legalFirstName, href: "/hr/supervisor/performance", checkInId: checkIn.id }, idempotencyKey: `unit7-checkin-due:${checkIn.id}:${checkIn.followUpAt!.toISOString().slice(0, 10)}` });
+    queued += 1;
+  }
+  return queued;
+}
+
+async function sendReviewActionReminders(organizationId: string) {
+  const reviews = await prisma.hrPerformanceReview.findMany({ where: { organizationId, status: { in: ["SELF_REVIEW", "MANAGER_REVIEW", "CALIBRATION"] } }, orderBy: { updatedAt: "asc" }, take: 500 });
+  let queued = 0;
+  for (const review of reviews) {
+    if (review.status === "SELF_REVIEW") {
+      const employee = await prisma.hrEmployee.findFirst({ where: { id: review.employeeId, organizationId, userId: { not: null } }, include: { user: true } });
+      if (!employee?.user || employee.user.status !== "ACTIVE") continue;
+      await enqueueHrEmail(prisma, { organizationId, recipient: employee.user.email, template: "hr-performance-self-review-due", subject: "Your self-review needs action", payload: { recipientName: employee.preferredName ?? employee.legalFirstName, href: "/hr/employee/performance", reviewId: review.id }, idempotencyKey: `unit7-self-review-due:${review.id}:v${review.version}` });
+      queued += 1;
+      continue;
+    }
+    if (review.status === "MANAGER_REVIEW") {
+      const reviewer = await prisma.hrUser.findFirst({ where: { id: review.reviewerUserId, organizationId, status: "ACTIVE" }, include: { employee: true } });
+      if (!reviewer) continue;
+      await enqueueHrEmail(prisma, { organizationId, recipient: reviewer.email, template: "hr-performance-manager-review-due", subject: "Manager review needs action", payload: { recipientName: reviewer.employee?.preferredName ?? reviewer.employee?.legalFirstName ?? reviewer.email.split("@")[0], href: "/hr/supervisor/performance", reviewId: review.id }, idempotencyKey: `unit7-manager-review-due:${review.id}:v${review.version}` });
+      queued += 1;
+      continue;
+    }
+    const sessions = await prisma.hrCalibrationSession.findMany({ where: { organizationId, cycleId: review.cycleId, status: { in: ["IN_SESSION", "DECISIONS_PENDING"] } }, select: { id: true, version: true } });
+    for (const session of sessions) {
+      const grants = await prisma.hrCalibrationGrant.findMany({ where: { organizationId, sessionId: session.id, effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] }, select: { userId: true } });
+      const users = await prisma.hrUser.findMany({ where: { organizationId, id: { in: grants.map(({ userId }) => userId) }, status: "ACTIVE" }, include: { employee: true } });
+      for (const user of users) {
+        await enqueueHrEmail(prisma, { organizationId, recipient: user.email, template: "hr-performance-calibration-action", subject: "Calibration action required", payload: { recipientName: user.employee?.preferredName ?? user.employee?.legalFirstName ?? user.email.split("@")[0], href: "/hr/admin/performance", sessionId: session.id, reviewId: review.id }, idempotencyKey: `unit7-calibration-action:${session.id}:v${session.version}:${review.id}:${user.id}` });
+        queued += 1;
+      }
+    }
+  }
+  return queued;
+}
+
 async function reconcilePromotionHandoffs(organizationId: string) {
   const cases = await prisma.hrPromotionCase.findMany({ where: { organizationId, status: "EXECUTION_PENDING", workforceEventId: { not: null } }, take: 500 });
   let reconciled = 0;
@@ -56,7 +113,7 @@ export async function runPerformanceOperationalWindow(now = new Date()) {
     const run = await claimRun(organizationId, "PERFORMANCE_OPERATIONAL_SWEEP", windowKey, now);
     if (!run) { results.push({ organizationId, status: "SKIPPED", reminders: 0, reconciled: 0 }); continue; }
     try {
-      const reminders = await sendDueGoalReminders(organizationId, now);
+      const reminders = (await sendDueGoalReminders(organizationId, now)) + (await sendDueDevelopmentReminders(organizationId, now)) + (await sendDueCheckInReminders(organizationId, now)) + (await sendReviewActionReminders(organizationId));
       const reconciled = await reconcilePromotionHandoffs(organizationId);
       await prisma.hrPerformanceJobRun.update({ where: { id: run.id }, data: { status: "COMPLETED", completedAt: new Date(), checkpoint: { reminders, reconciled }, claimTokenHash: null } });
       await appendHrAudit(prisma, { organizationId, actorRole: "WORKER", entityType: "HrPerformanceJobRun", entityId: run.id, action: "hr.performance.worker.completed", newValues: { jobType: run.jobType, windowKey, reminders, reconciled }, correlationId: run.correlationId });
