@@ -9,12 +9,12 @@ const items = [
   ["HEAD SHA", deployedHead],
   ["Deployment", deploymentId],
   ["Current subsection", "Unit 7C–7E — review cycles, calibration, development, readiness, and promotion cases"],
-  ["Database / migrations", "Additive Unit 7 migration drafted; staging application pending"],
+  ["Database / migrations", "41 migrations applied to staging PostgreSQL; none pending"],
   ["Automated tests", "688/688 passing at the latest completed full-suite checkpoint"],
-  ["Browser workflow", "Role workspaces implemented locally; exact-candidate staging journey pending"],
-  ["Defects found", "No runtime defects yet; implementation remains incomplete"],
-  ["Fixes applied", "Versioned schema, state guards, privacy rules, evidence checks, promotion handoff, worker route"],
-  ["Next release gate", "Commit exact candidate, deploy to staging PostgreSQL, and execute governed lifecycle"],
+  ["Browser workflow", "Exact candidate is live; governed employee, manager, HR, and auditor journeys are next"],
+  ["Defects found", "Status page retained pre-deployment wording after successful staging migration"],
+  ["Fixes applied", "Versioned schema, state guards, privacy rules, evidence checks, promotion handoff, worker route, accurate live checkpoint"],
+  ["Next release gate", "Execute the governed Unit 7A–7F staging lifecycle and direct authorization checks"],
 ] as const;
 
 export default function Unit7StatusPage() {
