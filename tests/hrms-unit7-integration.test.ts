@@ -46,6 +46,8 @@ describe("Unit 7 integration contracts", () => {
     expect(commands).toContain('status: "FINALIZED"');
     expect(page).toContain("Record version-bound decision");
     expect(page).toContain("Finalize calibrated reviews");
+    expect(page).toContain('role="alert"');
+    expect(readFileSync("src/app/hr/admin/performance/actions.ts", "utf8")).toContain("calibrationError=");
   });
   it("maps every Unit 7 template to the HR sender and fails closed for unknown templates", () => {
     for (const template of unit7Templates) {

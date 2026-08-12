@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { createCalibrationSession, createPerformanceCycle, openPerformanceCycle, recordCalibrationDecision, seedPerformanceFramework, transitionCalibrationSession } from "@/lib/hr/performance/commands";
@@ -35,7 +36,12 @@ export async function createCalibrationSessionAction(form: FormData) {
 
 export async function transitionCalibrationSessionAction(form: FormData) {
   const auth = await requirePermission("performance.calibration.admin");
-  await prisma.$transaction((tx) => transitionCalibrationSession(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { sessionId: text(form, "sessionId"), expectedVersion: Number(text(form, "expectedVersion")), to: text(form, "to") as "POPULATION_LOCKED" | "IN_SESSION" | "DECISIONS_PENDING" | "FINALIZED" | "CANCELLED", reason: text(form, "reason") }), { isolationLevel: "Serializable" });
+  try {
+    await prisma.$transaction((tx) => transitionCalibrationSession(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { sessionId: text(form, "sessionId"), expectedVersion: Number(text(form, "expectedVersion")), to: text(form, "to") as "POPULATION_LOCKED" | "IN_SESSION" | "DECISIONS_PENDING" | "FINALIZED" | "CANCELLED", reason: text(form, "reason") }), { isolationLevel: "Serializable" });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Calibration could not be changed.";
+    redirect(`/hr/admin/performance?calibrationError=${encodeURIComponent(message)}`);
+  }
   revalidatePath("/hr/admin/performance");
 }
 
