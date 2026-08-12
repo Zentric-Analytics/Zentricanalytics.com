@@ -1,10 +1,13 @@
 "use server";
 
+import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { activateDevelopmentPlan, createCalibrationSession, createDevelopmentPlan, createPerformanceCycle, createPromotionWorkforceHandoff, decidePromotionCase, finalizeReadinessAssessment, openPerformanceCycle, recordCalibrationDecision, seedPerformanceFramework, transitionCalibrationSession, transitionPromotionCaseStatus } from "@/lib/hr/performance/commands";
+import { performanceContentHash } from "@/lib/hr/performance/domain";
+import { appendHrAudit } from "@/lib/hr/audit";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 
@@ -61,6 +64,38 @@ export async function createDevelopmentPlanAction(form: FormData) {
     const expectationIds = form.getAll("expectationVersionIds").map(String).filter(Boolean);
     const plan = await createDevelopmentPlan(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { employeeId: review.employeeId, managerEmployeeId: review.managerEmployeeId, summary: text(form, "summary"), expectationVersionIds: expectationIds, actions: [{ gap: text(form, "gap"), targetCapability: text(form, "targetCapability"), actionType: text(form, "actionType"), ownerUserId: employee.userId!, mentorUserId: manager.userId!, targetDate, evidenceRequired: { description: text(form, "evidenceRequired"), targetJobProfileVersionId: text(form, "targetJobProfileVersionId") } }] });
     await activateDevelopmentPlan(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { planId: plan.id, expectedVersion: plan.currentVersion, reason: "Employee and manager agreed the version-bound Unit 7 development plan." });
+  }, { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/performance");
+}
+
+export async function publishCareerTargetAction(form: FormData) {
+  const auth = await requirePermission("performance.framework.manage");
+  await prisma.$transaction(async (tx) => {
+    const review = await tx.hrPerformanceReview.findFirstOrThrow({ where: { id: text(form, "reviewId"), organizationId: auth.user.organizationId, status: "FINALIZED" } });
+    const current = await tx.hrJobProfileVersion.findFirstOrThrow({ where: { id: review.jobProfileVersionId, organizationId: auth.user.organizationId, status: "PUBLISHED" } });
+    const currentLevelVersion = await tx.hrCompanyLevelVersion.findFirstOrThrow({ where: { id: current.companyLevelVersionId, organizationId: auth.user.organizationId, status: "PUBLISHED" } });
+    const currentLevel = await tx.hrCompanyLevel.findFirstOrThrow({ where: { id: currentLevelVersion.companyLevelId, organizationId: auth.user.organizationId } });
+    const nextLevel = await tx.hrCompanyLevel.findFirstOrThrow({ where: { organizationId: auth.user.organizationId, displayOrder: currentLevel.displayOrder + 1 } });
+    const nextLevelVersion = await tx.hrCompanyLevelVersion.findFirstOrThrow({ where: { organizationId: auth.user.organizationId, companyLevelId: nextLevel.id, status: "PUBLISHED", effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] }, orderBy: { version: "desc" } });
+    const currentLegacy = await tx.hrJobProfile.findFirstOrThrow({ where: { id: current.jobProfileId, organizationId: auth.user.organizationId }, include: { jobFamily: true } });
+    const code = text(form, "code").toUpperCase().replace(/[^A-Z0-9_-]+/g, "-");
+    if (!code || !text(form, "title")) throw new Error("A governed target code and title are required.");
+    const targetLegacy = await tx.hrJobProfile.upsert({ where: { organizationId_code: { organizationId: auth.user.organizationId, code } }, update: {}, create: { organizationId: auth.user.organizationId, jobFamilyId: currentLegacy.jobFamilyId, code, title: text(form, "title"), description: `Governed ${nextLevel.code} progression target from ${current.title}.`, responsibilities: { sourceProfileVersionId: current.id, targetLevelVersionId: nextLevelVersion.id }, minimumRequirements: { governed: true } } });
+    const existing = await tx.hrJobProfileVersion.findUnique({ where: { jobProfileId_version: { jobProfileId: targetLegacy.id, version: 1 } } });
+    if (existing) throw new Error("This target profile is already published; use its immutable version.");
+    const responsibilities = { sourceProfileVersionId: current.id, scope: text(form, "scope"), impact: text(form, "impact") };
+    const requirements = { independence: text(form, "independence"), complexity: text(form, "complexity"), collaboration: text(form, "collaboration"), governed: true };
+    const payload = { title: targetLegacy.title, responsibilities, requirements, careerTrackId: current.careerTrackId, companyLevelVersionId: nextLevelVersion.id };
+    const target = await tx.hrJobProfileVersion.create({ data: { organizationId: auth.user.organizationId, jobProfileId: targetLegacy.id, jobFunctionId: current.jobFunctionId, careerTrackId: current.careerTrackId, companyLevelVersionId: nextLevelVersion.id, version: 1, title: targetLegacy.title, responsibilities, requirements, status: "PUBLISHED", effectiveFrom: new Date(), contentHash: performanceContentHash(payload), publishedById: auth.user.id, publishedAt: new Date() } });
+    for (const [codeValue, name, expectation] of [["SCOPE", "Scope", text(form, "scope")], ["INDEPENDENCE", "Independence", text(form, "independence")], ["COMPLEXITY", "Complexity", text(form, "complexity")], ["IMPACT", "Impact", text(form, "impact")], ["COLLABORATION", "Collaboration and influence", text(form, "collaboration")]] as const) {
+      if (!expectation) throw new Error(`The ${name.toLowerCase()} expectation is required.`);
+      const competency = await tx.hrCompetency.upsert({ where: { organizationId_code: { organizationId: auth.user.organizationId, code: codeValue } }, update: {}, create: { organizationId: auth.user.organizationId, code: codeValue, name } });
+      let competencyVersion = await tx.hrCompetencyVersion.findUnique({ where: { competencyId_version: { competencyId: competency.id, version: 1 } } });
+      if (!competencyVersion) competencyVersion = await tx.hrCompetencyVersion.create({ data: { organizationId: auth.user.organizationId, competencyId: competency.id, version: 1, definition: `${name} evidence for governed career decisions.`, evidenceGuide: { requiresSource: true }, status: "PUBLISHED", effectiveFrom: new Date(), contentHash: performanceContentHash({ codeValue, name }), publishedById: auth.user.id, publishedAt: new Date() } });
+      await tx.hrCompetencyExpectation.create({ data: { organizationId: auth.user.organizationId, jobProfileVersionId: target.id, competencyVersionId: competencyVersion.id, companyLevelVersionId: nextLevelVersion.id, expectation, evidenceGuide: { requiresSustainedEvidence: true } } });
+    }
+    const correlationId = crypto.randomUUID();
+    await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN", entityType: "HrJobProfileVersion", entityId: target.id, action: "hr.performance.career_target.published", newValues: { sourceProfileVersionId: current.id, targetProfileVersionId: target.id, targetLevelVersionId: nextLevelVersion.id, careerTrackId: current.careerTrackId, jobFunctionId: current.jobFunctionId, expectationCount: 5 }, reason: "Publish a compatible next-level career target through governed job architecture.", correlationId });
   }, { isolationLevel: "Serializable" });
   revalidatePath("/hr/admin/performance");
 }
