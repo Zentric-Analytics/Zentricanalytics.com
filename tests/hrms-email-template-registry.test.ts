@@ -14,6 +14,9 @@ const namedTemplates = [
   "hr-leave-submitted", "hr-leave-review-requested", "hr-leave-approved", "hr-leave-rejected", "hr-leave-returned", "hr-leave-cancelled", "hr-leave-upcoming", "hr-leave-evidence-required", "hr-leave-expiring-entitlement", "hr-leave-return-to-work",
   "hr-payroll-review-ready", "hr-payroll-approval-ready", "hr-payroll-approved", "hr-payslip-ready",
   "hr-workflow-approval", "hr-employment-exit", "hr-vacancy-open", "hr-vacancy-approved",
+  "hr-time-schedule-published", "hr-time-schedule-changed", "hr-time-missed-clock-out", "hr-time-correction-required",
+  "hr-time-timesheet-due", "hr-time-timesheet-submitted", "hr-time-approval-required", "hr-time-returned", "hr-time-rejected",
+  "hr-time-overtime-decided", "hr-time-period-closing", "hr-time-period-locked",
 ];
 
 describe("HR outbound email template registry", () => {
