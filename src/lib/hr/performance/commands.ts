@@ -27,6 +27,7 @@ export type PerformanceContext = { organizationId: string; actorUserId: string; 
 const json = (value: unknown) => value as Prisma.InputJsonValue;
 
 export async function seedPerformanceFramework(tx: Prisma.TransactionClient, context: PerformanceContext, effectiveFrom = new Date()) {
+  effectiveFrom = new Date(Date.UTC(effectiveFrom.getUTCFullYear(), effectiveFrom.getUTCMonth(), effectiveFrom.getUTCDate()));
   const tracks = [];
   for (const code of careerTracks) tracks.push(await tx.hrCareerTrack.upsert({ where: { organizationId_code: { organizationId: context.organizationId, code } }, update: {}, create: { organizationId: context.organizationId, code, name: code === "IC" ? "Individual Contributor" : "People Manager", status: "PUBLISHED", effectiveFrom, createdById: context.actorUserId } }));
   const levels = [];

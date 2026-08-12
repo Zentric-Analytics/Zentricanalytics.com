@@ -1,20 +1,20 @@
 export const dynamic = "force-dynamic";
 
 const deployedHead = process.env.RENDER_GIT_COMMIT ?? "local working tree";
-const deploymentId = process.env.RENDER_DEPLOY_ID ?? "local validation";
+const deploymentId = process.env.RENDER ? "Render staging — exact SHA shown above" : "local validation";
 
 const items = [
   ["Environment", "Development / staging only — production untouched"],
   ["Branch", "feature/hrms-unit-07-performance-career-blueprint"],
   ["HEAD SHA", deployedHead],
   ["Deployment", deploymentId],
-  ["Current subsection", "Unit 7C–7E — review cycles, calibration, development, readiness, and promotion cases"],
-  ["Database / migrations", "41 migrations applied to staging PostgreSQL; none pending"],
-  ["Automated tests", "688/688 passing at the latest completed full-suite checkpoint"],
-  ["Browser workflow", "Exact candidate is live; governed employee, manager, HR, and auditor journeys are next"],
-  ["Defects found", "Status page retained pre-deployment wording after successful staging migration"],
-  ["Fixes applied", "Versioned schema, state guards, privacy rules, evidence checks, promotion handoff, worker route, accurate live checkpoint"],
-  ["Next release gate", "Execute the governed Unit 7A–7F staging lifecycle and direct authorization checks"],
+  ["Current subsection", "Unit 7C — employee self-review and manager review"],
+  ["Database / migrations", "42 migrations applied to staging PostgreSQL; none pending"],
+  ["Automated tests", "690/690 passing at the latest completed full-suite checkpoint"],
+  ["Browser workflow", "Framework initialized; effective-dated cycle open with two immutable review snapshots"],
+  ["Defects found", "Established-role permission drift; silent empty-cycle opening; same-day framework/cycle boundary"],
+  ["Fixes applied", "Permission backfill; empty populations fail closed; framework versions normalize to the effective UTC day"],
+  ["Next release gate", "Complete recipient-backed employee self-review, manager review, calibration, development, and promotion"],
 ] as const;
 
 export default function Unit7StatusPage() {

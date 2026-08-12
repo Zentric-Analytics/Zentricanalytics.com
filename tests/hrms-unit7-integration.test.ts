@@ -26,6 +26,7 @@ describe("Unit 7 integration contracts", () => {
     const administration = readFileSync("src/app/hr/admin/performance/page.tsx", "utf8");
     expect(commands).toContain('if (created === 0) throw new Error("This cycle has no eligible employees.');
     expect(administration).toContain("snapshotted review");
+    expect(commands).toContain("Date.UTC(effectiveFrom.getUTCFullYear()");
   });
   it("maps every Unit 7 template to the HR sender and fails closed for unknown templates", () => {
     for (const template of unit7Templates) {
