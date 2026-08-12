@@ -12,6 +12,14 @@ const unit7Templates = [
 ];
 
 describe("Unit 7 integration contracts", () => {
+  it("records governed historical check-in dates without permitting future evidence", () => {
+    const page = readFileSync("src/app/hr/supervisor/performance/page.tsx", "utf8");
+    const actions = readFileSync("src/app/hr/supervisor/performance/actions.ts", "utf8");
+    expect(page).toContain('name="occurredAt"');
+    expect(page).toContain('max={new Date().toISOString().slice(0, 10)}');
+    expect(actions).toContain('occurredAt.getTime() > Date.now()');
+    expect(actions).toContain("Check-in date must be a valid current or historical date.");
+  });
   it("backfills Unit 7 permissions for initialized installations", () => {
     const migration = readFileSync("prisma/migrations/20260812175500_hrms_unit7_permission_backfill/migration.sql", "utf8");
     const bootstrap = readFileSync("scripts/hr-bootstrap-lib.mjs", "utf8");

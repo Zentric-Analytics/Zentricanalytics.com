@@ -35,7 +35,9 @@ export async function addTeamFeedbackAction(form: FormData) {
 export async function recordTeamCheckInAction(form: FormData) {
   const employeeId = text(form, "employeeId");
   const auth = await managerContext(employeeId);
-  await prisma.$transaction((tx) => recordPerformanceCheckIn(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "MANAGER" }, { employeeId, managerEmployeeId: auth.user.employee!.id, occurredAt: new Date(), cadence: text(form, "cadence") || "CONTINUOUS", topics: { summary: text(form, "topics") }, blockers: { summary: text(form, "blockers") }, agreedActions: { summary: text(form, "agreedActions") }, followUpAt: text(form, "followUpAt") ? new Date(`${text(form, "followUpAt")}T12:00:00Z`) : undefined }));
+  const occurredAt = new Date(`${text(form, "occurredAt")}T12:00:00Z`);
+  if (Number.isNaN(occurredAt.getTime()) || occurredAt.getTime() > Date.now()) throw new Error("Check-in date must be a valid current or historical date.");
+  await prisma.$transaction((tx) => recordPerformanceCheckIn(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "MANAGER" }, { employeeId, managerEmployeeId: auth.user.employee!.id, occurredAt, cadence: text(form, "cadence") || "CONTINUOUS", topics: { summary: text(form, "topics") }, blockers: { summary: text(form, "blockers") }, agreedActions: { summary: text(form, "agreedActions") }, followUpAt: text(form, "followUpAt") ? new Date(`${text(form, "followUpAt")}T12:00:00Z`) : undefined }));
   revalidatePath("/hr/supervisor/performance");
 }
 
