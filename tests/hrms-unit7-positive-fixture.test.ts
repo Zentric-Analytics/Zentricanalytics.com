@@ -12,6 +12,7 @@ describe("Unit 7 positive staging fixture", () => {
     expect(source).toContain("hrWorkRelationship.upsert");
     expect(source).toContain("hrSupervisorAssignment.findFirst");
     expect(source).toContain("hrSupervisorAssignment.create");
+    expect(source).toContain('assignmentType: "DIRECT_REPORT"');
   });
 
   it("uses a separate employee and the approved staging-safe recipient", () => {

@@ -51,7 +51,7 @@ try {
     let supervisor = await tx.hrSupervisorAssignment.findFirst({ where: { organizationId: organization.id, assignedEmployeeId: employee.id, supervisorEmployeeId: managerUser.employee.id, status: "ACTIVE" } });
     if (!supervisor) supervisor = await tx.hrSupervisorAssignment.create({ data: {
       organizationId: organization.id, assignedEmployeeId: employee.id, supervisorEmployeeId: managerUser.employee.id,
-      assignmentType: "DIRECT", status: "ACTIVE", effectiveFrom,
+      assignmentType: "DIRECT_REPORT", status: "ACTIVE", effectiveFrom,
       capabilities: { performance: true, stagingFixture: fixtureKey }, assignedByUserId: managerUser.id,
       reason: "Unit 7 clearly labeled staging validation fixture",
     } });
