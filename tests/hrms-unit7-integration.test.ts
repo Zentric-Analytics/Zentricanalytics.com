@@ -21,6 +21,12 @@ describe("Unit 7 integration contracts", () => {
     expect(bootstrap).toContain("performance.review.submit_self");
     expect(bootstrap).toContain('AUDITOR: ["audit.read", "report.read", "performance.audit.read"]');
   });
+  it("fails closed instead of opening an empty review cycle", () => {
+    const commands = readFileSync("src/lib/hr/performance/commands.ts", "utf8");
+    const administration = readFileSync("src/app/hr/admin/performance/page.tsx", "utf8");
+    expect(commands).toContain('if (created === 0) throw new Error("This cycle has no eligible employees.');
+    expect(administration).toContain("snapshotted review");
+  });
   it("maps every Unit 7 template to the HR sender and fails closed for unknown templates", () => {
     for (const template of unit7Templates) {
       expect(emailTemplateSenderRegistry[template]).toBe("hr");
