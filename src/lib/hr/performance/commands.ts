@@ -13,12 +13,60 @@ import {
   promotionWorkforceIdempotencyKey,
   transitionGoal,
   transitionPromotionCase,
+  careerTracks,
+  companyLevels,
+  ratingCategories,
   type SustainedEvidence,
 } from "./domain";
 
 export type PerformanceContext = { organizationId: string; actorUserId: string; actorRole?: string };
 
 const json = (value: unknown) => value as Prisma.InputJsonValue;
+
+export async function seedPerformanceFramework(tx: Prisma.TransactionClient, context: PerformanceContext, effectiveFrom = new Date()) {
+  const tracks = [];
+  for (const code of careerTracks) tracks.push(await tx.hrCareerTrack.upsert({ where: { organizationId_code: { organizationId: context.organizationId, code } }, update: {}, create: { organizationId: context.organizationId, code, name: code === "IC" ? "Individual Contributor" : "People Manager", status: "PUBLISHED", effectiveFrom, createdById: context.actorUserId } }));
+  const levels = [];
+  for (const item of companyLevels) {
+    const level = await tx.hrCompanyLevel.upsert({ where: { organizationId_code: { organizationId: context.organizationId, code: item.code } }, update: {}, create: { organizationId: context.organizationId, code: item.code, name: `Zentric Level ${item.displayOrder}`, displayOrder: item.displayOrder } });
+    const version = await tx.hrCompanyLevelVersion.findUnique({ where: { companyLevelId_version: { companyLevelId: level.id, version: 1 } } });
+    if (!version) {
+      const expectations = { scope: `Configured expectations for ${item.code}`, independence: item.displayOrder, complexity: item.displayOrder, impact: item.displayOrder, collaboration: true };
+      await tx.hrCompanyLevelVersion.create({ data: { organizationId: context.organizationId, companyLevelId: level.id, version: 1, status: "PUBLISHED", expectations, effectiveFrom, contentHash: performanceContentHash(expectations), publishedById: context.actorUserId, publishedAt: effectiveFrom } });
+    }
+    levels.push(level);
+  }
+  const scale = await tx.hrRatingScale.upsert({ where: { organizationId_code: { organizationId: context.organizationId, code: "ZENTRIC_DESCRIPTIVE_5" } }, update: {}, create: { organizationId: context.organizationId, code: "ZENTRIC_DESCRIPTIVE_5", name: "Zentric descriptive performance scale" } });
+  let scaleVersion = await tx.hrRatingScaleVersion.findUnique({ where: { ratingScaleId_version: { ratingScaleId: scale.id, version: 1 } } });
+  if (!scaleVersion) {
+    scaleVersion = await tx.hrRatingScaleVersion.create({ data: { ratingScaleId: scale.id, version: 1, status: "PUBLISHED", contentHash: performanceContentHash(ratingCategories), publishedById: context.actorUserId, publishedAt: effectiveFrom } });
+    await tx.hrRatingScaleItem.createMany({ data: ratingCategories.map((item, index) => ({ ratingScaleVersionId: scaleVersion!.id, code: item.code, label: item.label, description: `${item.label} the published role and level expectations.`, displayOrder: index + 1 })) });
+  }
+  await appendHrAudit(tx, { ...context, entityType: "HrPerformanceFramework", action: "hr.performance.framework.seeded", newValues: { levelCount: levels.length, trackCount: tracks.length, ratingScaleVersionId: scaleVersion.id }, reason: "Initialize locked Unit 7 framework decisions" });
+  return { levels, tracks, ratingScaleVersion: scaleVersion };
+}
+
+export async function createPerformanceFeedback(tx: Prisma.TransactionClient, context: PerformanceContext, input: { employeeId: string; kind: string; visibility: "EMPLOYEE_VISIBLE" | "MANAGER_EMPLOYEE" | "HR_CONFIDENTIAL" | "CALIBRATION_ONLY"; content: Record<string, unknown>; correlationId?: string }) {
+  await tx.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: context.organizationId } });
+  const correlationId = input.correlationId ?? crypto.randomUUID();
+  const item = await tx.hrPerformanceFeedback.create({ data: { organizationId: context.organizationId, employeeId: input.employeeId, authorUserId: context.actorUserId, kind: input.kind, visibility: input.visibility, content: json(input.content), status: "SUBMITTED", correlationId, submittedAt: new Date() } });
+  await appendHrAudit(tx, { ...context, entityType: "HrPerformanceFeedback", entityId: item.id, action: "hr.performance.feedback.submitted", newValues: { kind: item.kind, visibility: item.visibility, version: item.version }, correlationId });
+  if (["EMPLOYEE_VISIBLE", "MANAGER_EMPLOYEE"].includes(item.visibility)) {
+    const employee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: item.employeeId } });
+    const recipient = employee.preferredNotificationEmail ?? employee.companyEmail ?? employee.personalEmail;
+    if (recipient) await enqueueHrEmail(tx, { organizationId: context.organizationId, recipient, template: "hr-performance-feedback-received", subject: "New performance feedback", payload: { recipientName: employee.preferredName ?? employee.legalFirstName, href: "/hr/employee/performance", feedbackId: item.id }, idempotencyKey: `unit7-feedback:${item.id}:v${item.version}` });
+  }
+  return item;
+}
+
+export async function recordPerformanceCheckIn(tx: Prisma.TransactionClient, context: PerformanceContext, input: { employeeId: string; managerEmployeeId: string; occurredAt: Date; cadence?: string; topics: unknown; blockers?: unknown; agreedActions: unknown; followUpAt?: Date; correlationId?: string }) {
+  if (input.employeeId === input.managerEmployeeId) throw new Error("An employee cannot conduct their own manager check-in.");
+  await tx.hrSupervisorAssignment.findFirstOrThrow({ where: { organizationId: context.organizationId, assignedEmployeeId: input.employeeId, supervisorEmployeeId: input.managerEmployeeId, status: "ACTIVE", effectiveFrom: { lte: input.occurredAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.occurredAt } }] } });
+  const correlationId = input.correlationId ?? crypto.randomUUID();
+  const checkIn = await tx.hrPerformanceCheckIn.create({ data: { organizationId: context.organizationId, employeeId: input.employeeId, managerEmployeeId: input.managerEmployeeId, occurredAt: input.occurredAt, cadence: input.cadence, topics: json(input.topics), blockers: input.blockers == null ? undefined : json(input.blockers), agreedActions: json(input.agreedActions), followUpAt: input.followUpAt, correlationId, createdById: context.actorUserId } });
+  await appendHrAudit(tx, { ...context, entityType: "HrPerformanceCheckIn", entityId: checkIn.id, action: "hr.performance.checkin.recorded", newValues: { employeeId: input.employeeId, managerEmployeeId: input.managerEmployeeId, occurredAt: input.occurredAt, visibility: checkIn.visibility, version: checkIn.version }, correlationId });
+  return checkIn;
+}
 
 export async function createGoal(tx: Prisma.TransactionClient, context: PerformanceContext, input: {
   employeeId?: string; ownerUserId: string; cycleId?: string; scopeType: string; scopeId?: string; goalType: string;
