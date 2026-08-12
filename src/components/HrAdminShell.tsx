@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Bell, BriefcaseBusiness, Building2, CalendarClock, CalendarDays, ChevronDown, CircleUserRound,
+  BriefcaseBusiness, Building2, CalendarClock, CalendarDays, ChevronDown, CircleUserRound,
   ClipboardCheck, FileText, FolderLock, Gauge, GitBranch, Landmark, LayoutDashboard,
   LogOut, Menu, Network, Package, ScrollText, Settings, UserRoundPlus, Users, WalletCards, X,
 } from "lucide-react";
