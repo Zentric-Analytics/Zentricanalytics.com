@@ -37,6 +37,16 @@ describe("Unit 7 integration contracts", () => {
     expect(actions).toContain("assignedEmployeeId: employeeId");
     expect(page).not.toContain('requirePermission("supervisor.review_assigned")');
   });
+  it("requires scoped calibration grants and complete version-bound decisions", () => {
+    const commands = readFileSync("src/lib/hr/performance/commands.ts", "utf8");
+    const page = readFileSync("src/app/hr/admin/performance/page.tsx", "utf8");
+    expect(commands).toContain("Every calibration participant must be an active user in this organization.");
+    expect(commands).toContain("A current session-specific calibration grant is required.");
+    expect(commands).toContain("Every snapshotted review requires a calibration decision before finalization.");
+    expect(commands).toContain('status: "FINALIZED"');
+    expect(page).toContain("Record version-bound decision");
+    expect(page).toContain("Finalize calibrated reviews");
+  });
   it("maps every Unit 7 template to the HR sender and fails closed for unknown templates", () => {
     for (const template of unit7Templates) {
       expect(emailTemplateSenderRegistry[template]).toBe("hr");

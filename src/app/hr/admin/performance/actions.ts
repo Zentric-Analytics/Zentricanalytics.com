@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
-import { createPerformanceCycle, openPerformanceCycle, seedPerformanceFramework } from "@/lib/hr/performance/commands";
+import { createCalibrationSession, createPerformanceCycle, openPerformanceCycle, recordCalibrationDecision, seedPerformanceFramework, transitionCalibrationSession } from "@/lib/hr/performance/commands";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 
@@ -24,5 +24,23 @@ export async function createPerformanceCycleAction(form: FormData) {
 export async function openPerformanceCycleAction(form: FormData) {
   const auth = await requirePermission("performance.review.admin");
   await prisma.$transaction((tx) => openPerformanceCycle(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { cycleId: text(form, "cycleId"), expectedVersion: Number(text(form, "expectedVersion")) }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/performance");
+}
+
+export async function createCalibrationSessionAction(form: FormData) {
+  const auth = await requirePermission("performance.calibration.admin");
+  await prisma.$transaction((tx) => createCalibrationSession(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { cycleId: text(form, "cycleId"), name: text(form, "name"), participantUserIds: [auth.user.id] }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/performance");
+}
+
+export async function transitionCalibrationSessionAction(form: FormData) {
+  const auth = await requirePermission("performance.calibration.admin");
+  await prisma.$transaction((tx) => transitionCalibrationSession(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "TALENT_ADMIN" }, { sessionId: text(form, "sessionId"), expectedVersion: Number(text(form, "expectedVersion")), to: text(form, "to") as "POPULATION_LOCKED" | "IN_SESSION" | "DECISIONS_PENDING" | "FINALIZED" | "CANCELLED", reason: text(form, "reason") }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/performance");
+}
+
+export async function recordCalibrationDecisionAction(form: FormData) {
+  const auth = await requirePermission("performance.calibration.participate");
+  await prisma.$transaction((tx) => recordCalibrationDecision(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "CALIBRATION_PARTICIPANT" }, { sessionId: text(form, "sessionId"), reviewId: text(form, "reviewId"), reviewVersion: Number(text(form, "reviewVersion")), managerRatingItemId: text(form, "managerRatingItemId"), calibratedRatingItemId: text(form, "calibratedRatingItemId"), rationale: text(form, "rationale") }), { isolationLevel: "Serializable" });
   revalidatePath("/hr/admin/performance");
 }

@@ -111,11 +111,44 @@ export async function submitPerformanceReview(tx: Prisma.TransactionClient, cont
   return submission;
 }
 
+export async function createCalibrationSession(tx: Prisma.TransactionClient, context: PerformanceContext, input: { cycleId: string; name: string; participantUserIds: string[]; correlationId?: string }) {
+  const cycle = await tx.hrPerformanceCycle.findFirstOrThrow({ where: { id: input.cycleId, organizationId: context.organizationId } });
+  const reviews = await tx.hrPerformanceReview.findMany({ where: { organizationId: context.organizationId, cycleId: cycle.id, status: "CALIBRATION" }, select: { id: true, version: true, employeeId: true } });
+  if (!reviews.length) throw new Error("Calibration requires at least one manager-submitted review.");
+  const participantUserIds = [...new Set(input.participantUserIds.filter(Boolean))];
+  if (!participantUserIds.length) throw new Error("Calibration requires at least one named participant.");
+  const participantCount = await tx.hrUser.count({ where: { id: { in: participantUserIds }, organizationId: context.organizationId, status: "ACTIVE" } });
+  if (participantCount !== participantUserIds.length) throw new Error("Every calibration participant must be an active user in this organization.");
+  const correlationId = input.correlationId ?? crypto.randomUUID();
+  const session = await tx.hrCalibrationSession.create({ data: { organizationId: context.organizationId, cycleId: cycle.id, name: input.name, population: json(reviews), correlationId, createdById: context.actorUserId } });
+  await tx.hrCalibrationGrant.createMany({ data: participantUserIds.map((userId) => ({ organizationId: context.organizationId, sessionId: session.id, userId, scope: json({ reviewIds: reviews.map(({ id }) => id) }), effectiveFrom: new Date(), grantedById: context.actorUserId })) });
+  await appendHrAudit(tx, { ...context, entityType: "HrCalibrationSession", entityId: session.id, action: "hr.performance.calibration.created", newValues: { cycleId: cycle.id, reviewCount: reviews.length, participantCount: participantUserIds.length, version: session.version }, correlationId });
+  return session;
+}
+
 export async function transitionCalibrationSession(tx: Prisma.TransactionClient, context: PerformanceContext, input: { sessionId: string; expectedVersion: number; to: "POPULATION_LOCKED" | "IN_SESSION" | "DECISIONS_PENDING" | "FINALIZED" | "CANCELLED"; reason: string }) {
   const session = await tx.hrCalibrationSession.findFirstOrThrow({ where: { id: input.sessionId, organizationId: context.organizationId } });
   assertExpectedVersion(input.expectedVersion, session.version, "calibration session");
   transitionCalibration(session.status, input.to);
-  const result = await tx.hrCalibrationSession.updateMany({ where: { id: session.id, status: session.status, version: session.version }, data: { status: input.to, version: { increment: 1 }, finalizedAt: input.to === "FINALIZED" ? new Date() : undefined } });
+  const finalizedAt = input.to === "FINALIZED" ? new Date() : undefined;
+  if (input.to === "FINALIZED") {
+    const population = Array.isArray(session.population) ? session.population : [];
+    const reviewIds = population.flatMap((item) => typeof item === "object" && item !== null && "id" in item && typeof item.id === "string" ? [item.id] : []);
+    const decisions = await tx.hrCalibrationDecision.findMany({ where: { organizationId: context.organizationId, sessionId: session.id, reviewId: { in: reviewIds } }, orderBy: { version: "desc" } });
+    const latest = new Map<string, (typeof decisions)[number]>();
+    for (const decision of decisions) if (!latest.has(decision.reviewId)) latest.set(decision.reviewId, decision);
+    if (latest.size !== reviewIds.length) throw new Error("Every snapshotted review requires a calibration decision before finalization.");
+    for (const reviewId of reviewIds) {
+      const review = await tx.hrPerformanceReview.findFirstOrThrow({ where: { id: reviewId, organizationId: context.organizationId, cycleId: session.cycleId } });
+      if (review.status === "FINALIZED") continue;
+      if (review.status !== "CALIBRATION") throw new Error("Only calibration-stage reviews can be finalized.");
+      const decision = latest.get(reviewId)!;
+      const updatedReview = await tx.hrPerformanceReview.updateMany({ where: { id: review.id, status: "CALIBRATION", version: review.version }, data: { status: "FINALIZED", version: { increment: 1 }, finalizedRatingItemId: decision.calibratedRatingItemId, employeeFacingRationale: decision.rationale, finalizedAt } });
+      if (updatedReview.count !== 1) throw new Error("Another request changed a calibrated review first.");
+      await tx.hrCalibrationDecision.update({ where: { id: decision.id }, data: { finalizedAt } });
+    }
+  }
+  const result = await tx.hrCalibrationSession.updateMany({ where: { id: session.id, status: session.status, version: session.version }, data: { status: input.to, version: { increment: 1 }, finalizedAt } });
   if (result.count !== 1) throw new Error("Another request changed this calibration session first.");
   await appendHrAudit(tx, { ...context, entityType: "HrCalibrationSession", entityId: session.id, action: `hr.performance.calibration.${input.to.toLowerCase()}`, previousValues: { status: session.status, version: session.version }, newValues: { status: input.to, version: session.version + 1 }, reason: input.reason, correlationId: session.correlationId });
 }
