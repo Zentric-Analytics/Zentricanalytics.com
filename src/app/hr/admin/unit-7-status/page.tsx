@@ -8,13 +8,13 @@ const items = [
   ["Branch", "feature/hrms-unit-07-performance-career-blueprint"],
   ["HEAD SHA", deployedHead],
   ["Deployment", deploymentId],
-  ["Current subsection", "Unit 7A–7F implementation — domain foundation and governed workflows"],
+  ["Current subsection", "Unit 7C–7E — review cycles, calibration, development, readiness, and promotion cases"],
   ["Database / migrations", "Additive Unit 7 migration drafted; staging application pending"],
-  ["Automated tests", "Unit 7 domain: 7/7 passing; complete suite pending this candidate"],
-  ["Browser workflow", "Not started — awaiting deployable Unit 7 UI"],
+  ["Automated tests", "688/688 passing at the latest completed full-suite checkpoint"],
+  ["Browser workflow", "Role workspaces implemented locally; exact-candidate staging journey pending"],
   ["Defects found", "No runtime defects yet; implementation remains incomplete"],
   ["Fixes applied", "Versioned schema, state guards, privacy rules, evidence checks, promotion handoff, worker route"],
-  ["Next release gate", "Complete commands/UI/tests, then exact-candidate staging deployment"],
+  ["Next release gate", "Commit exact candidate, deploy to staging PostgreSQL, and execute governed lifecycle"],
 ] as const;
 
 export default function Unit7StatusPage() {

@@ -45,8 +45,24 @@ export async function seedPerformanceFramework(tx: Prisma.TransactionClient, con
     scaleVersion = await tx.hrRatingScaleVersion.create({ data: { ratingScaleId: scale.id, version: 1, status: "PUBLISHED", contentHash: performanceContentHash(ratingCategories), publishedById: context.actorUserId, publishedAt: effectiveFrom } });
     await tx.hrRatingScaleItem.createMany({ data: ratingCategories.map((item, index) => ({ ratingScaleVersionId: scaleVersion!.id, code: item.code, label: item.label, description: `${item.label} the published role and level expectations.`, displayOrder: index + 1 })) });
   }
-  await appendHrAudit(tx, { ...context, entityType: "HrPerformanceFramework", action: "hr.performance.framework.seeded", newValues: { levelCount: levels.length, trackCount: tracks.length, ratingScaleVersionId: scaleVersion.id }, reason: "Initialize locked Unit 7 framework decisions" });
-  return { levels, tracks, ratingScaleVersion: scaleVersion };
+  const jobFunction = await tx.hrJobFunction.upsert({ where: { organizationId_code: { organizationId: context.organizationId, code: "GENERAL" } }, update: {}, create: { organizationId: context.organizationId, code: "GENERAL", name: "General", description: "Default function pending governed specialization", status: "PUBLISHED", effectiveFrom, createdById: context.actorUserId } });
+  const legacyProfiles = await tx.hrJobProfile.findMany({ where: { organizationId: context.organizationId, status: "ACTIVE" }, orderBy: { createdAt: "asc" } });
+  const levelVersion = await tx.hrCompanyLevelVersion.findUniqueOrThrow({ where: { companyLevelId_version: { companyLevelId: levels[0].id, version: 1 } } });
+  for (const profile of legacyProfiles) {
+    const existing = await tx.hrJobProfileVersion.findUnique({ where: { jobProfileId_version: { jobProfileId: profile.id, version: 1 } } });
+    if (!existing) {
+      const payload = { title: profile.title, responsibilities: { source: "legacy-job-profile" }, requirements: { governed: true } };
+      await tx.hrJobProfileVersion.create({ data: { organizationId: context.organizationId, jobProfileId: profile.id, jobFunctionId: jobFunction.id, careerTrackId: tracks[0].id, companyLevelVersionId: levelVersion.id, version: 1, title: profile.title, responsibilities: payload.responsibilities, requirements: payload.requirements, status: "PUBLISHED", effectiveFrom, contentHash: performanceContentHash(payload), publishedById: context.actorUserId, publishedAt: effectiveFrom } });
+    }
+  }
+  const reviewTemplate = await tx.hrReviewTemplate.upsert({ where: { organizationId_code: { organizationId: context.organizationId, code: "STANDARD_ANNUAL" } }, update: {}, create: { organizationId: context.organizationId, code: "STANDARD_ANNUAL", name: "Standard annual and mid-year review" } });
+  let reviewTemplateVersion = await tx.hrReviewTemplateVersion.findUnique({ where: { reviewTemplateId_version: { reviewTemplateId: reviewTemplate.id, version: 1 } } });
+  if (!reviewTemplateVersion) {
+    const sections = [{ key: "goals", label: "What was achieved" }, { key: "behaviors", label: "How the work was performed" }, { key: "development", label: "Development and career" }, { key: "summary", label: "Summary" }];
+    reviewTemplateVersion = await tx.hrReviewTemplateVersion.create({ data: { organizationId: context.organizationId, reviewTemplateId: reviewTemplate.id, ratingScaleVersionId: scaleVersion.id, version: 1, sections, status: "PUBLISHED", contentHash: performanceContentHash(sections), publishedById: context.actorUserId, publishedAt: effectiveFrom } });
+  }
+  await appendHrAudit(tx, { ...context, entityType: "HrPerformanceFramework", action: "hr.performance.framework.seeded", newValues: { levelCount: levels.length, trackCount: tracks.length, ratingScaleVersionId: scaleVersion.id, reviewTemplateVersionId: reviewTemplateVersion.id, jobProfileVersionCount: legacyProfiles.length }, reason: "Initialize locked Unit 7 framework decisions" });
+  return { levels, tracks, ratingScaleVersion: scaleVersion, reviewTemplateVersion };
 }
 
 export async function createPerformanceFeedback(tx: Prisma.TransactionClient, context: PerformanceContext, input: { employeeId: string; kind: string; visibility: "EMPLOYEE_VISIBLE" | "MANAGER_EMPLOYEE" | "HR_CONFIDENTIAL" | "CALIBRATION_ONLY"; content: Record<string, unknown>; correlationId?: string }) {
@@ -213,6 +229,36 @@ export async function createGoal(tx: Prisma.TransactionClient, context: Performa
   } });
   await appendHrAudit(tx, { ...context, entityType: "HrPerformanceGoal", entityId: goal.id, action: "hr.performance.goal.created", newValues: { status: goal.status, version: 1, scopeType: goal.scopeType }, reason: input.changeReason, correlationId });
   return goal;
+}
+
+export async function createPerformanceCycle(tx: Prisma.TransactionClient, context: PerformanceContext, input: { code: string; name: string; cycleType: "ANNUAL" | "MID_YEAR" | "PROBATION" | "AD_HOC" | "PROMOTION"; startsAt: Date; selfReviewOpensAt?: Date; managerReviewOpensAt?: Date; calibrationOpensAt?: Date; endsAt: Date; population: unknown; reviewTemplateVersionId: string; correlationId?: string }) {
+  if (!(input.startsAt < input.endsAt)) throw new Error("Performance cycle must end after it starts.");
+  const template = await tx.hrReviewTemplateVersion.findFirstOrThrow({ where: { id: input.reviewTemplateVersionId, organizationId: context.organizationId, status: "PUBLISHED" } });
+  const correlationId = input.correlationId ?? crypto.randomUUID();
+  const cycle = await tx.hrPerformanceCycle.create({ data: { organizationId: context.organizationId, code: input.code, name: input.name, cycleType: input.cycleType, startsAt: input.startsAt, selfReviewOpensAt: input.selfReviewOpensAt, managerReviewOpensAt: input.managerReviewOpensAt, calibrationOpensAt: input.calibrationOpensAt, endsAt: input.endsAt, population: json(input.population), reviewTemplateVersionId: template.id, correlationId, createdById: context.actorUserId } });
+  await appendHrAudit(tx, { ...context, entityType: "HrPerformanceCycle", entityId: cycle.id, action: "hr.performance.cycle.created", newValues: { code: cycle.code, type: cycle.cycleType, status: cycle.status, version: cycle.version, reviewTemplateVersionId: template.id, startsAt: cycle.startsAt, endsAt: cycle.endsAt }, correlationId });
+  return cycle;
+}
+
+export async function openPerformanceCycle(tx: Prisma.TransactionClient, context: PerformanceContext, input: { cycleId: string; expectedVersion: number }) {
+  const cycle = await tx.hrPerformanceCycle.findFirstOrThrow({ where: { id: input.cycleId, organizationId: context.organizationId, status: "DRAFT" } });
+  assertExpectedVersion(input.expectedVersion, cycle.version, "performance cycle");
+  const employees = await tx.hrEmployee.findMany({ where: { organizationId: context.organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE", "NOTICE_PERIOD"] }, userId: { not: null } }, select: { id: true, userId: true } });
+  let created = 0;
+  for (const employee of employees) {
+    const assignment = await tx.hrEmployeeAssignment.findFirst({ where: { organizationId: context.organizationId, employeeId: employee.id, status: "ACTIVE", isPrimary: true }, include: { position: true }, orderBy: { effectiveFrom: "desc" } });
+    const relationship = await tx.hrWorkRelationship.findFirst({ where: { organizationId: context.organizationId, employeeId: employee.id, status: { in: ["ACTIVE", "NOTICE_PERIOD", "SUSPENDED"] } }, orderBy: { startedAt: "desc" } });
+    const manager = await tx.hrSupervisorAssignment.findFirst({ where: { organizationId: context.organizationId, assignedEmployeeId: employee.id, status: "ACTIVE", effectiveFrom: { lte: cycle.startsAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: cycle.startsAt } }] }, include: { supervisorEmployee: true }, orderBy: { effectiveFrom: "desc" } });
+    if (!assignment || !relationship || !manager?.supervisorEmployee.userId || !assignment.position.jobProfileId) continue;
+    const jobProfileVersion = await tx.hrJobProfileVersion.findFirst({ where: { organizationId: context.organizationId, jobProfileId: assignment.position.jobProfileId, status: "PUBLISHED", effectiveFrom: { lte: cycle.startsAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: cycle.startsAt } }] }, orderBy: { version: "desc" } });
+    if (!jobProfileVersion) continue;
+    await tx.hrPerformanceReview.upsert({ where: { cycleId_employeeId_workRelationshipId: { cycleId: cycle.id, employeeId: employee.id, workRelationshipId: relationship.id } }, update: {}, create: { organizationId: context.organizationId, cycleId: cycle.id, employeeId: employee.id, workRelationshipId: relationship.id, assignmentId: assignment.id, managerEmployeeId: manager.supervisorEmployeeId, reviewerUserId: manager.supervisorEmployee.userId, jobProfileVersionId: jobProfileVersion.id, companyLevelVersionId: jobProfileVersion.companyLevelVersionId, reviewTemplateVersionId: cycle.reviewTemplateVersionId, status: "SELF_REVIEW", correlationId: `${cycle.correlationId}:${employee.id}`, idempotencyKey: `unit7-review:${cycle.id}:${employee.id}:${relationship.id}` } });
+    created += 1;
+  }
+  const claimed = await tx.hrPerformanceCycle.updateMany({ where: { id: cycle.id, status: "DRAFT", version: cycle.version }, data: { status: "SELF_REVIEW_OPEN", version: { increment: 1 } } });
+  if (claimed.count !== 1) throw new Error("Another request opened this performance cycle first.");
+  await appendHrAudit(tx, { ...context, entityType: "HrPerformanceCycle", entityId: cycle.id, action: "hr.performance.cycle.opened", previousValues: { status: cycle.status, version: cycle.version }, newValues: { status: "SELF_REVIEW_OPEN", version: cycle.version + 1, reviewCount: created }, correlationId: cycle.correlationId });
+  return created;
 }
 
 export async function transitionGoalStatus(tx: Prisma.TransactionClient, context: PerformanceContext, input: { goalId: string; expectedVersion: number; to: HrPerformanceGoalStatus; reason: string }) {

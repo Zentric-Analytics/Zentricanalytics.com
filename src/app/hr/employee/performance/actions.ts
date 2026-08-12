@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
-import { createGoal, recordGoalProgress, transitionGoalStatus } from "@/lib/hr/performance/commands";
+import { createGoal, recordGoalProgress, submitPerformanceReview, transitionGoalStatus } from "@/lib/hr/performance/commands";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 
@@ -22,5 +22,12 @@ export async function recordEmployeeGoalProgressAction(form: FormData) {
   const auth = await requirePermission("performance.goal.manage_self");
   if (!auth.user.employee) throw new Error("An employee profile is required.");
   await prisma.$transaction((tx) => recordGoalProgress(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "EMPLOYEE" }, { goalId: text(form, "goalId"), expectedGoalVersion: Number(text(form, "expectedVersion")), progress: Number(text(form, "progress")), note: text(form, "note") || undefined }));
+  revalidatePath("/hr/employee/performance");
+}
+
+export async function submitSelfReviewAction(form: FormData) {
+  const auth = await requirePermission("performance.review.submit_self");
+  if (!auth.user.employee) throw new Error("An employee profile is required.");
+  await prisma.$transaction((tx) => submitPerformanceReview(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "EMPLOYEE" }, { reviewId: text(form, "reviewId"), expectedVersion: Number(text(form, "expectedVersion")), submissionType: "SELF", answers: { achievements: text(form, "achievements"), goalReflection: text(form, "goalReflection"), challenges: text(form, "challenges"), development: text(form, "development"), careerInterest: text(form, "careerInterest") } }));
   revalidatePath("/hr/employee/performance");
 }

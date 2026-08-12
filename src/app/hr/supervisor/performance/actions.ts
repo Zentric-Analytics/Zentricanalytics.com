@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
-import { createPerformanceFeedback, recordPerformanceCheckIn, transitionGoalStatus } from "@/lib/hr/performance/commands";
+import { createPerformanceFeedback, recordPerformanceCheckIn, submitPerformanceReview, transitionGoalStatus } from "@/lib/hr/performance/commands";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 
@@ -34,5 +34,12 @@ export async function recordTeamCheckInAction(form: FormData) {
   const employeeId = text(form, "employeeId");
   const auth = await managerContext(employeeId);
   await prisma.$transaction((tx) => recordPerformanceCheckIn(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "MANAGER" }, { employeeId, managerEmployeeId: auth.user.employee!.id, occurredAt: new Date(), cadence: text(form, "cadence") || "CONTINUOUS", topics: { summary: text(form, "topics") }, blockers: { summary: text(form, "blockers") }, agreedActions: { summary: text(form, "agreedActions") }, followUpAt: text(form, "followUpAt") ? new Date(`${text(form, "followUpAt")}T12:00:00Z`) : undefined }));
+  revalidatePath("/hr/supervisor/performance");
+}
+
+export async function submitManagerReviewAction(form: FormData) {
+  const employeeId = text(form, "employeeId");
+  const auth = await managerContext(employeeId);
+  await prisma.$transaction((tx) => submitPerformanceReview(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: "MANAGER" }, { reviewId: text(form, "reviewId"), expectedVersion: Number(text(form, "expectedVersion")), submissionType: "MANAGER", answers: { results: text(form, "results"), behaviors: text(form, "behaviors"), development: text(form, "development") }, ratingItemId: text(form, "ratingItemId"), rationale: text(form, "rationale") }));
   revalidatePath("/hr/supervisor/performance");
 }
