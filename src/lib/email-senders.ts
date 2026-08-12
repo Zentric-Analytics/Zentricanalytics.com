@@ -47,6 +47,9 @@ const hrTemplates = [
   "hr-probation-review-due", "hr-probation-confirmed", "hr-probation-extended",
   "hr-contract-review", "hr-contract-active", "hr-contract-expiring",
   "hr-separation-submitted", "hr-separation-approved", "hr-separation-completed", "hr-rehire-started",
+  "hr-time-schedule-published", "hr-time-schedule-changed", "hr-time-missed-clock-out", "hr-time-correction-required",
+  "hr-time-timesheet-due", "hr-time-timesheet-submitted", "hr-time-approval-required", "hr-time-returned", "hr-time-rejected",
+  "hr-time-overtime-decided", "hr-time-period-closing", "hr-time-period-locked",
 ] as const;
 
 const accountSecurityTemplates = ["hr-account-invitation", "hr-password-reset", "hr-password-reset-complete", "hr-mfa-enrollment", "hr-employee-activated"] as const;

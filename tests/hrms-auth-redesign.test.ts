@@ -13,6 +13,6 @@ describe("HRMS authentication redesign", () => {
   });
   it("uses real notification counts in the authenticated header", () => {
     const layout = read("src/app/hr/admin/layout.tsx"); const shell = read("src/components/HrAdminShell.tsx");
-    expect(layout).toContain("hrNotification.count"); expect(shell).toContain('href="/hr/notifications"'); expect(shell).not.toContain('label: "Notifications"');
+    expect(layout).toContain("hrNotification.findMany"); expect(layout).toContain("notifications.filter(item => !item.readAt).length"); expect(shell).toContain("HrNotificationCenter"); expect(shell).toContain("unread={unread}");
   });
 });

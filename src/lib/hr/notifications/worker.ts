@@ -80,6 +80,18 @@ const notificationTemplates: Record<string, NotificationTemplate> = {
   "hr-separation-approved": { title: "Separation approved", body: "The separation plan is approved and scheduled for the final working date.", ctaLabel: "Review Offboarding", defaultHref: "/hr/employee/tasks" },
   "hr-separation-completed": { title: "Employment separation completed", body: "The approved separation and required offboarding steps are complete.", ctaLabel: "Review Employment History", defaultHref: "/hr/employee/profile" },
   "hr-rehire-started": { title: "Rehire onboarding started", body: "A new work relationship has been created and onboarding is ready.", ctaLabel: "Start Onboarding", defaultHref: "/hr/employee/tasks" },
+  "hr-time-schedule-published": { title: "Work schedule published", body: "Your effective work schedule is available in the secure HR workspace.", ctaLabel: "View Schedule", defaultHref: "/hr/employee/time" },
+  "hr-time-schedule-changed": { title: "Work schedule changed", body: "A new version of your work schedule has been published.", ctaLabel: "Review Schedule", defaultHref: "/hr/employee/time" },
+  "hr-time-missed-clock-out": { title: "Clock-out needs attention", body: "A clock session needs a governed correction before attendance can be approved.", ctaLabel: "Review Time", defaultHref: "/hr/employee/time" },
+  "hr-time-correction-required": { title: "Time correction required", body: "An attendance record requires a correction or explanation.", ctaLabel: "Review Correction", defaultHref: "/hr/employee/time" },
+  "hr-time-timesheet-due": { title: "Timesheet due", body: "Your current timesheet is due for submission.", ctaLabel: "Open Timesheet", defaultHref: "/hr/employee/time" },
+  "hr-time-timesheet-submitted": { title: "Timesheet submitted", body: "A timesheet is ready for governed review.", ctaLabel: "Review Timesheet", defaultHref: "/hr/supervisor/time" },
+  "hr-time-approval-required": { title: "Time approval required", body: "A time exception, correction, or overtime candidate requires review.", ctaLabel: "Review Time", defaultHref: "/hr/supervisor/time" },
+  "hr-time-returned": { title: "Time record returned", body: "A time record was returned for changes. Review the decision securely.", ctaLabel: "Update Time", defaultHref: "/hr/employee/time" },
+  "hr-time-rejected": { title: "Time record decision", body: "A submitted time record was not approved. Review the reason securely.", ctaLabel: "View Decision", defaultHref: "/hr/employee/time" },
+  "hr-time-overtime-decided": { title: "Overtime decision recorded", body: "A governed overtime decision has been recorded.", ctaLabel: "View Attendance", defaultHref: "/hr/employee/time" },
+  "hr-time-period-closing": { title: "Attendance period closing", body: "An attendance period is approaching its governed close.", ctaLabel: "Review Period", defaultHref: "/hr/admin/time" },
+  "hr-time-period-locked": { title: "Attendance period locked", body: "An approved attendance period has been locked and is ready for authorized downstream use.", ctaLabel: "View Period", defaultHref: "/hr/admin/time" },
 };
 
 const vacancyTemplate: NotificationTemplate = { title: "Vacancy workflow update", body: "A vacancy has changed state and is ready for secure review.", ctaLabel: "Review Vacancy", defaultHref: "/hr/admin/vacancies" };

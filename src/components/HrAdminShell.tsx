@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Bell, BriefcaseBusiness, Building2, CalendarDays, ChevronDown, CircleUserRound,
+  BriefcaseBusiness, Building2, CalendarClock, CalendarDays, ChevronDown, CircleUserRound,
   ClipboardCheck, FileText, FolderLock, Gauge, GitBranch, Landmark, LayoutDashboard,
   LogOut, Menu, Network, Package, ScrollText, Settings, UserRoundPlus, Users, WalletCards, X,
 } from "lucide-react";
 import { hrLogoutAction } from "@/app/hr/actions";
 import { HrSessionRotation } from "./HrSessionRotation";
+import { HrNotificationCenter, type NotificationItem } from "./HrNotificationCenter";
 
 type Item = { label: string; href: string; icon: React.ComponentType<{ className?: string }> };
 const groups: Array<{ label?: string; items: Item[] }> = [
@@ -21,6 +22,7 @@ const groups: Array<{ label?: string; items: Item[] }> = [
     { label: "Users", href: "/hr/admin/users", icon: CircleUserRound },
     { label: "Assignments", href: "/hr/admin/assignments", icon: Users },
     { label: "Leave", href: "/hr/admin/leave", icon: CalendarDays },
+    { label: "Time & Attendance", href: "/hr/admin/time", icon: CalendarClock },
   ]},
   { label: "PEOPLE & WORKFORCE", items: [
     { label: "Employees", href: "/hr/admin/employees", icon: Users },
@@ -50,7 +52,7 @@ function Brand() {
   return <Link href="/hr/admin/dashboard" className="hr-brand" aria-label="Zentric Analytics HRMS dashboard"><span className="hr-brand-mark">Z</span><span><strong>ZENTRIC</strong><small>ANALYTICS HRMS</small></span></Link>;
 }
 
-export function HrAdminShell({ email, role, organization, unread, allowedLinks, children }: { email: string; role: string; organization: string; unread: number; allowedLinks: string[]; children: React.ReactNode }) {
+export function HrAdminShell({ email, role, organization, unread, notifications, allowedLinks, children }: { email: string; role: string; organization: string; unread: number; notifications: NotificationItem[]; allowedLinks: string[]; children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const initials = email.split("@")[0].split(/[._-]/).slice(0, 2).map(part => part[0]?.toUpperCase()).join("") || "AD";
@@ -64,7 +66,7 @@ export function HrAdminShell({ email, role, organization, unread, allowedLinks, 
       <div className="hr-account"><span>{initials}</span><div><strong title={email}>{email}</strong><small>{role.replaceAll("_", " ").toLowerCase()}</small></div><form action={hrLogoutAction}><button aria-label="Sign out" title="Sign out"><LogOut /></button></form></div>
     </aside>
     <div className="hr-admin-stage">
-      <header className="hr-topbar"><p className="hr-breadcrumb"><Link href="/hr/admin/dashboard">Dashboard</Link><span>›</span>{currentLabel}</p><div className="hr-topbar-actions"><div className="hr-org"><Landmark /><span>{organization}</span><ChevronDown /></div><Link className="hr-notification" href="/hr/notifications" aria-label={`${unread} unread notifications`}><Bell />{unread > 0 && <span>{unread > 99 ? "99+" : unread}</span>}</Link><div className="hr-avatar" aria-label={`Signed in as ${email}`}>{initials}</div></div></header>
+      <header className="hr-topbar"><p className="hr-breadcrumb"><Link href="/hr/admin/dashboard">Dashboard</Link><span>›</span>{currentLabel}</p><div className="hr-topbar-actions"><div className="hr-org"><Landmark /><span>{organization}</span><ChevronDown /></div><HrNotificationCenter unread={unread} notifications={notifications}/><div className="hr-avatar" aria-label={`Signed in as ${email}`}>{initials}</div></div></header>
       <main className="hr-admin-main">{children}</main>
     </div>
   </div>;
