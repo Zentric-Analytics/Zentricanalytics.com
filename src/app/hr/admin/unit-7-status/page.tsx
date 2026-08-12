@@ -8,13 +8,13 @@ const items = [
   ["Branch", "feature/hrms-unit-07-performance-career-blueprint"],
   ["HEAD SHA", deployedHead],
   ["Deployment", deploymentId],
-  ["Current subsection", "Unit 7D–7F — development, target readiness, and governed promotion"],
+  ["Current subsection", "Immediate execution proof — governed staging promotion lifecycle"],
   ["Database / migrations", "43 migrations applied to staging PostgreSQL; none pending"],
-  ["Automated tests", "708/708 passing across 61 files; TypeScript and focused Unit 7 notification regression passing"],
-  ["Browser workflow", "Calibration, governed career target, development plan, truthful DEVELOPING readiness, manager feedback, check-in, and evidence sealing passed"],
-  ["Defects found", "Unit 7 notification sender mappings existed without renderer definitions, causing the recipient-backed feedback delivery to fail closed"],
-  ["Fixes applied", "All Unit 7 templates now have branded, personalized HTML/plain-text renderers with HTTPS CTAs and exhaustive registry regression coverage"],
-  ["Next release gate", "Deploy 7D–7F surfaces, validate target architecture and sustained evidence, then execute the Unit 4 exactly-once handoff"],
+  ["Automated tests", "713/713 passing across 62 files; latest fixture regression and complete suite passed"],
+  ["Browser workflow", "Future-dated control preserved; separate staging-only immediate promotion case being established"],
+  ["Defects found", "Historical calibration scope and incompatible promotion target-position defects identified during live staging validation"],
+  ["Fixes applied", "Calibration is cycle-scoped and promotion handoff now requires an active compatible target position; regressions added"],
+  ["Next release gate", "Complete immediate readiness and promotion approvals, then prove exactly-once Unit 4 execution and replay safety"],
 ] as const;
 
 export default function Unit7StatusPage() {
