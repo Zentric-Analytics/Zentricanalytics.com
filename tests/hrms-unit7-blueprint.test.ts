@@ -14,11 +14,11 @@ describe("Unit 7 blueprint and implementation status artifacts", () => {
     expect(blueprint).toContain("Owner decisions required before implementation");
   });
 
-  it("exposes an honest staging-only implementation status page", () => {
+  it("exposes the evidence-backed staging verdict and production boundary", () => {
     const status = read("src/app/hr/admin/unit-7-status/page.tsx");
-    expect(status).toContain("IMPLEMENTATION IN PROGRESS");
+    expect(status).toContain("PASS — Unit 7 Production Ready");
     expect(status).toContain("production untouched");
-    expect(status).not.toContain("PASS — Unit 7 Production Ready");
+    expect(status).toContain("separate owner authorization");
     expect(read("src/app/unit-7-status/page.tsx")).toContain("unit-7-status/page");
   });
 });
