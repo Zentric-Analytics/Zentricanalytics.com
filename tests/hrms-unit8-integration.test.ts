@@ -78,4 +78,14 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(fixture).toContain("authoritative compensation timeline overlaps");
     expect(fixture).not.toContain("deleteMany");
   });
+
+  it("registers a guarded real PostgreSQL concurrency gate", () => {
+    const script = read("scripts/hr-unit8-staging-concurrency.mjs");
+    expect(script).toContain('HR_UNIT8_STAGING_CONCURRENCY_CONFIRM !== "staging-only"');
+    expect(script).toContain("TransactionIsolationLevel.Serializable");
+    expect(script).toContain("FOR UPDATE");
+    expect(script).toContain("INSUFFICIENT_BUDGET");
+    expect(script).toContain("hr.compensation.concurrency.validated");
+    expect(script).not.toContain("deleteMany");
+  });
 });
