@@ -106,4 +106,14 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(script).toContain("hr.compensation.concurrency.validated");
     expect(script).not.toContain("deleteMany");
   });
+
+  it("registers a read-only staging integrity gate", () => {
+    const script = read("scripts/hr-unit8-staging-integrity.mjs");
+    expect(script).toContain('HR_UNIT8_STAGING_INTEGRITY_CONFIRM !== "staging-only"');
+    expect(script).toContain("orphanCompensationRecords");
+    expect(script).toContain("authoritativeOverlaps");
+    expect(script).toContain("failedCompensationOutbox");
+    expect(script).not.toContain("deleteMany");
+    expect(script).not.toContain("updateMany");
+  });
 });
