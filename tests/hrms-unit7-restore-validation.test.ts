@@ -14,6 +14,7 @@ describe("Unit 7 isolated restore validator", () => {
     expect(source).toContain('Boolean(calibration.managerRatingItemId)');
     expect(source).toContain('!employeeRationale.includes(calibrationRationale)');
     expect(source).toContain('activeAssignment.effectiveFrom.getTime() === event.appliedAt.getTime()');
+    expect(source).toContain('`%${promotionCase.id}%`');
     expect(source).toContain("migrations.length === 43");
   });
 

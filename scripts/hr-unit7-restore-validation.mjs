@@ -59,7 +59,7 @@ try {
     prisma.hrWorkforceEventExecutionAttempt.findMany({ where: { eventId: event.id } }),
     prisma.hrAuditEvent.findMany({ where: { correlationId: event.correlationId } }),
     prisma.hrNotification.findMany({ where: { organizationId: employee.organizationId, OR: [{ body: { contains: event.reference } }, { href: { contains: event.id } }] } }),
-    prisma.$queryRawUnsafe('SELECT id, status FROM "HrEmailOutbox" WHERE payload::text LIKE $1', `%${event.correlationId}%`),
+    prisma.$queryRawUnsafe('SELECT id, status FROM "HrEmailOutbox" WHERE payload::text LIKE $1 OR "idempotencyKey" LIKE $2 OR "idempotencyKey" LIKE $3', `%${promotionCase.id}%`, `%${decision.id}%`, `%${event.id}%`),
     prisma.hrJobProfileVersion.findUnique({ where: { id: promotionCase.currentJobProfileVersionId } }),
     prisma.hrJobProfileVersion.findUnique({ where: { id: promotionCase.targetJobProfileVersionId } }),
     prisma.hrCompanyLevelVersion.findUnique({ where: { id: promotionCase.currentLevelVersionId } }),
