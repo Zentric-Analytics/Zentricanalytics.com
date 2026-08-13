@@ -29,6 +29,8 @@ describe("Unit 8 compensation integration safeguards", () => {
     const worker = read("src/lib/hr/compensation/worker.ts");
     expect(route).toContain("ORGANIZATION_WORKER_SECRET");
     expect(worker).toContain("TransactionIsolationLevel.Serializable");
+    expect(worker).toContain('status: { in: ["SCHEDULED", "EFFECTIVE"] }');
+    expect(worker).not.toContain('status: { in: ["APPROVED", "SCHEDULED"] }');
     expect(worker).toContain('"DEAD_LETTER" : "FAILED"');
     expect(read("scripts/start-with-hr-workers.mjs")).toContain('/api/internal/hr/compensation');
   });
@@ -50,6 +52,9 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(migration).not.toContain("tstzrange(");
     expect(migration).toContain("hr_comp_protect_immutable");
     expect(migration).toContain("btree_gist");
+    const remediation = read("prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql");
+    expect(remediation).toContain('OLD."status"::text <> \'DRAFT\'');
+    expect(remediation).toContain("CREATE OR REPLACE FUNCTION hr_comp_protect_immutable");
   });
 
   it("guards the real staging lifecycle fixture and preserves governed provenance", () => {

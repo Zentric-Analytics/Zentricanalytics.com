@@ -24,8 +24,10 @@ try {
     orderBy: { createdAt: "asc" },
     include: { position: true, employee: { include: { workRelationships: { where: { status: "ACTIVE" }, orderBy: { startedAt: "desc" }, take: 1 } } } },
   });
+  const occupiedRelationships = new Set((await prisma.hrEmployeeCompensation.findMany({ where: { organizationId: organization.id }, select: { workRelationshipId: true } })).map(({ workRelationshipId }) => workRelationshipId));
   const assignment = assignmentCandidates.find((candidate) => candidate.position.salaryBandMinimum && candidate.position.salaryBandMaximum
-    && new Prisma.Decimal(candidate.position.salaryBandMinimum).lessThan(candidate.position.salaryBandMaximum));
+    && new Prisma.Decimal(candidate.position.salaryBandMinimum).lessThan(candidate.position.salaryBandMaximum)
+    && candidate.employee.workRelationships[0] && !occupiedRelationships.has(candidate.employee.workRelationships[0].id));
   if (!assignment) throw new Error("No governed active assignment has a complete non-degenerate legacy position range.");
   const workRelationship = assignment.employee.workRelationships[0];
   if (!workRelationship || !assignment.position.salaryBandMinimum || !assignment.position.salaryBandMaximum) throw new Error("No governed assignment with a complete legacy position range is available.");
@@ -85,7 +87,7 @@ try {
   const consumed = await prisma.hrCompBudgetEntry.aggregate({ where: { budgetId: budget.id, entryType: "CONSUME" }, _sum: { amount: true } });
   if (!new Prisma.Decimal(reserved._sum.amount ?? 0).equals(consumed._sum.amount ?? 0)) throw new Error("Unit 8 budget reservation and consumption do not reconcile.");
 
-  console.log(JSON.stringify({ result: "PASS", run, database: databaseUrl.pathname.slice(1), migrationExpectation: 45, provenance: { legacySalaryRecords: 0, positionId: assignment.positionId, positionRangeUsed: true }, ids: { organizationId: organization.id, employeeId: assignment.employeeId, workRelationshipId: workRelationship.id, assignmentId: assignment.id, marketId: market.id, marketVersionId: marketVersion.id, bandVersionId: bandVersion.id, policyVersionId: policyVersion.id, cycleId: cycle.id, budgetId: budget.id, recommendationId: recommendation.id, decisionId: decision.id, effectiveRecordId: effectiveRecord.id, correctedRecordId: correctedRecord.id, retroactiveSignalId: retroactiveSignal.id, bonusAwardId: bonusAward.id, payrollHandoffId: payrollHandoff.id }, unit7PromotionLinked: Boolean(promotion), budgetReconciled: true, authoritativeOverlaps: 0, auditEvents: auditEntities.length }, null, 2));
+  console.log(JSON.stringify({ result: "PASS", run, database: databaseUrl.pathname.slice(1), migrationExpectation: 46, provenance: { legacySalaryRecords: 0, positionId: assignment.positionId, positionRangeUsed: true }, ids: { organizationId: organization.id, employeeId: assignment.employeeId, workRelationshipId: workRelationship.id, assignmentId: assignment.id, marketId: market.id, marketVersionId: marketVersion.id, bandVersionId: bandVersion.id, policyVersionId: policyVersion.id, cycleId: cycle.id, budgetId: budget.id, recommendationId: recommendation.id, decisionId: decision.id, effectiveRecordId: effectiveRecord.id, correctedRecordId: correctedRecord.id, retroactiveSignalId: retroactiveSignal.id, bonusAwardId: bonusAward.id, payrollHandoffId: payrollHandoff.id }, unit7PromotionLinked: Boolean(promotion), budgetReconciled: true, authoritativeOverlaps: 0, auditEvents: auditEntities.length }, null, 2));
 } finally {
   await prisma.$disconnect();
 }
