@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
-import { s3CompatibleChecksumOptions } from "./hr-database-archive-lib.mjs";
+import { optionalObjectVersion, s3CompatibleChecksumOptions } from "./hr-database-archive-lib.mjs";
 
 function blocked(message) {
   console.error(`BLOCKED ${message}`);
@@ -53,7 +53,7 @@ if (manifestName) {
   const manifestObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: manifestKey }));
   manifest = JSON.parse(await manifestObject.Body.transformToString());
   const archiveKey = `${prefix}${manifest.archiveFile}`;
-  const archiveObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: archiveKey, VersionId: manifest.remote?.versionId }));
+  const archiveObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: archiveKey, ...optionalObjectVersion(manifest.remote?.versionId) }));
   encrypted = Buffer.from(await archiveObject.Body.transformToByteArray());
 }
 if (manifest.correlation !== correlation || manifest.encryption?.algorithm !== "aes-256-gcm") blocked("Archive manifest correlation or encryption metadata is invalid.");

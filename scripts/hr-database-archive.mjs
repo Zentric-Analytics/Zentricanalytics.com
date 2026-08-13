@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { pipeline } from "node:stream/promises";
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, s3CompatibleChecksumOptions, validateArchiveRoot } from "./hr-database-archive-lib.mjs";
+import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, optionalObjectVersion, s3CompatibleChecksumOptions, validateArchiveRoot } from "./hr-database-archive-lib.mjs";
 
 function blocked(message) {
   console.error(`BLOCKED ${message}`);
@@ -87,7 +87,7 @@ try {
     phase = "archive-upload";
     const uploaded = await client.send(new PutObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: archiveKey, Body: createReadStream(archivePath), ContentLength: stat.size, ContentType: "application/octet-stream", Metadata: { correlation, sha256: manifest.sha256, expiresat: manifest.expiresAt }, ...retention }));
     phase = "archive-head-verification";
-    const remote = await client.send(new HeadObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: archiveKey, VersionId: uploaded.VersionId }));
+    const remote = await client.send(new HeadObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: archiveKey, ...optionalObjectVersion(uploaded.VersionId) }));
     if (remote.ContentLength !== stat.size || remote.Metadata?.sha256 !== manifest.sha256) throw new Error("Uploaded archive failed size or SHA-256 metadata verification.");
     if (backupProvider === "aws-s3" && (!uploaded.VersionId || remote.ObjectLockMode !== "COMPLIANCE" || !remote.ObjectLockRetainUntilDate || remote.ObjectLockRetainUntilDate < new Date(manifest.expiresAt))) throw new Error("Uploaded archive lacks the required immutable AWS version and retention evidence.");
     manifest.remote = { provider: backupProvider, bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, key: archiveKey, versionId: uploaded.VersionId, eTag: uploaded.ETag?.replaceAll('"', ""), verifiedAt: new Date().toISOString(), objectLockMode: remote.ObjectLockMode, retainUntil: remote.ObjectLockRetainUntilDate?.toISOString() };

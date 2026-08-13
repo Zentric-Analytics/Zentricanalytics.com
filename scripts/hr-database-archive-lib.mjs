@@ -8,6 +8,10 @@ export function s3CompatibleChecksumOptions(provider) {
     : {};
 }
 
+export function optionalObjectVersion(versionId) {
+  return typeof versionId === "string" && versionId.length > 0 ? { VersionId: versionId } : {};
+}
+
 export function archiveTiersForDate(value) {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) throw new Error("Invalid archive timestamp.");

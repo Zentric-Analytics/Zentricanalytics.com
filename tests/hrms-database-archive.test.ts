@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, s3CompatibleChecksumOptions, validateArchiveRoot } from "../scripts/hr-database-archive-lib.mjs";
+import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, optionalObjectVersion, s3CompatibleChecksumOptions, validateArchiveRoot } from "../scripts/hr-database-archive-lib.mjs";
 
 describe("Render database archive policy", () => {
   it("promotes Sunday and first-of-month archives into longer tiers", () => {
@@ -34,5 +34,11 @@ describe("Render database archive policy", () => {
       responseChecksumValidation: "WHEN_REQUIRED",
     });
     expect(s3CompatibleChecksumOptions("aws-s3")).toEqual({});
+  });
+
+  it("omits unsupported version parameters when an S3-compatible provider returns none", () => {
+    expect(optionalObjectVersion(undefined)).toEqual({});
+    expect(optionalObjectVersion("")).toEqual({});
+    expect(optionalObjectVersion("version-1")).toEqual({ VersionId: "version-1" });
   });
 });
