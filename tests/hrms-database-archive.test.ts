@@ -37,9 +37,10 @@ describe("Render database archive policy", () => {
   });
 
   it("omits unsupported version parameters when an S3-compatible provider returns none", () => {
-    expect(optionalObjectVersion(undefined)).toEqual({});
-    expect(optionalObjectVersion("")).toEqual({});
-    expect(optionalObjectVersion("null")).toEqual({});
-    expect(optionalObjectVersion("version-1")).toEqual({ VersionId: "version-1" });
+    expect(optionalObjectVersion("s3-compatible", "r2-version")).toEqual({});
+    expect(optionalObjectVersion("aws-s3", undefined)).toEqual({});
+    expect(optionalObjectVersion("aws-s3", "")).toEqual({});
+    expect(optionalObjectVersion("aws-s3", "null")).toEqual({});
+    expect(optionalObjectVersion("aws-s3", "version-1")).toEqual({ VersionId: "version-1" });
   });
 });

@@ -53,7 +53,7 @@ if (manifestName) {
   const manifestObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: manifestKey }));
   manifest = JSON.parse(await manifestObject.Body.transformToString());
   const archiveKey = `${prefix}${manifest.archiveFile}`;
-  const archiveObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: archiveKey, ...optionalObjectVersion(manifest.remote?.versionId) }));
+  const archiveObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: archiveKey, ...optionalObjectVersion(provider, manifest.remote?.versionId) }));
   encrypted = Buffer.from(await archiveObject.Body.transformToByteArray());
 }
 if (manifest.correlation !== correlation || manifest.encryption?.algorithm !== "aes-256-gcm") blocked("Archive manifest correlation or encryption metadata is invalid.");
