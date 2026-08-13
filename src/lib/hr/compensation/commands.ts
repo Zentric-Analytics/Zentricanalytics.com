@@ -21,6 +21,10 @@ export async function withCompensationSerializableRetry<T>(operation: () => Prom
 
 export async function reserveCompensationBudget(context: CompensationContext, input: { budgetId: string; recommendationId: string; amount: string; idempotencyKey: string; correlationId?: string }) {
   return withCompensationSerializableRetry(() => prisma.$transaction(async (tx) => {
+    const budgetSnapshot = await tx.hrCompBudget.findFirstOrThrow({ where: { id: input.budgetId, organizationId: context.organizationId }, select: { cycleId: true } });
+    await tx.$queryRaw`SELECT id FROM "HrCompCycle" WHERE id = ${budgetSnapshot.cycleId} AND "organizationId" = ${context.organizationId} FOR UPDATE`;
+    const cycle = await tx.hrCompCycle.findFirstOrThrow({ where: { id: budgetSnapshot.cycleId, organizationId: context.organizationId } });
+    if (!["OPEN", "REVIEW"].includes(cycle.status)) throw new Error("Compensation budget reservations require an open or review-stage cycle.");
     await tx.$queryRaw`SELECT id FROM "HrCompBudget" WHERE id = ${input.budgetId} AND "organizationId" = ${context.organizationId} FOR UPDATE`;
     const budget = await tx.hrCompBudget.findFirstOrThrow({ where: { id: input.budgetId, organizationId: context.organizationId } });
     const existing = await tx.hrCompBudgetEntry.findUnique({ where: { budgetId_idempotencyKey: { budgetId: budget.id, idempotencyKey: input.idempotencyKey } } });
@@ -47,6 +51,15 @@ export async function releaseCompensationBudget(context: CompensationContext, in
 export async function finalizeCompensationDecision(context: CompensationContext, input: { recommendationId: string; recommendationVersion: number; budgetId: string; effectiveAt: Date; eventType: HrCompEventType; rationale: string; exceptionId?: string; correlationId?: string }) {
   return withCompensationSerializableRetry(() => prisma.$transaction(async (tx) => {
     const recommendation = await tx.hrCompRecommendation.findFirstOrThrow({ where: { id: input.recommendationId, organizationId: context.organizationId, version: input.recommendationVersion, status: "HR_REVIEW" } });
+    const population = await tx.hrCompCyclePopulation.findFirstOrThrow({ where: { id: recommendation.cyclePopulationId, organizationId: context.organizationId } });
+    await tx.$queryRaw`SELECT id FROM "HrCompCycle" WHERE id = ${population.cycleId} AND "organizationId" = ${context.organizationId} FOR UPDATE`;
+    const cycle = await tx.hrCompCycle.findFirstOrThrow({ where: { id: population.cycleId, organizationId: context.organizationId } });
+    if (!["REVIEW", "FINALIZING"].includes(cycle.status)) throw new Error("Final compensation approval requires a review or finalizing cycle.");
+    await tx.$queryRaw`SELECT id FROM "HrWorkRelationship" WHERE id = ${population.workRelationshipId} AND "organizationId" = ${context.organizationId} FOR UPDATE`;
+    const relationship = await tx.hrWorkRelationship.findFirstOrThrow({ where: { id: population.workRelationshipId, organizationId: context.organizationId } });
+    if (relationship.status !== "ACTIVE") throw new Error("Compensation cannot be approved for an inactive work relationship.");
+    const pendingSeparation = await tx.hrSeparationCase.findFirst({ where: { organizationId: context.organizationId, workRelationshipId: relationship.id, status: { in: ["SUBMITTED", "UNDER_REVIEW", "APPROVED", "SCHEDULED"] } }, select: { id: true } });
+    if (pendingSeparation) throw new Error("Compensation approval is blocked while an employment separation is pending.");
     assertIndependentCompensationApproval({ actorUserId: context.actorUserId, managerUserId: recommendation.managerUserId });
     const band = await tx.hrCompBandVersion.findFirstOrThrow({ where: { id: recommendation.bandVersionId, organizationId: context.organizationId, status: "PUBLISHED", effectiveFrom: { lte: input.effectiveAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.effectiveAt } }] } });
     const bandIdentity = await tx.hrCompBand.findFirstOrThrow({ where: { id: band.bandId, organizationId: context.organizationId } });

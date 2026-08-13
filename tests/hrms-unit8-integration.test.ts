@@ -50,6 +50,10 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(domain).not.toContain("Number(parseMoney");
     expect(commands).toContain("Final decision cannot consume more budget");
     expect(commands).toContain('payrollHandoffKey("record", record.id)');
+    expect(commands).toContain('SELECT id FROM "HrCompCycle"');
+    expect(commands).toContain('SELECT id FROM "HrWorkRelationship"');
+    expect(commands).toContain("Compensation approval is blocked while an employment separation is pending.");
+    expect(commands).toContain("Compensation budget reservations require an open or review-stage cycle.");
   });
 
   it("adds immutable publication and non-overlap database controls", () => {
