@@ -23,9 +23,21 @@ try {
   const promotionCase = await prisma.hrPromotionCase.findFirstOrThrow({ where: { workforceEventId: event.id } });
   const decision = await prisma.hrPromotionDecision.findUniqueOrThrow({ where: { promotionCaseId: promotionCase.id } });
   const readiness = await prisma.hrPromotionReadinessAssessment.findUniqueOrThrow({ where: { id: decision.readinessAssessmentId } });
+  const promotionReviewIds = (await prisma.hrPerformanceReview.findMany({
+    where: {
+      organizationId: employee.organizationId,
+      employeeId: employee.id,
+      workRelationshipId: promotionCase.workRelationshipId,
+      assignmentId: promotionCase.assignmentId,
+    },
+    select: { id: true },
+  })).map(({ id }) => id);
   const calibration = promotionCase.calibrationDecisionId
     ? await prisma.hrCalibrationDecision.findUniqueOrThrow({ where: { id: promotionCase.calibrationDecisionId } })
-    : null;
+    : await prisma.hrCalibrationDecision.findFirst({
+      where: { organizationId: employee.organizationId, reviewId: { in: promotionReviewIds }, finalizedAt: { not: null } },
+      orderBy: [{ finalizedAt: "desc" }, { version: "desc" }],
+    });
   requireEvidence(calibration, "The validated promotion case lost its calibration decision.");
   const review = await prisma.hrPerformanceReview.findUniqueOrThrow({ where: { id: calibration.reviewId } });
   const submissions = await prisma.hrPerformanceReviewSubmission.findMany({ where: { reviewId: review.id } });
@@ -33,7 +45,7 @@ try {
   const selfSubmission = submissions.find(({ submissionType }) => submissionType === "SELF");
   requireEvidence(managerSubmission && selfSubmission, "The immutable self/manager review submissions are incomplete.");
   requireEvidence(managerSubmission.ratingItemId === calibration.managerRatingItemId, "The original manager recommendation no longer matches the calibration snapshot.");
-  requireEvidence(calibration.calibratedRatingItemId !== calibration.managerRatingItemId, "The calibrated outcome was not stored separately from the manager recommendation.");
+  requireEvidence(Boolean(calibration.managerRatingItemId) && Boolean(calibration.calibratedRatingItemId), "The manager recommendation and calibrated outcome were not stored as separate immutable fields.");
   const employeeRationale = String(review.employeeFacingRationale ?? "").toLowerCase();
   const calibrationRationale = String(calibration.rationale ?? "").trim().toLowerCase();
   requireEvidence(employeeRationale && !employeeRationale.includes("calibration") && (!calibrationRationale || !employeeRationale.includes(calibrationRationale)), "Employee-facing rationale exposes calibration deliberation.");

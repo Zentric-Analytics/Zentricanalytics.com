@@ -10,6 +10,8 @@ describe("Unit 7 isolated restore validator", () => {
     expect(source).toContain('DR_RESTORE_CONFIRM !== "isolated-restore"');
     expect(source).toContain('employeeNumber: "U7-IMMEDIATE-001"');
     expect(source).toContain('reference: "WFE-2026-5B0A5F70"');
+    expect(source).toContain('finalizedAt: { not: null }');
+    expect(source).toContain('Boolean(calibration.managerRatingItemId)');
     expect(source).toContain("migrations.length === 43");
   });
 
