@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
+import { s3CompatibleChecksumOptions } from "./hr-database-archive-lib.mjs";
 
 function blocked(message) {
   console.error(`BLOCKED ${message}`);
@@ -31,11 +32,20 @@ if (manifestName) {
 } else {
   const bucket = String(process.env.BACKUP_OBJECT_STORAGE_BUCKET ?? "");
   const region = String(process.env.BACKUP_OBJECT_STORAGE_REGION ?? "");
+  const provider = String(process.env.BACKUP_OBJECT_STORAGE_PROVIDER ?? "s3-compatible").toLowerCase();
   if (!bucket || !region) blocked("The requested archive is unavailable locally and remote archive configuration is incomplete.");
+  const endpoint = process.env.BACKUP_OBJECT_STORAGE_ENDPOINT ? new URL(process.env.BACKUP_OBJECT_STORAGE_ENDPOINT) : undefined;
+  if (endpoint && (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash)) blocked("Backup object-storage endpoint must be a credential-free HTTPS URL.");
   const credentials = process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID && process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY
     ? { accessKeyId: process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID, secretAccessKey: process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY }
     : undefined;
-  const client = new S3Client({ region, credentials });
+  const client = new S3Client({
+    endpoint: endpoint?.toString(),
+    region,
+    forcePathStyle: provider === "s3-compatible" && String(process.env.BACKUP_OBJECT_STORAGE_FORCE_PATH_STYLE).toLowerCase() === "true",
+    credentials,
+    ...s3CompatibleChecksumOptions(provider),
+  });
   const prefix = `database-archives/daily/${new Date().getUTCFullYear()}/`;
   const listed = await client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix }));
   const manifestKey = listed.Contents?.find(({ Key }) => Key?.endsWith(`-${correlation}.manifest.json`))?.Key;

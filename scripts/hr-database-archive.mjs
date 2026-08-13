@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { pipeline } from "node:stream/promises";
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, validateArchiveRoot } from "./hr-database-archive-lib.mjs";
+import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, s3CompatibleChecksumOptions, validateArchiveRoot } from "./hr-database-archive-lib.mjs";
 
 function blocked(message) {
   console.error(`BLOCKED ${message}`);
@@ -77,6 +77,7 @@ try {
       region: process.env.BACKUP_OBJECT_STORAGE_REGION,
       forcePathStyle: backupProvider === "s3-compatible" && String(process.env.BACKUP_OBJECT_STORAGE_FORCE_PATH_STYLE).toLowerCase() === "true",
       credentials,
+      ...s3CompatibleChecksumOptions(backupProvider),
     });
     const prefix = `database-archives/${tiers.join("-")}/${createdAt.getUTCFullYear()}`;
     const archiveKey = `${prefix}/${archiveFile}`;

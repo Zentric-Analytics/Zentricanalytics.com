@@ -2,6 +2,12 @@ import path from "node:path";
 
 export const archiveRetention = Object.freeze({ dailyDays: 90, weeklyDays: 365, monthlyYears: 15 });
 
+export function s3CompatibleChecksumOptions(provider) {
+  return String(provider).toLowerCase() === "s3-compatible"
+    ? { requestChecksumCalculation: "WHEN_REQUIRED", responseChecksumValidation: "WHEN_REQUIRED" }
+    : {};
+}
+
 export function archiveTiersForDate(value) {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) throw new Error("Invalid archive timestamp.");
