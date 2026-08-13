@@ -89,7 +89,7 @@ export async function activateCompensationDecision(context: CompensationContext,
     const employee = await tx.hrEmployee.findUniqueOrThrow({ where: { id: record.employeeId } });
     const recipient = employee.preferredNotificationEmail ?? employee.companyEmail ?? employee.personalEmail;
     if (recipient) await enqueueHrEmail(tx, { organizationId: context.organizationId, recipient, template: "hr-compensation-effective", subject: "Your compensation update is effective", payload: { recipientName: employee.preferredName ?? employee.legalFirstName, href: "/hr/employee/compensation", decisionId: decision.id }, idempotencyKey: `unit8-effective:${decision.id}:${recipient}` });
-    await appendHrAudit(tx, { ...context, entityType: "HrCompensationRecord", entityId: record.id, action: "hr.compensation.record.effective", newValues: { decisionId: decision.id, eventType: record.eventType, effectiveFrom: record.effectiveFrom, currency: record.currency }, correlationId: record.correlationId });
+    await appendHrAudit(tx, { organizationId: context.organizationId, actorUserId: context.actorUserId === "WORKER" ? undefined : context.actorUserId, actorRole: context.actorRole ?? (context.actorUserId === "WORKER" ? "WORKER" : undefined), entityType: "HrCompensationRecord", entityId: record.id, action: "hr.compensation.record.effective", newValues: { decisionId: decision.id, eventType: record.eventType, effectiveFrom: record.effectiveFrom, currency: record.currency }, correlationId: record.correlationId });
     return record;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
 }
