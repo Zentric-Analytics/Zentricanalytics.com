@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { BriefcaseBusiness, Building2, CalendarClock, FileWarning, Mail, Network, UserRoundPlus, Users, WalletCards } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
+import { requirePermission } from "@/lib/hr/permissions/authorize";
 
 export default async function Dashboard() {
-  const auth = await requireAuthenticatedUser();
+  const auth = await requirePermission("employee.read_all");
   const organizationId = auth.user.organizationId;
   const now = new Date(); const inThirtyDays = new Date(now); inThirtyDays.setUTCDate(inThirtyDays.getUTCDate() + 30);
   const [employees, departments, positions, users, invitations, supervisors, outbox, payroll, leave, documents, assets, overdue, approvals] = await Promise.all([

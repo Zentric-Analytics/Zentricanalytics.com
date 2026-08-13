@@ -3,6 +3,9 @@ import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
 
 export default async function HrHome() {
   const auth = await requireAuthenticatedUser();
+  if (auth.roles.includes("COMPENSATION_ADMIN")) redirect("/hr/admin/compensation");
+  if (auth.roles.includes("BUDGET_OWNER")) redirect("/hr/admin/compensation/budgets");
+  if (auth.roles.includes("PAYROLL_READER")) redirect("/hr/admin/compensation/payroll-handoffs");
   if (auth.roles.some((role) => role === "ADMIN" || role === "HR_ADMIN" || role === "PAYROLL_ADMIN")) redirect("/hr/admin/dashboard");
   if (auth.roles.includes("AUDITOR")) redirect("/hr/auditor");
   if (auth.user.employee) {

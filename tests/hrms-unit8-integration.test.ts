@@ -30,6 +30,29 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(auditor).toContain('requirePermission("compensation.audit.read")');
     expect(auditor).not.toContain("newAmount: true");
     expect(auditor).not.toContain("rationale: true");
+    const budgets = read("src/app/hr/admin/compensation/budgets/page.tsx");
+    expect(budgets).toContain('requirePermission("compensation.budget.read")');
+    expect(budgets).toContain('scopeType: "USER", scopeId: auth.user.id');
+    expect(budgets).not.toContain("restrictedRationale");
+    const handoffs = read("src/app/hr/admin/compensation/payroll-handoffs/page.tsx");
+    expect(handoffs).toContain('requirePermission("compensation.payroll_handoff.read")');
+    for (const restricted of ["rationale", "guideline", "benchmark", "calibration", "exception"]) expect(handoffs).not.toContain(`${restricted}: true`);
+  });
+
+  it("routes specialized roles and supervisor compensation without widening general administration", () => {
+    const home = read("src/app/hr/page.tsx");
+    expect(home).toContain('auth.roles.includes("COMPENSATION_ADMIN")');
+    expect(home).toContain('auth.roles.includes("BUDGET_OWNER")');
+    expect(home).toContain('auth.roles.includes("PAYROLL_READER")');
+    const adminLayout = read("src/app/hr/admin/layout.tsx");
+    expect(adminLayout).toContain('"COMPENSATION_ADMIN", "BUDGET_OWNER", "PAYROLL_READER"');
+    expect(adminLayout).toContain('["Dashboard","/hr/admin/dashboard","employee.read_all"]');
+    expect(read("src/app/hr/admin/dashboard/page.tsx")).toContain('requirePermission("employee.read_all")');
+    expect(read("src/app/hr/supervisor/layout.tsx")).toContain('/hr/supervisor/compensation');
+    expect(read("src/app/hr/employee/layout.tsx")).toContain('/hr/employee/compensation');
+    expect(read("src/app/hr/auditor/layout.tsx")).toContain('/hr/auditor/compensation');
+    expect(permissionsForRole("EMPLOYEE")).toContain("compensation.recommendation.create");
+    expect(read("prisma/migrations/20260813203000_hrms_unit8_manager_compensation_scope/migration.sql")).toContain("ON CONFLICT");
   });
 
   it("registers a guarded replay-safe compensation worker", () => {

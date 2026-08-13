@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  BriefcaseBusiness, Building2, CalendarClock, CalendarDays, ChevronDown, CircleUserRound,
+  Banknote, BriefcaseBusiness, Building2, CalendarClock, CalendarDays, ChevronDown, CircleUserRound,
   ClipboardCheck, FileText, FolderLock, Gauge, GitBranch, Landmark, LayoutDashboard,
   LogOut, Menu, Network, Package, ScrollText, Settings, UserRoundPlus, Users, WalletCards, X,
 } from "lucide-react";
@@ -33,6 +33,9 @@ const groups: Array<{ label?: string; items: Item[] }> = [
     { label: "Recruitment", href: "/hr/admin/recruitment", icon: UserRoundPlus },
   ]},
   { label: "OPERATIONS", items: [
+    { label: "Compensation", href: "/hr/admin/compensation", icon: Banknote },
+    { label: "Scoped budgets", href: "/hr/admin/compensation/budgets", icon: WalletCards },
+    { label: "Payroll handoffs", href: "/hr/admin/compensation/payroll-handoffs", icon: ScrollText },
     { label: "Payroll", href: "/hr/admin/payroll", icon: WalletCards },
     { label: "Documents", href: "/hr/admin/documents", icon: FileText },
     { label: "Assets", href: "/hr/admin/assets", icon: Package },
@@ -49,7 +52,7 @@ const groups: Array<{ label?: string; items: Item[] }> = [
 ];
 
 function Brand() {
-  return <Link href="/hr/admin/dashboard" className="hr-brand" aria-label="Zentric Analytics HRMS dashboard"><span className="hr-brand-mark">Z</span><span><strong>ZENTRIC</strong><small>ANALYTICS HRMS</small></span></Link>;
+  return <Link href="/hr" className="hr-brand" aria-label="Zentric Analytics HRMS workspace"><span className="hr-brand-mark">Z</span><span><strong>ZENTRIC</strong><small>ANALYTICS HRMS</small></span></Link>;
 }
 
 export function HrAdminShell({ email, role, organization, unread, notifications, allowedLinks, children }: { email: string; role: string; organization: string; unread: number; notifications: NotificationItem[]; allowedLinks: string[]; children: React.ReactNode }) {
@@ -66,7 +69,7 @@ export function HrAdminShell({ email, role, organization, unread, notifications,
       <div className="hr-account"><span>{initials}</span><div><strong title={email}>{email}</strong><small>{role.replaceAll("_", " ").toLowerCase()}</small></div><form action={hrLogoutAction}><button aria-label="Sign out" title="Sign out"><LogOut /></button></form></div>
     </aside>
     <div className="hr-admin-stage">
-      <header className="hr-topbar"><p className="hr-breadcrumb"><Link href="/hr/admin/dashboard">Dashboard</Link><span>›</span>{currentLabel}</p><div className="hr-topbar-actions"><div className="hr-org"><Landmark /><span>{organization}</span><ChevronDown /></div><HrNotificationCenter unread={unread} notifications={notifications}/><div className="hr-avatar" aria-label={`Signed in as ${email}`}>{initials}</div></div></header>
+      <header className="hr-topbar"><p className="hr-breadcrumb"><Link href="/hr">Workspace</Link><span>›</span>{currentLabel}</p><div className="hr-topbar-actions"><div className="hr-org"><Landmark /><span>{organization}</span><ChevronDown /></div><HrNotificationCenter unread={unread} notifications={notifications}/><div className="hr-avatar" aria-label={`Signed in as ${email}`}>{initials}</div></div></header>
       <main className="hr-admin-main">{children}</main>
     </div>
   </div>;
