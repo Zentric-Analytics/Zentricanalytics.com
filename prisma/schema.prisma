@@ -3392,29 +3392,29 @@ model HrTimePolicyVersion {
 }
 
 model HrTimePolicyApplicability {
-  id               String                 @id @default(cuid())
-  organizationId   String
-  timePolicyId     String
-  legalEntityId    String?
-  countryCode      String?
-  employeeType     HrEmploymentType?
-  positionId       String?
-  gradeId          String?
-  departmentId     String?
-  locationId       String?
-  workMode         HrWorkMode?
-  priority         Int                    @default(0)
-  effectiveFrom    DateTime
-  effectiveTo      DateTime?
-  organization     HrOrganization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  timePolicy       HrTimePolicy           @relation(fields: [timePolicyId], references: [id], onDelete: Restrict)
+  id             String            @id @default(cuid())
+  organizationId String
+  timePolicyId   String
+  legalEntityId  String?
+  countryCode    String?
+  employeeType   HrEmploymentType?
+  positionId     String?
+  gradeId        String?
+  departmentId   String?
+  locationId     String?
+  workMode       HrWorkMode?
+  priority       Int               @default(0)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  organization   HrOrganization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  timePolicy     HrTimePolicy      @relation(fields: [timePolicyId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, effectiveFrom, effectiveTo, priority])
   @@index([timePolicyId, effectiveFrom, effectiveTo])
 }
 
 model HrTimePolicyAssignment {
-  id                  String                @id @default(cuid())
+  id                  String         @id @default(cuid())
   organizationId      String
   employeeId          String
   workRelationshipId  String
@@ -3425,9 +3425,9 @@ model HrTimePolicyAssignment {
   effectiveTo         DateTime?
   reason              String
   assignedById        String
-  createdAt           DateTime              @default(now())
-  organization        HrOrganization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  timePolicy          HrTimePolicy          @relation(fields: [timePolicyId], references: [id], onDelete: Restrict)
+  createdAt           DateTime       @default(now())
+  organization        HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  timePolicy          HrTimePolicy   @relation(fields: [timePolicyId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
   @@index([workRelationshipId, assignmentId, effectiveFrom, effectiveTo])
@@ -3471,19 +3471,19 @@ model HrShiftTemplate {
 }
 
 model HrShiftTemplateVersion {
-  id                  String          @id @default(cuid())
-  shiftTemplateId     String
-  version             Int
-  timezone            String
-  segments            Json
-  graceBeforeMinutes  Int             @default(0)
-  graceAfterMinutes   Int             @default(0)
-  effectiveFrom       DateTime
-  effectiveTo         DateTime?
-  publishedAt         DateTime?
-  createdById         String
-  createdAt           DateTime        @default(now())
-  shiftTemplate       HrShiftTemplate @relation(fields: [shiftTemplateId], references: [id], onDelete: Restrict)
+  id                 String          @id @default(cuid())
+  shiftTemplateId    String
+  version            Int
+  timezone           String
+  segments           Json
+  graceBeforeMinutes Int             @default(0)
+  graceAfterMinutes  Int             @default(0)
+  effectiveFrom      DateTime
+  effectiveTo        DateTime?
+  publishedAt        DateTime?
+  createdById        String
+  createdAt          DateTime        @default(now())
+  shiftTemplate      HrShiftTemplate @relation(fields: [shiftTemplateId], references: [id], onDelete: Restrict)
 
   @@unique([shiftTemplateId, version])
   @@index([shiftTemplateId, effectiveFrom, effectiveTo])
@@ -3547,48 +3547,48 @@ model HrTimeEvent {
 }
 
 model HrClockSession {
-  id                 String               @id @default(cuid())
-  organizationId     String
-  employeeId         String
-  workRelationshipId String
-  assignmentId       String
+  id                  String               @id @default(cuid())
+  organizationId      String
+  employeeId          String
+  workRelationshipId  String
+  assignmentId        String
   timePolicyVersionId String
-  businessDate       DateTime
-  openedByEventId    String
-  closedByEventId    String?
-  status             HrClockSessionStatus
-  startedAt          DateTime
-  endedAt            DateTime?
-  workedMinutes      Int?
-  breakMinutes       Int                  @default(0)
-  version            Int                  @default(1)
-  correlationId      String
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  organization       HrOrganization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  businessDate        DateTime
+  openedByEventId     String
+  closedByEventId     String?
+  status              HrClockSessionStatus
+  startedAt           DateTime
+  endedAt             DateTime?
+  workedMinutes       Int?
+  breakMinutes        Int                  @default(0)
+  version             Int                  @default(1)
+  correlationId       String
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  organization        HrOrganization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, employeeId, status, startedAt])
   @@index([assignmentId, businessDate])
 }
 
 model HrTimesheet {
-  id                 String             @id @default(cuid())
+  id                 String               @id @default(cuid())
   organizationId     String
   employeeId         String
   workRelationshipId String
   assignmentId       String
   periodStart        DateTime
   periodEnd          DateTime
-  status             HrTimesheetStatus  @default(DRAFT)
-  version            Int                @default(1)
+  status             HrTimesheetStatus    @default(DRAFT)
+  version            Int                  @default(1)
   submittedAt        DateTime?
   approvedAt         DateTime?
   approvedById       String?
   lockedAt           DateTime?
   correlationId      String
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  organization       HrOrganization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  organization       HrOrganization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   versions           HrTimesheetVersion[]
 
   @@unique([organizationId, employeeId, workRelationshipId, periodStart, periodEnd])
@@ -3596,33 +3596,33 @@ model HrTimesheet {
 }
 
 model HrTimesheetVersion {
-  id             String             @id @default(cuid())
-  timesheetId    String
-  version        Int
-  entries        Json
-  totalMinutes   Int
-  comment        String?
-  createdById    String
-  createdAt      DateTime           @default(now())
-  submittedAt    DateTime?
-  timesheet      HrTimesheet        @relation(fields: [timesheetId], references: [id], onDelete: Restrict)
+  id           String      @id @default(cuid())
+  timesheetId  String
+  version      Int
+  entries      Json
+  totalMinutes Int
+  comment      String?
+  createdById  String
+  createdAt    DateTime    @default(now())
+  submittedAt  DateTime?
+  timesheet    HrTimesheet @relation(fields: [timesheetId], references: [id], onDelete: Restrict)
 
   @@unique([timesheetId, version])
 }
 
 model HrAttendanceDay {
-  id                 String                        @id @default(cuid())
+  id                 String                       @id @default(cuid())
   organizationId     String
   employeeId         String
   workRelationshipId String
   assignmentId       String
   businessDate       DateTime
-  currentVersion     Int                           @default(1)
+  currentVersion     Int                          @default(1)
   currentOutcome     HrAttendanceOutcome
   correlationId      String
-  createdAt          DateTime                      @default(now())
-  updatedAt          DateTime                      @updatedAt
-  organization       HrOrganization                @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+  organization       HrOrganization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   interpretations    HrAttendanceInterpretation[]
 
   @@unique([organizationId, assignmentId, businessDate])
@@ -3652,49 +3652,49 @@ model HrAttendanceInterpretation {
 }
 
 model HrTimeCorrection {
-  id                       String                 @id @default(cuid())
-  organizationId           String
-  employeeId               String
-  attendanceDayId          String?
-  timesheetId              String?
-  sourceEventId            String?
-  status                   HrTimeCorrectionStatus @default(DRAFT)
-  requestedChanges         Json
-  reason                   String
-  version                  Int                    @default(1)
-  requestedById            String
-  reviewedById             String?
-  reviewedAt               DateTime?
-  appliedInterpretationId  String?
-  payrollImpact            Boolean                @default(false)
-  correlationId            String
-  createdAt                DateTime               @default(now())
-  updatedAt                DateTime               @updatedAt
-  organization             HrOrganization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  id                      String                 @id @default(cuid())
+  organizationId          String
+  employeeId              String
+  attendanceDayId         String?
+  timesheetId             String?
+  sourceEventId           String?
+  status                  HrTimeCorrectionStatus @default(DRAFT)
+  requestedChanges        Json
+  reason                  String
+  version                 Int                    @default(1)
+  requestedById           String
+  reviewedById            String?
+  reviewedAt              DateTime?
+  appliedInterpretationId String?
+  payrollImpact           Boolean                @default(false)
+  correlationId           String
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  organization            HrOrganization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, employeeId, status, createdAt])
   @@index([correlationId])
 }
 
 model HrAttendancePeriod {
-  id                 String                   @id @default(cuid())
-  organizationId     String
-  periodType         String                   @default("WEEKLY")
-  timezone           String
-  startsOn           DateTime
-  endsOn             DateTime
-  status             HrAttendancePeriodStatus @default(OPEN)
-  version            Int                      @default(1)
-  submittedAt        DateTime?
-  approvedAt         DateTime?
-  approvedById       String?
-  lockedAt           DateTime?
-  lockedById         String?
-  lockHash           String?
-  correlationId      String
-  createdAt          DateTime                 @default(now())
-  updatedAt          DateTime                 @updatedAt
-  organization       HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  id                   String                     @id @default(cuid())
+  organizationId       String
+  periodType           String                     @default("WEEKLY")
+  timezone             String
+  startsOn             DateTime
+  endsOn               DateTime
+  status               HrAttendancePeriodStatus   @default(OPEN)
+  version              Int                        @default(1)
+  submittedAt          DateTime?
+  approvedAt           DateTime?
+  approvedById         String?
+  lockedAt             DateTime?
+  lockedById           String?
+  lockHash             String?
+  correlationId        String
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  organization         HrOrganization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   authoritativeEntries HrAuthoritativeTimeEntry[]
 
   @@unique([organizationId, periodType, timezone, startsOn, endsOn])
@@ -4369,4 +4369,719 @@ model HrRecruitmentActivation {
   updatedAt           DateTime  @updatedAt
 
   @@index([organizationId, createdAt])
+}
+
+enum HrPerformancePublishStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+enum HrPerformanceVisibility {
+  EMPLOYEE_VISIBLE
+  MANAGER_EMPLOYEE
+  HR_CONFIDENTIAL
+  CALIBRATION_ONLY
+}
+
+enum HrPerformanceGoalStatus {
+  DRAFT
+  PROPOSED
+  ACTIVE
+  RETURNED
+  REVISED
+  COMPLETED
+  CANCELLED
+}
+
+enum HrPerformanceReviewStatus {
+  NOT_STARTED
+  SELF_REVIEW
+  MANAGER_REVIEW
+  CALIBRATION
+  FINALIZED
+  RETURNED
+  SKIPPED_SELF
+}
+
+enum HrCalibrationStatus {
+  DRAFT
+  POPULATION_LOCKED
+  IN_SESSION
+  DECISIONS_PENDING
+  FINALIZED
+  CANCELLED
+}
+
+enum HrDevelopmentPlanStatus {
+  DRAFT
+  ACTIVE
+  REVISED
+  COMPLETED
+  CANCELLED
+}
+
+enum HrPromotionReadinessState {
+  NOT_YET_READY
+  DEVELOPING
+  APPROACHING_READY
+  READY_NOW
+}
+
+enum HrPromotionCaseStatus {
+  DRAFT
+  MANAGER_RECOMMENDED
+  CALIBRATION
+  HR_REVIEW
+  BUSINESS_APPROVAL
+  APPROVED
+  EXECUTION_PENDING
+  APPLIED
+  RETURNED
+  DEFERRED
+  REJECTED
+  WITHDRAWN
+  CONFLICTED
+  FAILED
+}
+
+model HrJobFunction {
+  id             String                     @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  status         HrPerformancePublishStatus @default(DRAFT)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  version        Int                        @default(1)
+  createdById    String
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status, effectiveFrom, effectiveTo])
+}
+
+model HrCareerTrack {
+  id             String                     @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  status         HrPerformancePublishStatus @default(DRAFT)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  createdById    String
+  createdAt      DateTime                   @default(now())
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status, effectiveFrom, effectiveTo])
+}
+
+model HrCompanyLevel {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  displayOrder   Int
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, displayOrder])
+}
+
+model HrCompanyLevelVersion {
+  id             String                     @id @default(cuid())
+  organizationId String
+  companyLevelId String
+  version        Int
+  status         HrPerformancePublishStatus @default(DRAFT)
+  expectations   Json
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  supersedesId   String?
+  contentHash    String
+  publishedById  String?
+  publishedAt    DateTime?
+  createdAt      DateTime                   @default(now())
+
+  @@unique([companyLevelId, version])
+  @@unique([organizationId, contentHash])
+  @@index([organizationId, status, effectiveFrom, effectiveTo])
+}
+
+model HrJobProfileVersion {
+  id                    String                     @id @default(cuid())
+  organizationId        String
+  jobProfileId          String
+  jobFunctionId         String
+  careerTrackId         String
+  companyLevelVersionId String
+  version               Int
+  title                 String
+  responsibilities      Json
+  requirements          Json
+  status                HrPerformancePublishStatus @default(DRAFT)
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  supersedesId          String?
+  contentHash           String
+  publishedById         String?
+  publishedAt           DateTime?
+  createdAt             DateTime                   @default(now())
+
+  @@unique([jobProfileId, version])
+  @@unique([organizationId, contentHash])
+  @@index([organizationId, status, effectiveFrom, effectiveTo])
+  @@index([careerTrackId, companyLevelVersionId])
+}
+
+model HrCompetency {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, code])
+}
+
+model HrCompetencyVersion {
+  id             String                     @id @default(cuid())
+  organizationId String
+  competencyId   String
+  version        Int
+  definition     String
+  evidenceGuide  Json?
+  status         HrPerformancePublishStatus @default(DRAFT)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  contentHash    String
+  publishedById  String?
+  publishedAt    DateTime?
+  createdAt      DateTime                   @default(now())
+
+  @@unique([competencyId, version])
+  @@unique([organizationId, contentHash])
+  @@index([organizationId, status, effectiveFrom, effectiveTo])
+}
+
+model HrCompetencyExpectation {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  jobProfileVersionId   String
+  competencyVersionId   String
+  companyLevelVersionId String
+  expectation           String
+  evidenceGuide         Json?
+  createdAt             DateTime @default(now())
+
+  @@unique([jobProfileVersionId, competencyVersionId])
+  @@index([organizationId, companyLevelVersionId])
+}
+
+model HrRatingScale {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, code])
+}
+
+model HrRatingScaleVersion {
+  id            String                     @id @default(cuid())
+  ratingScaleId String
+  version       Int
+  status        HrPerformancePublishStatus @default(DRAFT)
+  contentHash   String
+  publishedById String?
+  publishedAt   DateTime?
+  createdAt     DateTime                   @default(now())
+
+  @@unique([ratingScaleId, version])
+}
+
+model HrRatingScaleItem {
+  id                   String   @id @default(cuid())
+  ratingScaleVersionId String
+  code                 String
+  label                String
+  description          String
+  displayOrder         Int
+  createdAt            DateTime @default(now())
+
+  @@unique([ratingScaleVersionId, code])
+  @@unique([ratingScaleVersionId, displayOrder])
+}
+
+model HrReviewTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, code])
+}
+
+model HrReviewTemplateVersion {
+  id                   String                     @id @default(cuid())
+  organizationId       String
+  reviewTemplateId     String
+  ratingScaleVersionId String
+  version              Int
+  sections             Json
+  status               HrPerformancePublishStatus @default(DRAFT)
+  contentHash          String
+  publishedById        String?
+  publishedAt          DateTime?
+  createdAt            DateTime                   @default(now())
+
+  @@unique([reviewTemplateId, version])
+  @@index([organizationId, status])
+}
+
+model HrPerformanceCycle {
+  id                      String    @id @default(cuid())
+  organizationId          String
+  code                    String
+  name                    String
+  cycleType               String
+  status                  String    @default("DRAFT")
+  startsAt                DateTime
+  selfReviewOpensAt       DateTime?
+  managerReviewOpensAt    DateTime?
+  calibrationOpensAt      DateTime?
+  endsAt                  DateTime
+  population              Json
+  workflowDefinitionId    String?
+  reviewTemplateVersionId String
+  version                 Int       @default(1)
+  correlationId           String
+  createdById             String
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, status, startsAt, endsAt])
+}
+
+model HrPerformanceGoal {
+  id             String                  @id @default(cuid())
+  organizationId String
+  employeeId     String?
+  ownerUserId    String
+  cycleId        String?
+  scopeType      String
+  scopeId        String?
+  goalType       String
+  status         HrPerformanceGoalStatus @default(DRAFT)
+  currentVersion Int                     @default(1)
+  correlationId  String
+  idempotencyKey String
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@unique([organizationId, idempotencyKey])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, ownerUserId, status])
+  @@index([employeeId, cycleId, status])
+}
+
+model HrPerformanceGoalVersion {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  goalId             String
+  version            Int
+  title              String
+  outcomeDescription String
+  measure            Json?
+  weight             Decimal?  @db.Decimal(5, 2)
+  dueAt              DateTime
+  contributors       String[]  @default([])
+  alignmentGoalId    String?
+  alignmentVersion   Int?
+  changeReason       String
+  proposedById       String
+  approvedById       String?
+  submittedAt        DateTime?
+  approvedAt         DateTime?
+  supersedesId       String?
+  contentHash        String
+  createdAt          DateTime  @default(now())
+
+  @@unique([goalId, version])
+  @@index([organizationId, dueAt])
+  @@index([alignmentGoalId, alignmentVersion])
+}
+
+model HrGoalMilestone {
+  id             String    @id @default(cuid())
+  organizationId String
+  goalVersionId  String
+  sequence       Int
+  title          String
+  dueAt          DateTime?
+  completedAt    DateTime?
+  completedById  String?
+  createdAt      DateTime  @default(now())
+
+  @@unique([goalVersionId, sequence])
+}
+
+model HrGoalProgress {
+  id             String   @id @default(cuid())
+  organizationId String
+  goalId         String
+  goalVersion    Int
+  progress       Int
+  note           String?
+  recordedById   String
+  correlationId  String
+  recordedAt     DateTime @default(now())
+
+  @@unique([organizationId, correlationId])
+  @@index([goalId, recordedAt])
+}
+
+model HrPerformanceEvidence {
+  id                String                  @id @default(cuid())
+  organizationId    String
+  employeeId        String
+  authorUserId      String?
+  evidenceType      String
+  summary           String
+  sourceType        String
+  sourceId          String
+  sourceVersion     String?
+  documentVersionId String?
+  visibility        HrPerformanceVisibility
+  occurredFrom      DateTime
+  occurredTo        DateTime?
+  correlationId     String
+  supersedesId      String?
+  sealedAt          DateTime?
+  createdAt         DateTime                @default(now())
+
+  @@unique([organizationId, correlationId])
+  @@index([employeeId, visibility, occurredFrom])
+  @@index([sourceType, sourceId, sourceVersion])
+}
+
+model HrPerformanceFeedback {
+  id             String                  @id @default(cuid())
+  organizationId String
+  employeeId     String
+  authorUserId   String
+  kind           String
+  visibility     HrPerformanceVisibility
+  version        Int                     @default(1)
+  status         String                  @default("DRAFT")
+  content        Json
+  supersedesId   String?
+  correlationId  String
+  submittedAt    DateTime?
+  createdAt      DateTime                @default(now())
+
+  @@unique([organizationId, correlationId])
+  @@index([employeeId, visibility, submittedAt])
+  @@index([authorUserId, status])
+}
+
+model HrPerformanceCheckIn {
+  id                String                  @id @default(cuid())
+  organizationId    String
+  employeeId        String
+  managerEmployeeId String
+  occurredAt        DateTime
+  cadence           String?
+  topics            Json
+  blockers          Json?
+  agreedActions     Json
+  followUpAt        DateTime?
+  visibility        HrPerformanceVisibility @default(MANAGER_EMPLOYEE)
+  version           Int                     @default(1)
+  supersedesId      String?
+  correlationId     String
+  createdById       String
+  createdAt         DateTime                @default(now())
+
+  @@unique([organizationId, correlationId])
+  @@index([employeeId, occurredAt])
+  @@index([managerEmployeeId, occurredAt])
+}
+
+model HrPerformanceReview {
+  id                      String                    @id @default(cuid())
+  organizationId          String
+  cycleId                 String
+  employeeId              String
+  workRelationshipId      String
+  assignmentId            String
+  managerEmployeeId       String
+  reviewerUserId          String
+  jobProfileVersionId     String
+  companyLevelVersionId   String
+  reviewTemplateVersionId String
+  status                  HrPerformanceReviewStatus @default(NOT_STARTED)
+  version                 Int                       @default(1)
+  correlationId           String
+  idempotencyKey          String
+  finalizedRatingItemId   String?
+  employeeFacingRationale String?
+  finalizedAt             DateTime?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+
+  @@unique([cycleId, employeeId, workRelationshipId])
+  @@unique([organizationId, correlationId])
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, reviewerUserId, status])
+}
+
+model HrPerformanceReviewSubmission {
+  id             String   @id @default(cuid())
+  organizationId String
+  reviewId       String
+  submissionType String
+  version        Int
+  submittedById  String
+  answers        Json
+  ratingItemId   String?
+  rationale      String?
+  evidenceIds    String[] @default([])
+  contentHash    String
+  submittedAt    DateTime @default(now())
+
+  @@unique([reviewId, submissionType, version])
+  @@index([organizationId, submittedById, submittedAt])
+}
+
+model HrCalibrationSession {
+  id             String              @id @default(cuid())
+  organizationId String
+  cycleId        String
+  name           String
+  population     Json
+  status         HrCalibrationStatus @default(DRAFT)
+  version        Int                 @default(1)
+  correlationId  String
+  createdById    String
+  finalizedAt    DateTime?
+  createdAt      DateTime            @default(now())
+
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, cycleId, status])
+}
+
+model HrCalibrationGrant {
+  id             String    @id @default(cuid())
+  organizationId String
+  sessionId      String
+  userId         String
+  scope          Json
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  grantedById    String
+  createdAt      DateTime  @default(now())
+
+  @@unique([sessionId, userId])
+  @@index([organizationId, userId, effectiveFrom, effectiveTo])
+}
+
+model HrCalibrationDecision {
+  id                     String    @id @default(cuid())
+  organizationId         String
+  sessionId              String
+  reviewId               String
+  reviewVersion          Int
+  managerRatingItemId    String
+  calibratedRatingItemId String
+  rationale              String
+  decidedById            String
+  correlationId          String
+  version                Int       @default(1)
+  finalizedAt            DateTime?
+  createdAt              DateTime  @default(now())
+
+  @@unique([sessionId, reviewId, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, finalizedAt])
+}
+
+model HrCareerInterest {
+  id                   String    @id @default(cuid())
+  organizationId       String
+  employeeId           String
+  preferredTrackId     String?
+  targetJobProfileId   String?
+  targetLevelId        String?
+  developmentInterests Json
+  mobilityInterest     Json?
+  visibility           String    @default("EMPLOYEE_MANAGER_HR")
+  effectiveFrom        DateTime
+  effectiveTo          DateTime?
+  version              Int       @default(1)
+  supersedesId         String?
+  createdById          String
+  createdAt            DateTime  @default(now())
+
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+}
+
+model HrDevelopmentPlan {
+  id                String                  @id @default(cuid())
+  organizationId    String
+  employeeId        String
+  managerEmployeeId String
+  status            HrDevelopmentPlanStatus @default(DRAFT)
+  currentVersion    Int                     @default(1)
+  correlationId     String
+  createdById       String
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@unique([organizationId, correlationId])
+  @@index([employeeId, status])
+}
+
+model HrDevelopmentPlanVersion {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  planId                String
+  version               Int
+  summary               String
+  expectationVersionIds String[]  @default([])
+  changeReason          String
+  supersedesId          String?
+  contentHash           String
+  createdById           String
+  submittedAt           DateTime?
+  createdAt             DateTime  @default(now())
+
+  @@unique([planId, version])
+}
+
+model HrDevelopmentAction {
+  id               String    @id @default(cuid())
+  organizationId   String
+  planVersionId    String
+  sequence         Int
+  gap              String
+  targetCapability String
+  actionType       String
+  ownerUserId      String
+  mentorUserId     String?
+  targetDate       DateTime
+  reviewDate       DateTime?
+  evidenceRequired Json
+  status           String    @default("PENDING")
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@unique([planVersionId, sequence])
+  @@index([organizationId, ownerUserId, status, targetDate])
+}
+
+model HrPromotionReadinessAssessment {
+  id                         String                    @id @default(cuid())
+  organizationId             String
+  employeeId                 String
+  workRelationshipId         String
+  assignmentId               String
+  currentJobProfileVersionId String
+  currentLevelVersionId      String
+  targetJobProfileVersionId  String
+  targetLevelVersionId       String
+  assessorUserId             String
+  cycleId                    String?
+  state                      HrPromotionReadinessState
+  evidenceIds                String[]                  @default([])
+  gaps                       Json
+  rationale                  String
+  employeeFacingRationale    String
+  version                    Int                       @default(1)
+  supersedesId               String?
+  correlationId              String
+  finalizedAt                DateTime?
+  createdAt                  DateTime                  @default(now())
+
+  @@unique([organizationId, correlationId])
+  @@index([employeeId, targetJobProfileVersionId, targetLevelVersionId, createdAt])
+}
+
+model HrPromotionCase {
+  id                         String                @id @default(cuid())
+  organizationId             String
+  employeeId                 String
+  workRelationshipId         String
+  assignmentId               String
+  currentJobProfileVersionId String
+  currentLevelVersionId      String
+  currentCareerTrackId       String
+  targetJobProfileVersionId  String
+  targetLevelVersionId       String
+  targetCareerTrackId        String
+  readinessAssessmentId      String
+  calibrationDecisionId      String?
+  workflowInstanceId         String?
+  status                     HrPromotionCaseStatus @default(DRAFT)
+  version                    Int                   @default(1)
+  businessJustification      String
+  proposedEffectiveAt        DateTime
+  idempotencyKey             String
+  correlationId              String
+  workforceEventId           String?
+  workforceEventVersion      Int?
+  createdById                String
+  createdAt                  DateTime              @default(now())
+  updatedAt                  DateTime              @updatedAt
+
+  @@unique([organizationId, idempotencyKey])
+  @@unique([organizationId, correlationId])
+  @@index([employeeId, targetJobProfileVersionId, status, proposedEffectiveAt])
+  @@index([organizationId, status, proposedEffectiveAt])
+}
+
+model HrPromotionDecision {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  promotionCaseId       String
+  caseVersion           Int
+  decision              String
+  rationale             String
+  readinessAssessmentId String
+  currentSnapshot       Json
+  targetSnapshot        Json
+  proposedEffectiveAt   DateTime
+  decidedByIds          String[] @default([])
+  correlationId         String
+  decidedAt             DateTime @default(now())
+
+  @@unique([promotionCaseId])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPerformanceJobRun {
+  id             String    @id @default(cuid())
+  organizationId String
+  jobType        String
+  windowKey      String
+  status         String    @default("PENDING")
+  claimTokenHash String?   @unique
+  attemptCount   Int       @default(0)
+  checkpoint     Json?
+  safeError      String?
+  correlationId  String
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  @@unique([organizationId, jobType, windowKey])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, status, startedAt])
 }

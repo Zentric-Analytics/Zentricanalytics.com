@@ -1,7 +1,7 @@
 import { HrPortalShell } from "@/components/HrPortalShell";
 import { requireAnyRole } from "@/lib/hr/permissions/authorize";
 
-const links: Array<[string, string]> = [["Audit evidence", "/hr/auditor"]];
+const links: Array<[string, string]> = [["Audit evidence", "/hr/auditor"], ["Performance evidence", "/hr/auditor/performance"]];
 
 export default async function AuditorLayout({ children }: { children: React.ReactNode }) {
   const auth = await requireAnyRole(["AUDITOR"]);

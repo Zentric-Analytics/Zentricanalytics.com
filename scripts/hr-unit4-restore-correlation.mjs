@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
+import { optionalObjectVersion, s3CompatibleChecksumOptions } from "./hr-database-archive-lib.mjs";
 
 function blocked(message) {
   console.error(`BLOCKED ${message}`);
@@ -13,7 +14,7 @@ if (process.env.APP_ENV !== "staging" || process.env.DR_RESTORE_CONFIRM !== "iso
   blocked("HRMS restore correlation requires an explicitly confirmed staging-only restore.");
 }
 const target = new URL(process.env.RESTORE_DATABASE_URL ?? "postgresql://missing/missing");
-if (!/^unit6_restore(?:_|$)|^zentric_unit(?:4_restore_|5_restore(?:_|$)|6_restore(?:_|$))/.test(target.pathname.slice(1))) blocked("The target database must use an isolated Unit 4, Unit 5, or Unit 6 restore naming convention.");
+if (!/^unit6_restore(?:_|$)|^zentric_unit(?:4_restore_|5_restore(?:_|$)|6_restore(?:_|$)|7_restore(?:_|$))/.test(target.pathname.slice(1))) blocked("The target database must use an isolated Unit 4, Unit 5, Unit 6, or Unit 7 restore naming convention.");
 const correlation = String(process.env.RESTORE_ARCHIVE_CORRELATION ?? "");
 if (!/^[a-f0-9]{12}$/.test(correlation)) blocked("A valid archive correlation is required.");
 const root = path.resolve(process.env.BACKUP_ARCHIVE_ROOT ?? "");
@@ -31,11 +32,20 @@ if (manifestName) {
 } else {
   const bucket = String(process.env.BACKUP_OBJECT_STORAGE_BUCKET ?? "");
   const region = String(process.env.BACKUP_OBJECT_STORAGE_REGION ?? "");
+  const provider = String(process.env.BACKUP_OBJECT_STORAGE_PROVIDER ?? "s3-compatible").toLowerCase();
   if (!bucket || !region) blocked("The requested archive is unavailable locally and remote archive configuration is incomplete.");
+  const endpoint = process.env.BACKUP_OBJECT_STORAGE_ENDPOINT ? new URL(process.env.BACKUP_OBJECT_STORAGE_ENDPOINT) : undefined;
+  if (endpoint && (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash)) blocked("Backup object-storage endpoint must be a credential-free HTTPS URL.");
   const credentials = process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID && process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY
     ? { accessKeyId: process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID, secretAccessKey: process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY }
     : undefined;
-  const client = new S3Client({ region, credentials });
+  const client = new S3Client({
+    endpoint: endpoint?.toString(),
+    region,
+    forcePathStyle: provider === "s3-compatible" && String(process.env.BACKUP_OBJECT_STORAGE_FORCE_PATH_STYLE).toLowerCase() === "true",
+    credentials,
+    ...s3CompatibleChecksumOptions(provider),
+  });
   const prefix = `database-archives/daily/${new Date().getUTCFullYear()}/`;
   const listed = await client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix }));
   const manifestKey = listed.Contents?.find(({ Key }) => Key?.endsWith(`-${correlation}.manifest.json`))?.Key;
@@ -43,7 +53,7 @@ if (manifestName) {
   const manifestObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: manifestKey }));
   manifest = JSON.parse(await manifestObject.Body.transformToString());
   const archiveKey = `${prefix}${manifest.archiveFile}`;
-  const archiveObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: archiveKey, VersionId: manifest.remote?.versionId }));
+  const archiveObject = await client.send(new GetObjectCommand({ Bucket: bucket, Key: archiveKey, ...optionalObjectVersion(provider, manifest.remote?.versionId) }));
   encrypted = Buffer.from(await archiveObject.Body.transformToByteArray());
 }
 if (manifest.correlation !== correlation || manifest.encryption?.algorithm !== "aes-256-gcm") blocked("Archive manifest correlation or encryption metadata is invalid.");

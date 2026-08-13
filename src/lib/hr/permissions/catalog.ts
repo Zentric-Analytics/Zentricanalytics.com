@@ -11,6 +11,14 @@ export const HR_PERMISSIONS = [
   "supervisor.assign", "supervisor.revoke", "supervisor.read_team", "supervisor.review_assigned",
   "leave.request", "leave.read_self", "leave.read_all", "leave.review_assigned", "leave.approve", "leave.override", "leave.policy.manage",
   "time.capture_self", "time.read_self", "time.read_team", "time.read_all", "time.schedule.manage", "time.policy.manage", "time.correction.request", "time.correction.review", "time.timesheet.submit", "time.timesheet.approve", "time.period.lock", "time.authoritative.read", "time.authoritative.export",
+  "performance.goal.read_self", "performance.goal.manage_self", "performance.goal.read_team", "performance.goal.review_team", "performance.goal.read_all", "performance.goal.admin",
+  "performance.feedback.create", "performance.feedback.read_self", "performance.feedback.read_team", "performance.feedback.read_confidential",
+  "performance.checkin.manage_self", "performance.checkin.manage_team",
+  "performance.review.submit_self", "performance.review.read_self", "performance.review.manage_team", "performance.review.read_all", "performance.review.admin",
+  "performance.calibration.participate", "performance.calibration.admin",
+  "performance.career.manage_self", "performance.career.read_team", "performance.development.manage_self", "performance.development.manage_team", "performance.development.admin",
+  "performance.readiness.read_self", "performance.readiness.assess", "performance.promotion.recommend", "performance.promotion.review", "performance.promotion.approve",
+  "performance.framework.manage", "performance.report.read", "performance.report.export", "performance.audit.read",
   "payroll.read", "payroll.create", "payroll.calculate", "payroll.review", "payroll.approve", "payroll.mark_paid", "payroll.export", "payroll.read_salary", "payroll.read_bank_details",
   "document.upload", "document.read_self", "document.read_employee", "document.read_sensitive", "document.update", "document.archive",
   "asset.manage", "asset.assign", "asset.return", "asset.read_self", "workflow.create", "workflow.assign", "workflow.review", "workflow.task.complete", "workflow.override",
@@ -32,8 +40,8 @@ const rolePermissions: Record<HrRoleKey, readonly HrPermissionKey[]> = {
   ADMIN: HR_PERMISSIONS,
   HR_ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("payroll.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(permission)),
   PAYROLL_ADMIN: HR_PERMISSIONS.filter((permission) => permission.startsWith("payroll.") || ["employee.read_all", "workflow.task.complete", "report.read", "report.export", "time.authoritative.read", "time.authoritative.export"].includes(permission)),
-  EMPLOYEE: ["employee.read_self", "employee.update_self", "employee.profile_change.request", "workforce_event.read_self", "leave.request", "leave.read_self", "time.capture_self", "time.read_self", "time.correction.request", "time.timesheet.submit", "document.read_self", "asset.read_self", "workflow.task.complete"],
-  AUDITOR: ["audit.read", "report.read"],
+  EMPLOYEE: ["employee.read_self", "employee.update_self", "employee.profile_change.request", "workforce_event.read_self", "leave.request", "leave.read_self", "time.capture_self", "time.read_self", "time.correction.request", "time.timesheet.submit", "performance.goal.read_self", "performance.goal.manage_self", "performance.feedback.create", "performance.feedback.read_self", "performance.checkin.manage_self", "performance.review.submit_self", "performance.review.read_self", "performance.career.manage_self", "performance.development.manage_self", "performance.readiness.read_self", "document.read_self", "asset.read_self", "workflow.task.complete"],
+  AUDITOR: ["audit.read", "report.read", "performance.audit.read"],
 };
 
 export function permissionsForRole(role: HrRoleKey) {
