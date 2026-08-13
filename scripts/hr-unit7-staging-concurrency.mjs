@@ -65,9 +65,10 @@ try {
     prisma.hrDevelopmentPlan.updateMany({ where: { id: plan.id, currentVersion: 1, status: "DRAFT" }, data: { status: "ACTIVE" } }),
   ]));
 
+  const promotionFixtureBase = Date.now() + (10 * 365 * 24 * 60 * 60 * 1000);
   let promotionFixtureIndex = 0;
   async function clonePromotion(status, suffix) {
-    const proposedEffectiveAt = new Date(Date.UTC(2099, 0, 1, 12, 0, promotionFixtureIndex++));
+    const proposedEffectiveAt = new Date(promotionFixtureBase + promotionFixtureIndex++);
     return prisma.hrPromotionCase.create({ data: { organizationId: organization.id, employeeId: baselinePromotion.employeeId, workRelationshipId: baselinePromotion.workRelationshipId, assignmentId: baselinePromotion.assignmentId, currentJobProfileVersionId: baselinePromotion.currentJobProfileVersionId, currentLevelVersionId: baselinePromotion.currentLevelVersionId, currentCareerTrackId: baselinePromotion.currentCareerTrackId, targetJobProfileVersionId: baselinePromotion.targetJobProfileVersionId, targetLevelVersionId: baselinePromotion.targetLevelVersionId, targetCareerTrackId: baselinePromotion.targetCareerTrackId, readinessAssessmentId: baselinePromotion.readinessAssessmentId, calibrationDecisionId: baselinePromotion.calibrationDecisionId, status, businessJustification: run, proposedEffectiveAt, idempotencyKey: id(`${suffix}-key`), correlationId: id(suffix), createdById: actor.id } });
   }
   const readinessRace = await clonePromotion("DRAFT", "readiness-race");
