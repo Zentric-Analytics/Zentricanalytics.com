@@ -57,6 +57,8 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(fixture).toContain('HR_UNIT8_STAGING_FIXTURE_CONFIRM !== "staging-only"');
     expect(fixture).toContain('databaseUrl.pathname.slice(1) !== "zentric_analytics_staging"');
     expect(fixture).toContain("salaryBandMinimum");
+    expect(fixture).toContain("assignmentCandidates.find");
+    expect(fixture).toContain("complete non-degenerate legacy position range");
     expect(fixture).toContain("hrPromotionDecision.findFirst");
     expect(fixture).toContain("authoritative compensation timeline overlaps");
     expect(fixture).not.toContain("deleteMany");

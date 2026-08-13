@@ -19,11 +19,14 @@ try {
   const actors = await prisma.hrUser.findMany({ where: { organizationId: organization.id, status: "ACTIVE" }, orderBy: { createdAt: "asc" }, take: 5, select: { id: true } });
   if (actors.length < 2) throw new Error("Unit 8 validation requires two active staging users for maker/checker evidence.");
   const [manager, approver] = actors;
-  const assignment = await prisma.hrEmployeeAssignment.findFirstOrThrow({
+  const assignmentCandidates = await prisma.hrEmployeeAssignment.findMany({
     where: { organizationId: organization.id, status: "ACTIVE", position: { salaryBandMinimum: { not: null }, salaryBandMaximum: { not: null } }, employee: { workRelationships: { some: { status: "ACTIVE" } } } },
     orderBy: { createdAt: "asc" },
     include: { position: true, employee: { include: { workRelationships: { where: { status: "ACTIVE" }, orderBy: { startedAt: "desc" }, take: 1 } } } },
   });
+  const assignment = assignmentCandidates.find((candidate) => candidate.position.salaryBandMinimum && candidate.position.salaryBandMaximum
+    && new Prisma.Decimal(candidate.position.salaryBandMinimum).lessThan(candidate.position.salaryBandMaximum));
+  if (!assignment) throw new Error("No governed active assignment has a complete non-degenerate legacy position range.");
   const workRelationship = assignment.employee.workRelationships[0];
   if (!workRelationship || !assignment.position.salaryBandMinimum || !assignment.position.salaryBandMaximum) throw new Error("No governed assignment with a complete legacy position range is available.");
   const minimum = new Prisma.Decimal(assignment.position.salaryBandMinimum);
