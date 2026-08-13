@@ -51,7 +51,7 @@ describe("HRMS secure foundation", () => {
     expect(permissionsForRole("HR_ADMIN")).not.toContain("payroll.read_bank_details");
     expect(permissionsForRole("PAYROLL_ADMIN")).toContain("payroll.read_bank_details");
     expect(permissionsForRole("EMPLOYEE")).toContain("employee.read_self");
-    expect(permissionsForRole("AUDITOR")).toEqual(["audit.read", "report.read"]);
+    expect(permissionsForRole("AUDITOR")).toEqual(["audit.read", "report.read", "performance.audit.read"]);
     expect(permissionsForRole("AUDITOR")).not.toContain("employee.update");
     expect(permissionsForRole("AUDITOR")).not.toContain("employee.read_all");
     expect(permissionsForRole("AUDITOR")).not.toContain("document.read_sensitive");

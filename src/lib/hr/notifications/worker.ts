@@ -92,6 +92,20 @@ const notificationTemplates: Record<string, NotificationTemplate> = {
   "hr-time-overtime-decided": { title: "Overtime decision recorded", body: "A governed overtime decision has been recorded.", ctaLabel: "View Attendance", defaultHref: "/hr/employee/time" },
   "hr-time-period-closing": { title: "Attendance period closing", body: "An attendance period is approaching its governed close.", ctaLabel: "Review Period", defaultHref: "/hr/admin/time" },
   "hr-time-period-locked": { title: "Attendance period locked", body: "An approved attendance period has been locked and is ready for authorized downstream use.", ctaLabel: "View Period", defaultHref: "/hr/admin/time" },
+  "hr-performance-goal-action": { title: "Performance goal requires action", body: "A governed performance goal requires your attention.", ctaLabel: "Review Performance", defaultHref: "/hr/employee/performance" },
+  "hr-performance-goal-due": { title: "Performance goal due", body: "A performance goal is approaching its due date. Review the goal and record accurate progress.", ctaLabel: "Review Goal", defaultHref: "/hr/employee/performance" },
+  "hr-performance-feedback-received": { title: "Performance feedback received", body: "New governed performance feedback is available in your secure HR workspace.", ctaLabel: "Review Feedback", defaultHref: "/hr/employee/performance" },
+  "hr-performance-checkin-due": { title: "Performance check-in due", body: "A scheduled performance check-in requires action.", ctaLabel: "Review Check-in", defaultHref: "/hr/employee/performance" },
+  "hr-performance-self-review-open": { title: "Self-review is open", body: "Your performance self-review is open for completion.", ctaLabel: "Start Self-review", defaultHref: "/hr/employee/performance" },
+  "hr-performance-self-review-due": { title: "Self-review due", body: "Your performance self-review is approaching its due date.", ctaLabel: "Complete Self-review", defaultHref: "/hr/employee/performance" },
+  "hr-performance-manager-review-due": { title: "Manager review due", body: "A direct-report performance review requires your governed assessment.", ctaLabel: "Complete Manager Review", defaultHref: "/hr/supervisor/performance" },
+  "hr-performance-calibration-action": { title: "Performance calibration action", body: "A performance review requires an authorized calibration action.", ctaLabel: "Review Calibration", defaultHref: "/hr/admin/performance" },
+  "hr-performance-development-action-due": { title: "Development action due", body: "A development-plan action is approaching its target date.", ctaLabel: "Review Development Plan", defaultHref: "/hr/employee/performance" },
+  "hr-promotion-submitted": { title: "Promotion case submitted", body: "A governed promotion case is awaiting independent review.", ctaLabel: "Review Promotion", defaultHref: "/hr/admin/performance" },
+  "hr-promotion-approved": { title: "Promotion approved", body: "A governed promotion case has completed approval and is ready for its effective-dated workforce handoff.", ctaLabel: "Review Promotion", defaultHref: "/hr/employee/performance" },
+  "hr-promotion-deferred": { title: "Promotion case deferred", body: "A promotion case has been deferred with a recorded decision and next steps.", ctaLabel: "Review Decision", defaultHref: "/hr/employee/performance" },
+  "hr-promotion-rejected": { title: "Promotion decision recorded", body: "A promotion case was not approved. Review the governed decision and rationale.", ctaLabel: "Review Decision", defaultHref: "/hr/employee/performance" },
+  "hr-performance-review-finalized": { title: "Performance review finalized", body: "Your performance review has been finalized and is available in the secure HR workspace.", ctaLabel: "Review Performance", defaultHref: "/hr/employee/performance" },
 };
 
 const vacancyTemplate: NotificationTemplate = { title: "Vacancy workflow update", body: "A vacancy has changed state and is ready for secure review.", ctaLabel: "Review Vacancy", defaultHref: "/hr/admin/vacancies" };

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, validateArchiveRoot } from "../scripts/hr-database-archive-lib.mjs";
+import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, optionalObjectVersion, s3CompatibleChecksumOptions, validateArchiveRoot } from "../scripts/hr-database-archive-lib.mjs";
 
 describe("Render database archive policy", () => {
   it("promotes Sunday and first-of-month archives into longer tiers", () => {
@@ -26,5 +26,21 @@ describe("Render database archive policy", () => {
     const valid = { schemaVersion: 1, archiveFile: "hrms-db-20260801T120000Z-abcdef123456.dump.enc", expiresAt: "2026-08-02T00:00:00Z" };
     const unrelated = { schemaVersion: 1, archiveFile: "unrelated.dump.enc", expiresAt: "2026-08-02T00:00:00Z" };
     expect(expiredManagedArchives([valid, unrelated], Date.parse("2026-08-03T00:00:00Z"))).toEqual([valid]);
+  });
+
+  it("uses R2-compatible checksum behavior only for S3-compatible providers", () => {
+    expect(s3CompatibleChecksumOptions("s3-compatible")).toEqual({
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
+    });
+    expect(s3CompatibleChecksumOptions("aws-s3")).toEqual({});
+  });
+
+  it("omits unsupported version parameters when an S3-compatible provider returns none", () => {
+    expect(optionalObjectVersion("s3-compatible", "r2-version")).toEqual({});
+    expect(optionalObjectVersion("aws-s3", undefined)).toEqual({});
+    expect(optionalObjectVersion("aws-s3", "")).toEqual({});
+    expect(optionalObjectVersion("aws-s3", "null")).toEqual({});
+    expect(optionalObjectVersion("aws-s3", "version-1")).toEqual({ VersionId: "version-1" });
   });
 });

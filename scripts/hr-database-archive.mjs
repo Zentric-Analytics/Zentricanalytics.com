@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { pipeline } from "node:stream/promises";
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, validateArchiveRoot } from "./hr-database-archive-lib.mjs";
+import { archiveExpiresAt, archiveTiersForDate, expiredManagedArchives, isManagedArchiveName, optionalObjectVersion, s3CompatibleChecksumOptions, validateArchiveRoot } from "./hr-database-archive-lib.mjs";
 
 function blocked(message) {
   console.error(`BLOCKED ${message}`);
@@ -40,6 +40,7 @@ const archiveFile = `${baseName}.dump.enc`;
 const archivePath = path.join(root, archiveFile);
 const manifestFile = `${baseName}.manifest.json`;
 const manifestPath = path.join(root, manifestFile);
+let phase = "database-dump";
 
 try {
   const iv = crypto.randomBytes(12);
@@ -67,6 +68,7 @@ try {
   await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { encoding: "utf8", mode: 0o600, flag: "wx" });
 
   if (remoteKeys.every((key) => String(process.env[key] ?? "").trim())) {
+    phase = "remote-client";
     const endpoint = process.env.BACKUP_OBJECT_STORAGE_ENDPOINT ? new URL(process.env.BACKUP_OBJECT_STORAGE_ENDPOINT) : undefined;
     if (endpoint && (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash)) throw new Error("Backup object-storage endpoint must be a credential-free HTTPS URL.");
     const credentials = process.env.BACKUP_OBJECT_STORAGE_ACCESS_KEY_ID && process.env.BACKUP_OBJECT_STORAGE_SECRET_ACCESS_KEY
@@ -77,21 +79,27 @@ try {
       region: process.env.BACKUP_OBJECT_STORAGE_REGION,
       forcePathStyle: backupProvider === "s3-compatible" && String(process.env.BACKUP_OBJECT_STORAGE_FORCE_PATH_STYLE).toLowerCase() === "true",
       credentials,
+      ...s3CompatibleChecksumOptions(backupProvider),
     });
     const prefix = `database-archives/${tiers.join("-")}/${createdAt.getUTCFullYear()}`;
     const archiveKey = `${prefix}/${archiveFile}`;
     const retention = backupProvider === "aws-s3" ? { ObjectLockMode: "COMPLIANCE", ObjectLockRetainUntilDate: new Date(manifest.expiresAt) } : {};
+    phase = "archive-upload";
     const uploaded = await client.send(new PutObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: archiveKey, Body: createReadStream(archivePath), ContentLength: stat.size, ContentType: "application/octet-stream", Metadata: { correlation, sha256: manifest.sha256, expiresat: manifest.expiresAt }, ...retention }));
-    const remote = await client.send(new HeadObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: archiveKey, VersionId: uploaded.VersionId }));
+    phase = "archive-head-verification";
+    const remote = await client.send(new HeadObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: archiveKey, ...optionalObjectVersion(backupProvider, uploaded.VersionId) }));
     if (remote.ContentLength !== stat.size || remote.Metadata?.sha256 !== manifest.sha256) throw new Error("Uploaded archive failed size or SHA-256 metadata verification.");
     if (backupProvider === "aws-s3" && (!uploaded.VersionId || remote.ObjectLockMode !== "COMPLIANCE" || !remote.ObjectLockRetainUntilDate || remote.ObjectLockRetainUntilDate < new Date(manifest.expiresAt))) throw new Error("Uploaded archive lacks the required immutable AWS version and retention evidence.");
     manifest.remote = { provider: backupProvider, bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, key: archiveKey, versionId: uploaded.VersionId, eTag: uploaded.ETag?.replaceAll('"', ""), verifiedAt: new Date().toISOString(), objectLockMode: remote.ObjectLockMode, retainUntil: remote.ObjectLockRetainUntilDate?.toISOString() };
+    phase = "local-manifest-update";
     await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
     const manifestBody = JSON.stringify(manifest);
+    phase = "manifest-upload";
     const manifestUpload = await client.send(new PutObjectCommand({ Bucket: process.env.BACKUP_OBJECT_STORAGE_BUCKET, Key: `${prefix}/${manifestFile}`, Body: manifestBody, ContentType: "application/json", Metadata: { correlation }, ...retention }));
     if (backupProvider === "aws-s3" && !manifestUpload.VersionId) throw new Error("Uploaded manifest lacks an immutable AWS version ID.");
   }
 
+  phase = "local-retention-cleanup";
   const entries = await fs.readdir(root);
   const manifestNames = entries.filter((name) => isManagedArchiveName(name) && name.endsWith(".manifest.json"));
   const manifests = [];
@@ -108,7 +116,10 @@ try {
   console.info(`PASS encrypted database archive created. correlation=${correlation} tiers=${tiers.join(",")} bytes=${stat.size}`);
 } catch (error) {
   await fs.rm(partialPath, { force: true }).catch(() => undefined);
-  console.error(`BLOCKED Database archive failed. ${error instanceof Error ? error.message.replace(String(process.env.DATABASE_URL), "[database hidden]") : "Unknown error."}`);
+  const status = error?.$metadata?.httpStatusCode ? ` status=${error.$metadata.httpStatusCode}` : "";
+  const code = error?.Code ?? error?.code ?? error?.name ?? "UnknownError";
+  const message = error instanceof Error ? error.message.replace(String(process.env.DATABASE_URL), "[database hidden]") : "Unknown error.";
+  console.error(`BLOCKED Database archive failed. phase=${phase} code=${code}${status} message=${message}`);
   process.exitCode = 1;
 } finally {
   await lock.close().catch(() => undefined);

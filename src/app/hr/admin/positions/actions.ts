@@ -13,9 +13,11 @@ export type PositionDecisionState = {
   message?: string;
 };
 
+const positionCreateInput = z.intersection(positionInput, z.object({ jobProfileId: z.string().cuid() }));
+
 export async function createPositionAction(formData: FormData) {
   const auth = await requirePermission("position.manage");
-  const input = positionInput.parse(Object.fromEntries(formData));
+  const input = positionCreateInput.parse(Object.fromEntries(formData));
   const organizationId = auth.user.organizationId;
   const [department, legalEntity, businessUnit, division, location, costCenter, jobProfile, grade] = await Promise.all([
     prisma.hrDepartment.findFirstOrThrow({ where: { id: input.departmentId, organizationId, status: "ACTIVE" } }),
@@ -24,7 +26,7 @@ export async function createPositionAction(formData: FormData) {
     prisma.hrDivision.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
     prisma.hrLocation.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
     prisma.hrCostCenter.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
-    prisma.hrJobProfile.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
+    prisma.hrJobProfile.findFirstOrThrow({ where: { id: input.jobProfileId, organizationId, status: "ACTIVE" } }),
     prisma.hrGrade.findUniqueOrThrow({ where: { organizationId_code: { organizationId, code: "DEFAULT" } } }),
   ]);
   if (input.teamId) await prisma.hrTeam.findFirstOrThrow({ where: { id: input.teamId, departmentId: department.id, organizationId: auth.user.organizationId, status: "ACTIVE" } });
