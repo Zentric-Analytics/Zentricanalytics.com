@@ -34,7 +34,7 @@ try {
   const midpoint = minimum.plus(maximum).dividedBy(2).toDecimalPlaces(4);
   if (!minimum.lessThan(midpoint) || !midpoint.lessThan(maximum)) throw new Error("Legacy position range cannot produce a valid three-point compensation band.");
   const currency = assignment.position.currency.toUpperCase();
-  const promotion = await prisma.hrPromotionDecision.findFirst({ where: { organizationId: organization.id, decision: "APPROVED" }, orderBy: { createdAt: "desc" }, select: { id: true } });
+  const promotion = await prisma.hrPromotionDecision.findFirst({ where: { organizationId: organization.id, decision: "APPROVED" }, orderBy: { decidedAt: "desc" }, select: { id: true } });
 
   const market = await prisma.hrCompMarket.create({ data: { organizationId: organization.id, code: `U8-${Date.now()}`, name: `Unit 8 staging market ${run}` } });
   const marketVersion = await prisma.hrCompMarketVersion.create({ data: { organizationId: organization.id, marketId: market.id, version: 1, countryCode: "NG", currency, applicability: { source: "governed-active-assignment", positionId: assignment.positionId }, status: "PUBLISHED", effectiveFrom: initialFrom, reason: "Unit 8 staging validation", contentHash: hash({ run, type: "market" }), createdById: manager.id, publishedById: approver.id, publishedAt: now } });
