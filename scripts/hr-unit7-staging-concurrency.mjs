@@ -66,8 +66,10 @@ try {
     prisma.hrDevelopmentPlan.updateMany({ where: { id: plan.id, currentVersion: 1, status: "DRAFT" }, data: { status: "ACTIVE" } }),
   ]));
 
+  let promotionFixtureIndex = 0;
   async function clonePromotion(status, suffix) {
-    return prisma.hrPromotionCase.create({ data: { organizationId: organization.id, employeeId: baselinePromotion.employeeId, workRelationshipId: baselinePromotion.workRelationshipId, assignmentId: baselinePromotion.assignmentId, currentJobProfileVersionId: baselinePromotion.currentJobProfileVersionId, currentLevelVersionId: baselinePromotion.currentLevelVersionId, currentCareerTrackId: baselinePromotion.currentCareerTrackId, targetJobProfileVersionId: baselinePromotion.targetJobProfileVersionId, targetLevelVersionId: baselinePromotion.targetLevelVersionId, targetCareerTrackId: baselinePromotion.targetCareerTrackId, readinessAssessmentId: baselinePromotion.readinessAssessmentId, calibrationDecisionId: baselinePromotion.calibrationDecisionId, status, businessJustification: run, proposedEffectiveAt: new Date("2099-01-01T12:00:00Z"), idempotencyKey: id(`${suffix}-key`), correlationId: id(suffix), createdById: actor.id } });
+    const proposedEffectiveAt = new Date(Date.UTC(2099, 0, 1, 12, 0, promotionFixtureIndex++));
+    return prisma.hrPromotionCase.create({ data: { organizationId: organization.id, employeeId: baselinePromotion.employeeId, workRelationshipId: baselinePromotion.workRelationshipId, assignmentId: baselinePromotion.assignmentId, currentJobProfileVersionId: baselinePromotion.currentJobProfileVersionId, currentLevelVersionId: baselinePromotion.currentLevelVersionId, currentCareerTrackId: baselinePromotion.currentCareerTrackId, targetJobProfileVersionId: baselinePromotion.targetJobProfileVersionId, targetLevelVersionId: baselinePromotion.targetLevelVersionId, targetCareerTrackId: baselinePromotion.targetCareerTrackId, readinessAssessmentId: baselinePromotion.readinessAssessmentId, calibrationDecisionId: baselinePromotion.calibrationDecisionId, status, businessJustification: run, proposedEffectiveAt, idempotencyKey: id(`${suffix}-key`), correlationId: id(suffix), createdById: actor.id } });
   }
   const readinessRace = await clonePromotion("DRAFT", "readiness-race");
   assertSingleWinner("readiness_vs_target_change", await Promise.all([
