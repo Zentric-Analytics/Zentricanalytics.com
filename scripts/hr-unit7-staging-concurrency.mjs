@@ -23,7 +23,6 @@ try {
   const employee = await prisma.hrEmployee.findFirstOrThrow({ where: { organizationId: organization.id, employeeNumber: "U7-IMMEDIATE-001" }, select: { id: true } });
   const baselineGoal = await prisma.hrPerformanceGoal.findFirstOrThrow({ where: { organizationId: organization.id, employeeId: employee.id }, orderBy: { createdAt: "desc" } });
   const baselineReview = await prisma.hrPerformanceReview.findFirstOrThrow({ where: { organizationId: organization.id, employeeId: employee.id }, orderBy: { createdAt: "desc" } });
-  const baselineSession = await prisma.hrCalibrationSession.findFirstOrThrow({ where: { organizationId: organization.id, cycleId: baselineReview.cycleId }, orderBy: { createdAt: "desc" } });
   const baselinePlan = await prisma.hrDevelopmentPlan.findFirstOrThrow({ where: { organizationId: organization.id, employeeId: employee.id }, orderBy: { createdAt: "desc" } });
   const baselinePromotion = await prisma.hrPromotionCase.findFirstOrThrow({ where: { organizationId: organization.id, employeeId: employee.id, status: "APPLIED" }, orderBy: { createdAt: "desc" } });
   const baselineCycle = await prisma.hrPerformanceCycle.findUniqueOrThrow({ where: { id: baselineReview.cycleId } });
@@ -49,7 +48,7 @@ try {
     prisma.hrPerformanceReview.updateMany({ where: { id: managerReview.id, version: 1, status: "CALIBRATION" }, data: { status: "FINALIZED", version: 2 } }),
   ]));
 
-  const session = await prisma.hrCalibrationSession.create({ data: { organizationId: organization.id, cycleId: baselineSession.cycleId, name: run, population: [], status: "DECISIONS_PENDING", correlationId: id("calibration"), createdById: actor.id } });
+  const session = await prisma.hrCalibrationSession.create({ data: { organizationId: organization.id, cycleId: baselineReview.cycleId, name: run, population: [], status: "DECISIONS_PENDING", correlationId: id("calibration"), createdById: actor.id } });
   assertSingleWinner("calibration_finalize_vs_finalize", await Promise.all([
     prisma.hrCalibrationSession.updateMany({ where: { id: session.id, version: 1, status: "DECISIONS_PENDING" }, data: { status: "FINALIZED", version: 2, finalizedAt: new Date() } }),
     prisma.hrCalibrationSession.updateMany({ where: { id: session.id, version: 1, status: "DECISIONS_PENDING" }, data: { status: "FINALIZED", version: 2, finalizedAt: new Date() } }),
