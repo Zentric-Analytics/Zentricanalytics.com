@@ -59,7 +59,7 @@ async function reconcileBudgets(organizationId: string) {
 }
 
 async function activateDueDecisions(organizationId: string, now: Date) {
-  const decisions = await prisma.hrCompDecision.findMany({ where: { organizationId, status: { in: ["SCHEDULED", "EFFECTIVE"] }, effectiveAt: { lte: now } }, orderBy: { effectiveAt: "asc" }, take: 200 });
+  const decisions = await prisma.hrCompDecision.findMany({ where: { organizationId, recommendationId: { not: null }, status: { in: ["SCHEDULED", "EFFECTIVE"] }, effectiveAt: { lte: now } }, orderBy: { effectiveAt: "asc" }, take: 200 });
   let activated = 0;
   for (const decision of decisions) {
     await activateCompensationDecision({ organizationId, actorUserId: "WORKER" }, decision.id, now);

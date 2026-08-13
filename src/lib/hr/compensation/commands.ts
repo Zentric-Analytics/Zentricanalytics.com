@@ -72,12 +72,12 @@ export async function finalizeCompensationDecision(context: CompensationContext,
 export async function activateCompensationDecision(context: CompensationContext, decisionId: string, now = new Date()) {
   return withCompensationSerializableRetry(() => prisma.$transaction(async (tx) => {
     const decision = await tx.hrCompDecision.findFirstOrThrow({ where: { id: decisionId, organizationId: context.organizationId, status: { in: ["SCHEDULED", "EFFECTIVE"] }, effectiveAt: { lte: now } } });
+    const existing = await tx.hrCompensationRecord.findUnique({ where: { decisionId: decision.id } });
+    if (existing) return existing;
     const recommendation = decision.recommendationId ? await tx.hrCompRecommendation.findUniqueOrThrow({ where: { id: decision.recommendationId } }) : null;
     if (!recommendation) throw new Error("A base compensation decision requires its approved recommendation.");
     const population = await tx.hrCompCyclePopulation.findUniqueOrThrow({ where: { id: recommendation.cyclePopulationId } });
     const aggregate = await tx.hrEmployeeCompensation.findFirstOrThrow({ where: { organizationId: context.organizationId, employeeId: recommendation.employeeId, workRelationshipId: population.workRelationshipId } });
-    const existing = await tx.hrCompensationRecord.findUnique({ where: { decisionId: decision.id } });
-    if (existing) return existing;
     const prior = aggregate.currentRecordId ? await tx.hrCompensationRecord.findUnique({ where: { id: aggregate.currentRecordId } }) : null;
     if (prior && prior.effectiveFrom < decision.effectiveAt && (!prior.effectiveTo || prior.effectiveTo > decision.effectiveAt)) await tx.hrCompensationRecord.update({ where: { id: prior.id }, data: { effectiveTo: decision.effectiveAt, status: "SUPERSEDED" } });
     const payload = { decisionId: decision.id, employeeId: recommendation.employeeId, workRelationshipId: population.workRelationshipId, assignmentId: population.assignmentId, amount: decision.newAmount.toString(), currency: decision.currency, payBasis: decision.payBasis, marketVersionId: decision.marketVersionId, bandVersionId: decision.bandVersionId, policyVersionId: decision.policyVersionId, effectiveFrom: decision.effectiveAt };

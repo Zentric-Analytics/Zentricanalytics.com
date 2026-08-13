@@ -30,7 +30,10 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(route).toContain("ORGANIZATION_WORKER_SECRET");
     expect(worker).toContain("TransactionIsolationLevel.Serializable");
     expect(worker).toContain('status: { in: ["SCHEDULED", "EFFECTIVE"] }');
+    expect(worker).toContain("recommendationId: { not: null }");
     expect(worker).not.toContain('status: { in: ["APPROVED", "SCHEDULED"] }');
+    const commands = read("src/lib/hr/compensation/commands.ts");
+    expect(commands.indexOf("if (existing) return existing")).toBeLessThan(commands.indexOf("A base compensation decision requires its approved recommendation"));
     expect(worker).toContain('"DEAD_LETTER" : "FAILED"');
     expect(read("scripts/start-with-hr-workers.mjs")).toContain('/api/internal/hr/compensation');
   });
