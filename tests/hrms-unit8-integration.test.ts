@@ -94,6 +94,7 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(script).toContain("TransactionIsolationLevel.Serializable");
     expect(script).toContain("FOR UPDATE");
     expect(script).toContain("INSUFFICIENT_BUDGET");
+    expect(script).toContain('baselineBand.maximum.plus("1000")');
     expect(script).toContain("hr.compensation.concurrency.validated");
     expect(script).not.toContain("deleteMany");
   });
