@@ -74,7 +74,10 @@ try {
   const previousAssignment = assignments.find(({ id }) => id === promotionCase.assignmentId);
   const activeAssignment = assignments.find(({ status }) => status === "ACTIVE");
   requireEvidence(previousAssignment?.effectiveTo && previousAssignment.status !== "ACTIVE", "The previous assignment was not historically closed.");
-  requireEvidence(activeAssignment && activeAssignment.effectiveFrom.getTime() === event.requestedEffectiveAt.getTime(), "The replacement assignment is not effective at the governed promotion boundary.");
+  requireEvidence(activeAssignment && event.appliedAt
+    && activeAssignment.effectiveFrom.getTime() === event.appliedAt.getTime()
+    && activeAssignment.effectiveFrom.getTime() >= event.requestedEffectiveAt.getTime()
+    && previousAssignment.effectiveTo?.getTime() === activeAssignment.effectiveFrom.getTime(), "The replacement assignment is not effective at the governed promotion boundary.");
   requireEvidence(attempts.length === 1 && attempts[0].status === "COMPLETED", "The promotion workforce event was not applied exactly once.");
   requireEvidence(event.status === "APPLIED" && event.appliedAt, "The governed Unit 4 promotion event is not applied.");
   requireEvidence(audits.length > 0, "Correlated immutable audit evidence is missing.");
