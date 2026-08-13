@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { createHrInvitation } from "@/lib/hr/auth/invitations";
 import { normalizeHrEmail } from "@/lib/hr/auth/crypto";
-import { canAssignRole } from "@/lib/hr/permissions/catalog";
+import { canAssignRole, HR_ASSIGNABLE_ROLES } from "@/lib/hr/permissions/catalog";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { revokeAllHrSessions } from "@/lib/hr/auth/session";
 import { userDeletionErrorMessage } from "@/lib/hr/users/deletion-errors";
@@ -22,7 +22,7 @@ function requirePrimaryAdmin(auth: { roles: string[]; user: { isPrimaryAdmin: bo
   }
 }
 
-const createSchema = z.object({ email: z.string().email().max(180), role: z.enum(["ADMIN","HR_ADMIN","PAYROLL_ADMIN","EMPLOYEE","AUDITOR"]) });
+const createSchema = z.object({ email: z.string().email().max(180), role: z.enum(HR_ASSIGNABLE_ROLES) });
 export async function createHrUserAction(formData: FormData) {
   const auth = await requirePermission("user.create");
   const input = createSchema.parse(Object.fromEntries(formData));
@@ -69,7 +69,7 @@ export async function reactivateHrUserAction(formData: FormData) {
   revalidatePath("/hr/admin/users");
 }
 
-const roleChangeSchema = z.object({ userId: z.string().cuid(), role: z.enum(["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN", "EMPLOYEE", "AUDITOR"]) });
+const roleChangeSchema = z.object({ userId: z.string().cuid(), role: z.enum(HR_ASSIGNABLE_ROLES) });
 export async function assignHrRoleAction(formData: FormData) {
   const auth = await requirePermission("user.role.assign");
   const input = roleChangeSchema.parse(Object.fromEntries(formData));

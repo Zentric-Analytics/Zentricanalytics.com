@@ -37,6 +37,17 @@ export const HR_PERMISSIONS = [
 
 export type HrPermissionKey = (typeof HR_PERMISSIONS)[number];
 
+export const HR_ASSIGNABLE_ROLES = [
+  "ADMIN",
+  "HR_ADMIN",
+  "PAYROLL_ADMIN",
+  "COMPENSATION_ADMIN",
+  "BUDGET_OWNER",
+  "PAYROLL_READER",
+  "EMPLOYEE",
+  "AUDITOR",
+] as const satisfies readonly HrRoleKey[];
+
 const rolePermissions: Record<HrRoleKey, readonly HrPermissionKey[]> = {
   ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("compensation.")),
   HR_ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("payroll.") && !permission.startsWith("compensation.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(permission)),

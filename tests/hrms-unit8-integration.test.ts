@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { permissionsForRole } from "../src/lib/hr/permissions/catalog";
+import { HR_ASSIGNABLE_ROLES, permissionsForRole } from "../src/lib/hr/permissions/catalog";
 
 const read = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
@@ -12,6 +12,14 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(permissionsForRole("COMPENSATION_ADMIN")).toContain("compensation.architecture.manage");
     expect(permissionsForRole("BUDGET_OWNER")).toContain("compensation.budget.read");
     expect(permissionsForRole("PAYROLL_READER")).not.toContain("compensation.recommendation.review");
+  });
+
+  it("makes every governed Unit 8 role assignable through user administration", () => {
+    expect(HR_ASSIGNABLE_ROLES).toEqual(expect.arrayContaining(["COMPENSATION_ADMIN", "BUDGET_OWNER", "PAYROLL_READER"]));
+    const usersPage = read("src/app/hr/admin/users/page.tsx");
+    const userActions = read("src/app/hr/admin/users/actions.ts");
+    expect(usersPage).toContain("HR_ASSIGNABLE_ROLES");
+    expect(userActions).toContain("HR_ASSIGNABLE_ROLES");
   });
 
   it("exposes four server-authorized and privacy-filtered experiences", () => {
