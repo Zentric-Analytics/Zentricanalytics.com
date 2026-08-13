@@ -35,6 +35,9 @@ describe("Unit 8 compensation integration safeguards", () => {
     const commands = read("src/lib/hr/compensation/commands.ts");
     expect(commands.indexOf("if (existing) return existing")).toBeLessThan(commands.indexOf("A base compensation decision requires its approved recommendation"));
     expect(worker).toContain('"DEAD_LETTER" : "FAILED"');
+    expect(worker).toContain("replayCompensationDeadLetter");
+    expect(worker).toContain("hr.compensation.worker.dead_letter_replayed");
+    expect(route).toContain('input.action === "replay-dead-letter"');
     expect(read("scripts/start-with-hr-workers.mjs")).toContain('/api/internal/hr/compensation');
   });
 

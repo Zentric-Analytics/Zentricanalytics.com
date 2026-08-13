@@ -7,6 +7,15 @@ import { activateCompensationDecision, compensationBudgetState } from "./command
 
 const MAX_ATTEMPTS = 5;
 
+export async function replayCompensationDeadLetter(organizationId: string, windowKey: string) {
+  return prisma.$transaction(async (tx) => {
+    const run = await tx.hrCompJobRun.findFirstOrThrow({ where: { organizationId, jobType: "COMPENSATION_OPERATIONAL_SWEEP", windowKey, status: "DEAD_LETTER" } });
+    const replayed = await tx.hrCompJobRun.update({ where: { id: run.id }, data: { status: "FAILED", attemptCount: 0, safeError: null, claimTokenHash: null, completedAt: null } });
+    await appendHrAudit(tx, { organizationId, actorRole: "WORKER", entityType: "HrCompJobRun", entityId: run.id, action: "hr.compensation.worker.dead_letter_replayed", previousValues: { status: run.status, attemptCount: run.attemptCount }, newValues: { status: replayed.status, attemptCount: replayed.attemptCount }, correlationId: run.correlationId });
+    return replayed;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
 async function claimRun(organizationId: string, windowKey: string, now: Date) {
   return prisma.$transaction(async (tx) => {
     const jobType = "COMPENSATION_OPERATIONAL_SWEEP";
