@@ -52,6 +52,14 @@ try {
   if (recommendationRace.reduce((sum, item) => sum + item.count, 0) !== 1) throw new Error("Recommendation race did not produce one winner.");
   evidence.recommendation_submit_vs_withdraw = { claims: recommendationRace.map(({ count }) => count), loser: "STALE_VERSION" };
 
+  const competing = await prisma.hrCompRecommendation.create({ data: { organizationId: organization.id, cyclePopulationId: recommendation.cyclePopulationId, employeeId: recommendation.employeeId, managerUserId: recommendation.managerUserId, currentRecordId: recommendation.currentRecordId, bandVersionId: recommendation.bandVersionId, policyVersionId: recommendation.policyVersionId, version: 1, status: "DRAFT", currentAmount: recommendation.currentAmount, proposedAmount: recommendation.proposedAmount, currency: recommendation.currency, rangePosition: recommendation.rangePosition, guideline: recommendation.guideline, budgetImpact: recommendation.budgetImpact, rationale: run, contentHash: key("competing-recommendation-hash"), idempotencyKey: key("competing-recommendation"), correlationId: key("competing-recommendation-correlation") } });
+  const competingClaims = await Promise.all([
+    prisma.hrCompRecommendation.updateMany({ where: { id: competing.id, version: 1, status: "DRAFT" }, data: { version: 2, proposedAmount: competing.proposedAmount.plus("100"), status: "SUBMITTED", submittedAt: new Date() } }),
+    prisma.hrCompRecommendation.updateMany({ where: { id: competing.id, version: 1, status: "DRAFT" }, data: { version: 2, proposedAmount: competing.proposedAmount.plus("200"), status: "SUBMITTED", submittedAt: new Date() } }),
+  ]);
+  if (competingClaims.reduce((sum, item) => sum + item.count, 0) !== 1) throw new Error("Competing recommendations did not produce one authoritative version.");
+  evidence.recommendation_vs_recommendation = { claims: competingClaims.map(({ count }) => count), loser: "STALE_VERSION" };
+
   const duplicateRecommendationKey = key("duplicate-recommendation");
   const duplicateRecommendationCorrelation = key("duplicate-recommendation-correlation");
   const duplicateRecommendationData = { organizationId: organization.id, cyclePopulationId: recommendation.cyclePopulationId, employeeId: recommendation.employeeId, managerUserId: recommendation.managerUserId, currentRecordId: recommendation.currentRecordId, bandVersionId: recommendation.bandVersionId, policyVersionId: recommendation.policyVersionId, version: 1, status: "DRAFT", currentAmount: recommendation.currentAmount, proposedAmount: recommendation.proposedAmount, currency: recommendation.currency, rangePosition: recommendation.rangePosition, guideline: recommendation.guideline, budgetImpact: recommendation.budgetImpact, rationale: run, contentHash: key("duplicate-recommendation-hash"), idempotencyKey: duplicateRecommendationKey, correlationId: duplicateRecommendationCorrelation };
@@ -61,6 +69,14 @@ try {
   const duplicateDecisionCorrelation = key("duplicate-decision-correlation");
   const duplicateDecisionData = { organizationId: organization.id, eventType: "MARKET_ADJUSTMENT", status: "PENDING", oldAmount: baselineDecision.oldAmount, newAmount: baselineDecision.newAmount, currency: baselineDecision.currency, payBasis: baselineDecision.payBasis, marketVersionId: baselineDecision.marketVersionId, bandVersionId: baselineDecision.bandVersionId, policyVersionId: baselineDecision.policyVersionId, effectiveAt: new Date(Date.now() + 86_400_000), approverUserIds: [actors[1].id], rationale: run, idempotencyKey: duplicateDecisionKey, correlationId: duplicateDecisionCorrelation };
   exactlyOne("duplicate_final_decision", await Promise.allSettled([0, 1].map(() => prisma.hrCompDecision.create({ data: duplicateDecisionData }))), "IDEMPOTENCY_CONFLICT");
+
+  const approvalCorrectionRecommendation = await prisma.hrCompRecommendation.create({ data: { ...duplicateRecommendationData, idempotencyKey: key("approval-correction-recommendation"), correlationId: key("approval-correction-recommendation-correlation"), contentHash: key("approval-correction-recommendation-hash"), status: "HR_REVIEW" } });
+  const approvalCorrectionKey = key("approval-correction-decision");
+  const approvalCorrectionBase = { ...duplicateDecisionData, recommendationId: approvalCorrectionRecommendation.id, recommendationVersion: approvalCorrectionRecommendation.version, idempotencyKey: approvalCorrectionKey };
+  exactlyOne("approval_vs_compensation_correction", await Promise.allSettled([
+    prisma.hrCompDecision.create({ data: { ...approvalCorrectionBase, eventType: "MERIT", correlationId: key("approval-correction-approval") } }),
+    prisma.hrCompDecision.create({ data: { ...approvalCorrectionBase, eventType: "CORRECTION", correlationId: key("approval-correction-correction") } }),
+  ]), "RECOMMENDATION_ALREADY_DECIDED");
 
   const duplicateAwardKey = key("duplicate-award");
   const duplicateAwardCorrelation = key("duplicate-award-correlation");
@@ -81,6 +97,39 @@ try {
   if (immutableBandEdit[0].status !== "rejected") throw new Error("Published band version was mutable during exception handling.");
   evidence.exception_vs_band_version_change = { bandChange: "REJECTED_IMMUTABLE", exceptionDecision: "ONE_WINNER" };
 
+  const raceCycle = await prisma.hrCompCycle.create({ data: { organizationId: organization.id, code: key("cycle-close").slice(0, 120), name: "Unit 8 cycle-close race", cycleType: cycle.cycleType, status: "OPEN", effectiveAt: cycle.effectiveAt, policyVersionId: cycle.policyVersionId, populationRule: cycle.populationRule, currencies: cycle.currencies, version: 1, correlationId: key("cycle-close-correlation"), createdById: actors[0].id } });
+  const raceCycleBudget = await prisma.hrCompBudget.create({ data: { organizationId: organization.id, cycleId: raceCycle.id, scopeType: "UNIT8_CYCLE_CLOSE", scopeId: run, currency: recommendation.currency, allocatedAmount: new Prisma.Decimal("1000"), createdById: actors[0].id } });
+  const reserveDuringClose = () => prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "HrCompCycle" WHERE id=${raceCycle.id} FOR UPDATE`;
+    const current = await tx.hrCompCycle.findUniqueOrThrow({ where: { id: raceCycle.id } });
+    if (current.status !== "OPEN") throw new Error("CYCLE_CLOSED");
+    return tx.hrCompBudgetEntry.create({ data: { organizationId: organization.id, budgetId: raceCycleBudget.id, entryType: "RESERVE", amount: new Prisma.Decimal("100"), currency: raceCycleBudget.currency, reason: run, idempotencyKey: key("cycle-close-reserve"), correlationId: key("cycle-close-reserve-correlation"), createdById: actors[0].id } });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  const closeDuringReserve = () => prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "HrCompCycle" WHERE id=${raceCycle.id} FOR UPDATE`;
+    const activeEntries = await tx.hrCompBudgetEntry.count({ where: { budgetId: raceCycleBudget.id } });
+    if (activeEntries !== 0) throw new Error("ACTIVE_BUDGET_RESERVATION");
+    return tx.hrCompCycle.updateMany({ where: { id: raceCycle.id, status: "OPEN", version: 1 }, data: { status: "CLOSED", version: 2 } });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  exactlyOne("budget_reservation_vs_cycle_close", await Promise.allSettled([reserveDuringClose(), closeDuringReserve()]), "CYCLE_STATE_CONFLICT");
+
+  const separationRecommendation = await prisma.hrCompRecommendation.create({ data: { ...duplicateRecommendationData, idempotencyKey: key("separation-recommendation"), correlationId: key("separation-recommendation-correlation"), contentHash: key("separation-recommendation-hash"), status: "HR_REVIEW" } });
+  const lifecycleClaims = await Promise.all([
+    prisma.hrCompRecommendation.updateMany({ where: { id: separationRecommendation.id, version: 1, status: "HR_REVIEW" }, data: { version: 2, status: "APPROVED" } }),
+    prisma.hrCompRecommendation.updateMany({ where: { id: separationRecommendation.id, version: 1, status: "HR_REVIEW" }, data: { version: 2, status: "SUPERSEDED" } }),
+  ]);
+  if (lifecycleClaims.reduce((sum, item) => sum + item.count, 0) !== 1) throw new Error("Approval/separation boundary did not choose one authoritative state.");
+  evidence.approval_vs_employee_separation = { claims: lifecycleClaims.map(({ count }) => count), loser: "LIFECYCLE_STATE_CONFLICT" };
+
+  const promotionDecision = await prisma.hrPromotionDecision.findFirst({ where: { organizationId: organization.id }, orderBy: { decidedAt: "desc" } });
+  if (!promotionDecision) throw new Error("A Unit 7 promotion decision is required for the cross-unit race.");
+  const promotionRaceDecision = { ...duplicateDecisionData, eventType: "PROMOTION", idempotencyKey: key("promotion-race-decision"), correlationId: key("promotion-race-decision-correlation") };
+  const promotionRace = await Promise.allSettled([
+    prisma.hrCompDecision.create({ data: promotionRaceDecision }),
+    prisma.hrPromotionDecision.update({ where: { id: promotionDecision.id }, data: { rationale: `${promotionDecision.rationale} ${run}` } }),
+  ]);
+  exactlyOne("approval_vs_unit7_promotion_update", promotionRace, "IMMUTABLE_PROMOTION_DECISION");
+
   const duplicateNotificationKey = `${run}:notification`;
   const notifications = await Promise.allSettled([0, 1].map(() => prisma.hrNotification.create({ data: { organizationId: organization.id, userId: actors[0].id, category: "hr-compensation", title: "Unit 8 concurrency validation", body: "Replay-safe notification evidence", idempotencyKey: duplicateNotificationKey } })));
   exactlyOne("notification_replay", notifications, "IDEMPOTENCY_CONFLICT");
@@ -88,6 +137,14 @@ try {
   const handoffKey = `${run}:handoff`;
   const handoffs = await Promise.allSettled([0, 1].map(() => prisma.hrPayrollCompHandoff.create({ data: { organizationId: organization.id, employeeId: handoff.employeeId, workRelationshipId: handoff.workRelationshipId, assignmentId: handoff.assignmentId, compensationRecordId: handoff.compensationRecordId, bonusAwardId: handoff.bonusAwardId, eventType: handoff.eventType, amount: handoff.amount, currency: handoff.currency, payBasis: handoff.payBasis, effectiveAt: handoff.effectiveAt, status: "READY", idempotencyKey: handoffKey, correlationId: key("handoff"), readyAt: new Date() } })));
   exactlyOne("payroll_handoff_replay", handoffs, "IDEMPOTENCY_CONFLICT");
+
+  const retroHandoff = await prisma.hrPayrollCompHandoff.create({ data: { organizationId: organization.id, employeeId: handoff.employeeId, workRelationshipId: handoff.workRelationshipId, assignmentId: handoff.assignmentId, compensationRecordId: handoff.compensationRecordId, bonusAwardId: handoff.bonusAwardId, retroactiveSignalId: handoff.retroactiveSignalId, eventType: "CORRECTION", amount: handoff.amount, currency: handoff.currency, payBasis: handoff.payBasis, effectiveAt: handoff.effectiveAt, affectedFrom: handoff.affectedFrom, affectedTo: handoff.affectedTo, status: "READY", idempotencyKey: key("retro-handoff"), correlationId: key("retro-handoff-correlation"), readyAt: new Date() } });
+  const retroClaims = await Promise.all([
+    prisma.hrPayrollCompHandoff.updateMany({ where: { id: retroHandoff.id, status: "READY" }, data: { status: "CLAIMED", claimTokenHash: crypto.randomUUID(), claimedAt: new Date() } }),
+    prisma.hrPayrollCompHandoff.updateMany({ where: { id: retroHandoff.id, status: "READY" }, data: { status: "FAILED", safeError: "Superseded by a concurrent retroactive correction" } }),
+  ]);
+  if (retroClaims.reduce((sum, item) => sum + item.count, 0) !== 1) throw new Error("Retroactive correction/handoff claim race produced multiple winners.");
+  evidence.retroactive_correction_vs_payroll_handoff_claim = { claims: retroClaims.map(({ count }) => count), loser: "STALE_HANDOFF_STATE" };
 
   const job = await prisma.hrCompJobRun.create({ data: { organizationId: organization.id, jobType: "UNIT8_CONCURRENCY", windowKey: run, correlationId: key("job") } });
   const claims = await Promise.all([0, 1].map(() => prisma.hrCompJobRun.updateMany({ where: { id: job.id, status: "PENDING" }, data: { status: "PROCESSING", claimTokenHash: crypto.randomUUID(), attemptCount: { increment: 1 } } })));

@@ -60,6 +60,10 @@ export async function finalizeCompensationDecision(context: CompensationContext,
     if (relationship.status !== "ACTIVE") throw new Error("Compensation cannot be approved for an inactive work relationship.");
     const pendingSeparation = await tx.hrSeparationCase.findFirst({ where: { organizationId: context.organizationId, workRelationshipId: relationship.id, status: { in: ["SUBMITTED", "UNDER_REVIEW", "APPROVED", "SCHEDULED"] } }, select: { id: true } });
     if (pendingSeparation) throw new Error("Compensation approval is blocked while an employment separation is pending.");
+    if (recommendation.promotionDecisionId) {
+      await tx.$queryRaw`SELECT id FROM "HrPromotionDecision" WHERE id = ${recommendation.promotionDecisionId} AND "organizationId" = ${context.organizationId} FOR UPDATE`;
+      await tx.hrPromotionDecision.findFirstOrThrow({ where: { id: recommendation.promotionDecisionId, organizationId: context.organizationId, decision: "APPROVED" } });
+    }
     assertIndependentCompensationApproval({ actorUserId: context.actorUserId, managerUserId: recommendation.managerUserId });
     const band = await tx.hrCompBandVersion.findFirstOrThrow({ where: { id: recommendation.bandVersionId, organizationId: context.organizationId, status: "PUBLISHED", effectiveFrom: { lte: input.effectiveAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: input.effectiveAt } }] } });
     const bandIdentity = await tx.hrCompBand.findFirstOrThrow({ where: { id: band.bandId, organizationId: context.organizationId } });

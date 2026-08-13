@@ -52,6 +52,7 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(commands).toContain('payrollHandoffKey("record", record.id)');
     expect(commands).toContain('SELECT id FROM "HrCompCycle"');
     expect(commands).toContain('SELECT id FROM "HrWorkRelationship"');
+    expect(commands).toContain('SELECT id FROM "HrPromotionDecision"');
     expect(commands).toContain("Compensation approval is blocked while an employment separation is pending.");
     expect(commands).toContain("Compensation budget reservations require an open or review-stage cycle.");
   });
@@ -69,6 +70,9 @@ describe("Unit 8 compensation integration safeguards", () => {
     const guarded = read("prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql");
     expect(guarded).toContain("IF TG_TABLE_NAME = 'HrCompDecision' AND TG_OP = 'UPDATE' THEN");
     expect(guarded).toContain("IF TG_TABLE_NAME = 'HrCompensationRecord' AND TG_OP = 'UPDATE' THEN");
+    const promotionGuard = read("prisma/migrations/20260813201500_hrms_unit8_promotion_decision_guard/migration.sql");
+    expect(promotionGuard).toContain('ON "HrPromotionDecision"');
+    expect(promotionGuard).toContain("Promotion decisions are immutable");
   });
 
   it("guards the real staging lifecycle fixture and preserves governed provenance", () => {
