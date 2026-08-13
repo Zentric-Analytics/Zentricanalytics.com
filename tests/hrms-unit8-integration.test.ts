@@ -77,6 +77,15 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(fixture).toContain("hrPromotionDecision.findFirst");
     expect(fixture).toContain("authoritative compensation timeline overlaps");
     expect(fixture).not.toContain("deleteMany");
+    expect(fixture).toContain("policyVersion, initialRecord, recommendation");
+  });
+
+  it("provides append-only guarded staging audit reconciliation", () => {
+    const script = read("scripts/hr-unit8-staging-audit-reconcile.mjs");
+    expect(script).toContain('HR_UNIT8_STAGING_AUDIT_CONFIRM !== "staging-only"');
+    expect(script).toContain("hr.compensation.record.audit_reconciled");
+    expect(script).not.toContain("update(");
+    expect(script).not.toContain("delete");
   });
 
   it("registers a guarded real PostgreSQL concurrency gate", () => {
