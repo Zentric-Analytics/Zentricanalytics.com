@@ -16,7 +16,7 @@ describe("Unit 8 compensation and rewards blueprint", () => {
 
   it("keeps the implementation status artifact free of compensation records", () => {
     const status = read("src/app/hr/admin/unit-8-status/page.tsx");
-    expect(status).toContain("LOCAL FOUNDATION AND PRIVACY VALIDATION");
+    expect(status).toContain("LIVE UNIT 8 LIFECYCLE AND DATA-INTEGRITY VALIDATION");
     expect(status).toContain("production untouched");
     expect(status).toContain("No individual compensation data");
     expect(status).not.toContain("salary:");

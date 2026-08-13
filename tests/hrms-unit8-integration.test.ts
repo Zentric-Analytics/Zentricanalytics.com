@@ -35,7 +35,10 @@ describe("Unit 8 compensation integration safeguards", () => {
 
   it("uses an atomic budget ledger and exact decision handoff", () => {
     const commands = read("src/lib/hr/compensation/commands.ts");
+    const domain = read("src/lib/hr/compensation/domain.ts");
     expect(commands).toContain("FOR UPDATE");
+    expect(commands).not.toContain("Number(recommendation.");
+    expect(domain).not.toContain("Number(parseMoney");
     expect(commands).toContain("Final decision cannot consume more budget");
     expect(commands).toContain('payrollHandoffKey("record", record.id)');
   });
@@ -47,5 +50,15 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(migration).not.toContain("tstzrange(");
     expect(migration).toContain("hr_comp_protect_immutable");
     expect(migration).toContain("btree_gist");
+  });
+
+  it("guards the real staging lifecycle fixture and preserves governed provenance", () => {
+    const fixture = read("scripts/hr-unit8-staging-fixture.mjs");
+    expect(fixture).toContain('HR_UNIT8_STAGING_FIXTURE_CONFIRM !== "staging-only"');
+    expect(fixture).toContain('databaseUrl.pathname.slice(1) !== "zentric_analytics_staging"');
+    expect(fixture).toContain("salaryBandMinimum");
+    expect(fixture).toContain("hrPromotionDecision.findFirst");
+    expect(fixture).toContain("authoritative compensation timeline overlaps");
+    expect(fixture).not.toContain("deleteMany");
   });
 });

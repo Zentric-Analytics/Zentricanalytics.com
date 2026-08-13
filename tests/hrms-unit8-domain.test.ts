@@ -37,6 +37,14 @@ describe("Unit 8 compensation domain", () => {
     expect(state).toEqual({ allocated: "10000.0000", adjusted: "500.0000", reserved: "0.0000", consumed: "7000.0000", available: "3500.0000", balanced: true });
   });
 
+  it("preserves four-decimal money beyond JavaScript's safe integer range", () => {
+    const state = reconcileBudget("9007199254740992.0002", [
+      { entryType: "RESERVE", amount: "9007199254740992.0001" },
+    ]);
+    expect(state.available).toBe("0.0001");
+    expect(() => assertBudgetAvailable("9007199254740992.0002", [{ entryType: "RESERVE", amount: "9007199254740992.0001" }], "0.0002")).toThrow("Insufficient");
+  });
+
   it("rejects a second shared-budget reservation that would overspend", () => {
     const entries = [{ entryType: "RESERVE" as const, amount: "8000" }];
     expect(assertBudgetAvailable("10000", entries, "2000").available).toBe("2000.0000");

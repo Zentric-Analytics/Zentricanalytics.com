@@ -39,7 +39,7 @@ export async function releaseCompensationBudget(context: CompensationContext, in
     const budget = await tx.hrCompBudget.findFirstOrThrow({ where: { id: input.budgetId, organizationId: context.organizationId } });
     const entries = await tx.hrCompBudgetEntry.findMany({ where: { budgetId: budget.id }, select: { entryType: true, amount: true } });
     const state = reconcileBudget(budget.allocatedAmount, entries);
-    if (Number(input.amount) > Number(state.reserved)) throw new Error("Cannot release more budget than is reserved.");
+    if (new Prisma.Decimal(parseMoney(input.amount)).greaterThan(state.reserved)) throw new Error("Cannot release more budget than is reserved.");
     return tx.hrCompBudgetEntry.upsert({ where: { budgetId_idempotencyKey: { budgetId: budget.id, idempotencyKey: input.idempotencyKey } }, update: {}, create: { organizationId: context.organizationId, budgetId: budget.id, recommendationId: input.recommendationId, entryType: "RELEASE", amount: parseMoney(input.amount), currency: budget.currency, reason: input.reason, idempotencyKey: input.idempotencyKey, correlationId: crypto.randomUUID(), createdById: context.actorUserId } });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
 }
@@ -54,13 +54,13 @@ export async function finalizeCompensationDecision(context: CompensationContext,
     const policy = await tx.hrCompPolicyVersion.findFirstOrThrow({ where: { id: recommendation.policyVersionId, organizationId: context.organizationId, status: "PUBLISHED" } });
     const exceptionApproved = input.exceptionId ? Boolean(await tx.hrCompException.findFirst({ where: { id: input.exceptionId, organizationId: context.organizationId, status: "APPROVED" } })) : false;
     if (input.eventType === "PROMOTION") promotionRecommendationFloor(recommendation.currentAmount, band.minimum, recommendation.proposedAmount, exceptionApproved);
-    if (Number(recommendation.proposedAmount) > Number(band.maximum) && !exceptionApproved) throw new Error("Above-band compensation requires an approved exception.");
+    if (recommendation.proposedAmount.greaterThan(band.maximum) && !exceptionApproved) throw new Error("Above-band compensation requires an approved exception.");
     const decisionKey = `unit8:decision:${recommendation.id}:v${recommendation.version}`;
     await tx.$queryRaw`SELECT id FROM "HrCompBudget" WHERE id = ${input.budgetId} AND "organizationId" = ${context.organizationId} FOR UPDATE`;
     const budget = await tx.hrCompBudget.findFirstOrThrow({ where: { id: input.budgetId, organizationId: context.organizationId } });
     const budgetEntries = await tx.hrCompBudgetEntry.findMany({ where: { budgetId: budget.id }, select: { entryType: true, amount: true } });
     const budgetState = reconcileBudget(budget.allocatedAmount, budgetEntries);
-    if (Number(recommendation.budgetImpact) > Number(budgetState.reserved)) throw new Error("Final decision cannot consume more budget than the recommendation reserved.");
+    if (recommendation.budgetImpact.greaterThan(budgetState.reserved)) throw new Error("Final decision cannot consume more budget than the recommendation reserved.");
     const decision = await tx.hrCompDecision.upsert({ where: { organizationId_idempotencyKey: { organizationId: context.organizationId, idempotencyKey: decisionKey } }, update: {}, create: { organizationId: context.organizationId, recommendationId: recommendation.id, recommendationVersion: recommendation.version, exceptionId: input.exceptionId, eventType: input.eventType, status: input.effectiveAt <= new Date() ? "EFFECTIVE" : "SCHEDULED", oldAmount: recommendation.currentAmount, newAmount: recommendation.proposedAmount, currency: assertCurrency(recommendation.currency), payBasis: bandIdentity.payBasis, marketVersionId: marketVersion.id, bandVersionId: band.id, policyVersionId: policy.id, effectiveAt: input.effectiveAt, approverUserIds: [context.actorUserId], rationale: input.rationale, idempotencyKey: decisionKey, correlationId: input.correlationId ?? crypto.randomUUID(), approvedAt: new Date() } });
     await tx.hrCompBudgetEntry.upsert({ where: { budgetId_idempotencyKey: { budgetId: budget.id, idempotencyKey: `consume:${decision.id}` } }, update: {}, create: { organizationId: context.organizationId, budgetId: budget.id, recommendationId: recommendation.id, decisionId: decision.id, entryType: "CONSUME", amount: recommendation.budgetImpact, currency: budget.currency, reason: "Final compensation decision", idempotencyKey: `consume:${decision.id}`, correlationId: crypto.randomUUID(), createdById: context.actorUserId } });
     await tx.hrCompRecommendation.update({ where: { id: recommendation.id }, data: { status: "APPROVED" } });

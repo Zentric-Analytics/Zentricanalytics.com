@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { HrCompCycleStatus, HrCompDecisionStatus, HrCompRecommendationStatus } from "@prisma/client";
+import { Prisma, type HrCompCycleStatus, type HrCompDecisionStatus, type HrCompRecommendationStatus } from "@prisma/client";
 
 export type MoneyInput = string | number | { toString(): string };
 
@@ -23,45 +23,45 @@ export function assertCurrency(code: string) {
 }
 
 export function rangePosition(amountInput: MoneyInput, minimumInput: MoneyInput, midpointInput: MoneyInput, maximumInput: MoneyInput) {
-  const amount = Number(parseMoney(amountInput));
-  const minimum = Number(parseMoney(minimumInput, "minimum"));
-  const midpoint = Number(parseMoney(midpointInput, "midpoint"));
-  const maximum = Number(parseMoney(maximumInput, "maximum"));
-  if (!(minimum <= midpoint && midpoint <= maximum) || midpoint <= 0) throw new Error("Band range must satisfy minimum <= midpoint <= maximum and midpoint must be positive.");
-  const ratio = amount / midpoint;
-  const category = amount < minimum ? "BELOW_MINIMUM" : amount > maximum ? "ABOVE_MAXIMUM" : ratio < 0.9 ? "LOWER_RANGE" : ratio <= 1.1 ? "AROUND_MIDPOINT" : "UPPER_RANGE";
+  const amount = new Prisma.Decimal(parseMoney(amountInput));
+  const minimum = new Prisma.Decimal(parseMoney(minimumInput, "minimum"));
+  const midpoint = new Prisma.Decimal(parseMoney(midpointInput, "midpoint"));
+  const maximum = new Prisma.Decimal(parseMoney(maximumInput, "maximum"));
+  if (minimum.greaterThan(midpoint) || midpoint.greaterThan(maximum) || midpoint.lessThanOrEqualTo(0)) throw new Error("Band range must satisfy minimum <= midpoint <= maximum and midpoint must be positive.");
+  const ratio = amount.dividedBy(midpoint);
+  const category = amount.lessThan(minimum) ? "BELOW_MINIMUM" : amount.greaterThan(maximum) ? "ABOVE_MAXIMUM" : ratio.lessThan("0.9") ? "LOWER_RANGE" : ratio.lessThanOrEqualTo("1.1") ? "AROUND_MIDPOINT" : "UPPER_RANGE";
   return { category, compaRatio: ratio.toFixed(4) } as const;
 }
 
 export function promotionRecommendationFloor(current: MoneyInput, bandMinimum: MoneyInput, proposed: MoneyInput, exceptionApproved = false) {
-  const currentAmount = Number(parseMoney(current, "current amount"));
-  const minimum = Number(parseMoney(bandMinimum, "band minimum"));
-  const proposedAmount = Number(parseMoney(proposed, "proposed amount"));
-  if (proposedAmount < currentAmount) throw new Error("Promotion compensation cannot reduce base pay through the promotion path.");
-  if (proposedAmount < minimum && !exceptionApproved) throw new Error("Promotion compensation must reach the target band minimum or use an approved exception.");
+  const currentAmount = new Prisma.Decimal(parseMoney(current, "current amount"));
+  const minimum = new Prisma.Decimal(parseMoney(bandMinimum, "band minimum"));
+  const proposedAmount = new Prisma.Decimal(parseMoney(proposed, "proposed amount"));
+  if (proposedAmount.lessThan(currentAmount)) throw new Error("Promotion compensation cannot reduce base pay through the promotion path.");
+  if (proposedAmount.lessThan(minimum) && !exceptionApproved) throw new Error("Promotion compensation must reach the target band minimum or use an approved exception.");
   return proposedAmount.toFixed(4);
 }
 
 export type BudgetEntry = { entryType: "ALLOCATE" | "RESERVE" | "RELEASE" | "CONSUME" | "ADJUST"; amount: MoneyInput };
 
 export function reconcileBudget(allocatedInput: MoneyInput, entries: BudgetEntry[]) {
-  const allocated = Number(parseMoney(allocatedInput, "allocated amount"));
-  let adjustment = 0; let reserved = 0; let consumed = 0;
+  const allocated = new Prisma.Decimal(parseMoney(allocatedInput, "allocated amount"));
+  let adjustment = new Prisma.Decimal(0); let reserved = new Prisma.Decimal(0); let consumed = new Prisma.Decimal(0);
   for (const entry of entries) {
-    const amount = Number(parseMoney(entry.amount));
-    if (entry.entryType === "ALLOCATE" || entry.entryType === "ADJUST") adjustment += amount;
-    if (entry.entryType === "RESERVE") reserved += amount;
-    if (entry.entryType === "RELEASE") reserved -= amount;
-    if (entry.entryType === "CONSUME") { reserved -= amount; consumed += amount; }
+    const amount = new Prisma.Decimal(parseMoney(entry.amount));
+    if (entry.entryType === "ALLOCATE" || entry.entryType === "ADJUST") adjustment = adjustment.plus(amount);
+    if (entry.entryType === "RESERVE") reserved = reserved.plus(amount);
+    if (entry.entryType === "RELEASE") reserved = reserved.minus(amount);
+    if (entry.entryType === "CONSUME") { reserved = reserved.minus(amount); consumed = consumed.plus(amount); }
   }
-  if (reserved < -0.00001) throw new Error("Budget ledger releases or consumes more than it reserved.");
-  const available = allocated + adjustment - reserved - consumed;
-  return { allocated: allocated.toFixed(4), adjusted: adjustment.toFixed(4), reserved: reserved.toFixed(4), consumed: consumed.toFixed(4), available: available.toFixed(4), balanced: available >= -0.00001 };
+  if (reserved.isNegative()) throw new Error("Budget ledger releases or consumes more than it reserved.");
+  const available = allocated.plus(adjustment).minus(reserved).minus(consumed);
+  return { allocated: allocated.toFixed(4), adjusted: adjustment.toFixed(4), reserved: reserved.toFixed(4), consumed: consumed.toFixed(4), available: available.toFixed(4), balanced: !available.isNegative() };
 }
 
 export function assertBudgetAvailable(allocated: MoneyInput, entries: BudgetEntry[], requested: MoneyInput) {
   const state = reconcileBudget(allocated, entries);
-  if (Number(parseMoney(requested, "requested budget")) > Number(state.available)) throw new Error("Insufficient compensation budget remains for this reservation.");
+  if (new Prisma.Decimal(parseMoney(requested, "requested budget")).greaterThan(state.available)) throw new Error("Insufficient compensation budget remains for this reservation.");
   return state;
 }
 
