@@ -1,5 +1,306 @@
 import { BriefcaseBusiness, CircleCheck, Clock3, DoorOpen } from "lucide-react";
-import { prisma } from "@/lib/prisma"; import { requirePermission } from "@/lib/hr/permissions/authorize";
-import { createPositionAction, openPositionAction, submitPositionAction } from "./actions"; import { PositionDecisionForm } from "./PositionDecisionForm"; import { PositionReviewModal } from "./PositionReviewModal";
-export default async function PositionsPage(){const auth=await requirePermission("position.manage"),organizationId=auth.user.organizationId;const[positions,departments,teams]=await Promise.all([prisma.hrPosition.findMany({where:{organizationId},include:{department:true,team:true,_count:{select:{employeeAssignments:true}}},orderBy:[{lifecycleStatus:"asc"},{title:"asc"}]}),prisma.hrDepartment.findMany({where:{organizationId,status:"ACTIVE"},orderBy:{name:"asc"}}),prisma.hrTeam.findMany({where:{organizationId,status:"ACTIVE"},include:{department:true},orderBy:{name:"asc"}})]);const count=(s:string)=>positions.filter(p=>p.lifecycleStatus===s).length,stats=[{label:"Total positions",value:positions.length,icon:BriefcaseBusiness},{label:"Open",value:count("OPEN"),icon:DoorOpen},{label:"Approved",value:count("APPROVED"),icon:CircleCheck},{label:"Pending approval",value:count("PENDING_APPROVAL"),icon:Clock3}];return <main><div className="hr-page-heading"><div><h1 className="hr-page-title">Positions</h1><p className="hr-page-subtitle">Approval-controlled organizational seats with governed capacity.</p></div><a className="btn btn-primary" href="#create-position">Create draft position</a></div><div className="hr-grid-4">{stats.map(({label,value,icon:Icon})=><article className="hr-card hr-stat" key={label}><span className="hr-icon"><Icon/></span><div><strong>{value}</strong><p>{label}</p></div></article>)}</div><section className="hr-card hr-form-panel hr-wide-form" id="create-position"><div className="hr-panel-heading"><span className="hr-icon"><BriefcaseBusiness/></span><div><h2>Create draft position</h2><p>Define a governed seat before submitting it for approval.</p></div></div><form action={createPositionAction} className="hr-position-form"><label>Code<input className="input" name="code" required/></label><label>Title<input className="input" name="title" required/></label><label>Department<select className="input" name="departmentId" required><option value="">Select department</option>{departments.map(x=><option value={x.id} key={x.id}>{x.name}</option>)}</select></label><label>Team<select className="input" name="teamId"><option value="">No team</option>{teams.map(x=><option value={x.id} key={x.id}>{x.department.name} — {x.name}</option>)}</select></label><label>Currency<input className="input" name="currency" defaultValue="NGN" maxLength={3} required/></label><label>Band minimum<input className="input" name="salaryBandMinimum" type="number" min="0" step="0.01"/></label><label>Band maximum<input className="input" name="salaryBandMaximum" type="number" min="0" step="0.01"/></label><label>Description<input className="input" name="description"/></label><button className="btn btn-primary">Create draft</button></form></section><section className="hr-card hr-register"><div className="hr-register-heading"><div><h2>Positions register</h2><p>Capacity, assignment history, lifecycle state, and approval actions.</p></div><span>{positions.length} records</span></div><div className="hr-table-wrap"><table><thead><tr><th>Code</th><th>Title</th><th>Department</th><th>Team</th><th>Band</th><th>Capacity</th><th>Assignments</th><th>Status</th><th>Actions</th></tr></thead><tbody>{positions.map(p=>{const band=p.salaryBandMinimum||p.salaryBandMaximum?`${p.currency} ${p.salaryBandMinimum?.toString()??"—"} – ${p.salaryBandMaximum?.toString()??"—"}`:"Not set";const controls=<div className="hr-governed-controls"><h3>Position lifecycle actions</h3>{p.lifecycleStatus==="DRAFT"&&<DecisionForm action={submitPositionAction} id={p.id} label="Submit for approval"/>}{p.lifecycleStatus==="PENDING_APPROVAL"&&<><PositionDecisionForm decision="approve" id={p.id}/><PositionDecisionForm decision="reject" id={p.id}/></>}{p.lifecycleStatus==="APPROVED"&&<DecisionForm action={openPositionAction} id={p.id} label="Open position"/>}{!["DRAFT","PENDING_APPROVAL","APPROVED"].includes(p.lifecycleStatus)&&<p className="hr-history-note">No lifecycle action is currently available.</p>}</div>;return <tr key={p.id}><td><code>{p.code}</code></td><td><strong>{p.title}</strong></td><td>{p.department.name}</td><td>{p.team?.name??"—"}</td><td>{band}</td><td>{p.headcountLimit} / {p.fullTimeEquivalent.toString()} FTE</td><td>{p._count.employeeAssignments}</td><td><span className="hr-status success">{p.lifecycleStatus.replaceAll("_"," ")}</span></td><td><PositionReviewModal position={{title:p.title,code:p.code,description:p.description,status:p.lifecycleStatus,department:p.department.name,team:p.team?.name??"—",band,headcount:p._count.employeeAssignments,approved:p.headcountLimit,createdAt:p.createdAt.toISOString(),updatedAt:p.updatedAt.toISOString()}} controls={controls}/></td></tr>})}</tbody></table></div>{!positions.length&&<p className="hr-empty">No positions yet.</p>}</section></main>}
-function DecisionForm({action,id,label}:{action:(formData:FormData)=>Promise<void>;id:string;label:string}){return <form action={action} className="hr-inline-action"><input type="hidden" name="id" value={id}/><input className="input" name="reason" placeholder={`${label} reason`} required/><button className="btn btn-primary">{label}</button></form>}
+import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/hr/permissions/authorize";
+import {
+  createPositionAction,
+  openPositionAction,
+  submitPositionAction,
+} from "./actions";
+import { PositionDecisionForm } from "./PositionDecisionForm";
+import { PositionReviewModal } from "./PositionReviewModal";
+export default async function PositionsPage() {
+  const auth = await requirePermission("position.manage"),
+    organizationId = auth.user.organizationId;
+  const [positions, departments, teams, jobProfiles] = await Promise.all([
+    prisma.hrPosition.findMany({
+      where: { organizationId },
+      include: {
+        department: true,
+        team: true,
+        _count: { select: { employeeAssignments: true } },
+      },
+      orderBy: [{ lifecycleStatus: "asc" }, { title: "asc" }],
+    }),
+    prisma.hrDepartment.findMany({
+      where: { organizationId, status: "ACTIVE" },
+      orderBy: { name: "asc" },
+    }),
+    prisma.hrTeam.findMany({
+      where: { organizationId, status: "ACTIVE" },
+      include: { department: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.hrJobProfile.findMany({
+      where: { organizationId, status: "ACTIVE" },
+      orderBy: { title: "asc" },
+    }),
+  ]);
+  const count = (s: string) =>
+      positions.filter((p) => p.lifecycleStatus === s).length,
+    stats = [
+      {
+        label: "Total positions",
+        value: positions.length,
+        icon: BriefcaseBusiness,
+      },
+      { label: "Open", value: count("OPEN"), icon: DoorOpen },
+      { label: "Approved", value: count("APPROVED"), icon: CircleCheck },
+      {
+        label: "Pending approval",
+        value: count("PENDING_APPROVAL"),
+        icon: Clock3,
+      },
+    ];
+  return (
+    <main>
+      <div className="hr-page-heading">
+        <div>
+          <h1 className="hr-page-title">Positions</h1>
+          <p className="hr-page-subtitle">
+            Approval-controlled organizational seats with governed capacity.
+          </p>
+        </div>
+        <a className="btn btn-primary" href="#create-position">
+          Create draft position
+        </a>
+      </div>
+      <div className="hr-grid-4">
+        {stats.map(({ label, value, icon: Icon }) => (
+          <article className="hr-card hr-stat" key={label}>
+            <span className="hr-icon">
+              <Icon />
+            </span>
+            <div>
+              <strong>{value}</strong>
+              <p>{label}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+      <section
+        className="hr-card hr-form-panel hr-wide-form"
+        id="create-position"
+      >
+        <div className="hr-panel-heading">
+          <span className="hr-icon">
+            <BriefcaseBusiness />
+          </span>
+          <div>
+            <h2>Create draft position</h2>
+            <p>Define a governed seat before submitting it for approval.</p>
+          </div>
+        </div>
+        <form action={createPositionAction} className="hr-position-form">
+          <label>
+            Code
+            <input className="input" name="code" required />
+          </label>
+          <label>
+            Title
+            <input className="input" name="title" required />
+          </label>
+          <label>
+            Department
+            <select className="input" name="departmentId" required>
+              <option value="">Select department</option>
+              {departments.map((x) => (
+                <option value={x.id} key={x.id}>
+                  {x.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Team
+            <select className="input" name="teamId">
+              <option value="">No team</option>
+              {teams.map((x) => (
+                <option value={x.id} key={x.id}>
+                  {x.department.name} — {x.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Job profile
+            <select className="input" name="jobProfileId" required>
+              <option value="">Select job profile</option>
+              {jobProfiles.map((x) => (
+                <option value={x.id} key={x.id}>
+                  {x.title} ({x.code})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Currency
+            <input
+              className="input"
+              name="currency"
+              defaultValue="NGN"
+              maxLength={3}
+              required
+            />
+          </label>
+          <label>
+            Band minimum
+            <input
+              className="input"
+              name="salaryBandMinimum"
+              type="number"
+              min="0"
+              step="0.01"
+            />
+          </label>
+          <label>
+            Band maximum
+            <input
+              className="input"
+              name="salaryBandMaximum"
+              type="number"
+              min="0"
+              step="0.01"
+            />
+          </label>
+          <label>
+            Description
+            <input className="input" name="description" />
+          </label>
+          <button className="btn btn-primary">Create draft</button>
+        </form>
+      </section>
+      <section className="hr-card hr-register">
+        <div className="hr-register-heading">
+          <div>
+            <h2>Positions register</h2>
+            <p>
+              Capacity, assignment history, lifecycle state, and approval
+              actions.
+            </p>
+          </div>
+          <span>{positions.length} records</span>
+        </div>
+        <div className="hr-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Team</th>
+                <th>Band</th>
+                <th>Capacity</th>
+                <th>Assignments</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {positions.map((p) => {
+                const band =
+                  p.salaryBandMinimum || p.salaryBandMaximum
+                    ? `${p.currency} ${p.salaryBandMinimum?.toString() ?? "—"} – ${p.salaryBandMaximum?.toString() ?? "—"}`
+                    : "Not set";
+                const controls = (
+                  <div className="hr-governed-controls">
+                    <h3>Position lifecycle actions</h3>
+                    {p.lifecycleStatus === "DRAFT" && (
+                      <DecisionForm
+                        action={submitPositionAction}
+                        id={p.id}
+                        label="Submit for approval"
+                      />
+                    )}
+                    {p.lifecycleStatus === "PENDING_APPROVAL" && (
+                      <>
+                        <PositionDecisionForm decision="approve" id={p.id} />
+                        <PositionDecisionForm decision="reject" id={p.id} />
+                      </>
+                    )}
+                    {p.lifecycleStatus === "APPROVED" && (
+                      <DecisionForm
+                        action={openPositionAction}
+                        id={p.id}
+                        label="Open position"
+                      />
+                    )}
+                    {!["DRAFT", "PENDING_APPROVAL", "APPROVED"].includes(
+                      p.lifecycleStatus,
+                    ) && (
+                      <p className="hr-history-note">
+                        No lifecycle action is currently available.
+                      </p>
+                    )}
+                  </div>
+                );
+                return (
+                  <tr key={p.id}>
+                    <td>
+                      <code>{p.code}</code>
+                    </td>
+                    <td>
+                      <strong>{p.title}</strong>
+                    </td>
+                    <td>{p.department.name}</td>
+                    <td>{p.team?.name ?? "—"}</td>
+                    <td>{band}</td>
+                    <td>
+                      {p.headcountLimit} / {p.fullTimeEquivalent.toString()} FTE
+                    </td>
+                    <td>{p._count.employeeAssignments}</td>
+                    <td>
+                      <span className="hr-status success">
+                        {p.lifecycleStatus.replaceAll("_", " ")}
+                      </span>
+                    </td>
+                    <td>
+                      <PositionReviewModal
+                        position={{
+                          title: p.title,
+                          code: p.code,
+                          description: p.description,
+                          status: p.lifecycleStatus,
+                          department: p.department.name,
+                          team: p.team?.name ?? "—",
+                          band,
+                          headcount: p._count.employeeAssignments,
+                          approved: p.headcountLimit,
+                          createdAt: p.createdAt.toISOString(),
+                          updatedAt: p.updatedAt.toISOString(),
+                        }}
+                        controls={controls}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {!positions.length && <p className="hr-empty">No positions yet.</p>}
+      </section>
+    </main>
+  );
+}
+function DecisionForm({
+  action,
+  id,
+  label,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  id: string;
+  label: string;
+}) {
+  return (
+    <form action={action} className="hr-inline-action">
+      <input type="hidden" name="id" value={id} />
+      <input
+        className="input"
+        name="reason"
+        placeholder={`${label} reason`}
+        required
+      />
+      <button className="btn btn-primary">{label}</button>
+    </form>
+  );
+}
