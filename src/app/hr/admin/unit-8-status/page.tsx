@@ -8,7 +8,7 @@ const items = [
   ["Staging deployment", "dep-d9v1khbm8hqs73dsrdn0"],
   ["8A–8F", "Foundation implemented; live workflow, privacy, concurrency and recovery validation in progress"],
   ["Tests", "762/762 passing across 69 files; TypeScript, ESLint, Prisma and production build pass"],
-  ["Migrations", "46 additive migrations expected; trigger-scope remediation pending staging deployment"],
+  ["Migrations", "47 additive migrations expected; table-specific trigger guard remediation pending staging deployment"],
   ["Owner decisions", "Approved defaults locked into implementation"],
   ["Defects fixed", "PostgreSQL exclusion now uses the immutable tsrange expression required by timestamp columns"],
   ["Blockers", "None; isolated paid restore target remains a later owner-approval boundary"],

@@ -55,6 +55,9 @@ describe("Unit 8 compensation integration safeguards", () => {
     const remediation = read("prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql");
     expect(remediation).toContain('OLD."status"::text <> \'DRAFT\'');
     expect(remediation).toContain("CREATE OR REPLACE FUNCTION hr_comp_protect_immutable");
+    const guarded = read("prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql");
+    expect(guarded).toContain("IF TG_TABLE_NAME = 'HrCompDecision' AND TG_OP = 'UPDATE' THEN");
+    expect(guarded).toContain("IF TG_TABLE_NAME = 'HrCompensationRecord' AND TG_OP = 'UPDATE' THEN");
   });
 
   it("guards the real staging lifecycle fixture and preserves governed provenance", () => {
