@@ -43,6 +43,8 @@ describe("Unit 8 compensation integration safeguards", () => {
   it("adds immutable publication and non-overlap database controls", () => {
     const migration = read("prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql");
     expect(migration).toContain("EXCLUDE USING gist");
+    expect(migration).toContain('tsrange("effectiveFrom", COALESCE("effectiveTo", \'infinity\'::timestamp)');
+    expect(migration).not.toContain("tstzrange(");
     expect(migration).toContain("hr_comp_protect_immutable");
     expect(migration).toContain("btree_gist");
   });

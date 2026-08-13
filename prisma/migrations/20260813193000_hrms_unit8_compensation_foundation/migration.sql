@@ -759,7 +759,7 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;
 ALTER TABLE "HrCompensationRecord" ADD CONSTRAINT "HrCompensationRecord_no_authoritative_overlap" EXCLUDE USING gist (
   "organizationId" WITH =,
   "workRelationshipId" WITH =,
-  tstzrange("effectiveFrom", COALESCE("effectiveTo", 'infinity'::timestamptz), '[)') WITH &&
+  tsrange("effectiveFrom", COALESCE("effectiveTo", 'infinity'::timestamp), '[)') WITH &&
 ) WHERE ("status" IN ('SCHEDULED', 'EFFECTIVE'));
 
 -- Published/approved financial evidence is append-only. Operational claim fields are explicitly exempted.
