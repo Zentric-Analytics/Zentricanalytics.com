@@ -12,6 +12,7 @@ describe("Unit 7 isolated restore validator", () => {
     expect(source).toContain('reference: "WFE-2026-5B0A5F70"');
     expect(source).toContain('finalizedAt: { not: null }');
     expect(source).toContain('Boolean(calibration.managerRatingItemId)');
+    expect(source).toContain('!employeeRationale.includes(calibrationRationale)');
     expect(source).toContain("migrations.length === 43");
   });
 

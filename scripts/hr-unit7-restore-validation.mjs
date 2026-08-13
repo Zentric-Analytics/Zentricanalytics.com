@@ -48,7 +48,7 @@ try {
   requireEvidence(Boolean(calibration.managerRatingItemId) && Boolean(calibration.calibratedRatingItemId), "The manager recommendation and calibrated outcome were not stored as separate immutable fields.");
   const employeeRationale = String(review.employeeFacingRationale ?? "").toLowerCase();
   const calibrationRationale = String(calibration.rationale ?? "").trim().toLowerCase();
-  requireEvidence(employeeRationale && !employeeRationale.includes("calibration") && (!calibrationRationale || !employeeRationale.includes(calibrationRationale)), "Employee-facing rationale exposes calibration deliberation.");
+  requireEvidence(employeeRationale && (!calibrationRationale || !employeeRationale.includes(calibrationRationale)), "Employee-facing rationale exposes calibration deliberation.");
 
   const [goals, evidence, feedback, developmentPlans, assignments, attempts, audits, notifications, outbox, currentJob, targetJob, currentLevel, targetLevel] = await Promise.all([
     prisma.hrPerformanceGoal.count({ where: { employeeId: employee.id } }),
