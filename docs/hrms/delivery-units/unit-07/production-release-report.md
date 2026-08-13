@@ -29,6 +29,9 @@ History was preserved with normal merge commits. No squash, rebase, force-push, 
 - Production preflight: ready.
 - Health and readiness endpoints: HTTP 200.
 - Public website, Careers, applicant tracking, and Unit 7 status routes: HTTP 200.
+- Production administrator sign-in and MFA-backed session: passed; the administrator reached the HR workspace and Unit 7 administration page.
+- Unit 7 administration page: loaded successfully and showed the completed hourly performance operational sweep (`PERFORMANCE_OPERATIONAL_SWEEP`, attempt 1).
+- Role-boundary direct requests: the administrator was denied the supervisor, employee, and auditor performance workspaces with an accessible HTTP 403 experience and no data disclosure.
 - Worker authentication: unauthenticated Unit 7 worker request rejected with HTTP 401.
 - Conservative load smoke: 50 requests, zero failures, p50 91.7 ms, p95 142.8 ms, maximum 199.3 ms.
 
@@ -47,6 +50,8 @@ Post-deployment read-only checks reported:
 - Unit 7 audit events missing correlation IDs: 0.
 
 The production database contained no Unit 7 performance goals before the release smoke, so no synthetic performance or career record was fabricated. Confidentiality, authorization, calibration separation, immutable recommendation, promotion exactly-once behavior, and Unit 4 effective-event integration remain supported by the exact deployed code and the validated staging/regression evidence.
+
+The production Unit 7 status view still describes its evidence as staging-only. This is a non-blocking presentation/documentation issue: the authenticated production administration and worker views correctly run the deployed Unit 7 implementation, while the status page is a preserved staging-evidence artifact. It must be relabelled in a future non-behavioral maintenance release.
 
 ## Recovery points
 
