@@ -5,14 +5,14 @@ const items = [
   ["Environment", "Staging validation — production untouched"],
   ["Branch", "feature/hrms-unit-08-compensation-rewards-blueprint"],
   ["HEAD SHA", head],
-  ["Staging deployment", "dep-d9v1khbm8hqs73dsrdn0"],
+  ["Staging deployment", "dep-d9v29j49v7es73b3r4pg"],
   ["8A–8F", "Foundation implemented; live workflow, privacy, concurrency and recovery validation in progress"],
-  ["Tests", "762/762 passing across 69 files; TypeScript, ESLint, Prisma and production build pass"],
-  ["Migrations", "47 additive migrations expected; table-specific trigger guard remediation pending staging deployment"],
+  ["Tests", "764/764 passing across 69 files; TypeScript, ESLint, Prisma and production build pass"],
+  ["Migrations", "47/47 applied to zentric_analytics_staging; none pending"],
   ["Owner decisions", "Approved defaults locked into implementation"],
-  ["Defects fixed", "PostgreSQL exclusion now uses the immutable tsrange expression required by timestamp columns"],
+  ["Defects fixed", "Immutable range index, exact Decimal money, scoped triggers, replay-safe decision selection, and audited dead-letter recovery"],
   ["Blockers", "None; isolated paid restore target remains a later owner-approval boundary"],
-  ["Next gate", "Legacy compensation compatibility, governed compensation lifecycle, privacy and real PostgreSQL concurrency"],
+  ["Next gate", "Worker recovery completion, pay privacy matrix, real PostgreSQL concurrency, integrity, notifications, load and encrypted recovery"],
 ] as const;
 
 export default function Unit8StatusPage() {
