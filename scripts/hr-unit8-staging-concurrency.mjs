@@ -24,6 +24,9 @@ try {
   const cycle = await prisma.hrCompCycle.findFirstOrThrow({ where: { organizationId: organization.id }, orderBy: { createdAt: "desc" } });
   const recommendation = await prisma.hrCompRecommendation.findFirstOrThrow({ where: { organizationId: organization.id }, orderBy: { createdAt: "desc" } });
   const handoff = await prisma.hrPayrollCompHandoff.findFirstOrThrow({ where: { organizationId: organization.id }, orderBy: { createdAt: "desc" } });
+  const baselineDecision = await prisma.hrCompDecision.findFirstOrThrow({ where: { organizationId: organization.id, recommendationId: { not: null } }, orderBy: { createdAt: "desc" } });
+  const baselineAward = await prisma.hrBonusAward.findFirstOrThrow({ where: { organizationId: organization.id }, orderBy: { createdAt: "desc" } });
+  const baselineBand = await prisma.hrCompBandVersion.findFirstOrThrow({ where: { organizationId: organization.id, status: "PUBLISHED" }, orderBy: { createdAt: "desc" } });
 
   const budget = await prisma.hrCompBudget.create({ data: { organizationId: organization.id, cycleId: cycle.id, scopeType: "UNIT8_CONCURRENCY", scopeId: run, currency: recommendation.currency, allocatedAmount: new Prisma.Decimal("10000"), createdById: actors[0].id } });
   async function reserve(amount, suffix) {
@@ -48,6 +51,33 @@ try {
   ]);
   if (recommendationRace.reduce((sum, item) => sum + item.count, 0) !== 1) throw new Error("Recommendation race did not produce one winner.");
   evidence.recommendation_submit_vs_withdraw = { claims: recommendationRace.map(({ count }) => count), loser: "STALE_VERSION" };
+
+  const duplicateRecommendationKey = key("duplicate-recommendation");
+  const duplicateRecommendationCorrelation = key("duplicate-recommendation-correlation");
+  const duplicateRecommendationData = { organizationId: organization.id, cyclePopulationId: recommendation.cyclePopulationId, employeeId: recommendation.employeeId, managerUserId: recommendation.managerUserId, currentRecordId: recommendation.currentRecordId, bandVersionId: recommendation.bandVersionId, policyVersionId: recommendation.policyVersionId, version: 1, status: "DRAFT", currentAmount: recommendation.currentAmount, proposedAmount: recommendation.proposedAmount, currency: recommendation.currency, rangePosition: recommendation.rangePosition, guideline: recommendation.guideline, budgetImpact: recommendation.budgetImpact, rationale: run, contentHash: key("duplicate-recommendation-hash"), idempotencyKey: duplicateRecommendationKey, correlationId: duplicateRecommendationCorrelation };
+  exactlyOne("duplicate_recommendation_submission", await Promise.allSettled([0, 1].map(() => prisma.hrCompRecommendation.create({ data: duplicateRecommendationData }))), "IDEMPOTENCY_CONFLICT");
+
+  const duplicateDecisionKey = key("duplicate-decision");
+  const duplicateDecisionCorrelation = key("duplicate-decision-correlation");
+  const duplicateDecisionData = { organizationId: organization.id, eventType: "MARKET_ADJUSTMENT", status: "PENDING", oldAmount: baselineDecision.oldAmount, newAmount: baselineDecision.newAmount, currency: baselineDecision.currency, payBasis: baselineDecision.payBasis, marketVersionId: baselineDecision.marketVersionId, bandVersionId: baselineDecision.bandVersionId, policyVersionId: baselineDecision.policyVersionId, effectiveAt: new Date(Date.now() + 86_400_000), approverUserIds: [actors[1].id], rationale: run, idempotencyKey: duplicateDecisionKey, correlationId: duplicateDecisionCorrelation };
+  exactlyOne("duplicate_final_decision", await Promise.allSettled([0, 1].map(() => prisma.hrCompDecision.create({ data: duplicateDecisionData }))), "IDEMPOTENCY_CONFLICT");
+
+  const duplicateAwardKey = key("duplicate-award");
+  const duplicateAwardCorrelation = key("duplicate-award-correlation");
+  const duplicateAwardData = { organizationId: organization.id, employeeId: baselineAward.employeeId, workRelationshipId: baselineAward.workRelationshipId, programVersionId: baselineAward.programVersionId, proposedAmount: baselineAward.proposedAmount, approvedAmount: baselineAward.approvedAmount, currency: baselineAward.currency, reason: run, effectiveAt: new Date(), status: "APPROVED", approverUserIds: [actors[1].id], idempotencyKey: duplicateAwardKey, correlationId: duplicateAwardCorrelation, approvedAt: new Date() };
+  exactlyOne("duplicate_bonus_award", await Promise.allSettled([0, 1].map(() => prisma.hrBonusAward.create({ data: duplicateAwardData }))), "IDEMPOTENCY_CONFLICT");
+
+  const exception = await prisma.hrCompException.create({ data: { organizationId: organization.id, recommendationId: optimistic.id, recommendationVersion: optimistic.version, exceptionType: "ABOVE_BAND", proposedAmount: recommendation.proposedAmount, referenceAmount: baselineBand.maximum, varianceAmount: recommendation.proposedAmount.minus(baselineBand.maximum), variancePercent: new Prisma.Decimal(0), restrictedRationale: run, requestedById: actors[0].id, correlationId: key("exception") } });
+  const exceptionClaims = await Promise.all([
+    prisma.hrCompException.updateMany({ where: { id: exception.id, status: "REQUESTED" }, data: { status: "APPROVED", decidedByIds: [actors[1].id], decisionReason: run, decidedAt: new Date() } }),
+    prisma.hrCompException.updateMany({ where: { id: exception.id, status: "REQUESTED" }, data: { status: "REJECTED", decidedByIds: [actors[1].id], decisionReason: run, decidedAt: new Date() } }),
+  ]);
+  if (exceptionClaims.reduce((sum, item) => sum + item.count, 0) !== 1) throw new Error("Exception decision race did not produce one winner.");
+  evidence.exception_approval_vs_rejection = { claims: exceptionClaims.map(({ count }) => count), loser: "ALREADY_DECIDED" };
+
+  const immutableBandEdit = await Promise.allSettled([prisma.hrCompBandVersion.update({ where: { id: baselineBand.id }, data: { maximum: baselineBand.maximum.plus(1) } })]);
+  if (immutableBandEdit[0].status !== "rejected") throw new Error("Published band version was mutable during exception handling.");
+  evidence.exception_vs_band_version_change = { bandChange: "REJECTED_IMMUTABLE", exceptionDecision: "ONE_WINNER" };
 
   const duplicateNotificationKey = `${run}:notification`;
   const notifications = await Promise.allSettled([0, 1].map(() => prisma.hrNotification.create({ data: { organizationId: organization.id, userId: actors[0].id, category: "hr-compensation", title: "Unit 8 concurrency validation", body: "Replay-safe notification evidence", idempotencyKey: duplicateNotificationKey } })));
