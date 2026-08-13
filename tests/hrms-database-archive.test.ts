@@ -39,6 +39,7 @@ describe("Render database archive policy", () => {
   it("omits unsupported version parameters when an S3-compatible provider returns none", () => {
     expect(optionalObjectVersion(undefined)).toEqual({});
     expect(optionalObjectVersion("")).toEqual({});
+    expect(optionalObjectVersion("null")).toEqual({});
     expect(optionalObjectVersion("version-1")).toEqual({ VersionId: "version-1" });
   });
 });

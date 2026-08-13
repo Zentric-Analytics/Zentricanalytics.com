@@ -9,7 +9,7 @@ export function s3CompatibleChecksumOptions(provider) {
 }
 
 export function optionalObjectVersion(versionId) {
-  return typeof versionId === "string" && versionId.length > 0 ? { VersionId: versionId } : {};
+  return typeof versionId === "string" && versionId.length > 0 && versionId !== "null" ? { VersionId: versionId } : {};
 }
 
 export function archiveTiersForDate(value) {
