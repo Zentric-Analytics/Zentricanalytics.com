@@ -83,6 +83,18 @@ describe("Unit 9 payroll domain", () => {
     expect(HR_ADMIN_WORKSPACE_ROLES).not.toContain("AUDITOR");
   });
 
+  it("routes specialized payroll roles before the generic admin dashboard", () => {
+    const home = fs.readFileSync(path.join(process.cwd(), "src/app/hr/page.tsx"), "utf8");
+    const payrollRedirect = home.indexOf('redirect("/hr/admin/payroll/unit9")');
+    const dashboardRedirect = home.indexOf('redirect("/hr/admin/dashboard")');
+
+    expect(payrollRedirect).toBeGreaterThan(-1);
+    expect(dashboardRedirect).toBeGreaterThan(payrollRedirect);
+    for (const role of ["PAYROLL_PROCESSOR", "PAYROLL_APPROVER", "PAYMENT_OPERATOR", "STATUTORY_COMPLIANCE_OPERATOR"]) {
+      expect(home).toContain(`"${role}"`);
+    }
+  });
+
   it("persists Unit 9 foundations additively with database-backed invariants", () => {
     const schema = fs.readFileSync(path.join(process.cwd(), "prisma/schema.prisma"), "utf8");
     const migrationPath = path.join(process.cwd(), "prisma/migrations/20260814110000_hrms_unit9_payroll_foundation/migration.sql");

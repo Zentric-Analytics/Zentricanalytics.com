@@ -7,6 +7,17 @@ export default async function HrHome() {
   if (auth.roles.includes("COMPENSATION_ADMIN")) redirect("/hr/admin/compensation");
   if (auth.roles.includes("BUDGET_OWNER")) redirect("/hr/admin/compensation/budgets");
   if (auth.roles.includes("PAYROLL_READER")) redirect("/hr/admin/compensation/payroll-handoffs");
+  if (auth.roles.some((role) => [
+    "PAYROLL_ADMIN",
+    "PAYROLL_PROCESSOR",
+    "PAYROLL_APPROVER",
+    "PAYROLL_COMPLIANCE_ADMIN",
+    "PAYMENT_OPERATOR",
+    "PAYMENT_APPROVER",
+    "FINANCE_READER",
+    "PAYROLL_AUDITOR",
+    "STATUTORY_COMPLIANCE_OPERATOR",
+  ].includes(role))) redirect("/hr/admin/payroll/unit9");
   if (auth.roles.some((role) => HR_ADMIN_WORKSPACE_ROLES.includes(role))) redirect("/hr/admin/dashboard");
   if (auth.roles.includes("AUDITOR")) redirect("/hr/auditor");
   if (auth.user.employee) {
