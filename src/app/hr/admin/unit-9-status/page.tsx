@@ -7,13 +7,14 @@ const items = [
   ["HEAD SHA", head],
   ["Unit 9A–9F", "IMPLEMENTED — governed inputs, calculation, reconciliation, approval, finalization, retro and YTD"],
   ["Unit 9G–9J", "IMPLEMENTED — payslips, simulated payments, accounting, statutory outputs and Regulatory Watch"],
-  ["Migrations", "54 present — Unit 9 additive migrations deploying to staging"],
-  ["Automated suite", "800 / 800 passing before staging deployment"],
+  ["Migrations", "54 applied — none pending on staging"],
+  ["Automated suite", "801 / 801 passing across 72 files"],
   ["Nigeria certification", "NOT CERTIFIED — official finalization remains fail-closed pending complete legal evidence"],
   ["Payment boundary", "Export and simulated settlement only; no real money movement"],
-  ["Current workflow", "Staging migration, health, browser, concurrency, worker, privacy, integrity and load validation"],
-  ["Defect fixed", "Removed unsupported UTF-8 BOM from the first Unit 9 PostgreSQL migration; regression guard added"],
-  ["Next release gate", "Complete all non-restore staging evidence, then create a durable encrypted archive"],
+  ["Current workflow", "Signed-in browser/privacy validation and remaining certification-independent downstream gates"],
+  ["Passed staging evidence", "Lifecycle fail-closed, PostgreSQL concurrency, integrity, Regulatory Watch and 250-operation load smoke"],
+  ["Defects fixed", "Migration BOM, resource-heavy live runner, fixture currency mismatch, and legal-rejection evidence matcher"],
+  ["Next release gate", "Complete signed-in browser evidence and every certification-independent gate; archive follows only after those pass"],
 ] as const;
 
 export default function Unit9StatusPage() {
