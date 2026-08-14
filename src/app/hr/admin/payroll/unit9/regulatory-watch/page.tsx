@@ -1,0 +1,17 @@
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { PollSourceButton } from "./poll-source-button";
+
+export const dynamic = "force-dynamic";
+
+export default async function Unit9RegulatoryWatchPage() {
+  const auth = await requirePermission("payroll.regulatory_watch.manage");
+  const [sources, changes] = await Promise.all([
+    prisma.hrPayrollRegulatorySource.findMany({ where: { organizationId: auth.user.organizationId }, orderBy: [{ jurisdictionCode: "asc" }, { authorityName: "asc" }] }),
+    prisma.hrPayrollRegulatoryChange.findMany({ where: { organizationId: auth.user.organizationId }, orderBy: { detectedAt: "desc" }, take: 50 }),
+  ]);
+  const sourceNames = new Map(sources.map((source) => [source.id, source.authorityName]));
+
+  return <main><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-sm font-semibold uppercase tracking-widest text-indigo-700">Payroll compliance</p><h1 className="mt-2 text-3xl font-bold">Regulatory Watch</h1><p className="mt-2 max-w-3xl text-slate-600">Monitor approved official sources using bounded HTTPS retrieval and immutable fingerprints. Detected changes require independent review and never activate payroll rules automatically.</p></div><Link className="rounded-xl border px-4 py-2 font-semibold" href="/hr/admin/payroll/unit9">Back to payroll</Link></div><section className="mt-8 space-y-4"><h2 className="text-xl font-bold">Approved sources</h2>{sources.map((source)=><article className="rounded-2xl border bg-white p-5" key={source.id}><div className="flex flex-wrap items-start justify-between gap-4"><div><h3 className="font-bold">{source.authorityName}</h3><p className="text-sm text-slate-600">{source.jurisdictionCode} · {source.sourceType} · {source.status}</p><p className="mt-2 break-all text-sm">Approved host: {source.approvedHost}</p><p className="text-sm">Health: {source.monitoringHealth} · Last checked: {source.lastCheckedAt?.toISOString() ?? "Never"}</p><a className="mt-2 inline-block break-all text-sm font-semibold text-indigo-700 underline" href={source.url} rel="noreferrer" target="_blank">View official source</a></div><PollSourceButton sourceId={source.id}/></div></article>)}{!sources.length&&<p className="rounded-2xl border bg-white p-5 text-slate-600">No approved regulatory sources are configured for this tenant.</p>}</section><section className="mt-8 overflow-hidden rounded-2xl border bg-white"><div className="p-5"><h2 className="text-xl font-bold">Detected change candidates</h2><p className="mt-1 text-sm text-slate-600">Candidates remain review-only until governed certification creates a separately approved jurisdiction version.</p></div><table className="w-full text-left text-sm"><thead className="bg-slate-50"><tr><th className="p-4">Source</th><th className="p-4">Detected</th><th className="p-4">Status</th><th className="p-4">Correlation</th></tr></thead><tbody>{changes.map((change)=><tr className="border-t" key={change.id}><td className="p-4">{sourceNames.get(change.regulatorySourceId) ?? "Unknown source"}</td><td className="p-4">{change.detectedAt.toISOString()}</td><td className="p-4">{change.status}</td><td className="p-4 font-mono text-xs">{change.correlationId}</td></tr>)}</tbody></table>{!changes.length&&<p className="border-t p-5 text-slate-600">No regulatory changes have been detected.</p>}</section></main>;
+}

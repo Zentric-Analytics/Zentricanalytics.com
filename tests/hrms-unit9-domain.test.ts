@@ -95,6 +95,16 @@ describe("Unit 9 payroll domain", () => {
     }
   });
 
+  it("provides a governed Regulatory Watch workspace without automatic rule activation", () => {
+    const page = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/payroll/unit9/regulatory-watch/page.tsx"), "utf8");
+    const button = fs.readFileSync(path.join(process.cwd(), "src/app/hr/admin/payroll/unit9/regulatory-watch/poll-source-button.tsx"), "utf8");
+    expect(page).toContain('requirePermission("payroll.regulatory_watch.manage")');
+    expect(page).toContain("organizationId: auth.user.organizationId");
+    expect(page).toContain("never activate payroll rules automatically");
+    expect(button).toContain("/api/hr/payroll/unit9/regulatory-sources/${sourceId}/poll");
+    expect(button).not.toContain("jurisdiction-versions");
+  });
+
   it("persists Unit 9 foundations additively with database-backed invariants", () => {
     const schema = fs.readFileSync(path.join(process.cwd(), "prisma/schema.prisma"), "utf8");
     const migrationPath = path.join(process.cwd(), "prisma/migrations/20260814110000_hrms_unit9_payroll_foundation/migration.sql");
