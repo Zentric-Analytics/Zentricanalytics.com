@@ -1,11 +1,18 @@
 import crypto from "node:crypto";
-import { Prisma, type PrismaClient } from "@prisma/client";
+import { Prisma, type HrRoleKey, type PrismaClient } from "@prisma/client";
 import { appendHrAudit } from "@/lib/hr/audit";
+import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { assertCertifiedJurisdictionPackage, payrollDigest } from "./unit9-domain";
 import { assertFinalizationReady, calculateFrozenPayroll, certifyPayrollInput, type FrozenPayrollManifest, type PayrollInputCandidate } from "./unit9-engine";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 type Actor = { organizationId: string; userId: string; role: string };
+
+async function notifyPayrollRoles(tx: Prisma.TransactionClient, input: { organizationId: string; roleKeys: HrRoleKey[]; template: "hr-payroll-review-ready" | "hr-payroll-approval-ready" | "hr-payroll-approved"; subject: string; runId: string; idempotencyStage: string }) {
+  const recipients = await tx.hrUser.findMany({ where: { organizationId: input.organizationId, status: "ACTIVE", deletedAt: null, roles: { some: { revokedAt: null, role: { key: { in: input.roleKeys } } } } }, select: { id: true, email: true } });
+  for (const recipient of recipients) await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: recipient.email, template: input.template, subject: input.subject, payload: { href: `/hr/admin/payroll/unit9/${input.runId}`, payrollRunId: input.runId }, idempotencyKey: `unit9:${input.idempotencyStage}:${input.runId}:${recipient.id}` });
+  return recipients.length;
+}
 
 export async function listUnit9Runs(db: Db, actor: Actor) {
   return db.hrPayrollAuthoritativeRun.findMany({ where: { organizationId: actor.organizationId }, orderBy: { createdAt: "desc" }, take: 100 });
@@ -121,6 +128,8 @@ export async function calculateUnit9Run(db: PrismaClient, actor: Actor, runId: s
       const outputHash = payrollDigest(computed.map(({ snapshot, value }) => ({ employeeId: snapshot.employeeId, outputHash: value.hash })));
       await tx.hrPayrollCalculationAttempt.update({ where: { id: attempt.id }, data: { status: "COMPLETED", completedAt: new Date(), outputHash } });
       await tx.hrPayrollAuthoritativeRun.update({ where: { id: run.id }, data: { status: "RECONCILED", reconciledById: actor.userId } });
+      await notifyPayrollRoles(tx, { organizationId: actor.organizationId, roleKeys: ["PAYROLL_ADMIN", "PAYROLL_PROCESSOR"], template: "hr-payroll-review-ready", subject: "Payroll ready for review", runId: run.id, idempotencyStage: `review-ready:${attempt.id}` });
+      await notifyPayrollRoles(tx, { organizationId: actor.organizationId, roleKeys: ["PAYROLL_APPROVER"], template: "hr-payroll-approval-ready", subject: "Payroll ready for approval", runId: run.id, idempotencyStage: `approval-ready:${attempt.id}` });
       await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollCalculationAttempt", entityId: attempt.id, action: "unit9.calculation.completed", reason: input.reason, newValues: { population: computed.length, outputHash }, correlationId: attempt.correlationId });
       return { attemptId: attempt.id, population: computed.length, outputHash, idempotent: false };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
@@ -141,6 +150,7 @@ export async function decideUnit9Run(db: PrismaClient, actor: Actor, runId: stri
     const inputHash = payrollDigest(await tx.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, authoritativeAt: { not: null } }, select: { employeeId: true, outputHash: true }, orderBy: { employeeId: "asc" } }));
     const approval = await tx.hrPayrollRunApproval.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, actorUserId: actor.userId, actorRole: actor.role, decision: input.decision, reason: input.reason, inputHash, correlationId: crypto.randomUUID() } });
     await tx.hrPayrollAuthoritativeRun.update({ where: { id: run.id }, data: input.decision === "APPROVED" ? { status: "APPROVED", approvedAt: new Date(), approvedById: actor.userId } : { status: "BLOCKED" } });
+    if (input.decision === "APPROVED") await notifyPayrollRoles(tx, { organizationId: actor.organizationId, roleKeys: ["PAYROLL_ADMIN", "PAYROLL_PROCESSOR"], template: "hr-payroll-approved", subject: "Payroll run approved", runId: run.id, idempotencyStage: `approved:${approval.id}` });
     await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollRunApproval", entityId: approval.id, action: `unit9.payroll_run.${input.decision.toLowerCase()}`, reason: input.reason, correlationId: approval.correlationId });
     return approval;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });

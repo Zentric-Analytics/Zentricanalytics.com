@@ -75,6 +75,15 @@ describe("Unit 9 governed mutating workflows", () => {
     expect(paymentRoute).toContain('"payroll.payment.submit"');
   });
 
+  it("routes payroll-stage notifications to explicitly governed payroll roles with replay-safe keys", () => {
+    const service = read("src/lib/hr/payroll/unit9-service.ts");
+    expect(service).toContain('roleKeys: ["PAYROLL_APPROVER"]');
+    expect(service).toContain('template: "hr-payroll-review-ready"');
+    expect(service).toContain('template: "hr-payroll-approval-ready"');
+    expect(service).toContain('template: "hr-payroll-approved"');
+    expect(service).toContain("unit9:${input.idempotencyStage}:${input.runId}:${recipient.id}");
+  });
+
   it("ships guarded real-staging lifecycle and integrity gates", () => {
     const lifecycle = read("scripts/hr-unit9-staging-lifecycle.ts");
     const integrity = read("scripts/hr-unit9-staging-integrity.mjs");
