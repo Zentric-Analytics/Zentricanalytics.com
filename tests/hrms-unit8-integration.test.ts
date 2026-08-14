@@ -61,6 +61,9 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(migration).toContain("'BUDGET_OWNER'::\"HrRoleKey\", 'compensation.recommendation.review'");
     expect(migration).toContain("'COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.read_all'");
     expect(migration).toContain('ON CONFLICT ("roleId", "permissionId") DO NOTHING');
+    const remediation = read("prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql");
+    expect(remediation).toContain('ON CONFLICT ("organizationId", "key") DO NOTHING;\n\nWITH grants');
+    expect(remediation).toContain("'BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.read'");
   });
 
   it("registers a guarded replay-safe compensation worker", () => {
