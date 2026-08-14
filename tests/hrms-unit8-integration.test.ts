@@ -55,6 +55,14 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(read("prisma/migrations/20260813203000_hrms_unit8_manager_compensation_scope/migration.sql")).toContain("ON CONFLICT");
   });
 
+  it("aligns persisted Unit 8 role grants with canonical route permissions", () => {
+    const migration = read("prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql");
+    expect(migration).toContain("'BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.read'");
+    expect(migration).toContain("'BUDGET_OWNER'::\"HrRoleKey\", 'compensation.recommendation.review'");
+    expect(migration).toContain("'COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.read_all'");
+    expect(migration).toContain('ON CONFLICT ("roleId", "permissionId") DO NOTHING');
+  });
+
   it("registers a guarded replay-safe compensation worker", () => {
     const route = read("src/app/api/internal/hr/compensation/route.ts");
     const worker = read("src/lib/hr/compensation/worker.ts");
