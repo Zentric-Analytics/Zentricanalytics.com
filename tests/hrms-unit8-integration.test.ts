@@ -99,6 +99,8 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(validation).toContain("migrations.length === 51");
     expect(validation).toContain("privacyGrantViolations");
     expect(validation).toContain("invalidBudgetLedgers");
+    expect(validation).toContain('LEFT JOIN "HrEmployeeDocumentVersion" v');
+    expect(validation).not.toContain('LEFT JOIN "HrDocumentVersion" v');
   });
 
   it("uses an atomic budget ledger and exact decision handoff", () => {
