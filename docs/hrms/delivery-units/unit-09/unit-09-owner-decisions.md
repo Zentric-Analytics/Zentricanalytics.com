@@ -1,57 +1,38 @@
 # Unit 9 owner decisions
 
-These business/product decisions are required before Unit 9A runtime implementation. Technical implementation details not listed here remain engineering decisions.
+## Closed decisions
 
-## Decision 1 — first jurisdiction and delivery model
+These are approved and must not be asked again unless a concrete implementation conflict arises:
 
-Select the first actual payroll jurisdiction and one model: Zentric-native, external provider, or hybrid.
+1. First jurisdiction: **Nigeria**.
+2. Delivery: **hybrid**. Zentric owns canonical payroll truth/orchestration; external providers remain adapters.
+3. Initial population: **salaried and hourly employees**. Contractors are excluded from employee payroll and later connect to contractor pay/accounts payable.
+4. Regulatory updates: **automated approved-official-source monitoring, human interpretation, tested independent approval and certified effective-date activation**. No automatic rule activation.
+5. Privileged HRMS role grants/removals: **Super Admin/Owner only for now**. Role assignment does not confer payroll operational access.
 
-Trade-off:
+## Remaining decisions
 
-- Native offers control and reproducibility but requires jurisdiction-specific tax/statutory expertise, certification evidence, continuous rule maintenance and larger test burden.
-- Provider-backed reduces native legal-rule scope but creates provider dependency, contract/cost, data-transfer, callback, reconciliation and availability obligations.
-- Hybrid keeps Zentric certification/snapshot/reconciliation/payment control while delegating calculations or filing; it is flexible but operationally most complex.
+These are the genuine business/policy inputs still needed. “Can start?” means whether the identified implementation units can safely begin before the decision; no Unit 9 implementation is authorized by this document.
 
-No tax logic will be implemented before this decision. The platform will not claim global or jurisdiction certification merely because the global core exists.
+| Decision | Why owner input is required | Strongest recommended default | Trade-off | Can implementation begin first? |
+|---|---|---|---|---|
+| Initial pay frequencies | Determines pay groups, calendars, annualization, YTD and test populations. | Monthly salaried; monthly hourly initially unless operations require weekly/biweekly. | Fewer frequencies reduce first-jurisdiction complexity; hourly operations may require faster cadence. | 9A framework can start; production calendar fixtures cannot be locked. |
+| Calendar/cutoff defaults | Business processing time, approval window and intended pay date cannot be inferred from law alone. | IANA `Africa/Lagos`; documented period end, cutoff several business days before pay date, freeze after certification, distinct accounting/tax dates. | Earlier cutoff improves control but increases retro/exception volume. | Schema/state work can start; default configuration and E2E cannot finish. |
+| Off-cycle policy | Missed pay, termination, retro and urgent correction handling affects approval/payment operations. | Allow only missed-pay, legal/termination and approved material corrections; same controls as regular payroll. | More flexibility reduces employee harm but increases cost and control risk. | 9A–9E can start; 9F acceptance rules cannot finish. |
+| Initial payment execution | Requires a real business rail, provider/bank contract, security and operational ownership. | Provider-neutral simulation first, then governed bank-file pilot or one vetted API provider under separate approval. | Simulation is safest but does not move money; bank files are simpler but operational; API is automated but integration-heavy. | 9A–9G can start; 9H real submission cannot. |
+| Statutory submission/remittance scope | Direct filing/remittance creates legal/provider obligations and destination-specific formats. | Calculate, liability-ledger and approved export first; provider submission after compliance validation. | Export reduces automation but limits certification exposure. | Tax calculation and liability models can start; external 9I submission cannot. |
+| Initial deduction/election scope | Determines employee authorization, ordering, arrears and benefits boundary. | Nigeria statutory deductions plus explicitly approved voluntary fixed/percentage deductions; benefits enrollment remains external/future. | Narrow scope is controllable; broad scope improves coverage but multiplies legal/configuration tests. | Engine/framework can start; supported catalog and validation cannot finish. |
+| Payroll/payment approval thresholds | Monetary and risk limits determine who can waive HIGH findings or approve emergency/off-cycle/payment batches. | Four-eyes for every payroll and payment; additional Owner approval for HIGH findings, emergency/off-cycle and owner-set high-value thresholds. | Strong control adds operational latency. | Permission/state framework can start; policy activation cannot finish. |
+| Emergency payroll policy | Defines eligible events, evidence, timing and escalation. | No bypass: typed emergency reason, independent payroll/payment approvals, capped scope and post-event review. | Strict governance may delay urgent cases but prevents unaudited money movement. | Framework can start; emergency workflow cannot finish. |
+| Accounting destination | Chart, dimensions, legal entities and acknowledgement protocol belong to the business accounting system. | Canonical balanced journal first; select one GL adapter later. | Canonical output avoids lock-in but needs operational import. | 9I canonical model can start; posting adapter cannot. |
+| Statutory destination | Authorities/provider and submission channel determine format, identity and acknowledgement. | Canonical Nigeria statutory/remittance batches with provider/export adapter selected after official validation. | Defers automation while preserving audit/reconciliation. | Canonical model can start; live integration cannot. |
+| Nigeria proration policy | Multiple defensible day/hour denominators may exist under contract/policy. | Salaried: versioned calendar-working-day method; hourly: approved Unit 6 hours; explicit hire/separation/unpaid-leave lines. | Calendar-day methods are simpler but may not match contracts; working-day methods require calendars. | Calculation skeleton can start; certified scenarios cannot finish. |
+| Nigeria overtime/pay policy | Unit 6 provides candidates, but entitlement/rates depend on contract/policy and applicable rules. | No automatic overtime; require approved eligible time and a versioned worker/pay-group rule. | Conservative control may require more exceptions. | Ingestion can start; overtime earnings cannot be activated. |
+| Currency/payment currency | Contract, payroll, payment and accounting currency choices affect conversion and banking. | NGN payroll/payment for Nigeria; preserve contractual currency and require governed dated FX only for approved exceptions/reporting. | Single currency is safer; multi-currency serves more cases but adds FX/reconciliation risk. | Multi-currency-safe schema can start; active conversion cannot. |
+| Rounding choices allowed by policy | Legally fixed rules come from the package; permitted business choices affect line/aggregate residuals. | Use official Nigeria requirements; otherwise Decimal calculation with currency exponent and deterministic documented residual allocation. | Alternate methods can create reconciliation differences. | Framework can start; package certification cannot finish. |
+| Payment-destination verification | Fraud controls and user experience depend on selected bank/provider and operational process. | Independent verification of create/change; cooling/high-risk review near cutoff; masked display and audited reveal. | Stronger controls delay genuine changes. | Security model can start; provider-specific verification cannot. |
+| Retention schedule | Payroll, tax, remittance, payment and investigation evidence may have different legal/business periods. | Compliance-approved Nigeria schedule by record class; legal hold overrides disposal; never use one blanket duration. | Longer retention improves defense/audit but increases privacy/storage exposure. | Classification and configurable retention can start; deletion schedules cannot activate. |
 
-## Decision 2 — initial worker population
+## Implementation boundary
 
-Choose salaried employees, hourly employees, or both. Decide separately whether contractor payment orchestration is included. Recommendation: start with employees only; include hourly only if the first jurisdiction/time policies and overtime rules are ready. Never classify contractors as employees for convenience.
-
-## Decision 3 — frequencies and calendars
-
-Approve initial frequencies and business timing: period boundaries, cutoff/freeze, approval deadline, intended payment date, accounting date, timezone and off-cycle policy. These cannot be inferred safely from the current generic monthly setting.
-
-## Decision 4 — payment execution scope
-
-Choose simulation/provider-neutral, governed bank-file export, or API provider submission. Recommendation: implement provider-neutral simulation and immutable payment batches first; add one real rail only after provider selection and security/compliance review. Simulation is not real payment.
-
-## Decision 5 — statutory scope
-
-Choose calculate/export only, external provider submission, or direct filing for the first jurisdiction. Recommendation: provider/export first unless the business commits to direct-filing certification and ongoing maintenance.
-
-## Decision 6 — deductions and benefits boundary
-
-Approve initial supported deductions (for example statutory only, plus selected voluntary deductions) and identify the authoritative source for elections. Recommendation: Unit 9 owns payroll application of versioned elections; a future benefits unit owns enrollment. Do not build a hidden benefits system in payroll.
-
-## Decision 7 — approval matrix and monetary/risk thresholds
-
-Approve who may process, approve payroll, operate payments, approve payments, resolve HIGH findings, waive eligible blockers and authorize emergency/off-cycle payroll, including legal-entity scope and monetary thresholds. One actor must not control calculation through settlement.
-
-## Decision 8 — retro and emergency policy
-
-Approve when corrections go to next regular payroll versus off-cycle, treatment of negative net/arrears, prior-tax-year corrections, terminated workers and failed payments. Jurisdiction/provider rules may further restrict choices.
-
-## Decision 9 — accounting/statutory destinations
-
-Identify the initial GL/accounting consumer, chart/dimension ownership and statutory/provider destination. If none is selected, Unit 9 will produce versioned canonical outputs only and must not claim external posting/filing.
-
-## Decision 10 — jurisdiction-specific business policy
-
-After Decision 1, approve only genuinely variable policies not dictated by law/provider contract: proration convention where choices exist, payroll currency/payment currency, rounding elections where allowed, overtime/pay policy, pay destination verification, retention schedule and employee payslip delivery timing.
-
-## Recommended decision package
-
-For a startup-safe first release: one jurisdiction, salaried employees, one frequency, provider-neutral calculation orchestration with either a vetted external payroll provider or export-only statutory boundary, simulated payments followed by a governed bank-file/provider pilot, statutory deductions only, strict four-eyes payroll/payment approval, and contractors deferred. This is a recommendation, not adopted policy.
-
-Implementation must stop until the owner records these decisions. Changing them later is supported by versioned configuration, but the first jurisdiction package and validation plan depend on them.
+The global foundation and additive schemas can be designed around these choices, but Unit 9A remains unauthorized in this phase. Before official Nigeria calculation is activated, all decisions affecting package certification, calendars, deductions, proration/overtime, approval, currency and retention must be recorded. Real payment, filing/remittance and accounting adapters require their destination decisions first.

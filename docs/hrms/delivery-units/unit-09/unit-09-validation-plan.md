@@ -5,12 +5,15 @@ This is the mandatory future gate plan; no gate was executed as Unit 9 runtime v
 ## Unit and integration tests
 
 - Decimal precision for 0/2/3-decimal currencies, every rounding stage, residual allocation and FX.
-- Salary/hourly/proration, overtime candidate treatment, paid/unpaid leave, deduction ordering, ceilings and employer contributions.
+- Nigeria PAYE progressive/YTD/previous-tax/refund/retro scenarios, taxable-base membership, relief/ceiling boundaries, annualization and explanation traces against approved reference examples.
+- Salaried/hourly/proration, overtime candidate treatment, paid/unpaid leave, deduction ordering, ceilings, arrears and employer contributions that never reduce net pay.
 - Package/definition effective dating, dependency-cycle rejection, deterministic traces and hash reproduction.
 - Every legal/illegal state transition, maker/checker rule, risk severity and reconciliation identity.
 - Unit 4/5/6/8 exact-version ingestion, duplicate handoff, cutoff, freeze, late event and retro delta.
 - Simulation cannot finalize/pay; finalized results cannot mutate; corrections append deltas.
 - Payment/provider/accounting/statutory canonical contracts and duplicate callbacks.
+- Payslips only from FINALIZED results, immutable versions/corrections, YTD lineage, secure issuance and portal availability independent of email outcome.
+- Regulatory Watch source allowlist, fingerprints, changed-document candidate, degraded/stale health, human certification and fail-closed missing package coverage.
 
 ## Privacy and authorization
 
@@ -18,7 +21,7 @@ Signed-in browser and direct-route/direct-ID tests for employee, manager, HR, pa
 
 ## Full staging lifecycle
 
-`active worker → assignment/legal entity → pay group/calendar → Unit 8 compensation → Unit 6 locked time if required → Unit 5 leave if applicable → certification → frozen snapshot → simulation → exception/risk review → calculation → employee/run reconciliation → independent approval → immutable finalization → payslip → payment batch → independent payment approval → simulated/provider settlement → accounting/statutory batches → reconciliation`
+`Nigeria salaried/hourly worker → assignment/legal entity → pay group/calendar → Unit 8 compensation → Unit 6 locked time/overtime candidate where applicable → Unit 5 leave → certification → frozen snapshot → certified Nigeria package → earnings/taxable base/PAYE/deductions/employer contributions → simulation → exception/risk review → calculation → employee/run reconciliation → independent approval → immutable finalization → secure payslip publication → payment batch → independent payment approval → simulated/provider settlement → accounting/liability/remittance/statutory batches → reconciliation`
 
 Then apply a retroactive Unit 8 correction and prove trigger, affected-period analysis, delta, approval, next/off-cycle run, accumulator/YTD update and downstream correction lineage without changing the original.
 
@@ -28,7 +31,7 @@ Execute every race in `unit-09-concurrency-idempotency.md` against real PostgreS
 
 ## Integrity and reconciliation
 
-Queries must prove zero duplicate finalizations, result lines by idempotency, payment instructions, provider events and accumulator entries; zero orphan input facts/results/retro impacts/payments/batches; no overlapping active configuration/pay-group assignment; employee/run/settlement/accounting/statutory totals exactly reconcile; all audit correlations exist.
+Queries must prove zero duplicate finalizations, result/tax/deduction/contribution lines by idempotency, payslip versions/issuance, liability/remittance lines, payment instructions, provider events and accumulator entries; zero orphan input facts/results/retro impacts/payments/batches; no overlapping active configuration/pay-group assignment; employee/run/settlement/accounting/statutory/remittance totals exactly reconcile; all audit correlations exist.
 
 ## Load
 

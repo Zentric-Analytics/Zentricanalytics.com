@@ -30,11 +30,11 @@ The snapshot hash is computed from stable sorted canonical serialization, never 
 
 The attempt manifest includes run/attempt/snapshot IDs, engine build SHA, jurisdiction and rule-package hashes, earning/deduction/tax definition versions, provider adapter version, rounding/FX context, ordered input hashes, calculation timestamp, output hash and trace hash. It contains no secret.
 
-Each result line records rule, dependencies, basis, rate/threshold/ceiling reference, unrounded amount, rounded amount, currency and source facts. An authorized user can reconstruct base, overtime, bonus, gross, each tax/deduction/contribution and net without seeing restricted provider or employee secrets.
+Each result line records rule, dependencies, taxable-base membership where applicable, basis, rate/threshold/ceiling reference, unrounded amount, rounded amount, currency and source facts. An authorized user can reconstruct base, overtime, bonus, gross, taxable earnings, PAYE, each deduction/contribution and net without seeing restricted provider or employee secrets.
 
 ## Rule engine
 
-Adopt a hybrid model: vetted code-defined jurisdiction packages plus a typed declarative graph for definitions/mappings. The graph is schema-validated, acyclic, bounded, deterministic and effective-dated. No dynamic code evaluation, SQL formulas, network requests, current-clock dependency or nondeterministic iteration is permitted inside calculation.
+Adopt a hybrid model: vetted code-defined Nigeria and future jurisdiction packages plus a typed declarative graph for definitions/mappings. The graph is schema-validated, acyclic, bounded, deterministic and effective-dated. No dynamic code evaluation, SQL formulas, network requests, current-clock dependency or nondeterministic iteration is permitted inside calculation. Nigeria PAYE uses certified package/YTD context; a successful source poll or AI output is never a calculation input by itself.
 
 ## Proration and FX
 

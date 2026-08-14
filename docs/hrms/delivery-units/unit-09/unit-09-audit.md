@@ -70,3 +70,7 @@ The contract is a good authoritative event envelope but is not a complete payrol
 ## Audit conclusion
 
 Unit 9 must be an additive bounded context. Preserve legacy payroll as read-only compatibility history during migration, dual-reconcile it against Unit 9, prohibit dual authority, and retire legacy write paths only after exact parity/cutover evidence. No legacy table is deleted in the initial Unit 9 migrations.
+
+## Owner-locked blueprint direction
+
+The post-audit amendment selects Nigeria as the first package, hybrid delivery, salaried plus hourly employees, contractors outside employee payroll, governed official-source Regulatory Watch and Super Admin/Owner-only privileged role assignment. These choices do not alter the repository facts above and create no runtime change; they narrow the implementation blueprint and certification plan.

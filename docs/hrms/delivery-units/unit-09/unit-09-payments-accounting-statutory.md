@@ -30,6 +30,8 @@ Unit 9 does not become the general ledger. It emits a canonical balanced journal
 
 Jurisdiction packages define tax-period outputs, required identifiers, employee/employer liabilities, filing schema/version and due dates. `HrPayrollStatutoryBatch` captures exact finalized results, package version, totals, file/payload hash, submission/reference and acceptance/rejection lineage. Unit 9 does not claim direct filing support until an adapter/jurisdiction reaches ACTIVE with evidence.
 
+Nigeria PAYE and other approved statutory deductions post separate append-only liability entries at payroll finalization. A governed remittance batch selects exact liabilities, reconciles deducted/employer amounts, requires independent approval, records submission/payment and authority/provider acknowledgement, and proves final reconciliation. It must answer how much was deducted, from whom, for which period/rule version, which batch included it, whether it was remitted and under which external reference. Calculation alone never means remittance.
+
 ## Reimbursements, benefits, contractors and equity
 
 - Future approved reimbursements may be non-earning payment lines with explicit tax treatment; Unit 9 does not implement expense management.

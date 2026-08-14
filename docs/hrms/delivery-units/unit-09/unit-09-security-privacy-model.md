@@ -19,6 +19,12 @@ Payroll data is restricted financial and identity data. Authorization is permiss
 
 `ADMIN`, `HR_ADMIN`, `COMPENSATION_ADMIN`, and the current `PAYROLL_ADMIN` do not automatically receive the new end-to-end role set. The legacy role is migrated into scoped bundles and cannot satisfy maker/checker by itself.
 
+## Privileged role assignment
+
+The approved present authority is Super Admin/Owner only. Payroll/HR/general administrators, payroll/payment approvers and operators cannot grant, remove or self-elevate Unit 9 roles. Every grant/revocation records tenant, actor, target, previous/new state, reason, effective date, optional expiry, timestamp and correlation in immutable audit. Temporary privileged grants expire automatically where the existing authorization model supports it.
+
+Role-assignment authority is not payroll authority. Super Admin/Owner does not automatically see payroll data, finalize payroll or approve/release payments; explicit scoped Unit 9 roles remain required. A future break-glass design is separately governed and is not implied here.
+
 ## Sensitive data controls
 
 - Bank/tax/statutory identifiers are envelope-encrypted or provider-tokenized; display last four only by default.

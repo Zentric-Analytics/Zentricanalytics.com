@@ -26,6 +26,9 @@ Critical correctness uses PostgreSQL constraints/transactions, not in-memory loc
 | payment approval versus destination change | stale destination/batch rejected; no submission |
 | settlement versus return | ordered append-only entries and deterministic terminal/partial state |
 | accounting/statutory export retry | one logical batch/version and one acknowledgement outcome |
+| remittance batch selection race | each liability selected at most once; loser conflict/idempotent result |
+| payslip publication versus correction | exact finalized result/version published; correction creates lineage, never overwrites |
+| regulatory activation versus payroll freeze | run binds exactly one certified effective package; stale activation loses safely |
 
 For every race verify one authoritative result, correct loser, no duplicate ledger/audit/notification/provider record, no orphan, complete correlation and replay-safe retry.
 

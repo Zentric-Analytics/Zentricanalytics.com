@@ -14,6 +14,15 @@ All records are tenant-scoped. Financial source/content fields become immutable 
 | `HrPayrollEarningDefinitionVersion` | Typed earning behavior, taxable-base memberships and accounting mapping. |
 | `HrPayrollDeductionDefinitionVersion` | Employee/employer side, priority, pre/post-tax behavior, ceilings, arrears and mapping. |
 | `HrPayrollRulePackageVersion` | Signed content hash, engine compatibility, dependency graph and activation evidence. |
+| `HrRegulatoryAuthority` / `Source` | Approved Nigeria authority and canonical monitored source; arbitrary web sources prohibited. |
+| `HrRegulatoryPublication` / `ChangeCandidate` | Fingerprinted publication metadata and governed possible-impact workflow. |
+| `HrJurisdictionCertificationEvidence` | Immutable tests, source references, reviewers, approval and hashes supporting package certification. |
+| `HrPayrollEmployeeTaxProfileVersion` | Effective Nigeria tax profile and encrypted statutory identifiers for one work relationship. |
+| `HrPayrollTaxableBaseDefinitionVersion` | Versioned membership/exemption/relief/ceiling behavior; replaces universal taxable boolean. |
+| `HrPayrollTaxRuleVersion` | Certified PAYE/YTD/rounding/explanation graph tied to a Nigeria package version. |
+| `HrPayrollDeductionDefinitionVersion` | Statutory/voluntary/recovery category, ordering, basis, limits, arrears, tax/YTD treatment. |
+| `HrPayrollDeductionElectionVersion` | Effective employee authorization/source for applicable deductions; no hidden benefits authority. |
+| `HrPayrollEmployerContributionDefinitionVersion` | Separate employer-cost/liability rule that cannot reduce net pay. |
 
 ## Inputs and calculation
 
@@ -27,7 +36,7 @@ All records are tenant-scoped. Financial source/content fields become immutable 
 | `HrPayrollCalculationAttempt` | Immutable numbered attempt over one frozen snapshot set; exactly one may be selected for finalization. |
 | `HrPayrollCalculationManifest` | Engine/package/rule/provider/rounding/FX versions, ordered source hashes, input/output hash and explanation trace hash. |
 | `HrPayrollEmployeeResult` | Worker-level totals and status for an attempt; unique attempt/work relationship. |
-| `HrPayrollResultLine` | Typed EARNING, DEDUCTION, EMPLOYEE_TAX, EMPLOYER_TAX, EMPLOYER_CONTRIBUTION, REIMBURSEMENT or ADJUSTMENT line with definition/rule/source refs and Decimal amount. |
+| `HrPayrollResultLine` | Typed EARNING, DEDUCTION, EMPLOYEE_TAX, EMPLOYER_TAX, EMPLOYER_CONTRIBUTION, REIMBURSEMENT or ADJUSTMENT line with definition/rule/source refs and Decimal amount. Tax/deduction lines point to exact taxable base, profile/election and package versions. |
 | `HrPayrollAccumulatorEntry` | Append-only YTD/lifetime/tax-period ledger entry derived from a finalization or correction; never a mutable balance. |
 
 ## Governance and outputs
@@ -39,7 +48,8 @@ All records are tenant-scoped. Financial source/content fields become immutable 
 | `HrPayrollApproval` | Transition evidence and maker/checker identity; append-only. |
 | `HrPayrollFinalization` | Selects one attempt, manifest and result set; unique per official run and immutable. |
 | `HrPayrollAdjustment` | Explicit reasoned line/correction authority; never overwrites a computed line. |
-| `HrPayrollPayslip` | Metadata linking exact finalization/result to private immutable document version and checksum. |
+| `HrPayrollPayslip` / `Version` | Stable official result identity plus immutable rendered document/YTD version, publication status, checksum and supersession/correction lineage. |
+| `HrPayrollPayslipIssuance` | Append-only secure publication, notification and employee-access evidence; email outcome is not payslip authority. |
 | `HrPayrollPaymentBatch` | Stable settlement-currency/grouped batch for one or more finalized results. |
 | `HrPayrollPaymentInstruction` | One logical employee/payment destination instruction; unique final result + destination/version + purpose. |
 | `HrPayrollPaymentApproval` | Independent payment authority; append-only. |
@@ -48,6 +58,8 @@ All records are tenant-scoped. Financial source/content fields become immutable 
 | `HrPayrollSettlementEntry` | Append-only submitted/settled/rejected/returned/reversed movement ledger. |
 | `HrPayrollAccountingBatch` / `Line` | Balanced canonical debit/credit output tied to finalization and mapping version. |
 | `HrPayrollStatutoryBatch` / `Line` | Jurisdiction/package/tax-period output and filing/provider state. |
+| `HrPayrollTaxLiabilityEntry` | Append-only employee/employer statutory liability from exact finalized result/rule version. |
+| `HrPayrollRemittanceBatch` / `Line` | Exact liability selection, approval, external reference/acknowledgement and reconciliation. |
 | `HrPayrollRetroTrigger` / `Impact` | Immutable late source event, affected periods/results and disposition. |
 
 ## Database-enforced invariants
@@ -56,10 +68,14 @@ All records are tenant-scoped. Financial source/content fields become immutable 
 - no overlapping active pay-group assignments or effective configuration versions;
 - exactly one official run per pay group/period/type and one authoritative finalization per run;
 - one employee result per attempt/work relationship and one payment instruction per finalized result/purpose;
+- one published current payslip version per finalized result while retaining all predecessors; issuance unique by version/channel/idempotency key;
 - exactly one consumed Unit 8 handoff version; duplicate provider event forbidden;
+- one liability consumption per remittance batch line and no liability remitted twice without explicit reversal/replacement lineage;
 - Decimal precision/check constraints, currency-code and non-negative/allowed-negative-by-type checks;
 - output hashes and immutable triggers for snapshots, manifests, results, finalizations, approvals, ledgers and submitted batches;
 - balanced journal constraint checked at batch finalization;
 - all direct subject references include tenant validation in commands; compound tenant keys where practical.
 
 Use separate stable identities and immutable versions rather than proliferating mutable JSON. JSON is acceptable only for canonical typed facts/traces validated against a schema version and hashed.
+
+Nigeria-specific domain details are centralized in `unit-09-nigeria-tax-regulatory.md`; payslip versioning and publication are in `unit-09-payslips.md`.

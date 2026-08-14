@@ -10,6 +10,13 @@ Transitions occur through commands that validate tenant, role, current version, 
 - CERTIFIED requires signed test evidence but is not selectable until activation.
 - SUSPENDED blocks new runs immediately while preserving historical reproducibility.
 - RETIRED is terminal for new work; historical package artifacts remain resolvable.
+- Nigeria payroll cannot finalize when no certified version covers the payroll date. Regulatory Watch degradation alone does not invalidate a still-covered package; unresolved change severity/effective-date exposure determines a governed block.
+
+## Regulatory change
+
+`DETECTED → REVIEW_REQUIRED → INTERPRETED → RULE_DRAFTED → TESTING → APPROVAL_REQUIRED → CERTIFIED → SCHEDULED → ACTIVE → SUPERSEDED → RETIRED`
+
+Monitoring/scraping creates candidates only. Human interpretation and independent certification approval are mandatory. AI cannot activate a state. Activation verifies effective-date coverage, official-source references, complete deterministic test evidence and predecessor/successor lineage.
 
 ## Payroll run
 
@@ -45,6 +52,8 @@ Payroll approval cannot satisfy payment approval. Submission requires an approve
 `DRAFT → VALIDATED → APPROVED → EXPORTED|SUBMITTED → ACCEPTED|PARTIALLY_ACCEPTED|REJECTED → RECONCILED`
 
 Provider callbacks cannot skip validation or approval. Rejected outputs produce a correction batch linked to the original.
+
+Tax/statutory liability entries progress into remittance through `OPEN → SELECTED → BATCH_APPROVAL_REQUIRED → APPROVED → SUBMITTED|PAID → ACKNOWLEDGED → RECONCILED`, with rejected/returned/corrected lineage. Selection and acknowledgement never rewrite the originating payroll result.
 
 ## Retro trigger
 
