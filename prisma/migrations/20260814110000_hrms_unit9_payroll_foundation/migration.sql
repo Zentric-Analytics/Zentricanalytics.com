@@ -462,4 +462,3 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER "HrPayrollAuthoritativeResult_finalized_immutable"
   BEFORE UPDATE OR DELETE ON "HrPayrollAuthoritativeResult"
   FOR EACH ROW EXECUTE FUNCTION "hr_unit9_finalized_result_immutable"();
-
