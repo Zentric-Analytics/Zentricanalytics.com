@@ -79,6 +79,8 @@ describe("Unit 9 governed mutating workflows", () => {
     const lifecycle = read("scripts/hr-unit9-staging-lifecycle.ts");
     const integrity = read("scripts/hr-unit9-staging-integrity.mjs");
     const concurrency = read("scripts/hr-unit9-staging-concurrency.ts");
+    const regulatory = read("scripts/hr-unit9-staging-regulatory-watch.ts");
+    const load = read("scripts/hr-unit9-staging-load.ts");
     expect(lifecycle).toContain('HR_UNIT9_STAGING_LIFECYCLE_CONFIRM !== "staging-only"');
     expect(lifecycle).toContain('finalization: "REJECTED_NOT_CERTIFIED"');
     expect(lifecycle).toContain("no certified .* jurisdiction package");
@@ -90,5 +92,11 @@ describe("Unit 9 governed mutating workflows", () => {
     expect(concurrency).toContain('HR_UNIT9_STAGING_CONCURRENCY_CONFIRM === "staging-only"');
     expect(concurrency).toContain("decisionRaceWinners: 1");
     expect(read("package.json")).toContain("scripts/hr-unit9-staging-concurrency.ts");
+    expect(regulatory).toContain('HR_UNIT9_STAGING_REGULATORY_CONFIRM !== "staging-only"');
+    expect(regulatory).toContain('candidate.status === "REVIEW_REQUIRED"');
+    expect(regulatory).toContain("changeCandidates: 1");
+    expect(load).toContain('HR_UNIT9_STAGING_LOAD_CONFIRM !== "staging-only"');
+    expect(load).toContain("requestCount = 250");
+    expect(load).toContain("concurrency = 10");
   });
 });
