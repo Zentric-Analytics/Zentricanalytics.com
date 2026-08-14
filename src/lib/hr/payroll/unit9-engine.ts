@@ -48,6 +48,62 @@ export function calculateEarnings(inputs: EarningInput[]) {
   });
 }
 
+export type DeductionInput = {
+  code: string; sourceId: string; definitionVersion: string; basis: Unit9Money;
+  method: "FIXED" | "PERCENTAGE"; value: Unit9Money; cap?: Unit9Money; floor?: Unit9Money;
+  taxableBaseCode?: string; explanation?: string;
+};
+
+export function calculateDeductions(inputs: DeductionInput[]) {
+  return inputs.map((input, sequence) => {
+    let amount = input.method === "FIXED" ? payrollMoney(input.value) : payrollMoney(input.basis).mul(payrollMoney(input.value)).div(100);
+    if (input.cap !== undefined) amount = Prisma.Decimal.min(amount, payrollMoney(input.cap));
+    if (input.floor !== undefined) amount = Prisma.Decimal.max(amount, payrollMoney(input.floor));
+    if (amount.isNegative()) throw new Error(`Deduction ${input.code} cannot be negative.`);
+    return { ...input, sequence, amount: roundPayroll(amount), explanation: { method: input.method, basis: payrollMoney(input.basis).toFixed(4), value: payrollMoney(input.value).toFixed(4), sourceId: input.sourceId, note: input.explanation ?? null } };
+  });
+}
+
+export type ContributionInput = Omit<DeductionInput, "taxableBaseCode"> & { liabilityCategory: string };
+export function calculateEmployerContributions(inputs: ContributionInput[]) {
+  return calculateDeductions(inputs).map((line) => ({ ...line, liabilityCategory: inputs[line.sequence].liabilityCategory }));
+}
+
+export type FrozenPayrollManifest = {
+  currency: string; jurisdictionVersion: string; engineVersion: string;
+  earnings: EarningInput[]; deductions?: DeductionInput[]; employerContributions?: ContributionInput[];
+  adjustments?: Array<{ code: string; amount: Unit9Money; sourceId: string; ruleVersionReference: string; approvedById: string; createdById: string; reason: string }>;
+  paye: { priorYtdTaxableIncome: Unit9Money; priorYtdPaye: Unit9Money; rules: ProgressiveTaxRules };
+  riskContext?: { previousGross?: Unit9Money; separated?: boolean; hourly?: boolean; lockedTimePresent?: boolean; destinationChangedNearCutoff?: boolean };
+};
+
+export function calculateFrozenPayroll(manifest: FrozenPayrollManifest, snapshotHash: string) {
+  const earnings = calculateEarnings(manifest.earnings);
+  const gross = earnings.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
+  const deductions = calculateDeductions(manifest.deductions ?? []);
+  const contributions = calculateEmployerContributions(manifest.employerContributions ?? []);
+  const adjustments = (manifest.adjustments ?? []).map((line, sequence) => {
+    if (!line.reason.trim() || line.createdById === line.approvedById) throw new Error(`Adjustment ${line.code} requires a reason and independent approval.`);
+    return { ...line, sequence, amount: roundPayroll(line.amount) };
+  });
+  const taxableIncome = earnings.filter((line) => Boolean(line.taxableBaseCode)).reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
+  const paye = calculateProgressivePaye({ periodTaxableIncome: taxableIncome, priorYtdTaxableIncome: manifest.paye.priorYtdTaxableIncome, priorYtdPaye: manifest.paye.priorYtdPaye, rules: manifest.paye.rules });
+  const lines: PayrollLine[] = [
+    ...earnings.map((line) => ({ code: line.code, category: "EARNING" as const, amount: line.amount })),
+    { code: "PAYE_BASE", category: "TAXABLE_BASE" as const, amount: taxableIncome },
+    { code: "PAYE", category: "PAYE" as const, amount: paye.currentPaye },
+    ...deductions.map((line) => ({ code: line.code, category: "EMPLOYEE_DEDUCTION" as const, amount: line.amount })),
+    ...contributions.map((line) => ({ code: line.code, category: "EMPLOYER_CONTRIBUTION" as const, amount: line.amount })),
+    ...adjustments.map((line) => ({ code: line.code, category: "ADJUSTMENT" as const, amount: line.amount })),
+  ];
+  const calculated = calculationManifest({ snapshotHash, jurisdictionVersion: manifest.jurisdictionVersion, engineVersion: manifest.engineVersion, sources: { earnings: manifest.earnings.map((line) => line.sourceId), deductions: (manifest.deductions ?? []).map((line) => line.sourceId), contributions: (manifest.employerContributions ?? []).map((line) => line.sourceId) }, ruleVersions: [manifest.paye.rules.version, ...manifest.earnings.map((line) => line.ruleVersionReference), ...(manifest.deductions ?? []).map((line) => line.definitionVersion), ...(manifest.employerContributions ?? []).map((line) => line.definitionVersion)], lines });
+  const employeeDeductions = deductions.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
+  const employerContributions = contributions.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
+  const adjustmentTotal = adjustments.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
+  const risks = payrollRisk({ gross, net: calculated.output.net, paye: paye.currentPaye, manualAdjustment: adjustmentTotal, ...manifest.riskContext });
+  return { ...calculated, gross: roundPayroll(gross), taxableIncome: roundPayroll(taxableIncome), paye, employeeDeductions: roundPayroll(employeeDeductions), employerContributions: roundPayroll(employerContributions), adjustments: roundPayroll(adjustmentTotal), earnings, deductions, contributions, adjustmentLines: adjustments, risks };
+}
+
 export type TaxBand = { lowerExclusive: Unit9Money; upperInclusive?: Unit9Money | null; ratePercent: Unit9Money };
 export type ProgressiveTaxRules = { version: string; annualizationPeriods: number; bands: TaxBand[]; roundingScale: number };
 

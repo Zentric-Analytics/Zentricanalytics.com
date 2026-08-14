@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertFinalizationReady, assertPaymentTransition, calculateEarnings, calculateProgressivePaye, calculationManifest, certifyPayrollInput, lateInputTreatment, payrollAccess, payrollRisk, reconcileJournal, retroDelta } from "../src/lib/hr/payroll/unit9-engine";
+import { assertFinalizationReady, assertPaymentTransition, calculateDeductions, calculateEarnings, calculateEmployerContributions, calculateFrozenPayroll, calculateProgressivePaye, calculationManifest, certifyPayrollInput, lateInputTreatment, payrollAccess, payrollRisk, reconcileJournal, retroDelta } from "../src/lib/hr/payroll/unit9-engine";
 
 describe("Unit 9 payroll engine", () => {
   const eligible = { employeeId: "e1", personId: "p1", workRelationshipId: "w1", assignmentId: "a1", employmentStatus: "ACTIVE", legalEntityId: "l1", jurisdictionCode: "NG", payGroupId: "pg1", workerType: "SALARIED" as const, compensationHandoffId: "c1", compensationCurrency: "NGN", payrollCurrency: "NGN", taxProfileVersionId: "t1", paymentDestinationVersionId: "d1" };
@@ -24,6 +24,26 @@ describe("Unit 9 payroll engine", () => {
     const result = calculateProgressivePaye({ periodTaxableIncome: "2000", priorYtdTaxableIncome: "0", priorYtdPaye: "0", rules: { version: "TEST-ONLY", annualizationPeriods: 12, roundingScale: 2, bands: [{ lowerExclusive: "0", upperInclusive: "1000", ratePercent: "10" }, { lowerExclusive: "1000", upperInclusive: null, ratePercent: "20" }] } });
     expect(result.currentPaye.toFixed(2)).toBe("300.00");
     expect(result.trace).toHaveLength(2);
+  });
+
+  it("calculates governed deductions and keeps employer contributions outside net pay", () => {
+    expect(calculateDeductions([{ code: "RECOVERY", sourceId: "election-v1", definitionVersion: "d1", basis: "1000", method: "PERCENTAGE", value: "5", cap: "40" }])[0].amount.toFixed(2)).toBe("40.00");
+    expect(calculateEmployerContributions([{ code: "EMPLOYER", sourceId: "policy-v1", definitionVersion: "c1", basis: "1000", method: "PERCENTAGE", value: "10", liabilityCategory: "EMPLOYER_STATUTORY" }])[0].amount.toFixed(2)).toBe("100.00");
+    const calculated = calculateFrozenPayroll({
+      currency: "NGN", jurisdictionVersion: "TEST-NOT-CERTIFIED", engineVersion: "unit9-1",
+      earnings: [{ code: "BASE", sourceType: "UNIT8", sourceId: "handoff-v1", fixedAmount: "1000", taxableBaseCode: "PAYE", ruleVersionReference: "earning-v1" }],
+      deductions: [{ code: "AUTHORIZED", sourceId: "election-v1", definitionVersion: "deduction-v1", basis: "1000", method: "FIXED", value: "50" }],
+      employerContributions: [{ code: "EMPLOYER", sourceId: "policy-v1", definitionVersion: "contribution-v1", basis: "1000", method: "PERCENTAGE", value: "10", liabilityCategory: "EMPLOYER_STATUTORY" }],
+      paye: { priorYtdTaxableIncome: "0", priorYtdPaye: "0", rules: { version: "TEST-ONLY", annualizationPeriods: 12, roundingScale: 2, bands: [{ lowerExclusive: "0", upperInclusive: null, ratePercent: "10" }] } },
+    }, "snapshot-hash");
+    expect(calculated.output.net.toFixed(2)).toBe("850.00");
+    expect(calculated.employerContributions.toFixed(2)).toBe("100.00");
+    expect(calculated.paye.trace[0]).toMatchObject({ taxable: "1000.0000", ratePercent: "10.0000" });
+  });
+
+  it("requires independent approval for manual adjustments", () => {
+    const base = { currency: "NGN", jurisdictionVersion: "TEST", engineVersion: "unit9-1", earnings: [], paye: { priorYtdTaxableIncome: "0", priorYtdPaye: "0", rules: { version: "TEST", annualizationPeriods: 12, roundingScale: 2, bands: [{ lowerExclusive: "0", upperInclusive: null, ratePercent: "0" }] } } };
+    expect(() => calculateFrozenPayroll({ ...base, adjustments: [{ code: "MANUAL", amount: "1", sourceId: "a1", ruleVersionReference: "adjust-v1", reason: "Correction", createdById: "u1", approvedById: "u1" }] }, "hash")).toThrow("independent approval");
   });
 
   it("produces stable calculation manifests and reconciles gross to net", () => {

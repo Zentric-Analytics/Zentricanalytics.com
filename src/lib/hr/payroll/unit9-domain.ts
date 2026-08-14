@@ -53,7 +53,7 @@ export function assertCertifiedJurisdictionPackage(packages: CertifiedPackage[],
 
 export type PayrollLine = {
   code: string;
-  category: "EARNING" | "PAYE" | "EMPLOYEE_DEDUCTION" | "EMPLOYER_CONTRIBUTION" | "ADJUSTMENT";
+  category: "EARNING" | "TAXABLE_BASE" | "PAYE" | "EMPLOYEE_DEDUCTION" | "EMPLOYER_CONTRIBUTION" | "ADJUSTMENT";
   amount: Unit9Money;
 };
 
@@ -115,4 +115,11 @@ export function assertRegulatorySourceUrl(raw: string, approvedHosts: readonly s
   if (!approvedHosts.includes(url.hostname.toLowerCase())) throw new Error("Regulatory source host is not approved.");
   if (["localhost", "127.0.0.1", "::1"].includes(url.hostname.toLowerCase())) throw new Error("Internal regulatory source addresses are forbidden.");
   return url.toString();
+}
+
+export function assertSafeRegulatoryWatchUrl(raw: string, approvedHost: string) {
+  const url = new URL(assertRegulatorySourceUrl(raw, [approvedHost.toLowerCase()]));
+  const host = url.hostname.toLowerCase();
+  if (host.endsWith(".local") || /^10\./.test(host) || /^192\.168\./.test(host) || /^169\.254\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host)) throw new Error("Regulatory source resolves to a forbidden private target.");
+  return url;
 }

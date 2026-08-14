@@ -4205,7 +4205,7 @@ model HrRecruitmentOfferVersion {
   contractType     String
   expiresAt        DateTime
   terms            Json
-  createdById      String
+  createdById      String?
   createdAt        DateTime            @default(now())
   offer            HrRecruitmentOffer  @relation("OfferVersions", fields: [offerId], references: [id], onDelete: Cascade)
   activeForOffer   HrRecruitmentOffer? @relation("ActiveOfferVersion")
@@ -5991,13 +5991,15 @@ model HrPayrollAuthoritativeResult {
   adjustments           Decimal   @db.Decimal(20, 4)
   netPay                Decimal   @db.Decimal(20, 4)
   outputHash            String
+  authoritativeAt       DateTime?
   finalizedAt           DateTime?
   supersedesResultId    String?
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([payrollRunId, employeeId])
+  @@unique([calculationAttemptId, employeeId])
   @@unique([organizationId, correlationId])
+  @@index([organizationId, payrollRunId, employeeId, authoritativeAt])
   @@index([organizationId, employeeId, createdAt])
 }
 
@@ -6054,6 +6056,31 @@ model HrPayrollPaymentInstruction {
   @@unique([organizationId, logicalKey])
   @@unique([organizationId, correlationId])
   @@index([organizationId, status, createdAt])
+}
+
+model HrPayrollPaymentDestinationVersion {
+  id                   String    @id @default(cuid())
+  organizationId       String
+  employeeId           String
+  version              Int
+  bankName             String
+  accountNameEncrypted String
+  accountNumberEncrypted String
+  accountNumberLastFour String
+  currency             String
+  verificationStatus   String    @default("PENDING")
+  verifiedById         String?
+  verifiedAt           DateTime?
+  effectiveFrom        DateTime
+  effectiveTo          DateTime?
+  supersedesId         String?
+  changedById          String
+  correlationId        String
+  createdAt            DateTime  @default(now())
+
+  @@unique([organizationId, employeeId, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
 }
 
 model HrPayrollCertificationIssue {
@@ -6204,8 +6231,14 @@ model HrPayrollPaymentBatch {
   instructionCount Int
   totalAmount      Decimal   @db.Decimal(20, 4)
   exportHash       String?
+  createdById      String
   approvedById     String?
   approvedAt       DateTime?
+  exportedAt       DateTime?
+  submittedAt      DateTime?
+  acknowledgedAt  DateTime?
+  settledAt        DateTime?
+  providerReference String?
   correlationId    String
   createdAt        DateTime  @default(now())
 

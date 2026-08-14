@@ -5,14 +5,21 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
 import { appendHrAudit } from "@/lib/hr/audit";
-import { certifyUnit9Population, finalizeUnit9Run, freezeUnit9Inputs } from "@/lib/hr/payroll/unit9-service";
+import { calculateUnit9Run, certifyUnit9Population, decideUnit9Run, finalizeUnit9Run, freezeUnit9Inputs, reviewUnit9Risk } from "@/lib/hr/payroll/unit9-service";
+import { createUnit9PaymentBatch, generateUnit9FinancialOutputs, generateUnit9Payslips } from "@/lib/hr/payroll/unit9-financial-service";
 
 const candidate = z.object({ employeeId: z.string(), personId: z.string().optional(), workRelationshipId: z.string().optional(), assignmentId: z.string().optional(), employmentStatus: z.string(), legalEntityId: z.string().optional(), jurisdictionCode: z.string().optional(), payGroupId: z.string().optional(), workerType: z.enum(["SALARIED", "HOURLY"]), compensationHandoffId: z.string().optional(), compensationCurrency: z.string().optional(), payrollCurrency: z.string(), lockedTimeReference: z.string().optional(), taxProfileVersionId: z.string().optional(), paymentDestinationVersionId: z.string().optional(), conflictingIntervals: z.boolean().optional() });
 const actionInput = z.discriminatedUnion("action", [
   z.object({ action: z.literal("certify"), candidates: z.array(candidate).min(1) }),
   z.object({ action: z.literal("freeze"), snapshots: z.array(z.object({ candidate, sourceManifest: z.record(z.string(), z.unknown()) })).min(1) }),
   z.object({ action: z.literal("resolve-issue"), issueId: z.string().cuid(), reason: z.string().trim().min(3).max(500) }),
+  z.object({ action: z.literal("calculate"), reason: z.string().trim().min(3).max(500).optional(), idempotencyKey: z.string().trim().min(8).max(200) }),
+  z.object({ action: z.literal("decide"), decision: z.enum(["APPROVED", "REJECTED"]), reason: z.string().trim().min(3).max(500) }),
   z.object({ action: z.literal("finalize") }),
+  z.object({ action: z.literal("generate-payslips") }),
+  z.object({ action: z.literal("create-payment-batch") }),
+  z.object({ action: z.literal("generate-financial-outputs"), periodKey: z.string().trim().min(3).max(40) }),
+  z.object({ action: z.literal("review-risk"), riskId: z.string().cuid(), disposition: z.enum(["ACKNOWLEDGED", "RESOLVED", "ACCEPTED", "WAIVED", "BLOCKED"]), reason: z.string().trim().min(3).max(500) }),
 ]);
 
 async function authFor(permission: string) {
@@ -44,7 +51,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const parsed = actionInput.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid payroll action." }, { status: 400 });
-  const permission = parsed.data.action === "finalize" ? "payroll.finalize" : parsed.data.action === "resolve-issue" ? "payroll.review" : parsed.data.action === "freeze" ? "payroll.freeze" : "payroll.certify";
+  const permission = parsed.data.action === "finalize" || parsed.data.action === "generate-payslips" || parsed.data.action === "generate-financial-outputs" ? "payroll.finalize" : parsed.data.action === "create-payment-batch" ? "payroll.payment.prepare" : parsed.data.action === "decide" ? "payroll.approve" : parsed.data.action === "calculate" ? "payroll.calculate" : parsed.data.action === "resolve-issue" || parsed.data.action === "review-risk" ? "payroll.review" : parsed.data.action === "freeze" ? "payroll.freeze" : "payroll.certify";
   const access = await authFor(permission);
   if (access === null) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (access === false) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -52,7 +59,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     if (parsed.data.action === "certify") return NextResponse.json(await certifyUnit9Population(prisma, access.actor, id, parsed.data.candidates));
     if (parsed.data.action === "freeze") return NextResponse.json(await freezeUnit9Inputs(prisma, access.actor, id, parsed.data.snapshots.map((snapshot) => ({ ...snapshot, sourceManifest: snapshot.sourceManifest as Prisma.InputJsonValue }))));
+    if (parsed.data.action === "calculate") return NextResponse.json(await calculateUnit9Run(prisma, access.actor, id, parsed.data));
+    if (parsed.data.action === "decide") return NextResponse.json(await decideUnit9Run(prisma, access.actor, id, parsed.data));
     if (parsed.data.action === "finalize") return NextResponse.json(await finalizeUnit9Run(prisma, access.actor, id));
+    if (parsed.data.action === "generate-payslips") return NextResponse.json(await generateUnit9Payslips(prisma, access.actor, id));
+    if (parsed.data.action === "create-payment-batch") return NextResponse.json(await createUnit9PaymentBatch(prisma, access.actor, id));
+    if (parsed.data.action === "generate-financial-outputs") return NextResponse.json(await generateUnit9FinancialOutputs(prisma, access.actor, id, parsed.data));
+    if (parsed.data.action === "review-risk") return NextResponse.json(await reviewUnit9Risk(prisma, access.actor, id, parsed.data));
     const issueData = parsed.data;
     const issue = await prisma.$transaction(async (tx) => {
       const current = await tx.hrPayrollCertificationIssue.findFirst({ where: { id: issueData.issueId, organizationId: access.actor.organizationId, payrollRunId: id, resolvedAt: null } });
