@@ -10,7 +10,7 @@ import {
   reconcileGrossToNet,
   roundPayroll,
 } from "../src/lib/hr/payroll/unit9-domain";
-import { canAssignRole, permissionsForRole } from "../src/lib/hr/permissions/catalog";
+import { canAssignRole, HR_ADMIN_WORKSPACE_ROLES, HR_PRIVILEGED_MFA_ROLES, permissionsForRole } from "../src/lib/hr/permissions/catalog";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -75,6 +75,12 @@ describe("Unit 9 payroll domain", () => {
     expect(permissionsForRole("PAYROLL_APPROVER")).not.toContain("payroll.payment.submit");
     expect(permissionsForRole("PAYMENT_OPERATOR")).not.toContain("payroll.payment.approve");
     expect(permissionsForRole("PAYMENT_APPROVER")).toContain("payroll.payment.approve");
+    for (const role of ["PAYROLL_PROCESSOR", "PAYROLL_APPROVER", "PAYROLL_COMPLIANCE_ADMIN", "PAYMENT_OPERATOR", "PAYMENT_APPROVER", "FINANCE_READER", "PAYROLL_AUDITOR", "STATUTORY_COMPLIANCE_OPERATOR"] as const) {
+      expect(HR_ADMIN_WORKSPACE_ROLES).toContain(role);
+      expect(HR_PRIVILEGED_MFA_ROLES).toContain(role);
+    }
+    expect(HR_ADMIN_WORKSPACE_ROLES).not.toContain("EMPLOYEE");
+    expect(HR_ADMIN_WORKSPACE_ROLES).not.toContain("AUDITOR");
   });
 
   it("persists Unit 9 foundations additively with database-backed invariants", () => {

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { HR_ASSIGNABLE_ROLES, permissionsForRole } from "../src/lib/hr/permissions/catalog";
+import { HR_ADMIN_WORKSPACE_ROLES, HR_ASSIGNABLE_ROLES, permissionsForRole } from "../src/lib/hr/permissions/catalog";
 
 const read = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
@@ -52,7 +52,8 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(home).toContain('auth.roles.includes("BUDGET_OWNER")');
     expect(home).toContain('auth.roles.includes("PAYROLL_READER")');
     const adminLayout = read("src/app/hr/admin/layout.tsx");
-    expect(adminLayout).toContain('"COMPENSATION_ADMIN", "BUDGET_OWNER", "PAYROLL_READER"');
+    expect(adminLayout).toContain("HR_ADMIN_WORKSPACE_ROLES");
+    expect(HR_ADMIN_WORKSPACE_ROLES).toEqual(expect.arrayContaining(["COMPENSATION_ADMIN", "BUDGET_OWNER", "PAYROLL_READER"]));
     expect(adminLayout).toContain('["Dashboard","/hr/admin/dashboard","employee.read_all"]');
     expect(read("src/app/hr/admin/dashboard/page.tsx")).toContain('requirePermission("employee.read_all")');
     expect(read("src/app/hr/supervisor/layout.tsx")).toContain('/hr/supervisor/compensation');

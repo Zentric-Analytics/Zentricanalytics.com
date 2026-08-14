@@ -58,6 +58,9 @@ export const HR_ASSIGNABLE_ROLES = [
   "AUDITOR",
 ] as const satisfies readonly HrRoleKey[];
 
+export const HR_ADMIN_WORKSPACE_ROLES: readonly HrRoleKey[] = HR_ASSIGNABLE_ROLES.filter((role) => role !== "EMPLOYEE" && role !== "AUDITOR");
+export const HR_PRIVILEGED_MFA_ROLES: readonly HrRoleKey[] = HR_ASSIGNABLE_ROLES.filter((role) => role !== "EMPLOYEE");
+
 const rolePermissions: Record<HrRoleKey, readonly HrPermissionKey[]> = {
   ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("compensation.") && !permission.startsWith("payroll.")),
   HR_ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("payroll.") && !permission.startsWith("compensation.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(permission)),
