@@ -47,7 +47,7 @@ async function run() {
       equal((await calculateUnit9Run(prisma, makerActor, run.id, { reason: "Replay validation", idempotencyKey: `${marker}:calculate` })).idempotent, true, "calculation replay");
       await decideUnit9Run(prisma, checkerActor, run.id, { decision: "APPROVED", reason: "Independent staging simulation review" });
       let finalizationRejected = false;
-      try { await finalizeUnit9Run(prisma, checkerActor, run.id); } catch (error) { finalizationRejected = /jurisdictionCertified|missing prerequisites/i.test(error instanceof Error ? error.message : String(error)); }
+      try { await finalizeUnit9Run(prisma, checkerActor, run.id); } catch (error) { finalizationRejected = /jurisdictionCertified|missing prerequisites|no certified .* jurisdiction package/i.test(error instanceof Error ? error.message : String(error)); }
       equal(finalizationRejected, true, "NOT CERTIFIED finalization boundary");
       const result = await prisma.hrPayrollAuthoritativeResult.findFirstOrThrow({ where: { payrollRunId: run.id, authoritativeAt: { not: null } } });
       equal(result.netPay.toFixed(2), "85000.00", "net pay");

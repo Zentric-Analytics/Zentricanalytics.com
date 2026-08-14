@@ -81,6 +81,7 @@ describe("Unit 9 governed mutating workflows", () => {
     const concurrency = read("scripts/hr-unit9-staging-concurrency.ts");
     expect(lifecycle).toContain('HR_UNIT9_STAGING_LIFECYCLE_CONFIRM !== "staging-only"');
     expect(lifecycle).toContain('finalization: "REJECTED_NOT_CERTIFIED"');
+    expect(lifecycle).toContain("no certified .* jurisdiction package");
     expect(lifecycle).toContain("const payrollCurrency = handoff.currency");
     expect(lifecycle).toContain('equal(certification.employeeBlocked.length, 0, "input certification employee blockers")');
     expect(integrity).toContain('HR_UNIT9_STAGING_INTEGRITY_CONFIRM !== "staging-only"');
