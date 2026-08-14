@@ -99,4 +99,14 @@ describe("Unit 9 payroll domain", () => {
     expect(migration).toContain('ON "HrPayrollAuthoritativeRun"("payGroupId", "calendarPeriodId", "kind", "sequence")');
     expect(schema).toMatch(/Decimal\s+@db\.Decimal\(20, 4\)/);
   });
+
+  it("reconciles every governed payroll role into initialized organizations", () => {
+    const bootstrap = fs.readFileSync(path.join(process.cwd(), "scripts/hr-bootstrap-lib.mjs"), "utf8");
+    for (const role of ["PAYROLL_PROCESSOR", "PAYROLL_APPROVER", "PAYROLL_COMPLIANCE_ADMIN", "PAYMENT_OPERATOR", "PAYMENT_APPROVER", "FINANCE_READER", "PAYROLL_AUDITOR", "STATUTORY_COMPLIANCE_OPERATOR"]) {
+      expect(bootstrap).toContain(`"${role}"`);
+      expect(bootstrap).toContain(`${role}: [`);
+    }
+    expect(bootstrap).toContain("existingRole ?? await tx.hrRole.create");
+    expect(bootstrap).toContain('!key.startsWith("compensation.") && !key.startsWith("payroll.")');
+  });
 });

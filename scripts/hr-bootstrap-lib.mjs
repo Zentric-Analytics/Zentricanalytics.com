@@ -1,9 +1,9 @@
 import bcrypt from "bcryptjs";
 
 export const HR_PERMISSION_KEYS = [
-  "user.create","user.read","user.update","user.suspend","user.invite","user.role.assign","user.role.revoke","employee.create","employee.read_all","employee.read_assigned","employee.read_self","employee.update","employee.update_self","department.manage","position.manage","assignment.create","assignment.update","assignment.end","assignment.override","organization.structure.manage","organization.structure.import","organization.position.create","organization.position.approve","organization.position.manage_state","organization.position.fill","organization.assignment.transfer","organization.report.read","organization.report.export","supervisor.assign","supervisor.revoke","supervisor.read_team","supervisor.review_assigned","leave.request","leave.read_self","leave.read_all","leave.review_assigned","leave.approve","leave.override","leave.policy.manage","time.capture_self","time.read_self","time.read_team","time.read_all","time.schedule.manage","time.policy.manage","time.correction.request","time.correction.review","time.timesheet.submit","time.timesheet.approve","time.period.lock","time.authoritative.read","time.authoritative.export","performance.goal.read_self","performance.goal.manage_self","performance.goal.read_team","performance.goal.review_team","performance.goal.read_all","performance.goal.admin","performance.feedback.create","performance.feedback.read_self","performance.feedback.read_team","performance.feedback.read_confidential","performance.checkin.manage_self","performance.checkin.manage_team","performance.review.submit_self","performance.review.read_self","performance.review.manage_team","performance.review.read_all","performance.review.admin","performance.calibration.participate","performance.calibration.admin","performance.career.manage_self","performance.career.read_team","performance.development.manage_self","performance.development.manage_team","performance.development.admin","performance.readiness.read_self","performance.readiness.assess","performance.promotion.recommend","performance.promotion.review","performance.promotion.approve","performance.framework.manage","performance.report.read","performance.report.export","performance.audit.read","compensation.read_self","compensation.read_team","compensation.read_scoped","compensation.architecture.manage","compensation.cycle.manage","compensation.budget.manage","compensation.budget.approve","compensation.recommendation.create","compensation.recommendation.review","compensation.calibration.manage","compensation.exception.approve","compensation.decision.approve","compensation.reward.manage","compensation.statement.read","compensation.report.read","compensation.payroll_handoff.read","compensation.audit.read","payroll.read","payroll.create","payroll.calculate","payroll.review","payroll.approve","payroll.mark_paid","payroll.export","payroll.read_salary","payroll.read_bank_details","document.upload","document.read_self","document.read_employee","document.read_sensitive","document.update","document.archive","asset.manage","asset.assign","asset.return","asset.read_self","workflow.create","workflow.assign","workflow.review","workflow.task.complete","workflow.override","report.read","report.export","audit.read","settings.manage"
+  "user.create","user.read","user.update","user.suspend","user.invite","user.role.assign","user.role.revoke","employee.create","employee.read_all","employee.read_assigned","employee.read_self","employee.update","employee.update_self","department.manage","position.manage","assignment.create","assignment.update","assignment.end","assignment.override","organization.structure.manage","organization.structure.import","organization.position.create","organization.position.approve","organization.position.manage_state","organization.position.fill","organization.assignment.transfer","organization.report.read","organization.report.export","supervisor.assign","supervisor.revoke","supervisor.read_team","supervisor.review_assigned","leave.request","leave.read_self","leave.read_all","leave.review_assigned","leave.approve","leave.override","leave.policy.manage","time.capture_self","time.read_self","time.read_team","time.read_all","time.schedule.manage","time.policy.manage","time.correction.request","time.correction.review","time.timesheet.submit","time.timesheet.approve","time.period.lock","time.authoritative.read","time.authoritative.export","performance.goal.read_self","performance.goal.manage_self","performance.goal.read_team","performance.goal.review_team","performance.goal.read_all","performance.goal.admin","performance.feedback.create","performance.feedback.read_self","performance.feedback.read_team","performance.feedback.read_confidential","performance.checkin.manage_self","performance.checkin.manage_team","performance.review.submit_self","performance.review.read_self","performance.review.manage_team","performance.review.read_all","performance.review.admin","performance.calibration.participate","performance.calibration.admin","performance.career.manage_self","performance.career.read_team","performance.development.manage_self","performance.development.manage_team","performance.development.admin","performance.readiness.read_self","performance.readiness.assess","performance.promotion.recommend","performance.promotion.review","performance.promotion.approve","performance.framework.manage","performance.report.read","performance.report.export","performance.audit.read","compensation.read_self","compensation.read_team","compensation.read_scoped","compensation.architecture.manage","compensation.cycle.manage","compensation.budget.manage","compensation.budget.read","compensation.budget.approve","compensation.recommendation.create","compensation.recommendation.review","compensation.calibration.manage","compensation.exception.approve","compensation.decision.approve","compensation.reward.manage","compensation.statement.read","compensation.report.read","compensation.payroll_handoff.read","compensation.audit.read","payroll.read","payroll.create","payroll.certify","payroll.freeze","payroll.calculate","payroll.review","payroll.approve","payroll.finalize","payroll.mark_paid","payroll.export","payroll.read_salary","payroll.read_bank_details","payroll.rules.manage","payroll.rules.certify","payroll.regulatory_watch.manage","payroll.payment.prepare","payroll.payment.approve","payroll.payment.submit","payroll.payment.reconcile","payroll.accounting.read","payroll.accounting.export","payroll.statutory.read","payroll.statutory.prepare","payroll.statutory.submit","payroll.audit.read","document.upload","document.read_self","document.read_employee","document.read_sensitive","document.update","document.archive","asset.manage","asset.assign","asset.return","asset.read_self","workflow.create","workflow.assign","workflow.review","workflow.task.complete","workflow.override","report.read","report.export","audit.read","settings.manage"
 ];
-export const HR_ROLE_KEYS = ["ADMIN", "HR_ADMIN", "COMPENSATION_ADMIN", "BUDGET_OWNER", "PAYROLL_READER", "PAYROLL_ADMIN", "EMPLOYEE", "AUDITOR"];
+export const HR_ROLE_KEYS = ["ADMIN", "HR_ADMIN", "PAYROLL_ADMIN", "PAYROLL_PROCESSOR", "PAYROLL_APPROVER", "PAYROLL_COMPLIANCE_ADMIN", "PAYMENT_OPERATOR", "PAYMENT_APPROVER", "FINANCE_READER", "PAYROLL_AUDITOR", "STATUTORY_COMPLIANCE_OPERATOR", "COMPENSATION_ADMIN", "BUDGET_OWNER", "PAYROLL_READER", "EMPLOYEE", "AUDITOR"];
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const allowedEnvironments = new Set(["development", "test", "staging", "production"]);
 
@@ -26,12 +26,20 @@ export function validateBootstrapEnvironment(env) {
 }
 
 export const permissionKeysByRole = {
-  ADMIN: HR_PERMISSION_KEYS.filter((key) => !key.startsWith("compensation.")),
+  ADMIN: HR_PERMISSION_KEYS.filter((key) => !key.startsWith("compensation.") && !key.startsWith("payroll.")),
   HR_ADMIN: HR_PERMISSION_KEYS.filter((key) => !key.startsWith("payroll.") && !key.startsWith("compensation.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(key)),
   COMPENSATION_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith("compensation.")),
-  BUDGET_OWNER: ["compensation.read_scoped", "compensation.budget.approve", "compensation.decision.approve", "compensation.report.read", "workflow.task.complete"],
+  BUDGET_OWNER: ["compensation.budget.read", "compensation.budget.manage", "compensation.recommendation.review", "compensation.decision.approve", "compensation.report.read"],
   PAYROLL_READER: ["compensation.payroll_handoff.read"],
   PAYROLL_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith("payroll.") || ["employee.read_all", "workflow.task.complete", "report.read", "report.export", "time.authoritative.read", "time.authoritative.export"].includes(key)),
+  PAYROLL_PROCESSOR: ["payroll.read", "payroll.create", "payroll.certify", "payroll.freeze", "payroll.calculate", "payroll.review", "payroll.read_salary", "time.authoritative.read", "compensation.payroll_handoff.read"],
+  PAYROLL_APPROVER: ["payroll.read", "payroll.review", "payroll.approve", "payroll.finalize", "payroll.read_salary"],
+  PAYROLL_COMPLIANCE_ADMIN: ["payroll.read", "payroll.rules.manage", "payroll.rules.certify", "payroll.regulatory_watch.manage", "payroll.statutory.read", "payroll.audit.read"],
+  PAYMENT_OPERATOR: ["payroll.read", "payroll.payment.prepare", "payroll.payment.submit", "payroll.payment.reconcile", "payroll.read_bank_details", "payroll.export"],
+  PAYMENT_APPROVER: ["payroll.read", "payroll.payment.approve", "payroll.read_bank_details"],
+  FINANCE_READER: ["payroll.read", "payroll.accounting.read", "payroll.statutory.read"],
+  PAYROLL_AUDITOR: ["payroll.read", "payroll.audit.read", "payroll.accounting.read", "payroll.statutory.read", "audit.read"],
+  STATUTORY_COMPLIANCE_OPERATOR: ["payroll.read", "payroll.statutory.read", "payroll.statutory.prepare", "payroll.statutory.submit", "payroll.payment.reconcile"],
   EMPLOYEE: ["employee.read_self", "employee.update_self", "leave.request", "leave.read_self", "time.capture_self", "time.read_self", "time.correction.request", "time.timesheet.submit", "performance.goal.read_self", "performance.goal.manage_self", "performance.feedback.create", "performance.feedback.read_self", "performance.checkin.manage_self", "performance.review.submit_self", "performance.review.read_self", "performance.career.manage_self", "performance.development.manage_self", "performance.readiness.read_self", "compensation.read_self", "compensation.statement.read", "document.read_self", "asset.read_self", "workflow.task.complete"],
   AUDITOR: ["audit.read", "report.read", "performance.audit.read", "compensation.audit.read"],
 };
@@ -39,11 +47,13 @@ export const permissionKeysByRole = {
 export async function reconcileHrRolePermissions(prisma, report = () => undefined) {
   const organizations = await prisma.hrOrganization.findMany({ select: { id: true } });
   let removed = 0;
+  let rolesCreated = 0;
   for (const { id: organizationId } of organizations) {
     await prisma.$transaction(async (tx) => {
       for (const [roleKey, allowedKeys] of Object.entries(permissionKeysByRole)) {
-        const role = await tx.hrRole.findUnique({ where: { organizationId_key: { organizationId, key: roleKey } } });
-        if (!role) continue;
+        const existingRole = await tx.hrRole.findUnique({ where: { organizationId_key: { organizationId, key: roleKey } } });
+        const role = existingRole ?? await tx.hrRole.create({ data: { organizationId, key: roleKey, name: roleKey.replaceAll("_", " ") } });
+        if (!existingRole) rolesCreated += 1;
         const allowedPermissionIds = [];
         for (const key of allowedKeys) {
           const permission = await tx.hrPermission.upsert({
@@ -79,8 +89,8 @@ export async function reconcileHrRolePermissions(prisma, report = () => undefine
       }
     });
   }
-  report(`PASS canonical built-in role permissions reconciled; staleGrantsRemoved=${removed}.`);
-  return { organizations: organizations.length, removed };
+  report(`PASS canonical built-in role permissions reconciled; rolesCreated=${rolesCreated}; staleGrantsRemoved=${removed}.`);
+  return { organizations: organizations.length, rolesCreated, removed };
 }
 
 export async function runHrBootstrap(prisma, env, report = () => undefined) {
