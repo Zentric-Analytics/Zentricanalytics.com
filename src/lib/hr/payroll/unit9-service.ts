@@ -58,6 +58,7 @@ export async function freezeUnit9Inputs(db: PrismaClient, actor: Actor, runId: s
     const count = await tx.hrPayrollInputSnapshot.count({ where: { organizationId: actor.organizationId, payrollRunId: run.id } });
     if (!count) throw new Error("Payroll cannot freeze without at least one certified employee snapshot.");
     await tx.hrPayrollAuthoritativeRun.update({ where: { id: run.id }, data: { status: "FROZEN", frozenAt } });
+    await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollAuthoritativeRun", entityId: run.id, action: "unit9.inputs.frozen", newValues: { snapshotCount: count, frozenAt: frozenAt.toISOString() }, correlationId: run.correlationId });
     return { runId: run.id, frozenAt, snapshotCount: count };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }

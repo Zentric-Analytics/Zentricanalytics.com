@@ -16,6 +16,7 @@ describe("Unit 9 governed mutating workflows", () => {
     const service = read("src/lib/hr/payroll/unit9-service.ts");
     expect(service).toContain("calculateFrozenPayroll(manifest, snapshot.inputHash)");
     expect(service).toContain("Recalculation requires an explicit reason");
+    expect(service).toContain('action: "unit9.inputs.frozen"');
   });
 
   it("fails payroll and payment approval closed under maker-checker conflicts", () => {
