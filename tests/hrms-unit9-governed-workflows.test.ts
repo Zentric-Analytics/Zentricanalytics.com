@@ -77,10 +77,13 @@ describe("Unit 9 governed mutating workflows", () => {
   it("ships guarded real-staging lifecycle and integrity gates", () => {
     const lifecycle = read("scripts/hr-unit9-staging-lifecycle.test.ts");
     const integrity = read("scripts/hr-unit9-staging-integrity.mjs");
+    const concurrency = read("scripts/hr-unit9-staging-concurrency.test.ts");
     expect(lifecycle).toContain('HR_UNIT9_STAGING_LIFECYCLE_CONFIRM === "staging-only"');
     expect(lifecycle).toContain('finalization: "REJECTED_NOT_CERTIFIED"');
     expect(integrity).toContain('HR_UNIT9_STAGING_INTEGRITY_CONFIRM !== "staging-only"');
     expect(integrity).toContain("employerContributionDeductedFromNet");
     expect(integrity).toContain("uncertifiedFinalizations");
+    expect(concurrency).toContain('HR_UNIT9_STAGING_CONCURRENCY_CONFIRM === "staging-only"');
+    expect(concurrency).toContain("decisionRaceWinners: 1");
   });
 });
