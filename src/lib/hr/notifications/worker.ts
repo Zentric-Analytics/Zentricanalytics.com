@@ -106,6 +106,15 @@ const notificationTemplates: Record<string, NotificationTemplate> = {
   "hr-promotion-deferred": { title: "Promotion case deferred", body: "A promotion case has been deferred with a recorded decision and next steps.", ctaLabel: "Review Decision", defaultHref: "/hr/employee/performance" },
   "hr-promotion-rejected": { title: "Promotion decision recorded", body: "A promotion case was not approved. Review the governed decision and rationale.", ctaLabel: "Review Decision", defaultHref: "/hr/employee/performance" },
   "hr-performance-review-finalized": { title: "Performance review finalized", body: "Your performance review has been finalized and is available in the secure HR workspace.", ctaLabel: "Review Performance", defaultHref: "/hr/employee/performance" },
+  "hr-compensation-cycle-open": { title: "Compensation review cycle open", body: "A governed compensation review cycle is open for authorized action.", ctaLabel: "Review Compensation", defaultHref: "/hr/supervisor/compensation" },
+  "hr-compensation-recommendation-due": { title: "Compensation recommendation due", body: "An authorized team compensation recommendation is due.", ctaLabel: "Review Recommendation", defaultHref: "/hr/supervisor/compensation" },
+  "hr-compensation-recommendation-returned": { title: "Compensation recommendation returned", body: "A compensation recommendation was returned for governed revision.", ctaLabel: "Review Recommendation", defaultHref: "/hr/supervisor/compensation" },
+  "hr-compensation-exception-requested": { title: "Compensation exception requested", body: "A restricted compensation exception requires authorized review.", ctaLabel: "Review Exception", defaultHref: "/hr/admin/compensation" },
+  "hr-compensation-exception-decided": { title: "Compensation exception decision", body: "A governed compensation exception decision has been recorded.", ctaLabel: "Review Decision", defaultHref: "/hr/admin/compensation" },
+  "hr-compensation-approved": { title: "Compensation decision approved", body: "A compensation decision has completed its governed approval workflow.", ctaLabel: "Review Compensation", defaultHref: "/hr/admin/compensation" },
+  "hr-compensation-effective": { title: "Compensation update effective", body: "Your finalized compensation update is effective and available securely.", ctaLabel: "View My Compensation", defaultHref: "/hr/employee/compensation" },
+  "hr-compensation-statement-available": { title: "Compensation statement available", body: "A finalized compensation statement is available in your secure HR workspace.", ctaLabel: "View Statement", defaultHref: "/hr/employee/compensation" },
+  "hr-compensation-bonus-awarded": { title: "Reward award approved", body: "A finalized reward award is available in your secure compensation history.", ctaLabel: "View Reward", defaultHref: "/hr/employee/compensation" },
 };
 
 const vacancyTemplate: NotificationTemplate = { title: "Vacancy workflow update", body: "A vacancy has changed state and is ready for secure review.", ctaLabel: "Review Vacancy", defaultHref: "/hr/admin/vacancies" };

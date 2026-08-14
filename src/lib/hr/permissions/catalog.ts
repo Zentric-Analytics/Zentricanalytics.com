@@ -19,6 +19,7 @@ export const HR_PERMISSIONS = [
   "performance.career.manage_self", "performance.career.read_team", "performance.development.manage_self", "performance.development.manage_team", "performance.development.admin",
   "performance.readiness.read_self", "performance.readiness.assess", "performance.promotion.recommend", "performance.promotion.review", "performance.promotion.approve",
   "performance.framework.manage", "performance.report.read", "performance.report.export", "performance.audit.read",
+  "compensation.architecture.manage", "compensation.cycle.manage", "compensation.budget.manage", "compensation.budget.read", "compensation.recommendation.create", "compensation.recommendation.review", "compensation.calibration.manage", "compensation.exception.review", "compensation.decision.approve", "compensation.read_all", "compensation.read_self", "compensation.statement.read", "compensation.payroll_handoff.read", "compensation.audit.read", "compensation.bonus.manage", "compensation.retroactive.manage", "compensation.report.read",
   "payroll.read", "payroll.create", "payroll.calculate", "payroll.review", "payroll.approve", "payroll.mark_paid", "payroll.export", "payroll.read_salary", "payroll.read_bank_details",
   "document.upload", "document.read_self", "document.read_employee", "document.read_sensitive", "document.update", "document.archive",
   "asset.manage", "asset.assign", "asset.return", "asset.read_self", "workflow.create", "workflow.assign", "workflow.review", "workflow.task.complete", "workflow.override",
@@ -36,12 +37,26 @@ export const HR_PERMISSIONS = [
 
 export type HrPermissionKey = (typeof HR_PERMISSIONS)[number];
 
+export const HR_ASSIGNABLE_ROLES = [
+  "ADMIN",
+  "HR_ADMIN",
+  "PAYROLL_ADMIN",
+  "COMPENSATION_ADMIN",
+  "BUDGET_OWNER",
+  "PAYROLL_READER",
+  "EMPLOYEE",
+  "AUDITOR",
+] as const satisfies readonly HrRoleKey[];
+
 const rolePermissions: Record<HrRoleKey, readonly HrPermissionKey[]> = {
-  ADMIN: HR_PERMISSIONS,
-  HR_ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("payroll.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(permission)),
+  ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("compensation.")),
+  HR_ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith("payroll.") && !permission.startsWith("compensation.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(permission)),
   PAYROLL_ADMIN: HR_PERMISSIONS.filter((permission) => permission.startsWith("payroll.") || ["employee.read_all", "workflow.task.complete", "report.read", "report.export", "time.authoritative.read", "time.authoritative.export"].includes(permission)),
-  EMPLOYEE: ["employee.read_self", "employee.update_self", "employee.profile_change.request", "workforce_event.read_self", "leave.request", "leave.read_self", "time.capture_self", "time.read_self", "time.correction.request", "time.timesheet.submit", "performance.goal.read_self", "performance.goal.manage_self", "performance.feedback.create", "performance.feedback.read_self", "performance.checkin.manage_self", "performance.review.submit_self", "performance.review.read_self", "performance.career.manage_self", "performance.development.manage_self", "performance.readiness.read_self", "document.read_self", "asset.read_self", "workflow.task.complete"],
-  AUDITOR: ["audit.read", "report.read", "performance.audit.read"],
+  COMPENSATION_ADMIN: HR_PERMISSIONS.filter((permission) => permission.startsWith("compensation.") || ["employee.read_all", "report.read", "audit.read"].includes(permission)),
+  BUDGET_OWNER: ["compensation.budget.read", "compensation.budget.manage", "compensation.recommendation.review", "compensation.decision.approve", "compensation.report.read"],
+  PAYROLL_READER: ["compensation.payroll_handoff.read", "payroll.read", "payroll.read_salary", "employee.read_all", "report.read"],
+  EMPLOYEE: ["employee.read_self", "employee.update_self", "employee.profile_change.request", "workforce_event.read_self", "leave.request", "leave.read_self", "time.capture_self", "time.read_self", "time.correction.request", "time.timesheet.submit", "performance.goal.read_self", "performance.goal.manage_self", "performance.feedback.create", "performance.feedback.read_self", "performance.checkin.manage_self", "performance.review.submit_self", "performance.review.read_self", "performance.career.manage_self", "performance.development.manage_self", "performance.readiness.read_self", "compensation.read_self", "compensation.statement.read", "compensation.recommendation.create", "document.read_self", "asset.read_self", "workflow.task.complete"],
+  AUDITOR: ["audit.read", "report.read", "performance.audit.read", "compensation.audit.read"],
 };
 
 export function permissionsForRole(role: HrRoleKey) {
