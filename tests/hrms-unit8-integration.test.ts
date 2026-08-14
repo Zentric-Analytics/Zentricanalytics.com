@@ -101,6 +101,14 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(validation).toContain("invalidBudgetLedgers");
     expect(validation).toContain('LEFT JOIN "HrEmployeeDocumentVersion" v');
     expect(validation).not.toContain('LEFT JOIN "HrDocumentVersion" v');
+    const release = read("scripts/hr-release.mjs");
+    const bootstrap = read("scripts/hr-bootstrap-lib.mjs");
+    const reconciliation = read("scripts/hr-reconcile-role-permissions.mjs");
+    expect(release).toContain("await reconcileHrRolePermissions(prisma, report)");
+    expect(bootstrap).toContain("hr.role.permissions.reconciled");
+    expect(bootstrap).toContain("permissionId: { notIn: allowedPermissionIds }");
+    expect(reconciliation).toContain('DR_RESTORE_CONFIRM !== "isolated-restore"');
+    expect(reconciliation).toContain("zentric_unit8_restore");
   });
 
   it("uses an atomic budget ledger and exact decision handoff", () => {

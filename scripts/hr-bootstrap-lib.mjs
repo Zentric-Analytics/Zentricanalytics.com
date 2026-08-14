@@ -25,7 +25,7 @@ export function validateBootstrapEnvironment(env) {
   return { appEnv, email, passwordHash };
 }
 
-const permissionKeysByRole = {
+export const permissionKeysByRole = {
   ADMIN: HR_PERMISSION_KEYS.filter((key) => !key.startsWith("compensation.")),
   HR_ADMIN: HR_PERMISSION_KEYS.filter((key) => !key.startsWith("payroll.") && !key.startsWith("compensation.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(key)),
   COMPENSATION_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith("compensation.")),
@@ -35,6 +35,53 @@ const permissionKeysByRole = {
   EMPLOYEE: ["employee.read_self", "employee.update_self", "leave.request", "leave.read_self", "time.capture_self", "time.read_self", "time.correction.request", "time.timesheet.submit", "performance.goal.read_self", "performance.goal.manage_self", "performance.feedback.create", "performance.feedback.read_self", "performance.checkin.manage_self", "performance.review.submit_self", "performance.review.read_self", "performance.career.manage_self", "performance.development.manage_self", "performance.readiness.read_self", "compensation.read_self", "compensation.statement.read", "document.read_self", "asset.read_self", "workflow.task.complete"],
   AUDITOR: ["audit.read", "report.read", "performance.audit.read", "compensation.audit.read"],
 };
+
+export async function reconcileHrRolePermissions(prisma, report = () => undefined) {
+  const organizations = await prisma.hrOrganization.findMany({ select: { id: true } });
+  let removed = 0;
+  for (const { id: organizationId } of organizations) {
+    await prisma.$transaction(async (tx) => {
+      for (const [roleKey, allowedKeys] of Object.entries(permissionKeysByRole)) {
+        const role = await tx.hrRole.findUnique({ where: { organizationId_key: { organizationId, key: roleKey } } });
+        if (!role) continue;
+        const allowedPermissionIds = [];
+        for (const key of allowedKeys) {
+          const permission = await tx.hrPermission.upsert({
+            where: { organizationId_key: { organizationId, key } },
+            update: {},
+            create: { organizationId, key },
+          });
+          allowedPermissionIds.push(permission.id);
+          await tx.hrRolePermission.upsert({
+            where: { roleId_permissionId: { roleId: role.id, permissionId: permission.id } },
+            update: {},
+            create: { roleId: role.id, permissionId: permission.id },
+          });
+        }
+        const stale = await tx.hrRolePermission.findMany({
+          where: { roleId: role.id, permissionId: { notIn: allowedPermissionIds } },
+          include: { permission: { select: { key: true } } },
+        });
+        if (!stale.length) continue;
+        await tx.hrRolePermission.deleteMany({ where: { id: { in: stale.map(({ id }) => id) } } });
+        removed += stale.length;
+        await tx.hrAuditEvent.create({ data: {
+          organizationId,
+          actorRole: "SYSTEM",
+          entityType: "HrRole",
+          entityId: role.id,
+          action: "hr.role.permissions.reconciled",
+          previousValues: { removedPermissionKeys: stale.map(({ permission }) => permission.key) },
+          newValues: { allowedPermissionKeys: allowedKeys },
+          reason: "Canonical built-in role permission reconciliation during guarded release.",
+          correlationId: `role-permissions:${role.id}:${Date.now()}`,
+        } });
+      }
+    });
+  }
+  report(`PASS canonical built-in role permissions reconciled; staleGrantsRemoved=${removed}.`);
+  return { organizations: organizations.length, removed };
+}
 
 export async function runHrBootstrap(prisma, env, report = () => undefined) {
   const config = validateBootstrapEnvironment(env);
