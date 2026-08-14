@@ -21,6 +21,18 @@ export async function createPaymentDestinationVersion(db: PrismaClient, actor: A
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
+export async function verifyPaymentDestinationVersion(db: PrismaClient, actor: Actor, destinationId: string, reason: string) {
+  return db.$transaction(async (tx) => {
+    const destination = await tx.hrPayrollPaymentDestinationVersion.findFirst({ where: { id: destinationId, organizationId: actor.organizationId } });
+    if (!destination) throw new Error("Payment destination is outside the tenant.");
+    if (destination.verificationStatus === "VERIFIED") return destination;
+    if (destination.changedById === actor.userId) throw new Error("Payment destination maker/checker separation prohibits self-verification.");
+    const verified = await tx.hrPayrollPaymentDestinationVersion.update({ where: { id: destination.id }, data: { verificationStatus: "VERIFIED", verifiedById: actor.userId, verifiedAt: new Date() } });
+    await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollPaymentDestinationVersion", entityId: destination.id, action: "unit9.payment_destination.verified", reason, newValues: { employeeId: destination.employeeId, version: destination.version, accountNumberLastFour: destination.accountNumberLastFour }, correlationId: destination.correlationId });
+    return { ...verified, accountNameEncrypted: undefined, accountNumberEncrypted: undefined };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
 export async function generateUnit9Payslips(db: PrismaClient, actor: Actor, runId: string) {
   return db.$transaction(async (tx) => {
     const run = await tx.hrPayrollAuthoritativeRun.findFirst({ where: { id: runId, organizationId: actor.organizationId, status: "FINALIZED" } });

@@ -14,7 +14,7 @@ describe("Unit 9 governed mutating workflows", () => {
 
   it("requires a frozen manifest and an explicit recalculation reason", () => {
     const service = read("src/lib/hr/payroll/unit9-service.ts");
-    expect(service).toContain("calculateFrozenPayroll(snapshot.sourceManifest");
+    expect(service).toContain("calculateFrozenPayroll(manifest, snapshot.inputHash)");
     expect(service).toContain("Recalculation requires an explicit reason");
   });
 

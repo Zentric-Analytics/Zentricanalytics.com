@@ -5880,6 +5880,106 @@ model HrPayrollPayGroup {
   @@index([organizationId, jurisdictionId, status])
 }
 
+model HrPayrollTaxableBaseDefinition {
+  id             String   @id @default(cuid())
+  organizationId String
+  jurisdictionVersionId String
+  code           String
+  version        Int
+  ruleManifest   Json
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  correlationId  String
+  createdAt      DateTime @default(now())
+  @@unique([organizationId, jurisdictionVersionId, code, version])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollEarningDefinition {
+  id             String   @id @default(cuid())
+  organizationId String
+  jurisdictionVersionId String
+  code           String
+  version        Int
+  taxableBaseCode String
+  ruleManifest   Json
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  correlationId  String
+  createdAt      DateTime @default(now())
+  @@unique([organizationId, jurisdictionVersionId, code, version])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollDeductionDefinition {
+  id             String   @id @default(cuid())
+  organizationId String
+  jurisdictionVersionId String
+  code           String
+  version        Int
+  category       String
+  method         String
+  ruleManifest   Json
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  correlationId  String
+  createdAt      DateTime @default(now())
+  @@unique([organizationId, jurisdictionVersionId, code, version])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollEmployeeDeductionElection {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  employeeId            String
+  deductionDefinitionId String
+  version               Int
+  electionManifest      Json
+  approvedById          String
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  supersedesId          String?
+  correlationId         String
+  createdAt             DateTime @default(now())
+  @@unique([organizationId, employeeId, deductionDefinitionId, version])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollEmployerContributionDefinition {
+  id             String   @id @default(cuid())
+  organizationId String
+  jurisdictionVersionId String
+  code           String
+  version        Int
+  liabilityCategory String
+  ruleManifest   Json
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  correlationId  String
+  createdAt      DateTime @default(now())
+  @@unique([organizationId, jurisdictionVersionId, code, version])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollManualAdjustment {
+  id             String   @id @default(cuid())
+  organizationId String
+  payrollRunId   String
+  employeeId     String
+  category       String
+  amount         Decimal  @db.Decimal(20, 4)
+  reason         String
+  evidence       Json
+  createdById    String
+  approvedById   String?
+  approvedAt     DateTime?
+  status         String   @default("PENDING")
+  correlationId  String
+  createdAt      DateTime @default(now())
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, payrollRunId, employeeId, status])
+}
+
 model HrPayrollCalendarPeriod {
   id                 String   @id @default(cuid())
   organizationId     String

@@ -82,7 +82,24 @@ export async function calculateUnit9Run(db: PrismaClient, actor: Actor, runId: s
       const run = await tx.hrPayrollAuthoritativeRun.findFirst({ where: { id: runId, organizationId: actor.organizationId } });
       if (!run || run.status !== "CALCULATING") throw new Error("Calculation claim is no longer active.");
       const snapshots = await tx.hrPayrollInputSnapshot.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, certificationStatus: "CERTIFIED" }, orderBy: { employeeId: "asc" } });
-      const computed = snapshots.map((snapshot) => ({ snapshot, value: calculateFrozenPayroll(snapshot.sourceManifest as unknown as FrozenPayrollManifest, snapshot.inputHash) }));
+      const computed: Array<{ snapshot: typeof snapshots[number]; value: ReturnType<typeof calculateFrozenPayroll> }> = [];
+      for (const snapshot of snapshots) {
+        const manifest = snapshot.sourceManifest as unknown as FrozenPayrollManifest;
+        const earningDefinitions = manifest.earnings.map((line) => line.ruleVersionReference);
+        const deductionDefinitions = (manifest.deductions ?? []).map((line) => line.definitionVersion);
+        const contributionDefinitions = (manifest.employerContributions ?? []).map((line) => line.definitionVersion);
+        const [earningCount, deductionCount, contributionCount] = await Promise.all([
+          tx.hrPayrollEarningDefinition.count({ where: { organizationId: actor.organizationId, jurisdictionVersionId: run.jurisdictionVersionId, id: { in: earningDefinitions } } }),
+          tx.hrPayrollDeductionDefinition.count({ where: { organizationId: actor.organizationId, jurisdictionVersionId: run.jurisdictionVersionId, id: { in: deductionDefinitions } } }),
+          tx.hrPayrollEmployerContributionDefinition.count({ where: { organizationId: actor.organizationId, jurisdictionVersionId: run.jurisdictionVersionId, id: { in: contributionDefinitions } } }),
+        ]);
+        if (earningCount !== new Set(earningDefinitions).size || deductionCount !== new Set(deductionDefinitions).size || contributionCount !== new Set(contributionDefinitions).size) throw new Error("Frozen payroll references an unknown or cross-tenant rule definition.");
+        for (const adjustment of manifest.adjustments ?? []) {
+          const approved = await tx.hrPayrollManualAdjustment.findFirst({ where: { id: adjustment.sourceId, organizationId: actor.organizationId, payrollRunId: run.id, employeeId: snapshot.employeeId, status: "APPROVED", createdById: adjustment.createdById, approvedById: adjustment.approvedById, amount: adjustment.amount } });
+          if (!approved) throw new Error("Frozen payroll references an unapproved or cross-tenant manual adjustment.");
+        }
+        computed.push({ snapshot, value: calculateFrozenPayroll(manifest, snapshot.inputHash) });
+      }
       await tx.hrPayrollAuthoritativeResult.updateMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, authoritativeAt: { not: null } }, data: { authoritativeAt: null } });
       for (const { snapshot, value } of computed) {
         const result = await tx.hrPayrollAuthoritativeResult.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, calculationAttemptId: attempt.id, inputSnapshotId: snapshot.id, employeeId: snapshot.employeeId, currency: (snapshot.sourceManifest as { currency?: string }).currency ?? "NGN", grossEarnings: value.gross, taxableIncome: value.taxableIncome, paye: value.paye.currentPaye, employeeDeductions: value.employeeDeductions, employerContributions: value.employerContributions, adjustments: value.adjustments, netPay: value.output.net, outputHash: value.hash, authoritativeAt: new Date(), correlationId: crypto.randomUUID() } });
@@ -147,6 +164,28 @@ export async function createUnit9RetroTrigger(db: PrismaClient, actor: Actor, in
     const trigger = await tx.hrPayrollRetroTrigger.create({ data: { organizationId: actor.organizationId, ...input, treatment: "OFF_CYCLE_CORRECTION", correlationId: crypto.randomUUID() } });
     await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollRetroTrigger", entityId: trigger.id, action: "unit9.retro_trigger.created", newValues: { sourceType: input.sourceType, sourceId: input.sourceId, sourceVersion: input.sourceVersion, previousVersion: input.previousVersion, affectedFrom: input.affectedFrom, affectedTo: input.affectedTo }, correlationId: trigger.correlationId });
     return { trigger, idempotent: false };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+export async function createUnit9ManualAdjustment(db: PrismaClient, actor: Actor, runId: string, input: { employeeId: string; category: string; amount: string; reason: string; evidence: Prisma.InputJsonValue }) {
+  return db.$transaction(async (tx) => {
+    const run = await tx.hrPayrollAuthoritativeRun.findFirst({ where: { id: runId, organizationId: actor.organizationId, status: { in: ["DRAFT", "CERTIFIED", "FROZEN"] } } });
+    if (!run) throw new Error("Manual adjustment is not allowed for this tenant payroll state.");
+    const amount = new Prisma.Decimal(input.amount); if (amount.isZero()) throw new Error("Manual adjustment cannot be zero.");
+    const adjustment = await tx.hrPayrollManualAdjustment.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, employeeId: input.employeeId, category: input.category, amount, reason: input.reason, evidence: input.evidence, createdById: actor.userId, correlationId: crypto.randomUUID() } });
+    await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollManualAdjustment", entityId: adjustment.id, action: "unit9.manual_adjustment.created", reason: input.reason, newValues: { employeeId: input.employeeId, category: input.category, amount: amount.toFixed(4) }, correlationId: adjustment.correlationId });
+    return adjustment;
+  });
+}
+
+export async function approveUnit9ManualAdjustment(db: PrismaClient, actor: Actor, adjustmentId: string, reason: string) {
+  return db.$transaction(async (tx) => {
+    const adjustment = await tx.hrPayrollManualAdjustment.findFirst({ where: { id: adjustmentId, organizationId: actor.organizationId, status: "PENDING" } });
+    if (!adjustment) throw new Error("Pending manual adjustment is outside the tenant.");
+    if (adjustment.createdById === actor.userId) throw new Error("Manual adjustment maker/checker separation prohibits self-approval.");
+    const approved = await tx.hrPayrollManualAdjustment.update({ where: { id: adjustment.id }, data: { status: "APPROVED", approvedById: actor.userId, approvedAt: new Date() } });
+    await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollManualAdjustment", entityId: adjustment.id, action: "unit9.manual_adjustment.approved", reason, correlationId: adjustment.correlationId });
+    return approved;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
