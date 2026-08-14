@@ -28,6 +28,7 @@
     "hr:unit8-staging-audit-reconcile": "node scripts/hr-unit8-staging-audit-reconcile.mjs",
     "hr:unit8-staging-integrity": "node scripts/hr-unit8-staging-integrity.mjs",
     "hr:unit8-restore-validation": "node scripts/hr-unit8-restore-validation.mjs",
+    "hr:unit9-staging-lifecycle": "vitest run scripts/hr-unit9-staging-lifecycle.test.ts",
     "hr:unit6-repair-synthetic-lineage": "node scripts/hr-unit6-repair-synthetic-lineage.mjs",
     "hr:staging-document-conflict": "node scripts/hr-staging-document-conflict.mjs",
     "postinstall": "prisma generate"
