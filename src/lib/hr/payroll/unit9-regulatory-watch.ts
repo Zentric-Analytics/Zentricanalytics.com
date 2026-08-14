@@ -31,6 +31,7 @@ export async function pollRegulatorySource(db: PrismaClient, actor: Actor, sourc
     return result;
   } catch (error) {
     await db.hrPayrollRegulatorySource.updateMany({ where: { id: source.id, organizationId: actor.organizationId }, data: { lastCheckedAt: new Date(), monitoringHealth: "DEGRADED" } });
+    if (error instanceof Error && error.name === "AbortError") throw new Error("Regulatory source check timed out after 8 seconds; monitoring remains degraded and no payroll rule was changed.");
     throw error;
   } finally {
     clearTimeout(timeout);
