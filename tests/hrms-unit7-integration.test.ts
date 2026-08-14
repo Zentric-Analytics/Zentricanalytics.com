@@ -27,7 +27,7 @@ describe("Unit 7 integration contracts", () => {
     expect(migration).toContain("performance.audit.read");
     expect(migration).toContain("ON CONFLICT");
     expect(bootstrap).toContain("performance.review.submit_self");
-    expect(bootstrap).toContain('AUDITOR: ["audit.read", "report.read", "performance.audit.read"]');
+    expect(bootstrap).toContain('AUDITOR: ["audit.read", "report.read", "performance.audit.read", "compensation.audit.read"]');
   });
   it("fails closed instead of opening an empty review cycle", () => {
     const commands = readFileSync("src/lib/hr/performance/commands.ts", "utf8");
@@ -98,7 +98,7 @@ describe("Unit 7 integration contracts", () => {
     expect(permissionsForRole("EMPLOYEE")).not.toContain("performance.calibration.admin");
     expect(permissionsForRole("HR_ADMIN")).toEqual(expect.arrayContaining(["performance.framework.manage", "performance.promotion.review", "performance.calibration.admin"]));
     expect(permissionsForRole("PAYROLL_ADMIN")).not.toContain("performance.readiness.assess");
-    expect(permissionsForRole("AUDITOR")).toEqual(["audit.read", "report.read", "performance.audit.read"]);
+    expect(permissionsForRole("AUDITOR")).toEqual(["audit.read", "report.read", "performance.audit.read", "compensation.audit.read"]);
   });
 
   it("exposes only employee-facing development and readiness narratives", () => {

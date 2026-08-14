@@ -1,0 +1,188 @@
+import fs from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { HR_ASSIGNABLE_ROLES, permissionsForRole } from "../src/lib/hr/permissions/catalog";
+
+const read = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
+
+describe("Unit 8 compensation integration safeguards", () => {
+  it("keeps general administration separate from individual-pay authority", () => {
+    expect(permissionsForRole("ADMIN").some((key) => key.startsWith("compensation."))).toBe(false);
+    expect(permissionsForRole("HR_ADMIN").some((key) => key.startsWith("compensation."))).toBe(false);
+    expect(permissionsForRole("COMPENSATION_ADMIN")).toContain("compensation.architecture.manage");
+    expect(permissionsForRole("COMPENSATION_ADMIN").every((key) => key.startsWith("compensation."))).toBe(true);
+    expect(permissionsForRole("BUDGET_OWNER")).toContain("compensation.budget.read");
+    expect(permissionsForRole("PAYROLL_READER")).toEqual(["compensation.payroll_handoff.read"]);
+    for (const forbidden of ["payroll.read", "payroll.read_salary", "employee.read_all", "report.read"]) {
+      expect(permissionsForRole("PAYROLL_READER")).not.toContain(forbidden);
+    }
+    const bootstrap = read("scripts/hr-bootstrap-lib.mjs");
+    expect(bootstrap).toContain('PAYROLL_READER: ["compensation.payroll_handoff.read"]');
+    expect(bootstrap).toContain('COMPENSATION_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith("compensation."))');
+  });
+
+  it("makes every governed Unit 8 role assignable through user administration", () => {
+    expect(HR_ASSIGNABLE_ROLES).toEqual(expect.arrayContaining(["COMPENSATION_ADMIN", "BUDGET_OWNER", "PAYROLL_READER"]));
+    const usersPage = read("src/app/hr/admin/users/page.tsx");
+    const userActions = read("src/app/hr/admin/users/actions.ts");
+    expect(usersPage).toContain("HR_ASSIGNABLE_ROLES");
+    expect(userActions).toContain("HR_ASSIGNABLE_ROLES");
+  });
+
+  it("exposes four server-authorized and privacy-filtered experiences", () => {
+    expect(read("src/app/hr/employee/compensation/page.tsx")).toContain('requirePermission("compensation.read_self")');
+    expect(read("src/app/hr/supervisor/compensation/page.tsx")).toContain('requirePermission("compensation.recommendation.create")');
+    expect(read("src/app/hr/admin/compensation/page.tsx")).toContain('requirePermission("compensation.architecture.manage")');
+    const auditor = read("src/app/hr/auditor/compensation/page.tsx");
+    expect(auditor).toContain('requirePermission("compensation.audit.read")');
+    expect(auditor).not.toContain("newAmount: true");
+    expect(auditor).not.toContain("rationale: true");
+    const budgets = read("src/app/hr/admin/compensation/budgets/page.tsx");
+    expect(budgets).toContain('requirePermission("compensation.budget.read")');
+    expect(budgets).toContain('scopeType: "USER", scopeId: auth.user.id');
+    expect(budgets).not.toContain("restrictedRationale");
+    const handoffs = read("src/app/hr/admin/compensation/payroll-handoffs/page.tsx");
+    expect(handoffs).toContain('requirePermission("compensation.payroll_handoff.read")');
+    for (const restricted of ["rationale", "guideline", "benchmark", "calibration", "exception"]) expect(handoffs).not.toContain(`${restricted}: true`);
+  });
+
+  it("routes specialized roles and supervisor compensation without widening general administration", () => {
+    const home = read("src/app/hr/page.tsx");
+    expect(home).toContain('auth.roles.includes("COMPENSATION_ADMIN")');
+    expect(home).toContain('auth.roles.includes("BUDGET_OWNER")');
+    expect(home).toContain('auth.roles.includes("PAYROLL_READER")');
+    const adminLayout = read("src/app/hr/admin/layout.tsx");
+    expect(adminLayout).toContain('"COMPENSATION_ADMIN", "BUDGET_OWNER", "PAYROLL_READER"');
+    expect(adminLayout).toContain('["Dashboard","/hr/admin/dashboard","employee.read_all"]');
+    expect(read("src/app/hr/admin/dashboard/page.tsx")).toContain('requirePermission("employee.read_all")');
+    expect(read("src/app/hr/supervisor/layout.tsx")).toContain('/hr/supervisor/compensation');
+    expect(read("src/app/hr/employee/layout.tsx")).toContain('/hr/employee/compensation');
+    expect(read("src/app/hr/auditor/layout.tsx")).toContain('/hr/auditor/compensation');
+    expect(permissionsForRole("EMPLOYEE")).toContain("compensation.recommendation.create");
+    expect(read("prisma/migrations/20260813203000_hrms_unit8_manager_compensation_scope/migration.sql")).toContain("ON CONFLICT");
+  });
+
+  it("aligns persisted Unit 8 role grants with canonical route permissions", () => {
+    const migration = read("prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql");
+    expect(migration).toContain("'BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.read'");
+    expect(migration).toContain("'BUDGET_OWNER'::\"HrRoleKey\", 'compensation.recommendation.review'");
+    expect(migration).toContain("'COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.read_all'");
+    expect(migration).toContain('ON CONFLICT ("roleId", "permissionId") DO NOTHING');
+    const remediation = read("prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql");
+    expect(remediation).toContain('ON CONFLICT ("organizationId", "key") DO NOTHING;\n\nWITH grants');
+    expect(remediation).toContain("'BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.read'");
+  });
+
+  it("registers a guarded replay-safe compensation worker", () => {
+    const route = read("src/app/api/internal/hr/compensation/route.ts");
+    const worker = read("src/lib/hr/compensation/worker.ts");
+    expect(route).toContain("ORGANIZATION_WORKER_SECRET");
+    expect(worker).toContain("TransactionIsolationLevel.Serializable");
+    expect(worker).toContain('status: { in: ["SCHEDULED", "EFFECTIVE"] }');
+    expect(worker).toContain("recommendationId: { not: null }");
+    expect(worker).not.toContain('status: { in: ["APPROVED", "SCHEDULED"] }');
+    const commands = read("src/lib/hr/compensation/commands.ts");
+    expect(commands.indexOf("if (existing) return existing")).toBeLessThan(commands.indexOf("A base compensation decision requires its approved recommendation"));
+    expect(commands).toContain('context.actorUserId === "WORKER" ? undefined : context.actorUserId');
+    expect(worker).toContain('"DEAD_LETTER" : "FAILED"');
+    expect(worker).toContain("replayCompensationDeadLetter");
+    expect(worker).toContain("hr.compensation.worker.dead_letter_replayed");
+    expect(route).toContain('input.action === "replay-dead-letter"');
+    expect(read("scripts/start-with-hr-workers.mjs")).toContain('/api/internal/hr/compensation');
+  });
+
+  it("supports only an explicitly confirmed isolated Unit 8 restore target", () => {
+    const restore = read("scripts/hr-unit4-restore-correlation.mjs");
+    const validation = read("scripts/hr-unit8-restore-validation.mjs");
+    expect(restore).toContain("8_restore");
+    expect(validation).toContain('DR_RESTORE_CONFIRM !== "isolated-restore"');
+    expect(validation).toContain("migrations.length === 51");
+    expect(validation).toContain("privacyGrantViolations");
+    expect(validation).toContain("invalidBudgetLedgers");
+    expect(validation).toContain('LEFT JOIN "HrEmployeeDocumentVersion" v');
+    expect(validation).not.toContain('LEFT JOIN "HrDocumentVersion" v');
+    const release = read("scripts/hr-release.mjs");
+    const bootstrap = read("scripts/hr-bootstrap-lib.mjs");
+    const reconciliation = read("scripts/hr-reconcile-role-permissions.mjs");
+    expect(release).toContain("await reconcileHrRolePermissions(prisma, report)");
+    expect(bootstrap).toContain("hr.role.permissions.reconciled");
+    expect(bootstrap).toContain("permissionId: { notIn: allowedPermissionIds }");
+    expect(reconciliation).toContain('DR_RESTORE_CONFIRM !== "isolated-restore"');
+    expect(reconciliation).toContain("zentric_unit8_restore");
+  });
+
+  it("uses an atomic budget ledger and exact decision handoff", () => {
+    const commands = read("src/lib/hr/compensation/commands.ts");
+    const domain = read("src/lib/hr/compensation/domain.ts");
+    expect(commands).toContain("FOR UPDATE");
+    expect(commands).not.toContain("Number(recommendation.");
+    expect(domain).not.toContain("Number(parseMoney");
+    expect(commands).toContain("Final decision cannot consume more budget");
+    expect(commands).toContain('payrollHandoffKey("record", record.id)');
+    expect(commands).toContain('SELECT id FROM "HrCompCycle"');
+    expect(commands).toContain('SELECT id FROM "HrWorkRelationship"');
+    expect(commands).toContain('SELECT id FROM "HrPromotionDecision"');
+    expect(commands).toContain("Compensation approval is blocked while an employment separation is pending.");
+    expect(commands).toContain("Compensation budget reservations require an open or review-stage cycle.");
+  });
+
+  it("adds immutable publication and non-overlap database controls", () => {
+    const migration = read("prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql");
+    expect(migration).toContain("EXCLUDE USING gist");
+    expect(migration).toContain('tsrange("effectiveFrom", COALESCE("effectiveTo", \'infinity\'::timestamp)');
+    expect(migration).not.toContain("tstzrange(");
+    expect(migration).toContain("hr_comp_protect_immutable");
+    expect(migration).toContain("btree_gist");
+    const remediation = read("prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql");
+    expect(remediation).toContain('OLD."status"::text <> \'DRAFT\'');
+    expect(remediation).toContain("CREATE OR REPLACE FUNCTION hr_comp_protect_immutable");
+    const guarded = read("prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql");
+    expect(guarded).toContain("IF TG_TABLE_NAME = 'HrCompDecision' AND TG_OP = 'UPDATE' THEN");
+    expect(guarded).toContain("IF TG_TABLE_NAME = 'HrCompensationRecord' AND TG_OP = 'UPDATE' THEN");
+    const promotionGuard = read("prisma/migrations/20260813201500_hrms_unit8_promotion_decision_guard/migration.sql");
+    expect(promotionGuard).toContain('ON "HrPromotionDecision"');
+    expect(promotionGuard).toContain("Promotion decisions are immutable");
+  });
+
+  it("guards the real staging lifecycle fixture and preserves governed provenance", () => {
+    const fixture = read("scripts/hr-unit8-staging-fixture.mjs");
+    expect(fixture).toContain('HR_UNIT8_STAGING_FIXTURE_CONFIRM !== "staging-only"');
+    expect(fixture).toContain('databaseUrl.pathname.slice(1) !== "zentric_analytics_staging"');
+    expect(fixture).toContain("salaryBandMinimum");
+    expect(fixture).toContain("assignmentCandidates.find");
+    expect(fixture).toContain("complete non-degenerate legacy position range");
+    expect(fixture).toContain("hrPromotionDecision.findFirst");
+    expect(fixture).toContain("authoritative compensation timeline overlaps");
+    expect(fixture).not.toContain("deleteMany");
+    expect(fixture).toContain("policyVersion, initialRecord, recommendation");
+  });
+
+  it("provides append-only guarded staging audit reconciliation", () => {
+    const script = read("scripts/hr-unit8-staging-audit-reconcile.mjs");
+    expect(script).toContain('HR_UNIT8_STAGING_AUDIT_CONFIRM !== "staging-only"');
+    expect(script).toContain("hr.compensation.record.audit_reconciled");
+    expect(script).not.toContain("update(");
+    expect(script).not.toContain("delete");
+  });
+
+  it("registers a guarded real PostgreSQL concurrency gate", () => {
+    const script = read("scripts/hr-unit8-staging-concurrency.mjs");
+    expect(script).toContain('HR_UNIT8_STAGING_CONCURRENCY_CONFIRM !== "staging-only"');
+    expect(script).toContain("TransactionIsolationLevel.Serializable");
+    expect(script).toContain("FOR UPDATE");
+    expect(script).toContain("INSUFFICIENT_BUDGET");
+    expect(script).toContain('baselineBand.maximum.plus("1000")');
+    expect(script).toContain("hr.compensation.concurrency.validated");
+    expect(script).not.toContain("deleteMany");
+  });
+
+  it("registers a read-only staging integrity gate", () => {
+    const script = read("scripts/hr-unit8-staging-integrity.mjs");
+    expect(script).toContain('HR_UNIT8_STAGING_INTEGRITY_CONFIRM !== "staging-only"');
+    expect(script).toContain("orphanCompensationRecords");
+    expect(script).toContain("authoritativeOverlaps");
+    expect(script).toContain("failedCompensationOutbox");
+    expect(script).not.toContain("deleteMany");
+    expect(script).not.toContain("updateMany");
+  });
+});

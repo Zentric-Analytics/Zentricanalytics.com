@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { PrismaClient } from "@prisma/client";
-import { runHrBootstrap } from "./hr-bootstrap-lib.mjs";
+import { reconcileHrRolePermissions, runHrBootstrap } from "./hr-bootstrap-lib.mjs";
 import { hrEnvironmentChecks, runHrPreflight } from "./hr-preflight-lib.mjs";
 
 const report = (message) => console.info(message);
@@ -34,6 +34,7 @@ try {
   } else {
     report("PASS HRMS already initialized; bootstrap was skipped and bootstrap secrets were not read.");
   }
+  await reconcileHrRolePermissions(prisma, report);
   const preflight = await runHrPreflight(prisma, process.env, report, { allowInitialMfaEnrollment: created });
   if (!preflight.ready) throw new Error("HRMS release preflight failed.");
   if (created) report("INITIALIZATION ONLY Deploy once, enroll privileged MFA immediately, remove bootstrap secrets and HR_BOOTSTRAP_ENABLED, then redeploy.");

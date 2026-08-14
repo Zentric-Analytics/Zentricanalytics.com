@@ -22,6 +22,9 @@ const namedTemplates = [
   "hr-performance-manager-review-due", "hr-performance-calibration-action", "hr-performance-development-action-due",
   "hr-promotion-submitted", "hr-promotion-approved", "hr-promotion-deferred", "hr-promotion-rejected",
   "hr-performance-review-finalized",
+  "hr-compensation-cycle-open", "hr-compensation-recommendation-due", "hr-compensation-recommendation-returned",
+  "hr-compensation-exception-requested", "hr-compensation-exception-decided", "hr-compensation-approved",
+  "hr-compensation-effective", "hr-compensation-statement-available", "hr-compensation-bonus-awarded",
 ];
 
 describe("HR outbound email template registry", () => {
