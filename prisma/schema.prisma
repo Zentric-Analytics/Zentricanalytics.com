@@ -6055,3 +6055,238 @@ model HrPayrollPaymentInstruction {
   @@unique([organizationId, correlationId])
   @@index([organizationId, status, createdAt])
 }
+
+model HrPayrollCertificationIssue {
+  id               String    @id @default(cuid())
+  organizationId   String
+  payrollRunId     String
+  employeeId       String?
+  code             String
+  severity         String
+  sourceType       String
+  sourceId         String?
+  message          String
+  resolvedById     String?
+  resolutionReason String?
+  resolvedAt       DateTime?
+  correlationId    String
+  createdAt        DateTime  @default(now())
+
+  @@unique([payrollRunId, employeeId, code, sourceId])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, payrollRunId, severity, resolvedAt])
+}
+
+model HrPayrollReconciliation {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  payrollRunId          String
+  payrollResultId       String?
+  scope                 String
+  populationCount       Int?
+  gross                 Decimal  @db.Decimal(20, 4)
+  taxableIncome         Decimal  @db.Decimal(20, 4)
+  paye                  Decimal  @db.Decimal(20, 4)
+  employeeDeductions    Decimal  @db.Decimal(20, 4)
+  employerContributions Decimal  @db.Decimal(20, 4)
+  adjustments           Decimal  @db.Decimal(20, 4)
+  netPay                Decimal  @db.Decimal(20, 4)
+  balanced              Boolean
+  evidenceHash          String
+  correlationId         String
+  createdAt             DateTime @default(now())
+
+  @@unique([payrollRunId, payrollResultId, scope])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollRiskFinding {
+  id               String    @id @default(cuid())
+  organizationId   String
+  payrollRunId     String
+  payrollResultId  String?
+  ruleCode         String
+  ruleVersion      String
+  severity         String
+  explanation      String
+  context          Json
+  status           String    @default("OPEN")
+  reviewedById     String?
+  resolutionReason String?
+  resolvedAt       DateTime?
+  correlationId    String
+  createdAt        DateTime  @default(now())
+
+  @@unique([payrollRunId, payrollResultId, ruleCode, ruleVersion])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, payrollRunId, severity, status])
+}
+
+model HrPayrollRetroTrigger {
+  id              String    @id @default(cuid())
+  organizationId  String
+  sourceType      String
+  sourceId        String
+  sourceVersion   String
+  previousVersion String?
+  affectedFrom    DateTime
+  affectedTo      DateTime?
+  detectedAt      DateTime  @default(now())
+  treatment       String
+  status          String    @default("PENDING")
+  correlationId   String
+
+  @@unique([organizationId, sourceType, sourceId, sourceVersion])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollRetroImpact {
+  id                 String   @id @default(cuid())
+  organizationId     String
+  retroTriggerId     String
+  originalResultId   String
+  correctedAttemptId String
+  adjustmentResultId String?
+  deltaManifest      Json
+  deltaHash          String
+  correlationId      String
+  createdAt          DateTime @default(now())
+
+  @@unique([retroTriggerId, originalResultId])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollYtdLedgerEntry {
+  id              String   @id @default(cuid())
+  organizationId  String
+  employeeId      String
+  taxYear         Int
+  accumulatorCode String
+  entryType       String
+  amount          Decimal  @db.Decimal(20, 4)
+  payrollResultId String
+  retroImpactId   String?
+  effectiveAt     DateTime
+  correlationId   String
+  createdAt       DateTime @default(now())
+
+  @@unique([organizationId, employeeId, accumulatorCode, payrollResultId, entryType])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, employeeId, taxYear, accumulatorCode, effectiveAt])
+}
+
+model HrPayrollPayslipVersion {
+  id              String    @id @default(cuid())
+  organizationId  String
+  employeeId      String
+  payrollResultId String
+  version         Int
+  artifactKey     String
+  contentHash     String
+  status          String    @default("GENERATED")
+  supersedesId    String?
+  generatedAt     DateTime  @default(now())
+  publishedAt     DateTime?
+  correlationId   String
+
+  @@unique([payrollResultId, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, employeeId, publishedAt])
+}
+
+model HrPayrollPaymentBatch {
+  id               String    @id @default(cuid())
+  organizationId   String
+  payrollRunId     String
+  version          Int
+  status           String    @default("DRAFT")
+  currency         String
+  instructionCount Int
+  totalAmount      Decimal   @db.Decimal(20, 4)
+  exportHash       String?
+  approvedById     String?
+  approvedAt       DateTime?
+  correlationId    String
+  createdAt        DateTime  @default(now())
+
+  @@unique([payrollRunId, version])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollJournalBatch {
+  id             String   @id @default(cuid())
+  organizationId String
+  payrollRunId   String
+  version        Int
+  status         String   @default("DRAFT")
+  totalDebit     Decimal  @db.Decimal(20, 4)
+  totalCredit    Decimal  @db.Decimal(20, 4)
+  contentHash    String
+  correlationId  String
+  createdAt      DateTime @default(now())
+
+  @@unique([payrollRunId, version])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollJournalLine {
+  id              String   @id @default(cuid())
+  organizationId  String
+  journalBatchId  String
+  accountCode     String
+  category        String
+  debit           Decimal  @db.Decimal(20, 4)
+  credit          Decimal  @db.Decimal(20, 4)
+  sourceReference String
+  sequence        Int
+  createdAt       DateTime @default(now())
+
+  @@unique([journalBatchId, sequence])
+}
+
+model HrPayrollStatutoryLiability {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  payrollRunId          String
+  payrollResultId       String?
+  jurisdictionVersionId String
+  category              String
+  periodKey             String
+  amount                Decimal  @db.Decimal(20, 4)
+  status                String   @default("OPEN")
+  ruleVersion           String
+  correlationId         String
+  createdAt             DateTime @default(now())
+
+  @@unique([organizationId, payrollRunId, payrollResultId, category])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollRemittanceBatch {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  jurisdictionVersionId String
+  periodKey             String
+  category              String
+  version               Int
+  status                String    @default("DRAFT")
+  totalAmount           Decimal   @db.Decimal(20, 4)
+  externalReference     String?
+  acknowledgedAt        DateTime?
+  correlationId         String
+  createdAt             DateTime  @default(now())
+
+  @@unique([organizationId, periodKey, category, version])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollRemittanceLine {
+  id                String   @id @default(cuid())
+  organizationId    String
+  remittanceBatchId String
+  liabilityId       String
+  amount            Decimal  @db.Decimal(20, 4)
+  createdAt         DateTime @default(now())
+
+  @@unique([remittanceBatchId, liabilityId])
+}
