@@ -10,8 +10,15 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(permissionsForRole("ADMIN").some((key) => key.startsWith("compensation."))).toBe(false);
     expect(permissionsForRole("HR_ADMIN").some((key) => key.startsWith("compensation."))).toBe(false);
     expect(permissionsForRole("COMPENSATION_ADMIN")).toContain("compensation.architecture.manage");
+    expect(permissionsForRole("COMPENSATION_ADMIN").every((key) => key.startsWith("compensation."))).toBe(true);
     expect(permissionsForRole("BUDGET_OWNER")).toContain("compensation.budget.read");
-    expect(permissionsForRole("PAYROLL_READER")).not.toContain("compensation.recommendation.review");
+    expect(permissionsForRole("PAYROLL_READER")).toEqual(["compensation.payroll_handoff.read"]);
+    for (const forbidden of ["payroll.read", "payroll.read_salary", "employee.read_all", "report.read"]) {
+      expect(permissionsForRole("PAYROLL_READER")).not.toContain(forbidden);
+    }
+    const bootstrap = read("scripts/hr-bootstrap-lib.mjs");
+    expect(bootstrap).toContain('PAYROLL_READER: ["compensation.payroll_handoff.read"]');
+    expect(bootstrap).toContain('COMPENSATION_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith("compensation."))');
   });
 
   it("makes every governed Unit 8 role assignable through user administration", () => {

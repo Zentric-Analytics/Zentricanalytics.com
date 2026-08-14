@@ -28,9 +28,9 @@ export function validateBootstrapEnvironment(env) {
 const permissionKeysByRole = {
   ADMIN: HR_PERMISSION_KEYS.filter((key) => !key.startsWith("compensation.")),
   HR_ADMIN: HR_PERMISSION_KEYS.filter((key) => !key.startsWith("payroll.") && !key.startsWith("compensation.") && !["user.role.assign", "user.role.revoke", "settings.manage"].includes(key)),
-  COMPENSATION_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith("compensation.") || ["employee.read_all", "workflow.task.complete", "document.read_employee", "report.read", "audit.read"].includes(key)),
+  COMPENSATION_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith("compensation.")),
   BUDGET_OWNER: ["compensation.read_scoped", "compensation.budget.approve", "compensation.decision.approve", "compensation.report.read", "workflow.task.complete"],
-  PAYROLL_READER: ["compensation.payroll_handoff.read", "compensation.read_scoped", "payroll.read", "employee.read_all", "report.read"],
+  PAYROLL_READER: ["compensation.payroll_handoff.read"],
   PAYROLL_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith("payroll.") || ["employee.read_all", "workflow.task.complete", "report.read", "report.export", "time.authoritative.read", "time.authoritative.export"].includes(key)),
   EMPLOYEE: ["employee.read_self", "employee.update_self", "leave.request", "leave.read_self", "time.capture_self", "time.read_self", "time.correction.request", "time.timesheet.submit", "performance.goal.read_self", "performance.goal.manage_self", "performance.feedback.create", "performance.feedback.read_self", "performance.checkin.manage_self", "performance.review.submit_self", "performance.review.read_self", "performance.career.manage_self", "performance.development.manage_self", "performance.readiness.read_self", "compensation.read_self", "compensation.statement.read", "document.read_self", "asset.read_self", "workflow.task.complete"],
   AUDITOR: ["audit.read", "report.read", "performance.audit.read", "compensation.audit.read"],
