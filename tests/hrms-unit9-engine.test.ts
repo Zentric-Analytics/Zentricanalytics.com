@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateEarnings, calculateProgressivePaye, calculationManifest, certifyPayrollInput, payrollRisk, reconcileJournal, retroDelta } from "../src/lib/hr/payroll/unit9-engine";
+import { assertFinalizationReady, assertPaymentTransition, calculateEarnings, calculateProgressivePaye, calculationManifest, certifyPayrollInput, lateInputTreatment, payrollAccess, payrollRisk, reconcileJournal, retroDelta } from "../src/lib/hr/payroll/unit9-engine";
 
 describe("Unit 9 payroll engine", () => {
   const eligible = { employeeId: "e1", personId: "p1", workRelationshipId: "w1", assignmentId: "a1", employmentStatus: "ACTIVE", legalEntityId: "l1", jurisdictionCode: "NG", payGroupId: "pg1", workerType: "SALARIED" as const, compensationHandoffId: "c1", compensationCurrency: "NGN", payrollCurrency: "NGN", taxProfileVersionId: "t1", paymentDestinationVersionId: "d1" };
@@ -43,5 +43,29 @@ describe("Unit 9 payroll engine", () => {
     expect(() => reconcileJournal([{ accountCode: "SALARY", debit: "1000", sourceReference: "r" }])).toThrow("not balanced");
     const delta = retroDelta([{ code: "BASE", category: "EARNING", amount: "1000" }], [{ code: "BASE", category: "EARNING", amount: "1100" }, { code: "PAYE", category: "PAYE", amount: "10" }]);
     expect(delta.deltas.map((line) => [line.key, line.amount.toFixed(2)])).toEqual([["EARNING:BASE", "100.00"], ["PAYE:PAYE", "10.00"]]);
+  });
+
+  it("fails finalization closed and enforces payment transitions", () => {
+    const ready = { jurisdictionCertified: true, certificationComplete: true, inputsFrozen: true, authoritativeCalculation: true, employeeReconciliation: true, runReconciliation: true, unresolvedBlockers: 0, independentApproval: true };
+    expect(assertFinalizationReady(ready)).toHaveLength(64);
+    expect(() => assertFinalizationReady({ ...ready, jurisdictionCertified: false })).toThrow("jurisdictionCertified");
+    expect(assertPaymentTransition("VALIDATED", "APPROVED")).toBe("APPROVED");
+    expect(() => assertPaymentTransition("DRAFT", "SETTLED")).toThrow("Invalid payment transition");
+  });
+
+  it("classifies late authoritative changes without mutating frozen inputs", () => {
+    const base = { sourceType: "UNIT8", oldVersion: "v1", newVersion: "v2", affectedPeriod: "2026-08" };
+    expect(lateInputTreatment({ ...base, runFinalized: true, explicitlyAuthorizedRecalculation: false }).treatment).toBe("RETRO_TRIGGER");
+    expect(lateInputTreatment({ ...base, runFinalized: false, explicitlyAuthorizedRecalculation: false }).treatment).toBe("GOVERNED_EXCEPTION_REQUIRED");
+    expect(lateInputTreatment({ ...base, runFinalized: false, explicitlyAuthorizedRecalculation: true }).treatment).toBe("RECALCULATE");
+  });
+
+  it("keeps payroll data authority separate from generic administration", () => {
+    expect(payrollAccess({ permissions: new Set() }).result).toBe(false);
+    expect(payrollAccess({ employeeId: "e1", subjectEmployeeId: "e1", permissions: new Set() }).ownFinalizedPayslip).toBe(true);
+    const processor = payrollAccess({ permissions: new Set(["payroll.read", "payroll.calculate"]) });
+    expect(processor.calculate).toBe(true); expect(processor.approvePayroll).toBe(false); expect(processor.bankDetails).toBe(false);
+    const approver = payrollAccess({ permissions: new Set(["payroll.approve"]) });
+    expect(approver.approvePayroll).toBe(true); expect(approver.approvePayment).toBe(false);
   });
 });

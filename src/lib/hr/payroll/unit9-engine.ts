@@ -102,3 +102,48 @@ export function retroDelta(original: PayrollLine[], corrected: PayrollLine[]) {
   const deltas = [...keys].sort().map((key) => ({ key, amount: roundPayroll(amount(corrected, key).minus(amount(original, key))) })).filter((line) => !line.amount.isZero());
   return { deltas, hash: payrollDigest(deltas.map((line) => ({ key: line.key, amount: line.amount.toFixed(4) }))) };
 }
+
+export type FinalizationEvidence = {
+  jurisdictionCertified: boolean; certificationComplete: boolean; inputsFrozen: boolean;
+  authoritativeCalculation: boolean; employeeReconciliation: boolean; runReconciliation: boolean;
+  unresolvedBlockers: number; independentApproval: boolean;
+};
+
+export function assertFinalizationReady(evidence: FinalizationEvidence) {
+  const missing = Object.entries(evidence).flatMap(([key, value]) => key === "unresolvedBlockers" ? (value === 0 ? [] : [key]) : (value ? [] : [key]));
+  if (missing.length) throw new Error(`Payroll cannot finalize; missing prerequisites: ${missing.join(", ")}.`);
+  return payrollDigest(evidence);
+}
+
+export type PaymentState = "DRAFT" | "VALIDATED" | "APPROVED" | "EXPORTED" | "SUBMITTED" | "ACKNOWLEDGED" | "SETTLED" | "REJECTED" | "RETURNED" | "CANCELLED";
+const paymentTransitions: Record<PaymentState, readonly PaymentState[]> = {
+  DRAFT: ["VALIDATED", "CANCELLED"], VALIDATED: ["APPROVED", "REJECTED", "CANCELLED"], APPROVED: ["EXPORTED", "CANCELLED"],
+  EXPORTED: ["SUBMITTED"], SUBMITTED: ["ACKNOWLEDGED", "REJECTED", "RETURNED"], ACKNOWLEDGED: ["SETTLED", "REJECTED", "RETURNED"],
+  SETTLED: [], REJECTED: [], RETURNED: [], CANCELLED: [],
+};
+export function assertPaymentTransition(from: PaymentState, to: PaymentState) {
+  if (!paymentTransitions[from].includes(to)) throw new Error(`Invalid payment transition ${from} -> ${to}.`);
+  return to;
+}
+
+export function lateInputTreatment(input: { runFinalized: boolean; explicitlyAuthorizedRecalculation: boolean; sourceType: string; oldVersion: string; newVersion: string; affectedPeriod: string }) {
+  if (input.oldVersion === input.newVersion) return { treatment: "NO_CHANGE", correlation: payrollDigest(input) } as const;
+  if (input.runFinalized) return { treatment: "RETRO_TRIGGER", correlation: payrollDigest(input) } as const;
+  if (input.explicitlyAuthorizedRecalculation) return { treatment: "RECALCULATE", correlation: payrollDigest(input) } as const;
+  return { treatment: "GOVERNED_EXCEPTION_REQUIRED", correlation: payrollDigest(input) } as const;
+}
+
+export type PayrollAccessContext = { employeeId?: string | null; subjectEmployeeId?: string | null; permissions: ReadonlySet<string> };
+export function payrollAccess(context: PayrollAccessContext) {
+  const own = Boolean(context.employeeId && context.employeeId === context.subjectEmployeeId);
+  return {
+    result: own || context.permissions.has("payroll.read"),
+    ownFinalizedPayslip: own,
+    calculate: context.permissions.has("payroll.calculate"),
+    approvePayroll: context.permissions.has("payroll.approve"),
+    approvePayment: context.permissions.has("payroll.payment.approve"),
+    submitPayment: context.permissions.has("payroll.payment.submit"),
+    bankDetails: context.permissions.has("payroll.read_bank_details"),
+    risk: context.permissions.has("payroll.review") || context.permissions.has("payroll.audit.read"),
+  };
+}
