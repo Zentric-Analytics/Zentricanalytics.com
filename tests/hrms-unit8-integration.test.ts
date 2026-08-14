@@ -91,6 +91,16 @@ describe("Unit 8 compensation integration safeguards", () => {
     expect(read("scripts/start-with-hr-workers.mjs")).toContain('/api/internal/hr/compensation');
   });
 
+  it("supports only an explicitly confirmed isolated Unit 8 restore target", () => {
+    const restore = read("scripts/hr-unit4-restore-correlation.mjs");
+    const validation = read("scripts/hr-unit8-restore-validation.mjs");
+    expect(restore).toContain("8_restore");
+    expect(validation).toContain('DR_RESTORE_CONFIRM !== "isolated-restore"');
+    expect(validation).toContain("migrations.length === 51");
+    expect(validation).toContain("privacyGrantViolations");
+    expect(validation).toContain("invalidBudgetLedgers");
+  });
+
   it("uses an atomic budget ledger and exact decision handoff", () => {
     const commands = read("src/lib/hr/compensation/commands.ts");
     const domain = read("src/lib/hr/compensation/domain.ts");
