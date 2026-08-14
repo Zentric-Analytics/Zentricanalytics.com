@@ -17,6 +17,9 @@ describe("Unit 8 compensation and rewards blueprint", () => {
   it("keeps the implementation status artifact free of compensation records", () => {
     const status = read("src/app/hr/admin/unit-8-status/page.tsx");
     expect(status).toContain("PASS — UNIT 8 PRODUCTION READY");
+    expect(status).toContain('process.env.APP_ENV === "production"');
+    expect(status).toContain("CONDITIONAL PASS — UNIT 8 PRODUCTION READY AND OPERATIONAL");
+    expect(status).toContain("GoDaddy-to-Outlook automatic Inbox-placement risk remains open");
     expect(status).toContain("production release requires separate owner authorization");
     expect(status).toContain("production untouched");
     expect(status).toContain("No individual compensation data");
