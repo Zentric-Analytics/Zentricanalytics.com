@@ -1,19 +1,19 @@
 # Unit 8 final staging validation report
 
-Status: **IN PROGRESS — isolated restore remains**
+Status: **PASS — Unit 8 Production Ready**
 
 ## Candidate and environment
 
 - Branch: `dev`
-- Validated application SHA: `9f6f926167b929842141637a1ecf00c1b3ee1291`
-- Staging deployment: `dep-d9vfvbbl550s738hf780`
+- Validated application SHA: `0d9f0e2a19ee094c5eab332b20977160f6b631c7`
+- Staging deployment: `dep-d9vgp7942hec73918hmg`
 - Database: `zentric_analytics_staging`
 - Migrations: 51 applied, none pending
 - Production: untouched
 
 ## Automated release evidence
 
-- Automated tests: 770/770 passing across 69 files
+- Automated tests: 771/771 passing across 69 files
 - TypeScript: PASS
 - ESLint: PASS with zero warnings
 - Prisma validation: PASS
@@ -50,6 +50,24 @@ Safe staging load passed: 250 requests at concurrency 15, zero failures, p50 181
 - Remote object version: `7e5fffcfc50723b4ef14bcc60e37db6a`
 - Plaintext or partial artifacts after upload: zero
 
+## Isolated restore correlation
+
+- Temporary target: `dpg-d9vgine1egvs73e6t4l0-a` / `zentric_unit8_restore`
+- Plan: Basic-256 MB, 1 GB, non-HA
+- Restore start: `2026-08-14T12:32:31.397Z`
+- Restore completion: `2026-08-14T12:32:53.696Z`
+- RTO: 22.299 seconds
+- RPO at exercise start: 19 minutes 58.423 seconds from archive creation
+- Migrations: 51 completed; none pending; Prisma schema up to date
+- Duplicate/orphan/overlap/correction/payroll-handoff/promotion-input/audit/privacy failures: zero
+- Budget reconciliation: 10 inspected; zero invalid ledgers
+- Representative restored counts: 3 markets, 3 bands, 3 policies, 18 recommendations, 3 calibrations, 3 exceptions, 15 decisions, 7 authoritative records, 1 correction, 5 rewards, 10 payroll handoffs, 1,171 audit events
+- Statements: the approved archive contained zero statement rows; the table and references restored successfully with zero orphan statement references
+- Candidate recovery reconciliation: 132 stale built-in-role grants removed deterministically with immutable audit evidence; privacy violations after reconciliation: zero
+- Plaintext restore artifact and temporary evidence file: removed
+- Temporary connection secret: unset from the staging shell
+- Target deletion: verified; target ID and name absent from the Render project; ongoing temporary resource count and cost: zero
+
 ## Defects corrected
 
 - Serialized compensation-cycle and budget reservation races.
@@ -57,9 +75,11 @@ Safe staging load passed: 250 requests at concurrency 15, zero failures, p50 181
 - Added the immutable promotion-decision database guard and read-only integrity gate.
 - Aligned persisted database, static application, and bootstrap role grants to least privilege.
 - Restored all temporary staging roles after privacy validation.
+- Corrected the restore validator's statement-document join to `HrEmployeeDocumentVersion` and added regression coverage.
+- Added guarded, audit-producing canonical built-in-role reconciliation to release and isolated-recovery paths.
 
-## Mandatory gate still open
+## Final verdict
 
-Restore archive `ba3853c31247` into the smallest owner-approved temporary non-HA Render PostgreSQL target, verify all 51 migrations and the complete Unit 8 lineage, record RPO/RTO and correlation evidence, remove plaintext artifacts and temporary secrets, then delete the target and verify ongoing temporary cost returns to zero.
+**PASS — Unit 8 Production Ready**
 
-No Unit 8 production-readiness PASS is asserted until that gate succeeds.
+Production was not accessed or modified. Unit 9 was not started. A separate owner authorization is required before any Unit 8 production release.

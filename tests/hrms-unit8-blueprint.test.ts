@@ -16,8 +16,8 @@ describe("Unit 8 compensation and rewards blueprint", () => {
 
   it("keeps the implementation status artifact free of compensation records", () => {
     const status = read("src/app/hr/admin/unit-8-status/page.tsx");
-    expect(status).toContain("ISOLATED RESTORE CORRELATION");
-    expect(status).toContain("Unit 8 PASS is withheld until the fresh durable archive is restored and verified");
+    expect(status).toContain("PASS — UNIT 8 PRODUCTION READY");
+    expect(status).toContain("production release requires separate owner authorization");
     expect(status).toContain("production untouched");
     expect(status).toContain("No individual compensation data");
     expect(status).not.toContain("salary:");
