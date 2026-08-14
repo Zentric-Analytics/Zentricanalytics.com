@@ -258,6 +258,14 @@ enum HrRoleKey {
   BUDGET_OWNER
   PAYROLL_READER
   PAYROLL_ADMIN
+  PAYROLL_PROCESSOR
+  PAYROLL_APPROVER
+  PAYROLL_COMPLIANCE_ADMIN
+  PAYMENT_OPERATOR
+  PAYMENT_APPROVER
+  FINANCE_READER
+  PAYROLL_AUDITOR
+  STATUTORY_COMPLIANCE_OPERATOR
   EMPLOYEE
   AUDITOR
 }
@@ -5185,176 +5193,185 @@ enum HrCompHandoffStatus {
 }
 
 model HrCompMarket {
-  id String @id @default(cuid())
+  id             String   @id @default(cuid())
   organizationId String
-  code String
-  name String
-  currentVersion Int @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  code           String
+  name           String
+  currentVersion Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
   @@unique([organizationId, code])
   @@index([organizationId, name])
 }
 
 model HrCompMarketVersion {
-  id String @id @default(cuid())
-  organizationId String
-  marketId String
-  version Int
-  countryCode String
-  region String?
-  locality String?
-  currency String
-  applicability Json
+  id                 String              @id @default(cuid())
+  organizationId     String
+  marketId           String
+  version            Int
+  countryCode        String
+  region             String?
+  locality           String?
+  currency           String
+  applicability      Json
   differentialPolicy Json?
-  status HrCompPublishStatus @default(DRAFT)
-  effectiveFrom DateTime
-  effectiveTo DateTime?
-  reason String
-  contentHash String
-  createdById String
-  publishedById String?
-  publishedAt DateTime?
-  createdAt DateTime @default(now())
+  status             HrCompPublishStatus @default(DRAFT)
+  effectiveFrom      DateTime
+  effectiveTo        DateTime?
+  reason             String
+  contentHash        String
+  createdById        String
+  publishedById      String?
+  publishedAt        DateTime?
+  createdAt          DateTime            @default(now())
+
   @@unique([marketId, version])
   @@unique([organizationId, contentHash])
   @@index([organizationId, status, effectiveFrom, effectiveTo])
 }
 
 model HrCompBand {
-  id String @id @default(cuid())
-  organizationId String
-  code String
-  name String
-  jobProfileId String?
-  jobFamilyId String?
-  companyLevelId String?
+  id                    String         @id @default(cuid())
+  organizationId        String
+  code                  String
+  name                  String
+  jobProfileId          String?
+  jobFamilyId           String?
+  companyLevelId        String?
   compensationGradeCode String?
-  marketId String
-  currency String
-  payBasis HrCompPayBasis
-  currentVersion Int @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  marketId              String
+  currency              String
+  payBasis              HrCompPayBasis
+  currentVersion        Int            @default(1)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
   @@unique([organizationId, code])
   @@index([organizationId, marketId, currency, payBasis])
   @@index([jobProfileId, companyLevelId, marketId])
 }
 
 model HrCompBandVersion {
-  id String @id @default(cuid())
+  id             String              @id @default(cuid())
   organizationId String
-  bandId String
-  version Int
-  minimum Decimal @db.Decimal(18, 4)
-  midpoint Decimal @db.Decimal(18, 4)
-  maximum Decimal @db.Decimal(18, 4)
-  effectiveFrom DateTime
-  effectiveTo DateTime?
-  status HrCompPublishStatus @default(DRAFT)
-  reason String
-  contentHash String
-  createdById String
-  publishedById String?
-  publishedAt DateTime?
-  createdAt DateTime @default(now())
+  bandId         String
+  version        Int
+  minimum        Decimal             @db.Decimal(18, 4)
+  midpoint       Decimal             @db.Decimal(18, 4)
+  maximum        Decimal             @db.Decimal(18, 4)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  status         HrCompPublishStatus @default(DRAFT)
+  reason         String
+  contentHash    String
+  createdById    String
+  publishedById  String?
+  publishedAt    DateTime?
+  createdAt      DateTime            @default(now())
+
   @@unique([bandId, version])
   @@unique([organizationId, contentHash])
   @@index([organizationId, status, effectiveFrom, effectiveTo])
 }
 
 model HrCompPolicy {
-  id String @id @default(cuid())
+  id             String   @id @default(cuid())
   organizationId String
-  code String
-  name String
-  currentVersion Int @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  code           String
+  name           String
+  currentVersion Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
   @@unique([organizationId, code])
 }
 
 model HrCompPolicyVersion {
-  id String @id @default(cuid())
+  id             String              @id @default(cuid())
   organizationId String
-  policyId String
-  version Int
-  rules Json
-  status HrCompPublishStatus @default(DRAFT)
-  effectiveFrom DateTime
-  effectiveTo DateTime?
-  contentHash String
-  createdById String
-  publishedById String?
-  publishedAt DateTime?
-  createdAt DateTime @default(now())
+  policyId       String
+  version        Int
+  rules          Json
+  status         HrCompPublishStatus @default(DRAFT)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  contentHash    String
+  createdById    String
+  publishedById  String?
+  publishedAt    DateTime?
+  createdAt      DateTime            @default(now())
+
   @@unique([policyId, version])
   @@unique([organizationId, contentHash])
   @@index([organizationId, status, effectiveFrom, effectiveTo])
 }
 
 model HrCompBenchmarkSnapshot {
-  id String @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
-  provider String
-  surveyDate DateTime
-  marketId String
-  jobProfileId String?
-  jobFamilyId String?
+  provider       String
+  surveyDate     DateTime
+  marketId       String
+  jobProfileId   String?
+  jobFamilyId    String?
   companyLevelId String?
-  percentile Decimal @db.Decimal(5, 2)
-  currency String
-  amount Decimal @db.Decimal(18, 4)
-  confidence Json?
-  effectiveFrom DateTime
-  effectiveTo DateTime?
-  contentHash String
-  createdById String
-  createdAt DateTime @default(now())
+  percentile     Decimal   @db.Decimal(5, 2)
+  currency       String
+  amount         Decimal   @db.Decimal(18, 4)
+  confidence     Json?
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  contentHash    String
+  createdById    String
+  createdAt      DateTime  @default(now())
+
   @@unique([organizationId, contentHash])
   @@index([organizationId, marketId, surveyDate])
 }
 
 model HrEmployeeCompensation {
-  id String @id @default(cuid())
-  organizationId String
-  employeeId String
+  id                 String   @id @default(cuid())
+  organizationId     String
+  employeeId         String
   workRelationshipId String
-  currentRecordId String? @unique
-  state String @default("ACTIVE")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  currentRecordId    String?  @unique
+  state              String   @default("ACTIVE")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
   @@unique([organizationId, workRelationshipId])
   @@index([organizationId, employeeId, state])
 }
 
 model HrCompensationRecord {
-  id String @id @default(cuid())
-  organizationId String
+  id                     String             @id @default(cuid())
+  organizationId         String
   employeeCompensationId String
-  employeeId String
-  workRelationshipId String
-  assignmentId String
-  previousRecordId String?
-  correctedRecordId String?
-  decisionId String @unique
-  eventType HrCompEventType
-  status HrCompRecordStatus @default(SCHEDULED)
-  amount Decimal @db.Decimal(18, 4)
-  annualizedAmount Decimal? @db.Decimal(18, 4)
-  currency String
-  payBasis HrCompPayBasis
-  marketVersionId String
-  bandVersionId String
-  policyVersionId String
-  effectiveFrom DateTime
-  effectiveTo DateTime?
-  approvedAt DateTime
-  payrollReadyAt DateTime?
-  contentHash String
-  idempotencyKey String
-  correlationId String
-  createdAt DateTime @default(now())
+  employeeId             String
+  workRelationshipId     String
+  assignmentId           String
+  previousRecordId       String?
+  correctedRecordId      String?
+  decisionId             String             @unique
+  eventType              HrCompEventType
+  status                 HrCompRecordStatus @default(SCHEDULED)
+  amount                 Decimal            @db.Decimal(18, 4)
+  annualizedAmount       Decimal?           @db.Decimal(18, 4)
+  currency               String
+  payBasis               HrCompPayBasis
+  marketVersionId        String
+  bandVersionId          String
+  policyVersionId        String
+  effectiveFrom          DateTime
+  effectiveTo            DateTime?
+  approvedAt             DateTime
+  payrollReadyAt         DateTime?
+  contentHash            String
+  idempotencyKey         String
+  correlationId          String
+  createdAt              DateTime           @default(now())
+
   @@unique([organizationId, idempotencyKey])
   @@unique([organizationId, correlationId])
   @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
@@ -5362,114 +5379,119 @@ model HrCompensationRecord {
 }
 
 model HrCompCycle {
-  id String @id @default(cuid())
-  organizationId String
-  code String
-  name String
-  cycleType String
-  status HrCompCycleStatus @default(DRAFT)
-  effectiveAt DateTime
-  policyVersionId String
-  populationRule Json
-  currencies String[] @default([])
+  id                    String            @id @default(cuid())
+  organizationId        String
+  code                  String
+  name                  String
+  cycleType             String
+  status                HrCompCycleStatus @default(DRAFT)
+  effectiveAt           DateTime
+  policyVersionId       String
+  populationRule        Json
+  currencies            String[]          @default([])
   recommendationOpensAt DateTime?
-  managerDeadlineAt DateTime?
-  reviewOpensAt DateTime?
-  payrollHandoffAt DateTime?
-  version Int @default(1)
-  workflowDefinitionId String?
-  correlationId String
-  createdById String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  managerDeadlineAt     DateTime?
+  reviewOpensAt         DateTime?
+  payrollHandoffAt      DateTime?
+  version               Int               @default(1)
+  workflowDefinitionId  String?
+  correlationId         String
+  createdById           String
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
   @@unique([organizationId, code])
   @@unique([organizationId, correlationId])
   @@index([organizationId, status, effectiveAt])
 }
 
 model HrCompCyclePopulation {
-  id String @id @default(cuid())
-  organizationId String
-  cycleId String
-  employeeId String
-  workRelationshipId String
-  assignmentId String
-  managerUserId String?
+  id                   String   @id @default(cuid())
+  organizationId       String
+  cycleId              String
+  employeeId           String
+  workRelationshipId   String
+  assignmentId         String
+  managerUserId        String?
   compensationRecordId String
-  bandVersionId String
-  performanceReviewId String?
-  promotionDecisionId String?
-  eligible Boolean
-  eligibilityReasons Json
-  snapshot Json
-  contentHash String
-  createdAt DateTime @default(now())
+  bandVersionId        String
+  performanceReviewId  String?
+  promotionDecisionId  String?
+  eligible             Boolean
+  eligibilityReasons   Json
+  snapshot             Json
+  contentHash          String
+  createdAt            DateTime @default(now())
+
   @@unique([cycleId, employeeId])
   @@index([organizationId, managerUserId, eligible])
 }
 
 model HrCompBudget {
-  id String @id @default(cuid())
-  organizationId String
-  cycleId String
-  scopeType String
-  scopeId String
-  currency String
-  allocatedAmount Decimal @db.Decimal(18, 4)
-  version Int @default(1)
-  createdById String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(cuid())
+  organizationId  String
+  cycleId         String
+  scopeType       String
+  scopeId         String
+  currency        String
+  allocatedAmount Decimal  @db.Decimal(18, 4)
+  version         Int      @default(1)
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   @@unique([cycleId, scopeType, scopeId, currency])
   @@index([organizationId, cycleId, currency])
 }
 
 model HrCompBudgetEntry {
-  id String @id @default(cuid())
-  organizationId String
-  budgetId String
+  id               String                @id @default(cuid())
+  organizationId   String
+  budgetId         String
   recommendationId String?
-  decisionId String?
-  entryType HrCompBudgetEntryType
-  amount Decimal @db.Decimal(18, 4)
-  currency String
-  fxContext Json?
-  reason String
-  idempotencyKey String
-  correlationId String
-  createdById String
-  createdAt DateTime @default(now())
+  decisionId       String?
+  entryType        HrCompBudgetEntryType
+  amount           Decimal               @db.Decimal(18, 4)
+  currency         String
+  fxContext        Json?
+  reason           String
+  idempotencyKey   String
+  correlationId    String
+  createdById      String
+  createdAt        DateTime              @default(now())
+
   @@unique([budgetId, idempotencyKey])
   @@unique([organizationId, correlationId])
   @@index([budgetId, createdAt])
 }
 
 model HrCompRecommendation {
-  id String @id @default(cuid())
-  organizationId String
-  cyclePopulationId String
-  employeeId String
-  managerUserId String
-  currentRecordId String
-  bandVersionId String
-  policyVersionId String
+  id                  String                     @id @default(cuid())
+  organizationId      String
+  cyclePopulationId   String
+  employeeId          String
+  managerUserId       String
+  currentRecordId     String
+  bandVersionId       String
+  policyVersionId     String
   performanceReviewId String?
   promotionDecisionId String?
-  version Int @default(1)
-  status HrCompRecommendationStatus @default(DRAFT)
-  currentAmount Decimal @db.Decimal(18, 4)
-  proposedAmount Decimal @db.Decimal(18, 4)
-  currency String
-  rangePosition String
-  guideline Json
-  budgetImpact Decimal @db.Decimal(18, 4)
-  rationale String
-  submittedAt DateTime?
-  contentHash String
-  idempotencyKey String
-  correlationId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  version             Int                        @default(1)
+  status              HrCompRecommendationStatus @default(DRAFT)
+  currentAmount       Decimal                    @db.Decimal(18, 4)
+  proposedAmount      Decimal                    @db.Decimal(18, 4)
+  currency            String
+  rangePosition       String
+  guideline           Json
+  budgetImpact        Decimal                    @db.Decimal(18, 4)
+  rationale           String
+  submittedAt         DateTime?
+  contentHash         String
+  idempotencyKey      String
+  correlationId       String
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+
   @@unique([organizationId, idempotencyKey])
   @@unique([organizationId, correlationId])
   @@index([organizationId, managerUserId, status])
@@ -5477,204 +5499,559 @@ model HrCompRecommendation {
 }
 
 model HrCompCalibrationDecision {
-  id String @id @default(cuid())
-  organizationId String
-  recommendationId String
+  id                    String   @id @default(cuid())
+  organizationId        String
+  recommendationId      String
   recommendationVersion Int
-  calibratedAmount Decimal @db.Decimal(18, 4)
-  currency String
-  restrictedRationale String
-  participantUserIds String[] @default([])
-  version Int @default(1)
-  contentHash String
-  correlationId String
-  createdById String
-  createdAt DateTime @default(now())
+  calibratedAmount      Decimal  @db.Decimal(18, 4)
+  currency              String
+  restrictedRationale   String
+  participantUserIds    String[] @default([])
+  version               Int      @default(1)
+  contentHash           String
+  correlationId         String
+  createdById           String
+  createdAt             DateTime @default(now())
+
   @@unique([recommendationId, version])
   @@unique([organizationId, correlationId])
 }
 
 model HrCompException {
-  id String @id @default(cuid())
-  organizationId String
-  recommendationId String
+  id                    String                @id @default(cuid())
+  organizationId        String
+  recommendationId      String
   recommendationVersion Int
-  exceptionType String
-  status HrCompExceptionStatus @default(REQUESTED)
-  proposedAmount Decimal @db.Decimal(18, 4)
-  referenceAmount Decimal @db.Decimal(18, 4)
-  varianceAmount Decimal @db.Decimal(18, 4)
-  variancePercent Decimal @db.Decimal(9, 4)
-  restrictedRationale String
-  requestedById String
-  decidedByIds String[] @default([])
-  decisionReason String?
-  decidedAt DateTime?
-  correlationId String
-  createdAt DateTime @default(now())
+  exceptionType         String
+  status                HrCompExceptionStatus @default(REQUESTED)
+  proposedAmount        Decimal               @db.Decimal(18, 4)
+  referenceAmount       Decimal               @db.Decimal(18, 4)
+  varianceAmount        Decimal               @db.Decimal(18, 4)
+  variancePercent       Decimal               @db.Decimal(9, 4)
+  restrictedRationale   String
+  requestedById         String
+  decidedByIds          String[]              @default([])
+  decisionReason        String?
+  decidedAt             DateTime?
+  correlationId         String
+  createdAt             DateTime              @default(now())
+
   @@unique([organizationId, correlationId])
   @@index([organizationId, status, createdAt])
 }
 
 model HrCompDecision {
-  id String @id @default(cuid())
-  organizationId String
-  recommendationId String? @unique
+  id                    String               @id @default(cuid())
+  organizationId        String
+  recommendationId      String?              @unique
   recommendationVersion Int?
-  exceptionId String?
-  awardId String?
-  eventType String
-  status HrCompDecisionStatus @default(PENDING)
-  oldAmount Decimal? @db.Decimal(18, 4)
-  newAmount Decimal @db.Decimal(18, 4)
-  currency String
-  payBasis HrCompPayBasis?
-  marketVersionId String?
-  bandVersionId String?
-  policyVersionId String
-  effectiveAt DateTime
-  approverUserIds String[] @default([])
-  rationale String
-  idempotencyKey String
-  correlationId String
-  approvedAt DateTime?
-  createdAt DateTime @default(now())
+  exceptionId           String?
+  awardId               String?
+  eventType             String
+  status                HrCompDecisionStatus @default(PENDING)
+  oldAmount             Decimal?             @db.Decimal(18, 4)
+  newAmount             Decimal              @db.Decimal(18, 4)
+  currency              String
+  payBasis              HrCompPayBasis?
+  marketVersionId       String?
+  bandVersionId         String?
+  policyVersionId       String
+  effectiveAt           DateTime
+  approverUserIds       String[]             @default([])
+  rationale             String
+  idempotencyKey        String
+  correlationId         String
+  approvedAt            DateTime?
+  createdAt             DateTime             @default(now())
+
   @@unique([organizationId, idempotencyKey])
   @@unique([organizationId, correlationId])
   @@index([organizationId, status, effectiveAt])
 }
 
 model HrBonusProgram {
-  id String @id @default(cuid())
+  id             String          @id @default(cuid())
   organizationId String
-  code String
-  name String
-  awardType HrCompAwardType
-  currentVersion Int @default(1)
-  createdAt DateTime @default(now())
+  code           String
+  name           String
+  awardType      HrCompAwardType
+  currentVersion Int             @default(1)
+  createdAt      DateTime        @default(now())
+
   @@unique([organizationId, code])
 }
 
 model HrBonusProgramVersion {
-  id String @id @default(cuid())
-  organizationId String
-  programId String
-  version Int
-  targetMode String
-  targetValue Decimal? @db.Decimal(18, 4)
-  currency String?
+  id              String              @id @default(cuid())
+  organizationId  String
+  programId       String
+  version         Int
+  targetMode      String
+  targetValue     Decimal?            @db.Decimal(18, 4)
+  currency        String?
   eligibilityRule Json
-  status HrCompPublishStatus @default(DRAFT)
-  effectiveFrom DateTime
-  effectiveTo DateTime?
-  contentHash String
-  publishedById String?
-  publishedAt DateTime?
-  createdAt DateTime @default(now())
+  status          HrCompPublishStatus @default(DRAFT)
+  effectiveFrom   DateTime
+  effectiveTo     DateTime?
+  contentHash     String
+  publishedById   String?
+  publishedAt     DateTime?
+  createdAt       DateTime            @default(now())
+
   @@unique([programId, version])
   @@unique([organizationId, contentHash])
 }
 
 model HrBonusAward {
-  id String @id @default(cuid())
-  organizationId String
-  employeeId String
+  id                 String    @id @default(cuid())
+  organizationId     String
+  employeeId         String
   workRelationshipId String
-  programVersionId String
-  proposedAmount Decimal @db.Decimal(18, 4)
-  approvedAmount Decimal? @db.Decimal(18, 4)
-  currency String
-  reason String
-  effectiveAt DateTime
+  programVersionId   String
+  proposedAmount     Decimal   @db.Decimal(18, 4)
+  approvedAmount     Decimal?  @db.Decimal(18, 4)
+  currency           String
+  reason             String
+  effectiveAt        DateTime
   paymentReferenceAt DateTime?
-  status String @default("PROPOSED")
-  approverUserIds String[] @default([])
-  idempotencyKey String
-  correlationId String
-  approvedAt DateTime?
-  createdAt DateTime @default(now())
+  status             String    @default("PROPOSED")
+  approverUserIds    String[]  @default([])
+  idempotencyKey     String
+  correlationId      String
+  approvedAt         DateTime?
+  createdAt          DateTime  @default(now())
+
   @@unique([organizationId, idempotencyKey])
   @@unique([organizationId, correlationId])
   @@index([organizationId, employeeId, status, effectiveAt])
 }
 
 model HrCompStatement {
-  id String @id @default(cuid())
-  organizationId String
-  employeeId String
-  decisionId String?
-  awardId String?
-  statementType String
-  version Int @default(1)
+  id                String    @id @default(cuid())
+  organizationId    String
+  employeeId        String
+  decisionId        String?
+  awardId           String?
+  statementType     String
+  version           Int       @default(1)
   documentVersionId String
-  contentHash String
-  releasedAt DateTime?
-  correlationId String
-  createdAt DateTime @default(now())
+  contentHash       String
+  releasedAt        DateTime?
+  correlationId     String
+  createdAt         DateTime  @default(now())
+
   @@unique([organizationId, correlationId])
   @@unique([decisionId, version])
   @@index([organizationId, employeeId, releasedAt])
 }
 
 model HrCompRetroactiveSignal {
-  id String @id @default(cuid())
-  organizationId String
-  decisionId String @unique
-  oldRecordId String
-  newRecordId String
-  affectedFrom DateTime
-  affectedTo DateTime?
-  payrollRecalculationRequired Boolean @default(true)
-  correlationId String
-  createdAt DateTime @default(now())
+  id                           String    @id @default(cuid())
+  organizationId               String
+  decisionId                   String    @unique
+  oldRecordId                  String
+  newRecordId                  String
+  affectedFrom                 DateTime
+  affectedTo                   DateTime?
+  payrollRecalculationRequired Boolean   @default(true)
+  correlationId                String
+  createdAt                    DateTime  @default(now())
+
   @@unique([organizationId, correlationId])
 }
 
 model HrPayrollCompHandoff {
-  id String @id @default(cuid())
-  organizationId String
-  employeeId String
-  workRelationshipId String
-  assignmentId String
+  id                   String              @id @default(cuid())
+  organizationId       String
+  employeeId           String
+  workRelationshipId   String
+  assignmentId         String
   compensationRecordId String?
-  bonusAwardId String?
-  retroactiveSignalId String?
-  eventType String
-  amount Decimal @db.Decimal(18, 4)
-  currency String
-  payBasis HrCompPayBasis?
-  effectiveAt DateTime
-  affectedFrom DateTime?
-  affectedTo DateTime?
-  status HrCompHandoffStatus @default(PENDING)
-  schemaVersion Int @default(1)
-  idempotencyKey String
-  correlationId String
-  claimTokenHash String? @unique
-  claimedAt DateTime?
-  readyAt DateTime?
-  exportedAt DateTime?
-  safeError String?
-  createdAt DateTime @default(now())
+  bonusAwardId         String?
+  retroactiveSignalId  String?
+  eventType            String
+  amount               Decimal             @db.Decimal(18, 4)
+  currency             String
+  payBasis             HrCompPayBasis?
+  effectiveAt          DateTime
+  affectedFrom         DateTime?
+  affectedTo           DateTime?
+  status               HrCompHandoffStatus @default(PENDING)
+  schemaVersion        Int                 @default(1)
+  idempotencyKey       String
+  correlationId        String
+  claimTokenHash       String?             @unique
+  claimedAt            DateTime?
+  readyAt              DateTime?
+  exportedAt           DateTime?
+  safeError            String?
+  createdAt            DateTime            @default(now())
+
   @@unique([organizationId, idempotencyKey])
   @@unique([organizationId, correlationId])
   @@index([organizationId, status, effectiveAt])
 }
 
 model HrCompJobRun {
-  id String @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
-  jobType String
-  windowKey String
-  status String @default("PENDING")
-  claimTokenHash String? @unique
-  attemptCount Int @default(0)
-  checkpoint Json?
-  safeError String?
-  correlationId String
-  startedAt DateTime @default(now())
-  completedAt DateTime?
+  jobType        String
+  windowKey      String
+  status         String    @default("PENDING")
+  claimTokenHash String?   @unique
+  attemptCount   Int       @default(0)
+  checkpoint     Json?
+  safeError      String?
+  correlationId  String
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+
   @@unique([organizationId, jobType, windowKey])
   @@unique([organizationId, correlationId])
   @@index([organizationId, status, startedAt])
+}
+
+enum HrPayrollJurisdictionStatus {
+  DRAFT
+  REVIEW_REQUIRED
+  TESTING
+  CERTIFIED
+  SCHEDULED
+  ACTIVE
+  SUPERSEDED
+  RETIRED
+}
+
+enum HrPayrollAuthoritativeRunStatus {
+  DRAFT
+  CERTIFYING
+  BLOCKED
+  CERTIFIED
+  FROZEN
+  CALCULATING
+  CALCULATED
+  RECONCILED
+  APPROVED
+  FINALIZED
+  CANCELLED
+}
+
+enum HrPayrollRunKind {
+  REGULAR
+  OFF_CYCLE
+  EMERGENCY
+  CORRECTION
+}
+
+enum HrPayrollLineCategory {
+  EARNING
+  TAXABLE_BASE
+  PAYE
+  EMPLOYEE_DEDUCTION
+  EMPLOYER_CONTRIBUTION
+  ADJUSTMENT
+}
+
+enum HrPayrollRegulatoryChangeStatus {
+  DETECTED
+  REVIEW_REQUIRED
+  INTERPRETED
+  RULE_DRAFTED
+  TESTING
+  APPROVAL_REQUIRED
+  CERTIFIED
+  SCHEDULED
+  ACTIVE
+  SUPERSEDED
+  RETIRED
+}
+
+model HrPayrollJurisdiction {
+  id             String         @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  currency       String
+  status         HrRecordStatus @default(ACTIVE)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+}
+
+model HrPayrollJurisdictionVersion {
+  id             String                      @id @default(cuid())
+  organizationId String
+  jurisdictionId String
+  version        Int
+  status         HrPayrollJurisdictionStatus @default(DRAFT)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  ruleManifest   Json
+  ruleHash       String
+  engineVersion  String
+  certifiedById  String?
+  certifiedAt    DateTime?
+  supersedesId   String?
+  correlationId  String
+  createdAt      DateTime                    @default(now())
+
+  @@unique([jurisdictionId, version])
+  @@unique([organizationId, correlationId])
+  @@unique([organizationId, ruleHash])
+  @@index([organizationId, jurisdictionId, status, effectiveFrom, effectiveTo])
+}
+
+model HrPayrollRegulatorySource {
+  id               String         @id @default(cuid())
+  organizationId   String
+  jurisdictionCode String
+  authorityName    String
+  sourceType       String
+  url              String
+  approvedHost     String
+  status           HrRecordStatus @default(ACTIVE)
+  lastCheckedAt    DateTime?
+  lastContentHash  String?
+  monitoringHealth String         @default("UNKNOWN")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([organizationId, url])
+  @@index([organizationId, jurisdictionCode, status])
+}
+
+model HrPayrollRegulatoryEvidence {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  jurisdictionVersionId String
+  regulatorySourceId    String
+  title                 String
+  publicationDate       DateTime?
+  retrievedAt           DateTime
+  contentHash           String
+  durableObjectKey      String?
+  reviewerUserId        String?
+  reviewNote            String?
+  createdAt             DateTime  @default(now())
+
+  @@unique([jurisdictionVersionId, regulatorySourceId, contentHash])
+  @@index([organizationId, jurisdictionVersionId])
+}
+
+model HrPayrollRegulatoryChange {
+  id                            String                          @id @default(cuid())
+  organizationId                String
+  regulatorySourceId            String
+  previousContentHash           String?
+  detectedContentHash           String
+  status                        HrPayrollRegulatoryChangeStatus @default(DETECTED)
+  impactClassification          String?
+  interpretation                Json?
+  proposedJurisdictionVersionId String?
+  reviewedById                  String?
+  approvedById                  String?
+  detectedAt                    DateTime                        @default(now())
+  reviewedAt                    DateTime?
+  approvedAt                    DateTime?
+  correlationId                 String
+
+  @@unique([organizationId, regulatorySourceId, detectedContentHash])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, status, detectedAt])
+}
+
+model HrPayrollPayGroup {
+  id             String         @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  workerType     String
+  frequency      HrPayFrequency @default(MONTHLY)
+  jurisdictionId String
+  currency       String         @default("NGN")
+  timezone       String
+  status         HrRecordStatus @default(ACTIVE)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([organizationId, code])
+  @@index([organizationId, jurisdictionId, status])
+}
+
+model HrPayrollCalendarPeriod {
+  id                 String   @id @default(cuid())
+  organizationId     String
+  payGroupId         String
+  periodKey          String
+  startsAt           DateTime
+  endsAt             DateTime
+  cutoffAt           DateTime
+  freezeAt           DateTime
+  calculationOpensAt DateTime
+  approvalDueAt      DateTime
+  intendedPaymentAt  DateTime
+  accountingDate     DateTime
+  taxYear            Int
+  taxPeriod          Int
+  timezone           String
+  createdAt          DateTime @default(now())
+
+  @@unique([payGroupId, periodKey])
+  @@unique([organizationId, payGroupId, startsAt, endsAt])
+  @@index([organizationId, intendedPaymentAt])
+}
+
+model HrPayrollAuthoritativeRun {
+  id                    String                          @id @default(cuid())
+  organizationId        String
+  payGroupId            String
+  calendarPeriodId      String
+  jurisdictionVersionId String
+  kind                  HrPayrollRunKind                @default(REGULAR)
+  sequence              Int                             @default(1)
+  status                HrPayrollAuthoritativeRunStatus @default(DRAFT)
+  idempotencyKey        String
+  correlationId         String
+  createdById           String
+  calculatedById        String?
+  reconciledById        String?
+  approvedById          String?
+  finalizedById         String?
+  frozenAt              DateTime?
+  approvedAt            DateTime?
+  finalizedAt           DateTime?
+  createdAt             DateTime                        @default(now())
+  updatedAt             DateTime                        @updatedAt
+
+  @@unique([organizationId, idempotencyKey])
+  @@unique([organizationId, correlationId])
+  @@unique([payGroupId, calendarPeriodId, kind, sequence])
+  @@index([organizationId, status, createdAt])
+}
+
+model HrPayrollInputSnapshot {
+  id                  String   @id @default(cuid())
+  organizationId      String
+  payrollRunId        String
+  employeeId          String
+  personId            String
+  workRelationshipId  String
+  assignmentId        String
+  sourceManifest      Json
+  inputHash           String
+  certificationStatus String
+  blockerCount        Int      @default(0)
+  warningCount        Int      @default(0)
+  frozenAt            DateTime
+  correlationId       String
+  createdAt           DateTime @default(now())
+
+  @@unique([payrollRunId, employeeId])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, payrollRunId, certificationStatus])
+}
+
+model HrPayrollCalculationAttempt {
+  id             String    @id @default(cuid())
+  organizationId String
+  payrollRunId   String
+  attemptNumber  Int
+  inputSetHash   String
+  ruleSetHash    String
+  engineVersion  String
+  outputHash     String?
+  manifest       Json
+  status         String    @default("PENDING")
+  claimTokenHash String?   @unique
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  safeError      String?
+  correlationId  String
+
+  @@unique([payrollRunId, attemptNumber])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, payrollRunId, status])
+}
+
+model HrPayrollAuthoritativeResult {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  payrollRunId          String
+  calculationAttemptId  String
+  inputSnapshotId       String
+  employeeId            String
+  currency              String
+  grossEarnings         Decimal   @db.Decimal(20, 4)
+  taxableIncome         Decimal   @db.Decimal(20, 4)
+  paye                  Decimal   @db.Decimal(20, 4)
+  employeeDeductions    Decimal   @db.Decimal(20, 4)
+  employerContributions Decimal   @db.Decimal(20, 4)
+  adjustments           Decimal   @db.Decimal(20, 4)
+  netPay                Decimal   @db.Decimal(20, 4)
+  outputHash            String
+  finalizedAt           DateTime?
+  supersedesResultId    String?
+  correlationId         String
+  createdAt             DateTime  @default(now())
+
+  @@unique([payrollRunId, employeeId])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, employeeId, createdAt])
+}
+
+model HrPayrollResultLine {
+  id                   String                @id @default(cuid())
+  organizationId       String
+  payrollResultId      String
+  code                 String
+  category             HrPayrollLineCategory
+  amount               Decimal               @db.Decimal(20, 4)
+  taxableBaseCode      String?
+  sourceReference      String?
+  ruleVersionReference String
+  explanation          Json
+  sequence             Int
+  createdAt            DateTime              @default(now())
+
+  @@unique([payrollResultId, code, sequence])
+  @@index([organizationId, payrollResultId, category])
+}
+
+model HrPayrollRunApproval {
+  id             String   @id @default(cuid())
+  organizationId String
+  payrollRunId   String
+  actorUserId    String
+  actorRole      String
+  decision       String
+  reason         String?
+  inputHash      String
+  correlationId  String
+  createdAt      DateTime @default(now())
+
+  @@unique([payrollRunId, actorUserId, decision])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, payrollRunId, createdAt])
+}
+
+model HrPayrollPaymentInstruction {
+  id                   String    @id @default(cuid())
+  organizationId       String
+  payrollResultId      String
+  destinationVersionId String
+  currency             String
+  amount               Decimal   @db.Decimal(20, 4)
+  logicalKey           String
+  status               String    @default("PENDING")
+  providerReference    String?
+  submittedAt          DateTime?
+  settledAt            DateTime?
+  correlationId        String
+  createdAt            DateTime  @default(now())
+
+  @@unique([organizationId, logicalKey])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, status, createdAt])
 }

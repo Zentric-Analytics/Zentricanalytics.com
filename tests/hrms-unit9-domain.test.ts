@@ -1,0 +1,93 @@
+import { describe, expect, it } from "vitest";
+import {
+  assertCertifiedJurisdictionPackage,
+  assertIndependentPayrollApproval,
+  assertRegulatorySourceUrl,
+  assertUnit9RunTransition,
+  paymentInstructionKey,
+  payrollDigest,
+  payrollMoney,
+  reconcileGrossToNet,
+  roundPayroll,
+} from "../src/lib/hr/payroll/unit9-domain";
+import { canAssignRole, permissionsForRole } from "../src/lib/hr/permissions/catalog";
+import fs from "node:fs";
+import path from "node:path";
+
+describe("Unit 9 payroll domain", () => {
+  it("uses canonical hashes and fixed-precision arithmetic", () => {
+    expect(payrollDigest({ b: 2, a: 1 })).toBe(payrollDigest({ a: 1, b: 2 }));
+    expect(roundPayroll("10.005").toFixed(2)).toBe("10.01");
+    expect(() => payrollMoney("0.00001")).toThrow("fixed-precision");
+    expect(() => payrollMoney(Number.NaN)).toThrow("fixed-precision");
+  });
+
+  it("keeps employee deductions and employer contributions separate", () => {
+    const result = reconcileGrossToNet([
+      { code: "BASE", category: "EARNING", amount: "100000.00" },
+      { code: "PAYE", category: "PAYE", amount: "10000.00" },
+      { code: "PENSION_EMPLOYEE", category: "EMPLOYEE_DEDUCTION", amount: "8000.00" },
+      { code: "PENSION_EMPLOYER", category: "EMPLOYER_CONTRIBUTION", amount: "10000.00" },
+      { code: "CORRECTION", category: "ADJUSTMENT", amount: "500.00" },
+    ]);
+    expect(result.gross.toFixed(2)).toBe("100000.00");
+    expect(result.paye.toFixed(2)).toBe("10000.00");
+    expect(result.employeeDeductions.toFixed(2)).toBe("8000.00");
+    expect(result.employerContributions.toFixed(2)).toBe("10000.00");
+    expect(result.net.toFixed(2)).toBe("82500.00");
+    expect(result.reconciles).toBe(true);
+  });
+
+  it("fails closed unless certified source-backed rules cover the payroll date", () => {
+    const payrollDate = new Date("2026-08-31T00:00:00.000Z");
+    expect(() => assertCertifiedJurisdictionPackage([], "NG", payrollDate)).toThrow("cannot finalize");
+    expect(() => assertCertifiedJurisdictionPackage([{ jurisdictionCode: "NG", status: "DRAFT", effectiveFrom: new Date("2026-01-01"), certifiedAt: null, sourceEvidenceCount: 2 }], "NG", payrollDate)).toThrow();
+    expect(assertCertifiedJurisdictionPackage([{ jurisdictionCode: "NG", status: "CERTIFIED", effectiveFrom: new Date("2026-01-01"), certifiedAt: new Date("2026-08-01"), sourceEvidenceCount: 2 }], "NG", payrollDate).jurisdictionCode).toBe("NG");
+  });
+
+  it("enforces governed run transitions and independent approval", () => {
+    expect(assertUnit9RunTransition("DRAFT", "CERTIFYING")).toBe("CERTIFYING");
+    expect(assertUnit9RunTransition("APPROVED", "FINALIZED")).toBe("FINALIZED");
+    expect(() => assertUnit9RunTransition("DRAFT", "FINALIZED")).toThrow("Invalid");
+    expect(() => assertIndependentPayrollApproval({ actorUserId: "same", createdById: "same" })).toThrow("Independent");
+    expect(() => assertIndependentPayrollApproval({ actorUserId: "approver", createdById: "creator", calculatedById: "processor" })).not.toThrow();
+  });
+
+  it("generates stable logical payment keys", () => {
+    const input = { organizationId: "org", finalizedResultId: "result", destinationVersionId: "bank-v2", amount: "100.0000", currency: "ngn" };
+    expect(paymentInstructionKey(input)).toBe(paymentInstructionKey({ ...input }));
+    expect(paymentInstructionKey({ ...input, amount: "101" })).not.toBe(paymentInstructionKey(input));
+  });
+
+  it("allows only explicitly approved HTTPS regulatory hosts", () => {
+    expect(assertRegulatorySourceUrl("https://www.pencom.gov.ng/pra2014/", ["www.pencom.gov.ng"])).toContain("https://");
+    expect(() => assertRegulatorySourceUrl("http://www.pencom.gov.ng/pra2014/", ["www.pencom.gov.ng"])).toThrow("HTTPS");
+    expect(() => assertRegulatorySourceUrl("https://example.com/rules", ["www.pencom.gov.ng"])).toThrow("not approved");
+  });
+
+  it("separates role governance from operational payroll authority", () => {
+    expect(canAssignRole(["ADMIN"], "PAYROLL_APPROVER")).toBe(true);
+    expect(canAssignRole(["HR_ADMIN"], "PAYROLL_APPROVER")).toBe(false);
+    expect(permissionsForRole("ADMIN")).not.toContain("payroll.read");
+    expect(permissionsForRole("PAYROLL_PROCESSOR")).toContain("payroll.calculate");
+    expect(permissionsForRole("PAYROLL_PROCESSOR")).not.toContain("payroll.approve");
+    expect(permissionsForRole("PAYROLL_APPROVER")).toContain("payroll.approve");
+    expect(permissionsForRole("PAYROLL_APPROVER")).not.toContain("payroll.payment.submit");
+    expect(permissionsForRole("PAYMENT_OPERATOR")).not.toContain("payroll.payment.approve");
+    expect(permissionsForRole("PAYMENT_APPROVER")).toContain("payroll.payment.approve");
+  });
+
+  it("persists Unit 9 foundations additively with database-backed invariants", () => {
+    const schema = fs.readFileSync(path.join(process.cwd(), "prisma/schema.prisma"), "utf8");
+    const migration = fs.readFileSync(path.join(process.cwd(), "prisma/migrations/20260814110000_hrms_unit9_payroll_foundation/migration.sql"), "utf8");
+    for (const model of ["HrPayrollJurisdiction", "HrPayrollJurisdictionVersion", "HrPayrollRegulatorySource", "HrPayrollRegulatoryEvidence", "HrPayrollRegulatoryChange", "HrPayrollPayGroup", "HrPayrollCalendarPeriod", "HrPayrollAuthoritativeRun", "HrPayrollInputSnapshot", "HrPayrollCalculationAttempt", "HrPayrollAuthoritativeResult", "HrPayrollResultLine", "HrPayrollRunApproval", "HrPayrollPaymentInstruction"]) {
+      expect(schema).toContain(`model ${model}`);
+      expect(migration).toContain(`CREATE TABLE "${model}"`);
+    }
+    expect(migration).not.toMatch(/DROP\s+(TABLE|COLUMN)/i);
+    expect(migration).toContain("HrPayrollAuthoritativeResult_finalized_immutable");
+    expect(migration).toContain("HrPayrollInputSnapshot_immutable");
+    expect(migration).toContain('ON "HrPayrollAuthoritativeRun"("payGroupId", "calendarPeriodId", "kind", "sequence")');
+    expect(schema).toMatch(/Decimal\s+@db\.Decimal\(20, 4\)/);
+  });
+});
