@@ -79,7 +79,7 @@ The following sources were retrieved directly from Nigerian government or regula
 | Joint Revenue Board | `https://www.jrb.gov.ng/assets/2026-pit-guidelines-TJG3n9-T.pdf` | `99ec0d0bcc5b1f4e1d592e15d4728715e8758fb3724fab4dcd495f389d5b22a8` | 2026 PAYE operation, employer registration, deduction/remittance timing, employee deduction records |
 | Federal Republic of Nigeria (official state revenue copy of Gazette) | `https://irs.gm.gov.ng/docs/national/NIGERIA_TAX_ACT_2025.pdf` | `e13ea10a605079e6da827ad29a40cd0ab426b4ef1c2fab4fee48263048782848` | Nigeria Tax Act 2025, including individual income-tax framework and schedules |
 | Federal Ministry of Finance | `https://finance.gov.ng/federal-government-issues-transition-guidelines-for-tax-acts-2025/` | page reference; durable evidence capture still required | Confirms the Nigeria Tax Act 2025 transition applies from 2026-01-01 and pre-2026 periods remain under repealed law |
-| National Pension Commission | `https://www.pencom.gov.ng/pra2014/` | official Act landing page; exact current Act PDF fingerprint still required | Pension Reform Act 2014 authority and applicable contributory-pension framework |
+| National Pension Commission | `https://www.pencom.gov.ng/wp-content/uploads/2018/01/PRA_2014.pdf` | `66c91953049132f1eb69f030282b8c0005ec89f31af8e1f87546a03f7f413889` (1,246,811 bytes) | Official Pension Reform Act 2014 publication retrieved from the regulator's current Act page; interpretation and applicability review remain required |
 
 ### Open certification items
 
@@ -87,7 +87,7 @@ Nigeria remains fail-closed because the evidence set has not yet completed all o
 
 - qualified interpretation of taxable employment income, exemptions and relief inputs across salaried, hourly, overtime, allowance, bonus, leave and retro cases;
 - exact annual/YTD PAYE treatment, proration and rounding reference examples from the 2026 PIT Guidelines;
-- current Pension Reform Act 2014 employee/employer percentages, covered-emolument basis, employer-paid alternative and coverage/exemption matrix from an exact official publication version (older PenCom FAQ pages expose superseded 7.5% language and therefore cannot drive payroll);
+- qualified interpretation of the fingerprinted Pension Reform Act 2014 employee/employer percentages, covered-emolument basis, employer-paid alternative and coverage/exemption matrix (older PenCom FAQ pages expose superseded 7.5% language and therefore cannot drive payroll);
 - any other enabled statutory deduction or employer contribution, including scope, basis, ceiling, remittance and effective date;
 - payslip/statutory-output and record-retention obligations applicable to the initial employer scope;
 - compliance reviewer and independent certifier approval over boundary, YTD, retro, rounding, salaried and hourly reference tests.
