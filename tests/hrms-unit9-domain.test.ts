@@ -79,7 +79,10 @@ describe("Unit 9 payroll domain", () => {
 
   it("persists Unit 9 foundations additively with database-backed invariants", () => {
     const schema = fs.readFileSync(path.join(process.cwd(), "prisma/schema.prisma"), "utf8");
-    const migration = fs.readFileSync(path.join(process.cwd(), "prisma/migrations/20260814110000_hrms_unit9_payroll_foundation/migration.sql"), "utf8");
+    const migrationPath = path.join(process.cwd(), "prisma/migrations/20260814110000_hrms_unit9_payroll_foundation/migration.sql");
+    const migrationBytes = fs.readFileSync(migrationPath);
+    expect([...migrationBytes.subarray(0, 3)]).not.toEqual([0xef, 0xbb, 0xbf]);
+    const migration = migrationBytes.toString("utf8");
     for (const model of ["HrPayrollJurisdiction", "HrPayrollJurisdictionVersion", "HrPayrollRegulatorySource", "HrPayrollRegulatoryEvidence", "HrPayrollRegulatoryChange", "HrPayrollPayGroup", "HrPayrollCalendarPeriod", "HrPayrollAuthoritativeRun", "HrPayrollInputSnapshot", "HrPayrollCalculationAttempt", "HrPayrollAuthoritativeResult", "HrPayrollResultLine", "HrPayrollRunApproval", "HrPayrollPaymentInstruction"]) {
       expect(schema).toContain(`model ${model}`);
       expect(migration).toContain(`CREATE TABLE "${model}"`);

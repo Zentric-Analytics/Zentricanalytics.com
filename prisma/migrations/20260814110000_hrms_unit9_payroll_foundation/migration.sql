@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "HrPayrollJurisdictionStatus" AS ENUM ('DRAFT', 'REVIEW_REQUIRED', 'TESTING', 'CERTIFIED', 'SCHEDULED', 'ACTIVE', 'SUPERSEDED', 'RETIRED');
 
 -- CreateEnum
