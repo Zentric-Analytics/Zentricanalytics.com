@@ -44,6 +44,9 @@ Unit 9 never silently rewrites the upstream authorities and never treats a draft
 - [Reviewer questions](nigeria-reviewer-questions.md)
 - [Review/certification template](nigeria-certification-signoff-template.md)
 - [Machine-readable manifest](nigeria-certification-manifest.json)
+- [NG-CANDIDATE-2026.2 Stage 1 review package](ng-candidate-2026-2-stage1-package.md)
+- [NG-CANDIDATE-2026.2 machine-readable manifest](ng-candidate-2026-2-stage1-manifest.json)
+- [NG-CANDIDATE-2026.2 deterministic package hashes](ng-candidate-2026-2-stage1-package.sha256)
 
 ## Implementation decomposition after owner approval
 

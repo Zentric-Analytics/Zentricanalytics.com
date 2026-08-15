@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "jurisdiction": "NG",
+  "candidateVersion": "NG-CANDIDATE-2026.2",
+  "certificationStatus": "NOT_CERTIFIED",
+  "candidateIdentity": {
+    "functionalCandidateSha": "14632a33b2cf2644089e54399412c7e94ce5dbbd",
+    "finalImplementationEvidenceSha": "a793a25416f98ca41c47c3e71fd25ecc4423f849",
+    "evidenceSha": "a793a25416f98ca41c47c3e71fd25ecc4423f849",
+    "mergeSha": "15b65249dfa91ff801b8031ad5d91722cabab4f1",
+    "devSha": "a793a25416f98ca41c47c3e71fd25ecc4423f849",
+    "stagingDeployedSha": "1fb4320f7c77df781d8a6f5829c21d003b557d6f",
+    "deploymentId": "dep-da07fddbedkc73a3k4qg"
+  },
+  "database": {
+    "environment": "staging",
+    "name": "zentric_analytics_staging",
+    "hostIdentity": "dpg-d8s9itj6sc1c73c6vsl0-a",
+    "migrationCount": 58,
+    "pendingMigrationCount": 0,
+    "unit9MigrationIds": [
+      "20260814110000_hrms_unit9_payroll_foundation",
+      "20260814120000_hrms_unit9_financial_evidence",
+      "20260814143000_hrms_unit9_authoritative_attempt_lineage",
+      "20260815053000_hrms_unit9_ng_2026_2_evidence",
+      "20260815064500_hrms_unit9_ng_2026_2_overlap_guards",
+      "20260815073000_hrms_unit9_ng_2026_2_immutability",
+      "20260815081500_hrms_unit9_ng_2026_2_statutory_amendments"
+    ]
+  },
+  "sources": [
+    {"id":"NG2-SRC-001","sha256":"41abf6887bc58a3c97116fd9a048aa91ad49c1cab156f39065a58401c0fce94f"},
+    {"id":"NG2-SRC-002","sha256":"eb3ea717052f48492cc6441ad23f9e7ac2ad4782395db1c391580cc1adef20e2"},
+    {"id":"NG2-SRC-003","sha256":"99ec0d0bcc5b1f4e1d592e15d4728715e8758fb3724fab4dcd495f389d5b22a8"},
+    {"id":"NG2-SRC-004","sha256":"66c91953049132f1eb69f030282b8c0005ec89f31af8e1f87546a03f7f413889"},
+    {"id":"NG2-SRC-005","sha256":"9cef51e3e6daa9d24ac2df04f1f9d2928ea845c5ab72a2142433100e4cd440a3"},
+    {"id":"NG2-SRC-006","sha256":null,"status":"EXTERNAL_COMPLIANCE_DECISION_REQUIRED"}
+  ],
+  "artifacts": {
+    "ruleConfigurationSha256": "2bb4273852b4c5cb5685b57fb3852e95886ee3e91b6a18ba523afa8c3b8b8da5",
+    "engineVersion": "unit9-engine@14632a33b2cf2644089e54399412c7e94ce5dbbd",
+    "engineSha256": "a9a8f11246fc23224d22583551a318f9afcdb5352776d4794684560186a64256",
+    "expectedValueFixtureCount": 17,
+    "expectedValueFixtureSha256": "bc7113ecd2057f70a1215f7b9c61af018c70dfbb155cfb6177d50916dc20af30",
+    "postgresqlEvidenceSha256": "bd1906347d019c23d1ccf1f01d4072bff457badca80efb5c7beeacedc59aca68",
+    "deterministicReplayEvidenceSha256": "bc7113ecd2057f70a1215f7b9c61af018c70dfbb155cfb6177d50916dc20af30",
+    "stagingEvidenceSha256": "f0d4cba0e3004667a8eecc5196414c9bf211066c3b148c45bc164ec39b6b3567",
+    "failClosedEvidenceSha256": "f0d4cba0e3004667a8eecc5196414c9bf211066c3b148c45bc164ec39b6b3567",
+    "sourceRegisterSha256": "cb9f11bafa82627f389e62e97de6160143f56db94b8e3598d7ede94d91f32015",
+    "remediationMatrixSha256": "f0fb1e463981ebf77a9e0f3e13ab78c8a7bc8909f8264e27ea39f37168ccff1f"
+  },
+  "quality": {
+    "fullTestCount": 918,
+    "fullTestFileCount": 77,
+    "result": "PASS",
+    "typescript": "PASS",
+    "eslint": "PASS_ZERO_WARNINGS",
+    "prisma": "PASS",
+    "productionBuild": "PASS"
+  },
+  "review": {
+    "stage1Reviewer": null,
+    "stage1Decision": "PENDING",
+    "stage2Certifier": null,
+    "certificationEvent": null
+  },
+  "restrictions": {
+    "officialFinalization": false,
+    "officialPayslips": false,
+    "realPayments": false,
+    "realFilingsOrRemittances": false
+  }
+}
