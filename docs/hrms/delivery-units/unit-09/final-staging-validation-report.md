@@ -7,8 +7,8 @@ Production was not accessed or modified. No real payment or statutory filing was
 ## Candidate and deployment
 
 - Branch: `dev`
-- Evidence candidate: `f052d7b68ba6ec5a32e768d38695bad8a6e4222b`
-- Render staging deployment: `dep-d9vqf9nlk1mc73ed7hdg`
+- Deployed evidence candidate: `ed190a9040cef261efb01180c1714cbf8d40e59d`
+- Render staging deployment: `dep-d9vsmbrl550s73c1hii0`
 - Staging database: `zentric_analytics_staging`
 - Migrations: 54 applied, none pending
 - Automated gate: 805/805 tests across 72 files; TypeScript, ESLint zero warnings, Prisma validation and production build pass
