@@ -127,17 +127,20 @@ export async function generateUnit9FinancialOutputs(db: PrismaClient, actor: Act
     if (existing) return { journalBatchId: existing.id, idempotent: true };
     const results = await tx.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, authoritativeAt: { not: null }, finalizedAt: { not: null } } });
     const total = (field: "grossEarnings" | "paye" | "employeeDeductions" | "employerContributions" | "netPay") => results.reduce((sum, result) => sum.plus(result[field]), new Prisma.Decimal(0));
+    const payeTotal = total("paye");
     const lines = [
       { accountCode: "PAYROLL_EXPENSE", debit: total("grossEarnings").plus(total("employerContributions")), sourceReference: run.id },
       { accountCode: "NET_PAY_PAYABLE", credit: total("netPay"), sourceReference: run.id },
-      { accountCode: "PAYE_PAYABLE", credit: total("paye"), sourceReference: run.id },
+      ...(payeTotal.isNegative()
+        ? [{ accountCode: "PAYE_REFUND_RECEIVABLE", debit: payeTotal.abs(), sourceReference: run.id }]
+        : [{ accountCode: "PAYE_PAYABLE", credit: payeTotal, sourceReference: run.id }]),
       { accountCode: "DEDUCTION_PAYABLE", credit: total("employeeDeductions"), sourceReference: run.id },
       { accountCode: "EMPLOYER_CONTRIBUTION_PAYABLE", credit: total("employerContributions"), sourceReference: run.id },
     ];
     const balanced = reconcileJournal(lines);
     const journal = await tx.hrPayrollJournalBatch.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, version: 1, status: "GENERATED", totalDebit: balanced.debit, totalCredit: balanced.credit, contentHash: balanced.hash, correlationId: crypto.randomUUID() } });
     await tx.hrPayrollJournalLine.createMany({ data: lines.map((line, sequence) => ({ organizationId: actor.organizationId, journalBatchId: journal.id, accountCode: line.accountCode, category: line.accountCode, debit: line.debit ?? new Prisma.Decimal(0), credit: line.credit ?? new Prisma.Decimal(0), sourceReference: line.sourceReference, sequence })) });
-    for (const result of results) for (const liability of [{ category: "PAYE", amount: result.paye }, { category: "EMPLOYEE_DEDUCTION", amount: result.employeeDeductions }, { category: "EMPLOYER_CONTRIBUTION", amount: result.employerContributions }]) if (!liability.amount.isZero()) await tx.hrPayrollStatutoryLiability.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, payrollResultId: result.id, jurisdictionVersionId: run.jurisdictionVersionId, category: liability.category, periodKey: input.periodKey, amount: liability.amount, ruleVersion: "frozen-result", correlationId: crypto.randomUUID() } });
+    for (const result of results) for (const liability of [{ category: result.paye.isNegative() ? "PAYE_REFUND_CREDIT" : "PAYE", amount: result.paye.abs() }, { category: "EMPLOYEE_DEDUCTION", amount: result.employeeDeductions }, { category: "EMPLOYER_CONTRIBUTION", amount: result.employerContributions }]) if (!liability.amount.isZero()) await tx.hrPayrollStatutoryLiability.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, payrollResultId: result.id, jurisdictionVersionId: run.jurisdictionVersionId, category: liability.category, periodKey: input.periodKey, amount: liability.amount, ruleVersion: "frozen-result", correlationId: crypto.randomUUID() } });
     await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollJournalBatch", entityId: journal.id, action: "unit9.financial_outputs.generated", newValues: { balanced: true, statutoryLiabilityCount: await tx.hrPayrollStatutoryLiability.count({ where: { organizationId: actor.organizationId, payrollRunId: run.id } }) }, correlationId: journal.correlationId });
     return { journalBatchId: journal.id, contentHash: journal.contentHash, idempotent: false };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
@@ -162,12 +165,39 @@ export async function acknowledgeUnit9RemittanceSimulation(db: PrismaClient, act
   return db.$transaction(async (tx) => {
     const batch = await tx.hrPayrollRemittanceBatch.findFirst({ where: { id: batchId, organizationId: actor.organizationId } });
     if (!batch) throw new Error("Remittance batch is outside the tenant.");
-    if (batch.status === "ACKNOWLEDGED") return batch;
+    const externalReference = `TEST:${testReference}`;
+    if (batch.status === "ACKNOWLEDGED") {
+      if (batch.externalReference !== externalReference) throw new Error("Conflicting simulated acknowledgement reference was rejected.");
+      return batch;
+    }
     if (batch.status !== "DRAFT") throw new Error("Only a draft remittance simulation may be acknowledged.");
-    const updated = await tx.hrPayrollRemittanceBatch.update({ where: { id: batch.id }, data: { status: "ACKNOWLEDGED", externalReference: `TEST:${testReference}`, acknowledgedAt: new Date() } });
+    const claimed = await tx.hrPayrollRemittanceBatch.updateMany({ where: { id: batch.id, organizationId: actor.organizationId, status: "DRAFT", externalReference: null }, data: { status: "ACKNOWLEDGED", externalReference, acknowledgedAt: new Date() } });
+    if (claimed.count !== 1) {
+      const winner = await tx.hrPayrollRemittanceBatch.findFirst({ where: { id: batch.id, organizationId: actor.organizationId } });
+      if (winner?.status === "ACKNOWLEDGED" && winner.externalReference === externalReference) return winner;
+      throw new Error("Conflicting simulated acknowledgement won the concurrent claim.");
+    }
+    const updated = await tx.hrPayrollRemittanceBatch.findUniqueOrThrow({ where: { id: batch.id } });
     const liabilityIds = (await tx.hrPayrollRemittanceLine.findMany({ where: { organizationId: actor.organizationId, remittanceBatchId: batch.id }, select: { liabilityId: true } })).map((line) => line.liabilityId);
     await tx.hrPayrollStatutoryLiability.updateMany({ where: { organizationId: actor.organizationId, id: { in: liabilityIds } }, data: { status: "REMITTED_SIMULATION" } });
     await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollRemittanceBatch", entityId: batch.id, action: "unit9.remittance_simulation.acknowledged", newValues: { testReference: "[RECORDED]", realFiling: false }, correlationId: batch.correlationId });
     return updated;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+export async function createUnit9RemittanceAmendmentSimulation(db: PrismaClient, actor: Actor, batchId: string, input: { idempotencyKey: string; reason: string; deltaManifest: Prisma.InputJsonValue }) {
+  const contentHash = payrollDigest({ batchId, reason: input.reason.trim(), deltaManifest: input.deltaManifest, simulationOnly: true });
+  return db.$transaction(async (tx) => {
+    const batch = await tx.hrPayrollRemittanceBatch.findFirst({ where: { id: batchId, organizationId: actor.organizationId, status: "ACKNOWLEDGED" } });
+    if (!batch) throw new Error("Only an acknowledged tenant remittance simulation may be amended.");
+    const existing = await tx.hrPayrollStatutoryAmendment.findUnique({ where: { organizationId_idempotencyKey: { organizationId: actor.organizationId, idempotencyKey: input.idempotencyKey } } });
+    if (existing) {
+      if (existing.originalRemittanceBatchId !== batch.id || existing.contentHash !== contentHash) throw new Error("Statutory amendment idempotency key was reused with conflicting content.");
+      return { amendment: existing, idempotent: true };
+    }
+    const latest = await tx.hrPayrollStatutoryAmendment.findFirst({ where: { organizationId: actor.organizationId, originalRemittanceBatchId: batch.id }, orderBy: { version: "desc" } });
+    const amendment = await tx.hrPayrollStatutoryAmendment.create({ data: { organizationId: actor.organizationId, originalRemittanceBatchId: batch.id, supersedesAmendmentId: latest?.id, version: (latest?.version ?? 0) + 1, idempotencyKey: input.idempotencyKey, reason: input.reason.trim(), deltaManifest: input.deltaManifest, contentHash, simulationOnly: true, correlationId: crypto.randomUUID() } });
+    await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollStatutoryAmendment", entityId: amendment.id, action: "unit9.remittance_simulation.amended", reason: amendment.reason, newValues: { originalRemittanceBatchId: batch.id, version: amendment.version, supersedesAmendmentId: amendment.supersedesAmendmentId, simulationOnly: true }, correlationId: amendment.correlationId });
+    return { amendment, idempotent: false };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }

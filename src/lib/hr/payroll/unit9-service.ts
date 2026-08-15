@@ -226,6 +226,8 @@ export async function finalizeUnit9Run(db: PrismaClient, actor: Actor, runId: st
     ]);
     for (const result of finalizedResults) for (const entry of [
       { code: "GROSS", amount: result.grossEarnings }, { code: "TAXABLE", amount: result.taxableIncome }, { code: "PAYE", amount: result.paye },
+      { code: "PAYE_DEDUCTED", amount: Prisma.Decimal.max(0, result.paye) },
+      { code: "PAYE_REPAID", amount: Prisma.Decimal.max(0, result.paye.negated()) },
       { code: "EMPLOYEE_DEDUCTION", amount: result.employeeDeductions }, { code: "EMPLOYER_CONTRIBUTION", amount: result.employerContributions },
     ]) await tx.hrPayrollYtdLedgerEntry.upsert({ where: { organizationId_employeeId_accumulatorCode_payrollResultId_entryType: { organizationId: actor.organizationId, employeeId: result.employeeId, accumulatorCode: entry.code, payrollResultId: result.id, entryType: "PERIOD_RESULT" } }, create: { organizationId: actor.organizationId, employeeId: result.employeeId, taxYear: period.taxYear, accumulatorCode: entry.code, entryType: "PERIOD_RESULT", amount: entry.amount, payrollResultId: result.id, effectiveAt: period.endsAt, correlationId: crypto.randomUUID() }, update: {} });
     await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollAuthoritativeRun", entityId: run.id, action: "unit9.payroll_run.finalized", newValues: { finalizationHash }, correlationId: run.correlationId });

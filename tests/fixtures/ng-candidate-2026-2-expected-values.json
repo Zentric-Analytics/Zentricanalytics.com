@@ -1,0 +1,151 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.2",
+  "certificationStatus": "NOT_CERTIFIED",
+  "fixtures": [
+    {
+      "id": "PAYE-STABLE-3M",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "3000000", "annualDeductions": "0", "period": 12, "priorDeducted": "302500", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3000000.00", "annualTax": "330000.00", "cumulativeTarget": "330000.00", "currentAdjustment": "27500.00" },
+      "derivation": "First NGN800,000 at 0%; next NGN2,200,000 at 15%."
+    },
+    {
+      "id": "PAYE-RELIEF-6M",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "6000000", "annualDeductions": "600000", "period": 12, "priorDeducted": "700000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "5400000.00", "annualTax": "762000.00", "cumulativeTarget": "762000.00", "currentAdjustment": "62000.00" },
+      "derivation": "NGN2,200,000 at 15% plus NGN2,400,000 at 18%."
+    },
+    {
+      "id": "PAYE-MIDYEAR-COMPENSATION-CHANGE",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "3600000", "annualDeductions": "0", "period": 7, "priorDeducted": "165000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3600000.00", "annualTax": "438000.00", "cumulativeTarget": "255500.00", "currentAdjustment": "90500.00" },
+      "derivation": "Expected income re-estimated to six months at NGN250,000 plus six at NGN350,000; cumulative target is 7/12."
+    },
+    {
+      "id": "PAYE-ONE-TIME-BONUS",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "4000000", "annualDeductions": "0", "period": 12, "priorDeducted": "450000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "4000000.00", "annualTax": "510000.00", "cumulativeTarget": "510000.00", "currentAdjustment": "60000.00" },
+      "derivation": "NGN3,000,000 salary plus NGN1,000,000 bonus; NGN330,000 plus NGN1,000,000 at 18%."
+    },
+    {
+      "id": "PAYE-BIK-50K",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "3050000", "annualDeductions": "0", "period": 12, "priorDeducted": "330000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3050000.00", "annualTax": "339000.00", "cumulativeTarget": "339000.00", "currentAdjustment": "9000.00" },
+      "derivation": "NGN3,000,000 cash remuneration plus governed NGN50,000 BIK."
+    },
+    {
+      "id": "PAYE-REFUND-35K",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "3000000", "annualDeductions": "0", "period": 6, "priorDeducted": "200000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3000000.00", "annualTax": "330000.00", "cumulativeTarget": "165000.00", "currentAdjustment": "-35000.00", "treatment": "PAYE_REFUND_CREDIT" },
+      "derivation": "Six-twelfths cumulative target less NGN200,000 already deducted."
+    },
+    {
+      "id": "JRB-RENT-ILLUSTRATION-2026",
+      "evidenceClass": "OFFICIAL_NUMERIC_EXAMPLE",
+      "sourceIds": ["NG2-SRC-003"],
+      "sourcePage": 7,
+      "input": { "rentPaid": "2000000", "monthsCovered": 24, "monthsAttributable": 12 },
+      "expected": { "attributableRent": "1000000.00", "rentRelief": "200000.00" }
+    },
+    {
+      "id": "PENSION-BHT-SPLIT",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-004"],
+      "input": { "basic": "100000", "housing": "20000", "transport": "10000" },
+      "expected": { "basis": "130000.00", "employee": "10400.00", "employer": "13000.00" },
+      "derivation": "BHT total; employee 8%; employer 10%."
+    },
+    {
+      "id": "PAYE-ZERO-TAXABLE",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "sourceSections": ["NTA 2025 First Schedule progressive individual rates", "JRB PIT Guidelines 2026 Appendix 1 p. 13"],
+      "input": { "annualIncome": "0", "annualDeductions": "0", "period": 12, "priorDeducted": "0", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "0.00", "annualTax": "0.00", "cumulativeTarget": "0.00", "currentAdjustment": "0.00" },
+      "rounding": "Aggregate annual liability, then ROUND_HALF_UP to NGN 2dp."
+    },
+    {
+      "id": "PAYE-LOW-500K",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "sourceSections": ["JRB PIT Guidelines 2026 Appendix 1 p. 13: first NGN800,000 at 0%"],
+      "input": { "annualIncome": "500000", "annualDeductions": "0", "period": 12, "priorDeducted": "0", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "500000.00", "annualTax": "0.00", "cumulativeTarget": "0.00", "currentAdjustment": "0.00" },
+      "rounding": "Aggregate annual liability, then ROUND_HALF_UP to NGN 2dp."
+    },
+    {
+      "id": "PAYE-HIGH-60M",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "sourceSections": ["JRB PIT Guidelines 2026 Appendix 1 p. 13: 0/15/18/21/23/25 percent bands"],
+      "input": { "annualIncome": "60000000", "annualDeductions": "0", "period": 12, "priorDeducted": "0", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "60000000.00", "annualTax": "12930000.00", "cumulativeTarget": "12930000.00", "currentAdjustment": "12930000.00" },
+      "rounding": "Aggregate annual liability, then ROUND_HALF_UP to NGN 2dp."
+    },
+    {
+      "id": "PAYE-ALLOWANCE-INCLUDED",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "sourceSections": ["JRB PIT Guidelines 2026 interpretation p. 4 and Appendix 2 p. 15: allowances are employment income"],
+      "input": { "annualIncome": "3600000", "annualDeductions": "0", "period": 12, "priorDeducted": "400000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3600000.00", "annualTax": "438000.00", "cumulativeTarget": "438000.00", "currentAdjustment": "38000.00" },
+      "rounding": "Aggregate annual liability, then ROUND_HALF_UP to NGN 2dp."
+    },
+    {
+      "id": "PAYE-BONUS-PLUS-BIK",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "sourceSections": ["JRB PIT Guidelines 2026 sections 10 and 13, pp. 7-8"],
+      "input": { "annualIncome": "4050000", "annualDeductions": "0", "period": 12, "priorDeducted": "500000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "4050000.00", "annualTax": "519000.00", "cumulativeTarget": "519000.00", "currentAdjustment": "19000.00" },
+      "rounding": "Aggregate annual liability, then ROUND_HALF_UP to NGN 2dp."
+    },
+    {
+      "id": "PAYE-RELIEF-INTRODUCED-300K",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "sourceSections": ["JRB PIT Guidelines 2026 sections 8-9, pp. 6-7"],
+      "input": { "annualIncome": "6000000", "annualDeductions": "300000", "period": 6, "priorDeducted": "350000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "5700000.00", "annualTax": "816000.00", "cumulativeTarget": "408000.00", "currentAdjustment": "58000.00" },
+      "rounding": "Aggregate annual liability, prorate cumulative target, then ROUND_HALF_UP to NGN 2dp."
+    },
+    {
+      "id": "PAYE-PRIOR-UNDER-DEDUCTION",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "sourceSections": ["JRB PIT Guidelines 2026 section 7.5-7.7 p. 6"],
+      "input": { "annualIncome": "3000000", "annualDeductions": "0", "period": 6, "priorDeducted": "100000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3000000.00", "annualTax": "330000.00", "cumulativeTarget": "165000.00", "currentAdjustment": "65000.00" },
+      "rounding": "Aggregate annual liability, prorate cumulative target, then ROUND_HALF_UP to NGN 2dp."
+    },
+    {
+      "id": "PAYE-JANUARY-JOINER",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "sourceSections": ["JRB PIT Guidelines 2026 sections 7.5-7.7 p. 6"],
+      "input": { "annualIncome": "3000000", "annualDeductions": "0", "period": 1, "priorDeducted": "0", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3000000.00", "annualTax": "330000.00", "cumulativeTarget": "27500.00", "currentAdjustment": "27500.00" },
+      "rounding": "Aggregate annual liability, prorate cumulative target, then ROUND_HALF_UP to NGN 2dp."
+    },
+    {
+      "id": "PAYE-MIDYEAR-JOINER-WITH-PRIOR-YTD",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "sourceSections": ["JRB PIT Guidelines 2026 sections 7.5-7.7 p. 6"],
+      "input": { "annualIncome": "3000000", "annualDeductions": "0", "period": 7, "priorDeducted": "100000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3000000.00", "annualTax": "330000.00", "cumulativeTarget": "192500.00", "currentAdjustment": "92500.00" },
+      "rounding": "Aggregate annual liability, prorate cumulative target, then ROUND_HALF_UP to NGN 2dp."
+    }
+  ]
+}

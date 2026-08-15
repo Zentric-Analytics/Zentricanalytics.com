@@ -5881,55 +5881,58 @@ model HrPayrollPayGroup {
 }
 
 model HrPayrollTaxableBaseDefinition {
-  id             String   @id @default(cuid())
-  organizationId String
+  id                    String    @id @default(cuid())
+  organizationId        String
   jurisdictionVersionId String
-  code           String
-  version        Int
-  ruleManifest   Json
-  effectiveFrom  DateTime
-  effectiveTo    DateTime?
-  correlationId  String
-  createdAt      DateTime @default(now())
+  code                  String
+  version               Int
+  ruleManifest          Json
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  correlationId         String
+  createdAt             DateTime  @default(now())
+
   @@unique([organizationId, jurisdictionVersionId, code, version])
   @@unique([organizationId, correlationId])
 }
 
 model HrPayrollEarningDefinition {
-  id             String   @id @default(cuid())
-  organizationId String
+  id                    String    @id @default(cuid())
+  organizationId        String
   jurisdictionVersionId String
-  code           String
-  version        Int
-  taxableBaseCode String
-  ruleManifest   Json
-  effectiveFrom  DateTime
-  effectiveTo    DateTime?
-  correlationId  String
-  createdAt      DateTime @default(now())
+  code                  String
+  version               Int
+  taxableBaseCode       String
+  ruleManifest          Json
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  correlationId         String
+  createdAt             DateTime  @default(now())
+
   @@unique([organizationId, jurisdictionVersionId, code, version])
   @@unique([organizationId, correlationId])
 }
 
 model HrPayrollDeductionDefinition {
-  id             String   @id @default(cuid())
-  organizationId String
+  id                    String    @id @default(cuid())
+  organizationId        String
   jurisdictionVersionId String
-  code           String
-  version        Int
-  category       String
-  method         String
-  ruleManifest   Json
-  effectiveFrom  DateTime
-  effectiveTo    DateTime?
-  correlationId  String
-  createdAt      DateTime @default(now())
+  code                  String
+  version               Int
+  category              String
+  method                String
+  ruleManifest          Json
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  correlationId         String
+  createdAt             DateTime  @default(now())
+
   @@unique([organizationId, jurisdictionVersionId, code, version])
   @@unique([organizationId, correlationId])
 }
 
 model HrPayrollEmployeeDeductionElection {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   organizationId        String
   employeeId            String
   deductionDefinitionId String
@@ -5940,42 +5943,45 @@ model HrPayrollEmployeeDeductionElection {
   effectiveTo           DateTime?
   supersedesId          String?
   correlationId         String
-  createdAt             DateTime @default(now())
+  createdAt             DateTime  @default(now())
+
   @@unique([organizationId, employeeId, deductionDefinitionId, version])
   @@unique([organizationId, correlationId])
 }
 
 model HrPayrollEmployerContributionDefinition {
-  id             String   @id @default(cuid())
-  organizationId String
+  id                    String    @id @default(cuid())
+  organizationId        String
   jurisdictionVersionId String
-  code           String
-  version        Int
-  liabilityCategory String
-  ruleManifest   Json
-  effectiveFrom  DateTime
-  effectiveTo    DateTime?
-  correlationId  String
-  createdAt      DateTime @default(now())
+  code                  String
+  version               Int
+  liabilityCategory     String
+  ruleManifest          Json
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  correlationId         String
+  createdAt             DateTime  @default(now())
+
   @@unique([organizationId, jurisdictionVersionId, code, version])
   @@unique([organizationId, correlationId])
 }
 
 model HrPayrollManualAdjustment {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
   payrollRunId   String
   employeeId     String
   category       String
-  amount         Decimal  @db.Decimal(20, 4)
+  amount         Decimal   @db.Decimal(20, 4)
   reason         String
   evidence       Json
   createdById    String
   approvedById   String?
   approvedAt     DateTime?
-  status         String   @default("PENDING")
+  status         String    @default("PENDING")
   correlationId  String
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
+
   @@unique([organizationId, correlationId])
   @@index([organizationId, payrollRunId, employeeId, status])
 }
@@ -6159,24 +6165,24 @@ model HrPayrollPaymentInstruction {
 }
 
 model HrPayrollPaymentDestinationVersion {
-  id                   String    @id @default(cuid())
-  organizationId       String
-  employeeId           String
-  version              Int
-  bankName             String
-  accountNameEncrypted String
+  id                     String    @id @default(cuid())
+  organizationId         String
+  employeeId             String
+  version                Int
+  bankName               String
+  accountNameEncrypted   String
   accountNumberEncrypted String
-  accountNumberLastFour String
-  currency             String
-  verificationStatus   String    @default("PENDING")
-  verifiedById         String?
-  verifiedAt           DateTime?
-  effectiveFrom        DateTime
-  effectiveTo          DateTime?
-  supersedesId         String?
-  changedById          String
-  correlationId        String
-  createdAt            DateTime  @default(now())
+  accountNumberLastFour  String
+  currency               String
+  verificationStatus     String    @default("PENDING")
+  verifiedById           String?
+  verifiedAt             DateTime?
+  effectiveFrom          DateTime
+  effectiveTo            DateTime?
+  supersedesId           String?
+  changedById            String
+  correlationId          String
+  createdAt              DateTime  @default(now())
 
   @@unique([organizationId, employeeId, version])
   @@unique([organizationId, correlationId])
@@ -6322,25 +6328,25 @@ model HrPayrollPayslipVersion {
 }
 
 model HrPayrollPaymentBatch {
-  id               String    @id @default(cuid())
-  organizationId   String
-  payrollRunId     String
-  version          Int
-  status           String    @default("DRAFT")
-  currency         String
-  instructionCount Int
-  totalAmount      Decimal   @db.Decimal(20, 4)
-  exportHash       String?
-  createdById      String
-  approvedById     String?
-  approvedAt       DateTime?
-  exportedAt       DateTime?
-  submittedAt      DateTime?
-  acknowledgedAt  DateTime?
-  settledAt        DateTime?
+  id                String    @id @default(cuid())
+  organizationId    String
+  payrollRunId      String
+  version           Int
+  status            String    @default("DRAFT")
+  currency          String
+  instructionCount  Int
+  totalAmount       Decimal   @db.Decimal(20, 4)
+  exportHash        String?
+  createdById       String
+  approvedById      String?
+  approvedAt        DateTime?
+  exportedAt        DateTime?
+  submittedAt       DateTime?
+  acknowledgedAt    DateTime?
+  settledAt         DateTime?
   providerReference String?
-  correlationId    String
-  createdAt        DateTime  @default(now())
+  correlationId     String
+  createdAt         DateTime  @default(now())
 
   @@unique([payrollRunId, version])
   @@unique([organizationId, correlationId])
@@ -6422,4 +6428,185 @@ model HrPayrollRemittanceLine {
   createdAt         DateTime @default(now())
 
   @@unique([remittanceBatchId, liabilityId])
+}
+
+model HrPayrollStatutoryAmendment {
+  id                      String   @id @default(cuid())
+  organizationId          String
+  originalRemittanceBatchId String
+  supersedesAmendmentId   String?
+  version                 Int
+  idempotencyKey          String
+  reason                  String
+  deltaManifest           Json
+  contentHash             String
+  simulationOnly          Boolean  @default(true)
+  correlationId           String
+  createdAt               DateTime @default(now())
+
+  @@unique([organizationId, idempotencyKey])
+  @@unique([originalRemittanceBatchId, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, originalRemittanceBatchId, createdAt])
+}
+
+model HrPayrollBikEvidenceVersion {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  employeeId            String
+  jurisdictionVersionId String
+  code                  String
+  version               Int
+  valuationMethod       String
+  valuationInputs       Json
+  taxableTreatment      String
+  taxableValue          Decimal   @db.Decimal(20, 4)
+  sourceRuleId          String
+  evidenceReference     String?
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  supersedesId          String?
+  correlationId         String
+  createdAt             DateTime  @default(now())
+
+  @@unique([organizationId, employeeId, code, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+}
+
+model HrPayrollTaxReliefClaimVersion {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  employeeId            String
+  jurisdictionVersionId String
+  taxYear               Int
+  claimType             String
+  version               Int
+  claimedAmount         Decimal  @db.Decimal(20, 4)
+  eligibleAmount        Decimal  @db.Decimal(20, 4)
+  ytdUtilized           Decimal  @default(0) @db.Decimal(20, 4)
+  electionRecorded      Boolean
+  evidenceReference     String
+  remittanceStatus      String
+  sourceRuleId          String
+  status                String   @default("PENDING")
+  effectiveFrom         DateTime
+  supersedesId          String?
+  correlationId         String
+  createdAt             DateTime @default(now())
+
+  @@unique([organizationId, employeeId, taxYear, claimType, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, employeeId, taxYear, status])
+}
+
+model HrPayrollPriorEmployerYtdVersion {
+  id                     String   @id @default(cuid())
+  organizationId         String
+  employeeId             String
+  taxYear                Int
+  version                Int
+  priorEmployerReference String?
+  gross                  Decimal? @db.Decimal(20, 4)
+  eligibleDeductions     Decimal? @db.Decimal(20, 4)
+  taxableIncome          Decimal? @db.Decimal(20, 4)
+  payeDeducted           Decimal? @db.Decimal(20, 4)
+  payeRepaid             Decimal? @db.Decimal(20, 4)
+  handling               String
+  evidenceReference      String
+  rtaApprovalReference   String?
+  supersedesId           String?
+  correlationId          String
+  createdAt              DateTime @default(now())
+
+  @@unique([organizationId, employeeId, taxYear, version])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollEmployeeRtaProfileVersion {
+  id                     String    @id @default(cuid())
+  organizationId         String
+  employeeId             String
+  taxYear                Int
+  version                Int
+  residenceStateOrFct    String
+  rtaCode                String
+  taxIdentifierEncrypted String
+  adapterVersion         String
+  priorYtdRequirement    String
+  effectiveFrom          DateTime
+  effectiveTo            DateTime?
+  supersedesId           String?
+  correlationId          String
+  createdAt              DateTime  @default(now())
+
+  @@unique([organizationId, employeeId, taxYear, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+}
+
+model HrPayrollPensionProfileVersion {
+  id                      String    @id @default(cuid())
+  organizationId          String
+  employeeId              String
+  jurisdictionVersionId   String
+  version                 Int
+  applicability           String
+  coverageReason          String?
+  exemptionReason         String?
+  rsaEncrypted            String?
+  pfaCode                 String?
+  pfcReference            String?
+  basisPolicy             Json
+  contributionRuleVersion String
+  effectiveFrom           DateTime
+  effectiveTo             DateTime?
+  supersedesId            String?
+  correlationId           String
+  createdAt               DateTime  @default(now())
+
+  @@unique([organizationId, employeeId, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+}
+
+model HrPayrollStatutoryApplicabilityVersion {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  legalEntityId         String
+  jurisdictionVersionId String
+  schemeCode            String
+  version               Int
+  state                 String
+  reason                String
+  evidenceReference     String?
+  configuration         Json?
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  supersedesId          String?
+  correlationId         String
+  createdAt             DateTime  @default(now())
+
+  @@unique([organizationId, legalEntityId, schemeCode, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, legalEntityId, effectiveFrom, effectiveTo])
+}
+
+model HrPayrollRetentionPolicyVersion {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  jurisdictionVersionId String
+  recordCategory        String
+  version               Int
+  minimumYears          Int?
+  holdType              String?
+  holdUntil             DateTime?
+  reason                String
+  effectiveFrom         DateTime
+  supersedesId          String?
+  correlationId         String
+  createdAt             DateTime  @default(now())
+
+  @@unique([organizationId, jurisdictionVersionId, recordCategory, version])
+  @@unique([organizationId, correlationId])
 }

@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { Prisma, PrismaClient } from "@prisma/client";
-import { calculateUnit9Run, createUnit9Run, decideUnit9Run } from "../src/lib/hr/payroll/unit9-service";
+import { acknowledgeUnit9RemittanceSimulation, createUnit9RemittanceAmendmentSimulation } from "../src/lib/hr/payroll/unit9-financial-service";
+import { calculateUnit9Run, createUnit9RetroTrigger, createUnit9Run, decideUnit9Run } from "../src/lib/hr/payroll/unit9-service";
 
 const databaseUrl = new URL(process.env.DATABASE_URL ?? "postgresql://missing/missing");
 const enabled = process.env.HR_UNIT9_STAGING_CONCURRENCY_CONFIRM === "staging-only" && databaseUrl.pathname.slice(1) === "zentric_analytics_staging";
@@ -44,8 +45,51 @@ async function main() {
       if (current.status === "RECONCILED") await decideUnit9Run(prisma, checker, current.id, { decision: "APPROVED", reason: "Approve winning recalculation" });
       assert(await prisma.hrPayrollRunApproval.count({ where: { payrollRunId: run.value.id, decision: "APPROVED" } }) === 1, "Approval was not exactly once.");
       assert(await prisma.hrPayrollAuthoritativeResult.count({ where: { payrollRunId: run.value.id, authoritativeAt: { not: null } } }) === 1, "Decision race duplicated the authoritative result.");
-      await prisma.hrAuditEvent.create({ data: { organizationId: source.organizationId, actorUserId: maker.userId, actorRole: maker.role, entityType: "Unit9Concurrency", entityId: run.value.id, action: "unit9.concurrency.validated", newValues: { duplicateRunWinners: 1, completedAttempts: 1, selectedResults: 1, decisionRaceWinners: 1 }, correlationId: marker } });
-      console.log(JSON.stringify({ result: "PASS", marker, runId: run.value.id, duplicateRunWinners: 1, completedAttempts: 1, selectedResults: 1, decisionRaceWinners: 1, approvals: 1 }));
+      const authoritativeResult = await prisma.hrPayrollAuthoritativeResult.findFirstOrThrow({ where: { organizationId: source.organizationId, payrollRunId: run.value.id, authoritativeAt: { not: null } } });
+
+      const priorYtd = { organizationId: source.organizationId, employeeId: sourceSnapshot.employeeId, taxYear: 2026, version: 1, priorEmployerReference: `${marker}:prior-employer`, gross: new Prisma.Decimal("100000"), eligibleDeductions: new Prisma.Decimal("10000"), taxableIncome: new Prisma.Decimal("90000"), payeDeducted: new Prisma.Decimal("9000"), payeRepaid: new Prisma.Decimal("0"), handling: "EVIDENCED", evidenceReference: `${marker}:evidence`, correlationId: `${marker}:prior-ytd-v1` };
+      const priorYtdRace = await Promise.allSettled([0, 1].map(() => prisma.hrPayrollPriorEmployerYtdVersion.create({ data: priorYtd })));
+      assert(priorYtdRace.filter(({ status }) => status === "fulfilled").length === 1, "Prior-YTD equivalent evidence race did not produce one winner.");
+      assert(await prisma.hrPayrollPriorEmployerYtdVersion.count({ where: { organizationId: source.organizationId, employeeId: sourceSnapshot.employeeId, taxYear: 2026, version: 1 } }) === 1, "Prior-YTD race persisted duplicate truth.");
+      const priorV1 = await prisma.hrPayrollPriorEmployerYtdVersion.findFirstOrThrow({ where: { organizationId: source.organizationId, correlationId: priorYtd.correlationId } });
+      await prisma.hrPayrollPriorEmployerYtdVersion.create({ data: { ...priorYtd, version: 2, payeDeducted: new Prisma.Decimal("9500"), supersedesId: priorV1.id, correlationId: `${marker}:prior-ytd-v2` } });
+
+      const accumulatorAmounts = { GROSS: "100000", TAXABLE_INCOME: "90000", PAYE_DEDUCTED: "9000", PAYE_REPAID: "3500", PENSION_EMPLOYEE: "8000", PENSION_EMPLOYER: "10000" } as const;
+      const ytdRaceWinners: Record<string, number> = {};
+      for (const [accumulatorCode, amount] of Object.entries(accumulatorAmounts)) {
+        const data = { organizationId: source.organizationId, employeeId: sourceSnapshot.employeeId, taxYear: 2026, accumulatorCode, entryType: "AUTHORITATIVE", amount: new Prisma.Decimal(amount), payrollResultId: authoritativeResult.id, effectiveAt: new Date(), correlationId: `${marker}:ytd:${accumulatorCode}` };
+        const raced = await Promise.allSettled([0, 1].map(() => prisma.hrPayrollYtdLedgerEntry.create({ data })));
+        ytdRaceWinners[accumulatorCode] = raced.filter(({ status }) => status === "fulfilled").length;
+        assert(ytdRaceWinners[accumulatorCode] === 1, `${accumulatorCode} YTD retry race did not produce one winner.`);
+        const aggregate = await prisma.hrPayrollYtdLedgerEntry.aggregate({ where: { organizationId: source.organizationId, employeeId: sourceSnapshot.employeeId, taxYear: 2026, accumulatorCode, payrollResultId: authoritativeResult.id }, _sum: { amount: true }, _count: true });
+        assert(aggregate._count === 1 && aggregate._sum.amount?.equals(amount), `${accumulatorCode} YTD aggregate did not reconcile exactly.`);
+      }
+
+      const retroInput = { sourceType: "PAYROLL" as const, sourceId: authoritativeResult.id, sourceVersion: `${marker}:v2`, previousVersion: `${marker}:v1`, affectedFrom: new Date("2026-08-01T00:00:00.000Z") };
+      const retroRace = await Promise.allSettled([0, 1].map(() => createUnit9RetroTrigger(prisma, maker, retroInput)));
+      assert(retroRace.some(({ status }) => status === "fulfilled"), "No retro trigger request won.");
+      assert(await prisma.hrPayrollRetroTrigger.count({ where: { organizationId: source.organizationId, sourceType: retroInput.sourceType, sourceId: retroInput.sourceId, sourceVersion: retroInput.sourceVersion } }) === 1, "Retro trigger duplicated its logical lineage.");
+
+      const remittance = await prisma.hrPayrollRemittanceBatch.create({ data: { organizationId: source.organizationId, jurisdictionVersionId: source.jurisdictionVersionId, periodKey: `${marker}:period`, category: "PAYE_REFUND_CREDIT", version: 1, totalAmount: new Prisma.Decimal("3500"), correlationId: `${marker}:remittance` } });
+      const acknowledgementRace = await Promise.allSettled([0, 1].map(() => acknowledgeUnit9RemittanceSimulation(prisma, checker, remittance.id, `${marker}:ack`)));
+      assert(acknowledgementRace.filter(({ status }) => status === "fulfilled").length >= 1, "No acknowledgement replay completed.");
+      const acknowledged = await prisma.hrPayrollRemittanceBatch.findUniqueOrThrow({ where: { id: remittance.id } });
+      assert(acknowledged.status === "ACKNOWLEDGED" && acknowledged.externalReference === `TEST:${marker}:ack`, "Acknowledgement did not preserve the winning test reference.");
+      let conflictingAcknowledgementRejected = false;
+      try { await acknowledgeUnit9RemittanceSimulation(prisma, checker, remittance.id, `${marker}:conflict`); } catch { conflictingAcknowledgementRejected = true; }
+      assert(conflictingAcknowledgementRejected, "Conflicting acknowledgement silently overwrote history.");
+
+      const amendmentInput = { idempotencyKey: `${marker}:amendment`, reason: "Correct synthetic PAYE refund liability", deltaManifest: { payeRefundDelta: "3500.00", realFiling: false } };
+      const amendmentRace = await Promise.allSettled([0, 1].map(() => createUnit9RemittanceAmendmentSimulation(prisma, checker, remittance.id, amendmentInput)));
+      assert(amendmentRace.some(({ status }) => status === "fulfilled"), "No statutory amendment request won.");
+      assert(await prisma.hrPayrollStatutoryAmendment.count({ where: { organizationId: source.organizationId, idempotencyKey: amendmentInput.idempotencyKey } }) === 1, "Statutory amendment duplicated its logical version.");
+      const firstAmendment = await prisma.hrPayrollStatutoryAmendment.findFirstOrThrow({ where: { organizationId: source.organizationId, idempotencyKey: amendmentInput.idempotencyKey } });
+      const secondAmendment = await createUnit9RemittanceAmendmentSimulation(prisma, checker, remittance.id, { idempotencyKey: `${marker}:amendment-v2`, reason: "Second governed synthetic correction", deltaManifest: { payeRefundDelta: "100.00", realFiling: false } });
+      assert(secondAmendment.amendment.version === 2 && secondAmendment.amendment.supersedesAmendmentId === firstAmendment.id, "Legitimate later amendment did not append to lineage.");
+
+      const evidence = { duplicateRunWinners: 1, completedAttempts: 1, selectedResults: 1, decisionRaceWinners: 1, priorYtdWinners: 1, priorYtdVersions: 2, ytdRaceWinners, retroTriggerCount: 1, acknowledgementStatus: acknowledged.status, conflictingAcknowledgementRejected, amendmentVersions: 2 };
+      await prisma.hrAuditEvent.create({ data: { organizationId: source.organizationId, actorUserId: maker.userId, actorRole: maker.role, entityType: "Unit9Concurrency", entityId: run.value.id, action: "unit9.concurrency.validated", newValues: evidence, correlationId: marker } });
+      console.log(JSON.stringify({ result: "PASS", marker, runId: run.value.id, ...evidence, approvals: 1 }));
     } finally {
       await prisma.$disconnect();
     }
