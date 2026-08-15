@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { annualEmployerReturnDueDate, assertNg2026_2EarningMapped, assertNg2026_2JoinerYtd, assertRtaConfiguration, assertStatutoryApplicability, calculateNg2026_2AnnualizedPaye, calculateNg2026_2Pension, calculateNg2026_2RentRelief, evaluateNg2026_2Relief, NG_2026_2_STATUS, payeRemittanceDueDate, pensionRemittanceDueDate, taxRetentionUntil, valueNg2026_2Bik } from "../src/lib/hr/payroll/nigeria-2026-2";
+import { annualEmployerReturnDueDate, assertNg2026_2EarningMapped, assertNg2026_2JoinerYtd, assertRtaConfiguration, assertStatutoryApplicability, buildNg2026_2CandidatePayslip, buildNg2026_2PayeLiability, calculateNg2026_2AnnualizedPaye, calculateNg2026_2Pension, calculateNg2026_2Proration, calculateNg2026_2RentRelief, evaluateNg2026_2MinimumWage, evaluateNg2026_2Relief, NG_2026_2_STATUS, payeRemittanceDueDate, pensionRemittanceDueDate, taxRetentionUntil, valueNg2026_2Bik } from "../src/lib/hr/payroll/nigeria-2026-2";
+import { calculateFrozenPayroll } from "../src/lib/hr/payroll/unit9-engine";
+import fs from "node:fs";
+import path from "node:path";
 
 describe("NG-CANDIDATE-2026.2 remediation", () => {
   it.each([
@@ -67,5 +70,67 @@ describe("NG-CANDIDATE-2026.2 remediation", () => {
   it("retains tax evidence for at least six years after assessment and honors longer holds", () => {
     expect(taxRetentionUntil(2026).toISOString().slice(0,10)).toBe("2033-01-01");
     expect(taxRetentionUntil(2026, new Date("2035-06-01")).toISOString().slice(0,10)).toBe("2035-06-01");
+  });
+
+  it("uses the annualized candidate path in the frozen engine and represents refunds explicitly", () => {
+    const result = calculateFrozenPayroll({
+      currency: "NGN", jurisdictionVersion: "NG-CANDIDATE-2026.2", engineVersion: "unit9-ng-2026.2",
+      earnings: [{ code: "BASE", sourceType: "UNIT8", sourceId: "handoff-1", fixedAmount: "250000", taxableBaseCode: "EMPLOYMENT", ruleVersionReference: "comp-v1" }],
+      paye: {
+        priorYtdTaxableIncome: "0", priorYtdPaye: "200000", priorPayeRepaid: "0",
+        expectedAnnualEmploymentIncome: "3000000", eligibleAnnualDeductions: "0", periodsElapsed: 6, periodsInTaxYear: 12,
+        rules: { version: "legacy-must-not-run", annualizationPeriods: 12, roundingScale: 2, bands: [] },
+      },
+    }, "snapshot-hash");
+    expect("currentTreatment" in result.paye ? result.paye.currentTreatment : null).toBe("PAYE_REFUND_CREDIT");
+    expect(result.paye.currentPaye.toFixed(2)).toBe("-35000.00");
+    expect(result.manifest.lines.find((line) => line.code === "PAYE_REFUND_CREDIT")?.amount).toBe("-35000.0000");
+    expect(result.output.net.toFixed(2)).toBe("285000.00");
+  });
+
+  it("fails closed when the frozen 2026.2 annualization evidence is incomplete", () => {
+    expect(() => calculateFrozenPayroll({
+      currency: "NGN", jurisdictionVersion: "NG-CANDIDATE-2026.2", engineVersion: "unit9-ng-2026.2", earnings: [],
+      paye: { priorYtdTaxableIncome: "0", priorYtdPaye: "0", rules: { version: "legacy", annualizationPeriods: 12, roundingScale: 2, bands: [] } },
+    }, "snapshot-hash")).toThrow("NG_2026_2_ANNUALIZATION_BLOCKER");
+  });
+
+  it("adds normalized versioned persistence with database-enforced idempotency and evidence checks", () => {
+    const migration = fs.readFileSync(path.join(process.cwd(), "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"), "utf8");
+    for (const table of ["HrPayrollBikEvidenceVersion", "HrPayrollTaxReliefClaimVersion", "HrPayrollPriorEmployerYtdVersion", "HrPayrollEmployeeRtaProfileVersion", "HrPayrollPensionProfileVersion", "HrPayrollStatutoryApplicabilityVersion", "HrPayrollRetentionPolicyVersion"]) {
+      expect(migration).toContain(`CREATE TABLE "${table}"`);
+    }
+    expect(migration).toContain("HrPayrollTaxReliefClaimVersion_logical_key");
+    expect(migration).toContain("HrPayrollPriorEmployerYtdVersion_handling_check");
+    expect(migration).toContain("APPLICABLE_CONFIGURED");
+    expect(migration).not.toContain("DROP TABLE");
+    expect(migration).not.toContain("ALTER TABLE");
+  });
+
+  it.each([
+    ["CALENDAR_DAY", "300000", "15", "30", undefined, "150000.00"],
+    ["SCHEDULED_WORKDAY", "220000", "10", "22", undefined, "100000.00"],
+    ["HOURLY", undefined, "80", undefined, "2500", "200000.00"],
+  ] as const)("uses the governed %s proration denominator", (mode, fullPeriodAmount, eligibleUnits, denominatorUnits, hourlyRate, expected) => {
+    expect(calculateNg2026_2Proration({ mode, fullPeriodAmount, eligibleUnits, denominatorUnits, hourlyRate, timezone: "Africa/Lagos", roundingScale: 2 }).amount.toFixed(2)).toBe(expected);
+  });
+
+  it("fails closed on unresolved minimum-wage applicability and reports an evidenced shortfall", () => {
+    expect(() => evaluateNg2026_2MinimumWage({ applicability: "REVIEW_REQUIRED", comparableMonthlyPay: "100000" })).toThrow("MINIMUM_WAGE_APPLICABILITY_BLOCKER");
+    expect(evaluateNg2026_2MinimumWage({ applicability: "APPLICABLE", governedMinimumMonthly: "70000", comparableMonthlyPay: "65000", evidenceReference: "official-source" }).shortfall?.toFixed(2)).toBe("5000.00");
+  });
+
+  it("renders PAYE refunds and immutable correction lineage in candidate-only payslips", () => {
+    const payslip = buildNg2026_2CandidatePayslip({ employerName: "Synthetic Employer", employeeReference: "EMP-TEST", periodKey: "2026-06", paymentDate: new Date("2026-06-30T00:00:00Z"), currency: "NGN", earnings: [{ code: "BASE", amount: "250000" }], bik: [], eligibleReliefs: [], payeAdjustment: "-35000", employeePension: "20000", employerPension: "25000", otherDeductions: "0", ytdGross: "1500000", ytdTaxable: "1500000", ytdPayeDeducted: "200000", ytdPayeRepaid: "35000", version: 2, supersedesId: "slip-v1", correctionReason: "Corrected cumulative PAYE" });
+    expect([payslip.payeDeduction.toFixed(2), payslip.payeRefund.toFixed(2), payslip.net.toFixed(2)]).toEqual(["0.00", "35000.00", "265000.00"]);
+    expect(payslip.publicationState).toBe("CANDIDATE_ONLY");
+    expect(payslip.hash).toHaveLength(64);
+  });
+
+  it("builds a versioned simulated State RTA liability with separate refund semantics", () => {
+    const output = buildNg2026_2PayeLiability({ rta: { stateOrFct: "Lagos", rtaId: "LIRS", taxIdentifier: "encrypted", adapterVersion: "candidate-v1", effectiveFrom: new Date("2026-01-01") }, taxYear: 2026, month: 12, grossEmoluments: "250000", bik: "0", eligibleReliefs: "0", taxableIncome: "250000", payeAdjustment: "-35000", resultReference: "result-1", version: 2, supersedesId: "liability-v1" });
+    expect(output.dueDate.slice(0, 10)).toBe("2027-01-10");
+    expect([output.payeDeducted.toFixed(2), output.payeRepaid.toFixed(2)]).toEqual(["0.00", "35000.00"]);
+    expect(output.simulationOnly).toBe(true);
   });
 });

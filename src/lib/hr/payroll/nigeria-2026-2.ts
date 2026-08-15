@@ -118,3 +118,66 @@ export function assertRtaConfiguration(input: { stateOrFct?: string; rtaId?: str
 }
 
 export function taxRetentionUntil(yearOfAssessment: number, holdUntil?: Date) { const minimum = new Date(Date.UTC(yearOfAssessment + 7, 0, 1)); return holdUntil && holdUntil > minimum ? holdUntil : minimum; }
+
+export type NgProrationPolicy = {
+  mode: "CALENDAR_DAY" | "SCHEDULED_WORKDAY" | "HOURLY";
+  fullPeriodAmount?: Unit9Money;
+  eligibleUnits: Unit9Money;
+  denominatorUnits?: Unit9Money;
+  hourlyRate?: Unit9Money;
+  timezone: string;
+  roundingScale: number;
+};
+
+export function calculateNg2026_2Proration(policy: NgProrationPolicy) {
+  if (!policy.timezone.trim()) throw new Error("PRORATION_POLICY_BLOCKER: timezone is required.");
+  const eligible = payrollMoney(policy.eligibleUnits);
+  if (eligible.isNegative()) throw new Error("Proration eligible units cannot be negative.");
+  if (policy.mode === "HOURLY") {
+    if (policy.hourlyRate === undefined) throw new Error("PRORATION_POLICY_BLOCKER: hourly rate is required.");
+    return { mode: policy.mode, amount: roundPayroll(eligible.mul(payrollMoney(policy.hourlyRate)), policy.roundingScale) };
+  }
+  if (policy.fullPeriodAmount === undefined || policy.denominatorUnits === undefined || !payrollMoney(policy.denominatorUnits).isPositive()) throw new Error("PRORATION_POLICY_BLOCKER: full-period amount and positive denominator are required.");
+  return { mode: policy.mode, amount: roundPayroll(payrollMoney(policy.fullPeriodAmount).mul(eligible).div(payrollMoney(policy.denominatorUnits)), policy.roundingScale) };
+}
+
+export function evaluateNg2026_2MinimumWage(input: { applicability: "APPLICABLE" | "EXEMPT" | "REVIEW_REQUIRED"; governedMinimumMonthly?: Unit9Money; comparableMonthlyPay: Unit9Money; evidenceReference?: string }) {
+  if (input.applicability === "REVIEW_REQUIRED") throw new Error("MINIMUM_WAGE_APPLICABILITY_BLOCKER");
+  if (input.applicability === "EXEMPT") return { compliant: true, applicability: input.applicability };
+  if (input.governedMinimumMonthly === undefined || !input.evidenceReference) throw new Error("MINIMUM_WAGE_CONFIGURATION_BLOCKER");
+  const minimum = payrollMoney(input.governedMinimumMonthly);
+  const actual = payrollMoney(input.comparableMonthlyPay);
+  return { compliant: actual.greaterThanOrEqualTo(minimum), shortfall: roundPayroll(Prisma.Decimal.max(0, minimum.minus(actual))), applicability: input.applicability };
+}
+
+export type NgCandidatePayslipInput = {
+  employerName: string; employeeReference: string; periodKey: string; paymentDate: Date; currency: string;
+  earnings: Array<{ code: string; amount: Unit9Money }>;
+  bik: Array<{ code: string; amount: Unit9Money }>;
+  eligibleReliefs: Array<{ code: string; amount: Unit9Money }>;
+  payeAdjustment: Unit9Money; employeePension: Unit9Money; employerPension: Unit9Money;
+  otherDeductions: Unit9Money; ytdGross: Unit9Money; ytdTaxable: Unit9Money; ytdPayeDeducted: Unit9Money; ytdPayeRepaid: Unit9Money;
+  version: number; supersedesId?: string; correctionReason?: string;
+};
+
+export function buildNg2026_2CandidatePayslip(input: NgCandidatePayslipInput) {
+  if (input.version > 1 && (!input.supersedesId || !input.correctionReason)) throw new Error("PAYSLIP_LINEAGE_BLOCKER");
+  const gross = [...input.earnings, ...input.bik].reduce((sum, line) => sum.plus(payrollMoney(line.amount)), new Prisma.Decimal(0));
+  const paye = payrollMoney(input.payeAdjustment);
+  const payeDeduction = Prisma.Decimal.max(0, paye);
+  const payeRefund = Prisma.Decimal.max(0, paye.negated());
+  const net = gross.minus(payeDeduction).plus(payeRefund).minus(payrollMoney(input.employeePension)).minus(payrollMoney(input.otherDeductions));
+  const representation = {
+    candidateVersion: NG_2026_2_VERSION, certificationStatus: NG_2026_2_STATUS, publicationState: "CANDIDATE_ONLY",
+    ...input, paymentDate: input.paymentDate.toISOString(), gross: roundPayroll(gross), payeDeduction: roundPayroll(payeDeduction), payeRefund: roundPayroll(payeRefund), net: roundPayroll(net),
+    productControlFields: ["version", "supersedesId", "correctionReason", "hash"],
+  };
+  return { ...representation, hash: payrollDigest(representation) };
+}
+
+export function buildNg2026_2PayeLiability(input: { rta: { stateOrFct?: string; rtaId?: string; taxIdentifier?: string; adapterVersion?: string; effectiveFrom?: Date }; taxYear: number; month: number; grossEmoluments: Unit9Money; bik: Unit9Money; eligibleReliefs: Unit9Money; taxableIncome: Unit9Money; payeAdjustment: Unit9Money; resultReference: string; version: number; supersedesId?: string }) {
+  assertRtaConfiguration(input.rta);
+  const adjustment = payrollMoney(input.payeAdjustment);
+  const output = { candidateVersion: NG_2026_2_VERSION, simulationOnly: true, rtaCode: input.rta.rtaId!, periodKey: `${input.taxYear}-${String(input.month).padStart(2, "0")}`, dueDate: payeRemittanceDueDate(input.taxYear, input.month).toISOString(), grossEmoluments: roundPayroll(input.grossEmoluments), bik: roundPayroll(input.bik), eligibleReliefs: roundPayroll(input.eligibleReliefs), taxableIncome: roundPayroll(input.taxableIncome), payeDeducted: roundPayroll(Prisma.Decimal.max(0, adjustment)), payeRepaid: roundPayroll(Prisma.Decimal.max(0, adjustment.negated())), resultReference: input.resultReference, version: input.version, supersedesId: input.supersedesId ?? null };
+  return { ...output, hash: payrollDigest(output) };
+}

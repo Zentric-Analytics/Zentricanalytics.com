@@ -127,17 +127,20 @@ export async function generateUnit9FinancialOutputs(db: PrismaClient, actor: Act
     if (existing) return { journalBatchId: existing.id, idempotent: true };
     const results = await tx.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, authoritativeAt: { not: null }, finalizedAt: { not: null } } });
     const total = (field: "grossEarnings" | "paye" | "employeeDeductions" | "employerContributions" | "netPay") => results.reduce((sum, result) => sum.plus(result[field]), new Prisma.Decimal(0));
+    const payeTotal = total("paye");
     const lines = [
       { accountCode: "PAYROLL_EXPENSE", debit: total("grossEarnings").plus(total("employerContributions")), sourceReference: run.id },
       { accountCode: "NET_PAY_PAYABLE", credit: total("netPay"), sourceReference: run.id },
-      { accountCode: "PAYE_PAYABLE", credit: total("paye"), sourceReference: run.id },
+      ...(payeTotal.isNegative()
+        ? [{ accountCode: "PAYE_REFUND_RECEIVABLE", debit: payeTotal.abs(), sourceReference: run.id }]
+        : [{ accountCode: "PAYE_PAYABLE", credit: payeTotal, sourceReference: run.id }]),
       { accountCode: "DEDUCTION_PAYABLE", credit: total("employeeDeductions"), sourceReference: run.id },
       { accountCode: "EMPLOYER_CONTRIBUTION_PAYABLE", credit: total("employerContributions"), sourceReference: run.id },
     ];
     const balanced = reconcileJournal(lines);
     const journal = await tx.hrPayrollJournalBatch.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, version: 1, status: "GENERATED", totalDebit: balanced.debit, totalCredit: balanced.credit, contentHash: balanced.hash, correlationId: crypto.randomUUID() } });
     await tx.hrPayrollJournalLine.createMany({ data: lines.map((line, sequence) => ({ organizationId: actor.organizationId, journalBatchId: journal.id, accountCode: line.accountCode, category: line.accountCode, debit: line.debit ?? new Prisma.Decimal(0), credit: line.credit ?? new Prisma.Decimal(0), sourceReference: line.sourceReference, sequence })) });
-    for (const result of results) for (const liability of [{ category: "PAYE", amount: result.paye }, { category: "EMPLOYEE_DEDUCTION", amount: result.employeeDeductions }, { category: "EMPLOYER_CONTRIBUTION", amount: result.employerContributions }]) if (!liability.amount.isZero()) await tx.hrPayrollStatutoryLiability.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, payrollResultId: result.id, jurisdictionVersionId: run.jurisdictionVersionId, category: liability.category, periodKey: input.periodKey, amount: liability.amount, ruleVersion: "frozen-result", correlationId: crypto.randomUUID() } });
+    for (const result of results) for (const liability of [{ category: result.paye.isNegative() ? "PAYE_REFUND_CREDIT" : "PAYE", amount: result.paye.abs() }, { category: "EMPLOYEE_DEDUCTION", amount: result.employeeDeductions }, { category: "EMPLOYER_CONTRIBUTION", amount: result.employerContributions }]) if (!liability.amount.isZero()) await tx.hrPayrollStatutoryLiability.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, payrollResultId: result.id, jurisdictionVersionId: run.jurisdictionVersionId, category: liability.category, periodKey: input.periodKey, amount: liability.amount, ruleVersion: "frozen-result", correlationId: crypto.randomUUID() } });
     await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollJournalBatch", entityId: journal.id, action: "unit9.financial_outputs.generated", newValues: { balanced: true, statutoryLiabilityCount: await tx.hrPayrollStatutoryLiability.count({ where: { organizationId: actor.organizationId, payrollRunId: run.id } }) }, correlationId: journal.correlationId });
     return { journalBatchId: journal.id, contentHash: journal.contentHash, idempotent: false };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
