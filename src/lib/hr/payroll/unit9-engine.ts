@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { payrollDigest, payrollMoney, reconcileGrossToNet, roundPayroll, type PayrollLine, type Unit9Money } from "./unit9-domain";
 import { calculateNg2026_2AnnualizedPaye, NG_2026_2_VERSION } from "./nigeria-2026-2";
+import { calculateNg2026_3CurrentPaye, NG_2026_3_VERSION, type Ng2026_3RtaNonPeriodicRule } from "./nigeria-2026-3";
 
 export type CertificationSeverity = "RUN_BLOCKER" | "EMPLOYEE_BLOCKER" | "WARNING" | "INFO";
 export type PayrollInputCandidate = {
@@ -78,6 +79,8 @@ export type FrozenPayrollManifest = {
     priorYtdTaxableIncome: Unit9Money; priorYtdPaye: Unit9Money; rules: ProgressiveTaxRules;
     expectedAnnualEmploymentIncome?: Unit9Money; eligibleAnnualDeductions?: Unit9Money;
     periodsElapsed?: number; periodsInTaxYear?: number; priorPayeRepaid?: Unit9Money;
+    currentPeriodRecurringEarnings?: Unit9Money; currentNonPeriodicPayments?: Unit9Money; bik?: Unit9Money;
+    rtaNonPeriodicRule?: Ng2026_3RtaNonPeriodicRule;
   };
   riskContext?: { previousGross?: Unit9Money; separated?: boolean; hourly?: boolean; lockedTimePresent?: boolean; destinationChangedNearCutoff?: boolean };
 };
@@ -93,7 +96,16 @@ export function calculateFrozenPayroll(manifest: FrozenPayrollManifest, snapshot
   });
   const taxableIncome = earnings.filter((line) => Boolean(line.taxableBaseCode)).reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
   const candidate2026_2 = manifest.jurisdictionVersion === NG_2026_2_VERSION;
-  const paye = candidate2026_2
+  const candidate2026_3 = manifest.jurisdictionVersion === NG_2026_3_VERSION;
+  const paye = candidate2026_3
+    ? (() => {
+        if (manifest.paye.expectedAnnualEmploymentIncome === undefined || manifest.paye.eligibleAnnualDeductions === undefined || manifest.paye.periodsElapsed === undefined || manifest.paye.periodsInTaxYear === undefined || manifest.paye.currentPeriodRecurringEarnings === undefined || manifest.paye.currentNonPeriodicPayments === undefined || manifest.paye.bik === undefined) {
+          throw new Error("NG_2026_3_REPRODUCIBILITY_BLOCKER: complete frozen current-PAYE facts are required.");
+        }
+        const result = calculateNg2026_3CurrentPaye({ expectedAnnualCashEmploymentIncome: manifest.paye.expectedAnnualEmploymentIncome, currentPeriodRecurringEarnings: manifest.paye.currentPeriodRecurringEarnings, currentNonPeriodicPayments: manifest.paye.currentNonPeriodicPayments, bik: manifest.paye.bik, eligibleAnnualDeductions: manifest.paye.eligibleAnnualDeductions, payrollPeriodNumber: manifest.paye.periodsElapsed, totalPeriodsInTaxYear: manifest.paye.periodsInTaxYear, priorPayeDeducted: manifest.paye.priorYtdPaye, priorPayeRepaid: manifest.paye.priorPayeRepaid ?? "0", rtaNonPeriodicRule: manifest.paye.rtaNonPeriodicRule });
+        return { ...result, ruleVersion: NG_2026_3_VERSION, currentPaye: result.currentPeriodPayeDebitOrRefund, ytdTaxable: result.annualChargeableIncome, ytdPaye: result.netPriorPaye.plus(result.currentPeriodPayeDebitOrRefund), trace: [] };
+      })()
+    : candidate2026_2
     ? (() => {
         if (manifest.paye.expectedAnnualEmploymentIncome === undefined || manifest.paye.eligibleAnnualDeductions === undefined || manifest.paye.periodsElapsed === undefined || manifest.paye.periodsInTaxYear === undefined) {
           throw new Error("NG_2026_2_ANNUALIZATION_BLOCKER: frozen expected annual income, eligible deductions, and tax-year position are required.");
@@ -117,7 +129,7 @@ export function calculateFrozenPayroll(manifest: FrozenPayrollManifest, snapshot
     ...contributions.map((line) => ({ code: line.code, category: "EMPLOYER_CONTRIBUTION" as const, amount: line.amount })),
     ...adjustments.map((line) => ({ code: line.code, category: "ADJUSTMENT" as const, amount: line.amount })),
   ];
-  const calculated = calculationManifest({ snapshotHash, jurisdictionVersion: manifest.jurisdictionVersion, engineVersion: manifest.engineVersion, sources: { earnings: manifest.earnings.map((line) => line.sourceId), deductions: (manifest.deductions ?? []).map((line) => line.sourceId), contributions: (manifest.employerContributions ?? []).map((line) => line.sourceId) }, ruleVersions: [candidate2026_2 ? NG_2026_2_VERSION : manifest.paye.rules.version, ...manifest.earnings.map((line) => line.ruleVersionReference), ...(manifest.deductions ?? []).map((line) => line.definitionVersion), ...(manifest.employerContributions ?? []).map((line) => line.definitionVersion)], lines });
+  const calculated = calculationManifest({ snapshotHash, jurisdictionVersion: manifest.jurisdictionVersion, engineVersion: manifest.engineVersion, sources: { earnings: manifest.earnings.map((line) => line.sourceId), deductions: (manifest.deductions ?? []).map((line) => line.sourceId), contributions: (manifest.employerContributions ?? []).map((line) => line.sourceId) }, ruleVersions: [candidate2026_3 ? NG_2026_3_VERSION : candidate2026_2 ? NG_2026_2_VERSION : manifest.paye.rules.version, ...manifest.earnings.map((line) => line.ruleVersionReference), ...(manifest.deductions ?? []).map((line) => line.definitionVersion), ...(manifest.employerContributions ?? []).map((line) => line.definitionVersion)], lines });
   const employeeDeductions = deductions.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
   const employerContributions = contributions.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
   const adjustmentTotal = adjustments.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));

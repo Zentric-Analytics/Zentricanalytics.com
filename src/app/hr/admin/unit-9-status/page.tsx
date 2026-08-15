@@ -3,18 +3,18 @@ export const dynamic = "force-dynamic";
 const head = process.env.RENDER_GIT_COMMIT ?? "local development candidate";
 const items = [
   ["Environment", "Staging only — production untouched"],
-  ["Branch", "dev"],
+  ["Branch", "feature/hrms-unit-09-ng-candidate-2026-3"],
   ["HEAD SHA", head],
   ["Unit 9A–9F", "IMPLEMENTED — governed inputs, calculation, reconciliation, approval, finalization, retro and YTD"],
   ["Unit 9G–9J", "IMPLEMENTED — payslips, simulated payments, accounting, statutory outputs and Regulatory Watch"],
   ["Migrations", "58 applied — none pending on staging"],
-  ["Automated suite", "919 / 919 passing across 77 files"],
+  ["Automated suite", "Focused 2026.3 gate: 22 / 22 passing; full release gate pending"],
   ["Nigeria certification", "NOT CERTIFIED — official finalization remains fail-closed pending qualified review"],
   ["Payment boundary", "Export and simulated settlement only; no real money movement"],
-  ["Current workflow", "NG-CANDIDATE-2026.2 final staging evidence and immutable Stage 1 package"],
+  ["Current workflow", "NG-CANDIDATE-2026.3 Stage 1 remediation — minimum-wage split and RTA-governed non-periodic pay"],
   ["Passed staging evidence", "Prior-YTD/YTD/retro/acknowledgement/amendment concurrency, fail-closed certification, privacy-safe 403s and PostgreSQL immutability"],
-  ["Defects fixed", "Candidate-aware migration gate and schema-correct retro-lineage integrity validation"],
-  ["Next release gate", "New qualified Stage 1 compliance review; candidate remains NOT CERTIFIED"],
+  ["Defects fixed", "Employment wage-floor and PAYE exemption separated; current-PAYE fixture schema made reproducible; generic bonus spreading removed"],
+  ["Next release gate", "Full repository/staging evidence, then qualified Stage 1 closure review; candidate remains NOT_CERTIFIED"],
 ] as const;
 
 export default function Unit9StatusPage() {
