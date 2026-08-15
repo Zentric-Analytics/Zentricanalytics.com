@@ -1,10 +1,10 @@
 bbae3f30d2491e83880fb72b5ca3323fe8ca04eee19e5f5354fde85f4eb23572  docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-stage1-package.md
-16085290914ea02f075eb157c55d7d38676034fc31efb9ae6be31052a246e9ab  docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-stage1-manifest.json
+f69ffe3cb1cc3c9c67fb93183490dc753efde74cbecfcf751685e12a5d0bdae9  docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-stage1-manifest.json
 f0fb1e463981ebf77a9e0f3e13ab78c8a7bc8909f8264e27ea39f37168ccff1f  docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-remediation-matrix.md
 cb9f11bafa82627f389e62e97de6160143f56db94b8e3598d7ede94d91f32015  docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-source-register.md
 bd1906347d019c23d1ccf1f01d4072bff457badca80efb5c7beeacedc59aca68  docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-postgresql-evidence.md
 0394d651a90760ee13c3588788d32db5b1227a110637014dcb1253b4bf7d235d  docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-immutability-boundaries.md
-5e648f7e04e95d7a33b6a41d98e471ef96edde3bb157afa27836a12a9e355142  docs/hrms/delivery-units/unit-09/final-staging-validation-report.md
+1e30972d188eb4bc8df753a82ca26135c29a3fac8d0ff28830eb12222f8bf4fa  docs/hrms/delivery-units/unit-09/final-staging-validation-report.md
 bc7113ecd2057f70a1215f7b9c61af018c70dfbb155cfb6177d50916dc20af30  tests/fixtures/ng-candidate-2026-2-expected-values.json
 2bb4273852b4c5cb5685b57fb3852e95886ee3e91b6a18ba523afa8c3b8b8da5  src/lib/hr/payroll/nigeria-2026-2.ts
 a9a8f11246fc23224d22583551a318f9afcdb5352776d4794684560186a64256  src/lib/hr/payroll/unit9-engine.ts

@@ -11,7 +11,8 @@ Production was not accessed or modified. No real payment, filing, submission, or
 - History-preserving merge into `dev`: `15b65249dfa91ff801b8031ad5d91722cabab4f1`
 - Candidate-aware integrity correction: `1fb4320f7c77df781d8a6f5829c21d003b557d6f`
 - Final implementation and integrity correction: `0ddde7e9c11ffc7a96e773bfd665377bc4465cd5`
-- Staging deployment: `dep-da07quojo6nc73du5eg0`
+- Validated implementation deployment: `dep-da07quojo6nc73du5eg0`
+- Visible evidence/status deployment: SHA `d54b37b24abee3f6b4a8c695c9037072a13cd591`, deployment `dep-da07uhflk1mc73fc16f0`
 - Staging database: `zentric_analytics_staging` at staging host identity `dpg-d8s9itj6sc1c73c6vsl0-a`
 - Migrations: 58 applied, zero pending, zero failed
 
