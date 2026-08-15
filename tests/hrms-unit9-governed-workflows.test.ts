@@ -50,6 +50,26 @@ describe("Unit 9 governed mutating workflows", () => {
     expect(service).toContain('status: "DRAFT", externalReference: null');
   });
 
+  it("preserves immutable, replay-safe statutory amendment lineage", () => {
+    const service = read("src/lib/hr/payroll/unit9-financial-service.ts");
+    const migration = read("prisma/migrations/20260815081500_hrms_unit9_ng_2026_2_statutory_amendments/migration.sql");
+    expect(service).toContain("createUnit9RemittanceAmendmentSimulation");
+    expect(service).toContain("Statutory amendment idempotency key was reused with conflicting content");
+    expect(service).toContain("supersedesAmendmentId: latest?.id");
+    expect(service).toContain("simulationOnly: true");
+    expect(migration).toContain('CREATE TABLE "HrPayrollStatutoryAmendment"');
+    expect(migration).toContain('BEFORE UPDATE OR DELETE ON "HrPayrollStatutoryAmendment"');
+    expect(migration).not.toMatch(/DROP TABLE|DROP COLUMN/);
+  });
+
+  it("classifies downstream immutability without overstating database enforcement", () => {
+    const boundaries = read("docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-immutability-boundaries.md");
+    expect(boundaries).toContain("DATABASE ENFORCED + SERVICE ENFORCED");
+    expect(boundaries).toContain("SERVICE ENFORCED + DATABASE IDEMPOTENCY");
+    expect(boundaries).toContain("does not claim database-level immutability for legacy rows");
+    expect(boundaries).toContain("Atomic DRAFT claim");
+  });
+
   it("persists balanced accounting and distinct statutory liability categories", () => {
     const service = read("src/lib/hr/payroll/unit9-financial-service.ts");
     expect(service).toContain("reconcileJournal(lines)");

@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { Prisma, PrismaClient } from "@prisma/client";
-import { acknowledgeUnit9RemittanceSimulation } from "../src/lib/hr/payroll/unit9-financial-service";
+import { acknowledgeUnit9RemittanceSimulation, createUnit9RemittanceAmendmentSimulation } from "../src/lib/hr/payroll/unit9-financial-service";
 import { calculateUnit9Run, createUnit9RetroTrigger, createUnit9Run, decideUnit9Run } from "../src/lib/hr/payroll/unit9-service";
 
 const databaseUrl = new URL(process.env.DATABASE_URL ?? "postgresql://missing/missing");
@@ -79,7 +79,15 @@ async function main() {
       try { await acknowledgeUnit9RemittanceSimulation(prisma, checker, remittance.id, `${marker}:conflict`); } catch { conflictingAcknowledgementRejected = true; }
       assert(conflictingAcknowledgementRejected, "Conflicting acknowledgement silently overwrote history.");
 
-      const evidence = { duplicateRunWinners: 1, completedAttempts: 1, selectedResults: 1, decisionRaceWinners: 1, priorYtdWinners: 1, priorYtdVersions: 2, ytdRaceWinners, retroTriggerCount: 1, acknowledgementStatus: acknowledged.status, conflictingAcknowledgementRejected };
+      const amendmentInput = { idempotencyKey: `${marker}:amendment`, reason: "Correct synthetic PAYE refund liability", deltaManifest: { payeRefundDelta: "3500.00", realFiling: false } };
+      const amendmentRace = await Promise.allSettled([0, 1].map(() => createUnit9RemittanceAmendmentSimulation(prisma, checker, remittance.id, amendmentInput)));
+      assert(amendmentRace.some(({ status }) => status === "fulfilled"), "No statutory amendment request won.");
+      assert(await prisma.hrPayrollStatutoryAmendment.count({ where: { organizationId: source.organizationId, idempotencyKey: amendmentInput.idempotencyKey } }) === 1, "Statutory amendment duplicated its logical version.");
+      const firstAmendment = await prisma.hrPayrollStatutoryAmendment.findFirstOrThrow({ where: { organizationId: source.organizationId, idempotencyKey: amendmentInput.idempotencyKey } });
+      const secondAmendment = await createUnit9RemittanceAmendmentSimulation(prisma, checker, remittance.id, { idempotencyKey: `${marker}:amendment-v2`, reason: "Second governed synthetic correction", deltaManifest: { payeRefundDelta: "100.00", realFiling: false } });
+      assert(secondAmendment.amendment.version === 2 && secondAmendment.amendment.supersedesAmendmentId === firstAmendment.id, "Legitimate later amendment did not append to lineage.");
+
+      const evidence = { duplicateRunWinners: 1, completedAttempts: 1, selectedResults: 1, decisionRaceWinners: 1, priorYtdWinners: 1, priorYtdVersions: 2, ytdRaceWinners, retroTriggerCount: 1, acknowledgementStatus: acknowledged.status, conflictingAcknowledgementRejected, amendmentVersions: 2 };
       await prisma.hrAuditEvent.create({ data: { organizationId: source.organizationId, actorUserId: maker.userId, actorRole: maker.role, entityType: "Unit9Concurrency", entityId: run.value.id, action: "unit9.concurrency.validated", newValues: evidence, correlationId: marker } });
       console.log(JSON.stringify({ result: "PASS", marker, runId: run.value.id, ...evidence, approvals: 1 }));
     } finally {

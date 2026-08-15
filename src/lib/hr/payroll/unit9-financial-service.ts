@@ -184,3 +184,20 @@ export async function acknowledgeUnit9RemittanceSimulation(db: PrismaClient, act
     return updated;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
+
+export async function createUnit9RemittanceAmendmentSimulation(db: PrismaClient, actor: Actor, batchId: string, input: { idempotencyKey: string; reason: string; deltaManifest: Prisma.InputJsonValue }) {
+  const contentHash = payrollDigest({ batchId, reason: input.reason.trim(), deltaManifest: input.deltaManifest, simulationOnly: true });
+  return db.$transaction(async (tx) => {
+    const batch = await tx.hrPayrollRemittanceBatch.findFirst({ where: { id: batchId, organizationId: actor.organizationId, status: "ACKNOWLEDGED" } });
+    if (!batch) throw new Error("Only an acknowledged tenant remittance simulation may be amended.");
+    const existing = await tx.hrPayrollStatutoryAmendment.findUnique({ where: { organizationId_idempotencyKey: { organizationId: actor.organizationId, idempotencyKey: input.idempotencyKey } } });
+    if (existing) {
+      if (existing.originalRemittanceBatchId !== batch.id || existing.contentHash !== contentHash) throw new Error("Statutory amendment idempotency key was reused with conflicting content.");
+      return { amendment: existing, idempotent: true };
+    }
+    const latest = await tx.hrPayrollStatutoryAmendment.findFirst({ where: { organizationId: actor.organizationId, originalRemittanceBatchId: batch.id }, orderBy: { version: "desc" } });
+    const amendment = await tx.hrPayrollStatutoryAmendment.create({ data: { organizationId: actor.organizationId, originalRemittanceBatchId: batch.id, supersedesAmendmentId: latest?.id, version: (latest?.version ?? 0) + 1, idempotencyKey: input.idempotencyKey, reason: input.reason.trim(), deltaManifest: input.deltaManifest, contentHash, simulationOnly: true, correlationId: crypto.randomUUID() } });
+    await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollStatutoryAmendment", entityId: amendment.id, action: "unit9.remittance_simulation.amended", reason: amendment.reason, newValues: { originalRemittanceBatchId: batch.id, version: amendment.version, supersedesAmendmentId: amendment.supersedesAmendmentId, simulationOnly: true }, correlationId: amendment.correlationId });
+    return { amendment, idempotent: false };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { annualEmployerReturnDueDate, assertNg2026_2EarningMapped, assertNg2026_2JoinerYtd, assertRtaConfiguration, assertStatutoryApplicability, buildNg2026_2AnnualEmployerReturn, buildNg2026_2CandidatePayslip, buildNg2026_2PayeLiability, calculateNg2026_2AnnualizedPaye, calculateNg2026_2Overtime, calculateNg2026_2Pension, calculateNg2026_2Proration, calculateNg2026_2RentRelief, evaluateNg2026_2MinimumWage, evaluateNg2026_2Relief, NG_2026_2_STATUS, payeRemittanceDueDate, pensionRemittanceDueDate, selectEffectiveNg2026_2Rta, taxRetentionUntil, valueNg2026_2Bik } from "../src/lib/hr/payroll/nigeria-2026-2";
 import { calculateFrozenPayroll } from "../src/lib/hr/payroll/unit9-engine";
+import { roundPayroll } from "../src/lib/hr/payroll/unit9-domain";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -8,11 +9,13 @@ describe("NG-CANDIDATE-2026.2 remediation", () => {
   const fixturePackage = JSON.parse(fs.readFileSync(path.join(process.cwd(), "tests/fixtures/ng-candidate-2026-2-expected-values.json"), "utf8")) as { candidateVersion: string; certificationStatus: string; fixtures: Array<{ id: string; evidenceClass: string; input: Record<string, string | number>; expected: Record<string, string> }> };
 
   it.each([
+    ["0", "0.00"], ["500000.00", "0.00"],
     ["799999.99", "0.00"], ["800000.00", "0.00"], ["800000.01", "0.00"],
     ["2999999.99", "330000.00"], ["3000000.00", "330000.00"], ["3000000.01", "330000.00"],
     ["11999999.99", "1950000.00"], ["12000000.00", "1950000.00"], ["12000000.01", "1950000.00"],
     ["24999999.99", "4680000.00"], ["25000000.00", "4680000.00"], ["25000000.01", "4680000.00"],
     ["49999999.99", "10430000.00"], ["50000000.00", "10430000.00"], ["50000000.01", "10430000.00"],
+    ["60000000.00", "12930000.00"],
   ])("uses independently specified annual band expectations at %s", (income, expected) => {
     const result = calculateNg2026_2AnnualizedPaye({ expectedAnnualEmploymentIncome: income, eligibleAnnualDeductions: "0", periodsElapsed: 12, periodsInTaxYear: 12, priorPayeDeducted: "0", priorPayeRepaid: "0" });
     expect(result.annualTax.toFixed(2)).toBe(expected);
@@ -183,7 +186,7 @@ describe("NG-CANDIDATE-2026.2 remediation", () => {
     expect(fixturePackage.fixtures.every((fixture) => ["OFFICIAL_NUMERIC_EXAMPLE", "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE"].includes(fixture.evidenceClass))).toBe(true);
   });
 
-  it.each(["PAYE-STABLE-3M", "PAYE-RELIEF-6M", "PAYE-MIDYEAR-COMPENSATION-CHANGE", "PAYE-ONE-TIME-BONUS", "PAYE-BIK-50K", "PAYE-REFUND-35K"])("matches independently stored expected values for %s", (id) => {
+  it.each(fixturePackage.fixtures.filter((fixture) => "annualTax" in fixture.expected).map((fixture) => fixture.id))("matches independently stored expected values for %s", (id) => {
     const fixture = fixturePackage.fixtures.find((candidate) => candidate.id === id)!;
     const result = calculateNg2026_2AnnualizedPaye({ expectedAnnualEmploymentIncome: fixture.input.annualIncome, eligibleAnnualDeductions: fixture.input.annualDeductions, periodsElapsed: Number(fixture.input.period), periodsInTaxYear: 12, priorPayeDeducted: fixture.input.priorDeducted, priorPayeRepaid: fixture.input.priorRepaid });
     expect({ annualTaxable: result.annualTaxable.toFixed(2), annualTax: result.annualTax.toFixed(2), cumulativeTarget: result.cumulativeTarget.toFixed(2), currentAdjustment: result.currentAdjustment.toFixed(2) }).toEqual({ annualTaxable: fixture.expected.annualTaxable, annualTax: fixture.expected.annualTax, cumulativeTarget: fixture.expected.cumulativeTarget, currentAdjustment: fixture.expected.currentAdjustment });
@@ -195,5 +198,24 @@ describe("NG-CANDIDATE-2026.2 remediation", () => {
     expect(attributable.toFixed(2)).toBe(fixture.expected.attributableRent);
     expect(calculateNg2026_2RentRelief(String(attributable)).toFixed(2)).toBe(fixture.expected.rentRelief);
     expect(fixture.evidenceClass).toBe("OFFICIAL_NUMERIC_EXAMPLE");
+  });
+
+  it.each([
+    ["0.0049", "0.00"], ["0.0050", "0.01"], ["0.0051", "0.01"],
+    ["-0.0049", "0.00"], ["-0.0050", "-0.01"], ["-0.0051", "-0.01"],
+  ])("rounds %s once at the final NGN boundary", (input, expected) => {
+    expect(roundPayroll(input, 2).toFixed(2)).toBe(expected);
+  });
+
+  it.each(["PAYE-STABLE-3M", "PAYE-RELIEF-6M", "PAYE-MIDYEAR-COMPENSATION-CHANGE", "PAYE-ONE-TIME-BONUS", "PAYE-BIK-50K", "PAYE-REFUND-35K"])("deterministically replays %s from frozen independent fixture inputs", (id) => {
+    const fixture = fixturePackage.fixtures.find((candidate) => candidate.id === id)!;
+    const run = () => calculateNg2026_2AnnualizedPaye({ expectedAnnualEmploymentIncome: fixture.input.annualIncome, eligibleAnnualDeductions: fixture.input.annualDeductions, periodsElapsed: Number(fixture.input.period), periodsInTaxYear: 12, priorPayeDeducted: fixture.input.priorDeducted, priorPayeRepaid: fixture.input.priorRepaid });
+    const normalize = (value: ReturnType<typeof run>) => JSON.stringify(value, (_key, candidate) => candidate && typeof candidate === "object" && "toFixed" in candidate ? candidate.toFixed(8) : candidate);
+    expect(normalize(run())).toBe(normalize(run()));
+  });
+
+  it("does not implement the superseded consolidated relief allowance", () => {
+    const implementation = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/payroll/nigeria-2026-2.ts"), "utf8");
+    expect(implementation).not.toMatch(/consolidated relief allowance|\bCRA\b/i);
   });
 });

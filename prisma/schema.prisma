@@ -6430,6 +6430,26 @@ model HrPayrollRemittanceLine {
   @@unique([remittanceBatchId, liabilityId])
 }
 
+model HrPayrollStatutoryAmendment {
+  id                      String   @id @default(cuid())
+  organizationId          String
+  originalRemittanceBatchId String
+  supersedesAmendmentId   String?
+  version                 Int
+  idempotencyKey          String
+  reason                  String
+  deltaManifest           Json
+  contentHash             String
+  simulationOnly          Boolean  @default(true)
+  correlationId           String
+  createdAt               DateTime @default(now())
+
+  @@unique([organizationId, idempotencyKey])
+  @@unique([originalRemittanceBatchId, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, originalRemittanceBatchId, createdAt])
+}
+
 model HrPayrollBikEvidenceVersion {
   id                    String    @id @default(cuid())
   organizationId        String
