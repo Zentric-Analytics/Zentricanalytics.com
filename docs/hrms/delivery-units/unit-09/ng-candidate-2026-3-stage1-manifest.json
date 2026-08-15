@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "jurisdiction": "NG",
+  "candidateVersion": "NG-CANDIDATE-2026.3",
+  "certificationStatus": "NOT_CERTIFIED",
+  "candidateIdentity": {
+    "baselineDevSha": "ed401f0b19811f2ff577acce8985fcbfbf998ce1",
+    "functionalCandidateSha": "f13696df41a20f07a165215c0b1a57e376b4b16b",
+    "mergeSha": "0ab54d7151cf402ca0f4ce0f056ae04c3ee23fac",
+    "stagingImplementationSha": "0ab54d7151cf402ca0f4ce0f056ae04c3ee23fac",
+    "stagingImplementationDeploymentId": "dep-da09uq5g1s2s73clkleg",
+    "evidenceSha": null,
+    "evidenceDeploymentId": null
+  },
+  "database": {"environment":"staging","name":"zentric_analytics_staging","migrationCount":58,"pendingMigrationCount":0,"schemaChangedByCandidate":false},
+  "sources": [
+    {"id":"NG3-SRC-NMW-2019","sha256":"496d8ce3cc6aea1cefe93348aebd88b23812f633d4a81ffa244e9f86e6bb2985"},
+    {"id":"NG3-SRC-NMW-2024-BILL","sha256":"b67ceb94ddab7a4a4032bb2738e7de9f358f0346a2e355fdc36f5b67a01b7dbc","status":"FINAL_ACT_BYTES_REQUIRED"},
+    {"id":"NG3-SRC-JRB-2026","sha256":"99ec0d0bcc5b1f4e1d592e15d4728715e8758fb3724fab4dcd495f389d5b22a8"},
+    {"id":"NG3-SRC-NTA-2025","sha256":"41abf6887bc58a3c97116fd9a048aa91ad49c1cab156f39065a58401c0fce94f"},
+    {"id":"NG3-SRC-NTAA-2025","sha256":"eb3ea717052f48492cc6441ad23f9e7ac2ad4782395db1c391580cc1adef20e2"}
+  ],
+  "artifacts": {
+    "ruleConfigurationSha256":"d2f82e2983dab31dc721d21a96baebc9669804fe5ad200259d24f4707f2ee46b",
+    "engineSha256":"74486228ae038481cc09f833ae63c5a8ba70c0aa9e00812c2bd0237fd3a0db2b",
+    "expectedValueFixtureCount":8,
+    "expectedValueFixtureSha256":"9cbca5487abffdff8ccb9a624f8f6c9e30c579629c258e0a928517ab40a86b0e",
+    "sourceRegisterSha256":"74626d3ef8dad0916a1857e7eb56e7cc108bb44c5392660c9584905ee6fbf55f",
+    "remediationMatrixSha256":"517b048c6689d1a872fdbd2d6b87401c033c83101cfe598a2fd569d1352cd7a9",
+    "stagingEvidenceSha256":"0c9d1f03652d7502f312c47f244c877e2ede93d89a382c03b19a4edee58cf13a"
+  },
+  "quality":{"focusedTestCount":22,"packageTestCount":3,"fullTestCount":944,"fullTestFileCount":79,"typescript":"PASS","eslint":"PASS_ZERO_WARNINGS","prisma":"PASS","productionBuild":"PASS"},
+  "review":{"stage1ClosureReviewer":null,"stage1ClosureDecision":"PENDING_EXTERNAL_COMPLIANCE_DECISION","stage2Certifier":null,"certificationEvent":null},
+  "restrictions":{"officialFinalization":false,"officialPayslips":false,"realPayments":false,"realFilingsOrRemittances":false},
+  "externalComplianceQuestions":["Canonical final 2024 amendment Act/gazette bytes and effective date","RTA-specific minimum-wage comparison basis for joiner/leaver/partial-year/irregular pay","RTA-specific non-periodic payment-period PAYE allocation"]
+}

@@ -8,13 +8,13 @@ const items = [
   ["Unit 9A–9F", "IMPLEMENTED — governed inputs, calculation, reconciliation, approval, finalization, retro and YTD"],
   ["Unit 9G–9J", "IMPLEMENTED — payslips, simulated payments, accounting, statutory outputs and Regulatory Watch"],
   ["Migrations", "58 applied — none pending on staging"],
-  ["Automated suite", "Focused 2026.3 gate: 22 / 22 passing; full release gate pending"],
+  ["Automated suite", "944 / 944 passing across 79 files; focused 2026.3 gate 22 / 22"],
   ["Nigeria certification", "NOT CERTIFIED — official finalization remains fail-closed pending qualified review"],
   ["Payment boundary", "Export and simulated settlement only; no real money movement"],
   ["Current workflow", "NG-CANDIDATE-2026.3 Stage 1 remediation — minimum-wage split and RTA-governed non-periodic pay"],
   ["Passed staging evidence", "Prior-YTD/YTD/retro/acknowledgement/amendment concurrency, fail-closed certification, privacy-safe 403s and PostgreSQL immutability"],
   ["Defects fixed", "Employment wage-floor and PAYE exemption separated; current-PAYE fixture schema made reproducible; generic bonus spreading removed"],
-  ["Next release gate", "Full repository/staging evidence, then qualified Stage 1 closure review; candidate remains NOT_CERTIFIED"],
+  ["Next release gate", "External RTA allocation/comparison decision and final 2024 Act bytes; candidate remains NOT_CERTIFIED"],
 ] as const;
 
 export default function Unit9StatusPage() {
