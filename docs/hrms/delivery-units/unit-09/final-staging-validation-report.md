@@ -50,3 +50,14 @@ Production was not accessed or modified. No real payment or statutory filing was
 Nigeria remains **NOT CERTIFIED**. This report does not claim that the email, payment, filing, finalization, backup, restore, or overall Unit 9 release gate has passed.
 
 The blocking certification work is not an ordinary engineering task. A qualified compliance reviewer and an independent certifier must approve the complete taxable-income, exemptions, reliefs, PAYE annual/YTD, proration, rounding, pension, statutory deduction, retention, salaried, hourly and retro interpretation/reference-test matrix. The application correctly fails closed until that evidence is approved; no test fixture or developer action may substitute for the required legal certification.
+
+## Qualified-review package
+
+- Candidate jurisdiction: `NG-CANDIDATE-2026.1`; state `NOT CERTIFIED`.
+- Authoritative sources registered: 4 (three byte fingerprints recorded; one official transition page still requires durable capture).
+- In-scope candidate rule rows: 15; none silently approved.
+- Certification scenarios: 14, with engineering mechanics distinguished from unresolved legal expected values.
+- Reviewer questions: 8 across taxable bases, PAYE/YTD, reliefs, pension, rounding, proration/overtime, payslip obligations, and liability/remittance/retention.
+- Certification-package regression: 3/3 passing; focused Unit 9 evidence/domain/engine/workflow suite 37/37 passing.
+- Full repository gate after package assembly: 808/808 across 73 files; TypeScript, ESLint zero warnings, Prisma validation, and production build pass.
+- Fail-closed proof remains valid: uncertified Nigeria finalization is rejected; official payslip generation, payment batches, and accounting/statutory output generation each require finalized authoritative payroll.

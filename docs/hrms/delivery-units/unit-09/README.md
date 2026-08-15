@@ -1,8 +1,8 @@
 # Unit 9 — Nigeria Payroll, Payments, Tax, Statutory Processing & Global Payroll Foundation
 
-Status: **BLUEPRINT READY — implementation not authorized**.
+Status: **IMPLEMENTED IN STAGING; NIGERIA JURISDICTION NOT CERTIFIED**.
 
-This directory defines the additive Nigeria-first, globally extensible architecture for turning governed workforce, leave, time, and compensation truth into reproducible payroll results, employee outputs, payment instructions, accounting outputs, and statutory outputs. Nigeria is the approved first jurisdiction, using a hybrid delivery model. This blueprint does not claim that the Nigeria package, filing process, bank integration, or payment provider is already certified or implemented.
+This directory defines and evidences the additive Nigeria-first, globally extensible architecture for turning governed workforce, leave, time, and compensation truth into reproducible payroll results, employee outputs, payment instructions, accounting outputs, and statutory outputs. The global engine and governed staging workflows are implemented. Nigeria remains fail-closed and `NOT CERTIFIED`; no filing, bank integration, real payment, or legal certification is claimed.
 
 ## Authority boundary
 
@@ -29,6 +29,21 @@ Unit 9 never silently rewrites the upstream authorities and never treats a draft
 11. [Owner decisions](unit-09-owner-decisions.md)
 12. [Nigeria PAYE, deductions and regulatory governance](unit-09-nigeria-tax-regulatory.md)
 13. [Payslips and employee payroll experience](unit-09-payslips.md)
+
+## Nigeria certification review package
+
+- [Qualified-review handoff](nigeria-certification-handoff.md)
+- [Authoritative-source register](nigeria-authoritative-source-register.md)
+- [Rule-to-source matrix](nigeria-rule-source-matrix.md)
+- [PAYE calculation specification](nigeria-paye-calculation-spec.md)
+- [Taxable-base matrix](nigeria-taxable-base-matrix.md)
+- [Pension/contribution specification](nigeria-pension-contribution-spec.md)
+- [Proration, overtime and rounding](nigeria-proration-overtime-rounding.md)
+- [YTD and retro specification](nigeria-ytd-retro-spec.md)
+- [Certification test matrix](nigeria-certification-test-matrix.md)
+- [Reviewer questions](nigeria-reviewer-questions.md)
+- [Review/certification template](nigeria-certification-signoff-template.md)
+- [Machine-readable manifest](nigeria-certification-manifest.json)
 
 ## Implementation decomposition after owner approval
 

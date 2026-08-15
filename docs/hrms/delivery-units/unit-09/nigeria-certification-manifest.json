@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "jurisdiction": "NG",
+  "candidateVersion": "NG-CANDIDATE-2026.1",
+  "status": "NOT_CERTIFIED",
+  "functionalStagingCommit": "ed190a9040cef261efb01180c1714cbf8d40e59d",
+  "sources": [
+    {"id":"NG-SRC-001","sha256":"99ec0d0bcc5b1f4e1d592e15d4728715e8758fb3724fab4dcd495f389d5b22a8","ruleIds":["NG-PAYE-001","NG-PAYE-002","NG-PAYE-003","NG-PAYE-004","NG-PAYE-005","NG-STAT-001"]},
+    {"id":"NG-SRC-002","sha256":"e13ea10a605079e6da827ad29a40cd0ab426b4ef1c2fab4fee48263048782848","ruleIds":["NG-PAYE-001","NG-PAYE-002","NG-PAYE-003","NG-PAYE-004","NG-PAYE-005","NG-STAT-001"]},
+    {"id":"NG-SRC-003","sha256":null,"ruleIds":["NG-PAYE-001"]},
+    {"id":"NG-SRC-004","sha256":"66c91953049132f1eb69f030282b8c0005ec89f31af8e1f87546a03f7f413889","ruleIds":["NG-PEN-001","NG-PEN-002","NG-STAT-001"]}
+  ],
+  "ruleIds": ["NG-PAYE-001","NG-PAYE-002","NG-PAYE-003","NG-PAYE-004","NG-PAYE-005","NG-PAYE-006","NG-PEN-001","NG-PEN-002","NG-SAL-001","NG-PROR-001","NG-HOUR-001","NG-RETRO-001","NG-PS-001","NG-STAT-001","NG-RET-001"],
+  "testFiles": ["tests/hrms-unit9-domain.test.ts","tests/hrms-unit9-engine.test.ts","tests/hrms-unit9-governed-workflows.test.ts"],
+  "implementationFiles": ["src/lib/hr/payroll/unit9-domain.ts","src/lib/hr/payroll/unit9-engine.ts","src/lib/hr/payroll/unit9-service.ts","src/lib/hr/payroll/unit9-financial-service.ts"],
+  "certification": {"reviewer":null,"certifier":null,"reviewedAt":null,"certifiedAt":null,"decision":"NOT_CERTIFIED"}
+}
