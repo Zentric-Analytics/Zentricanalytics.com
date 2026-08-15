@@ -1,9 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import fs from "node:fs";
 
 const databaseUrl = new URL(process.env.DATABASE_URL ?? "postgresql://missing/missing");
 if (process.env.HR_UNIT9_STAGING_INTEGRITY_CONFIRM !== "staging-only" || databaseUrl.pathname.slice(1) !== "zentric_analytics_staging") throw new Error("Refusing Unit 9 integrity validation outside the explicitly confirmed staging database.");
 const prisma = new PrismaClient();
 const count = (rows) => Number(rows[0]?.count ?? 0);
+const expectedMigrationCount = fs.readdirSync(new URL("../prisma/migrations", import.meta.url), { withFileTypes: true }).filter((entry) => entry.isDirectory()).length;
 
 try {
   const checks = {
@@ -23,7 +25,7 @@ try {
     instructionsWithoutVerifiedDestination: count(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM "HrPayrollPaymentInstruction" i LEFT JOIN "HrPayrollPaymentDestinationVersion" d ON d.id=i."destinationVersionId" AND d."organizationId"=i."organizationId" WHERE d.id IS NULL OR d."verificationStatus"<>'VERIFIED'`),
     duplicatePaymentInstructions: count(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM (SELECT "organizationId","logicalKey" FROM "HrPayrollPaymentInstruction" GROUP BY 1,2 HAVING COUNT(*)>1) q`),
   };
-  if (checks.migrationCount !== 54) throw new Error(`Expected 54 applied migrations, found ${checks.migrationCount}.`);
+  if (checks.migrationCount !== expectedMigrationCount) throw new Error(`Expected ${expectedMigrationCount} applied migrations from the exact candidate, found ${checks.migrationCount}.`);
   const failures = Object.entries(checks).filter(([key, value]) => key !== "migrationCount" && value !== 0);
   if (failures.length) throw new Error(`Unit 9 integrity failures: ${JSON.stringify(Object.fromEntries(failures))}`);
   console.log(JSON.stringify({ result: "PASS", database: databaseUrl.pathname.slice(1), checks, populations: { runs: await prisma.hrPayrollAuthoritativeRun.count(), results: await prisma.hrPayrollAuthoritativeResult.count(), attempts: await prisma.hrPayrollCalculationAttempt.count(), destinations: await prisma.hrPayrollPaymentDestinationVersion.count() } }, null, 2));

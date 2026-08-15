@@ -62,6 +62,13 @@ describe("Unit 9 governed mutating workflows", () => {
     expect(migration).not.toMatch(/DROP TABLE|DROP COLUMN/);
   });
 
+  it("derives the staging migration gate from the exact candidate", () => {
+    const integrity = read("scripts/hr-unit9-staging-integrity.mjs");
+    expect(integrity).toContain('readdirSync(new URL("../prisma/migrations", import.meta.url)');
+    expect(integrity).toContain("checks.migrationCount !== expectedMigrationCount");
+    expect(integrity).not.toMatch(/migrationCount\s*!==\s*\d+/);
+  });
+
   it("classifies downstream immutability without overstating database enforcement", () => {
     const boundaries = read("docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-immutability-boundaries.md");
     expect(boundaries).toContain("DATABASE ENFORCED + SERVICE ENFORCED");
