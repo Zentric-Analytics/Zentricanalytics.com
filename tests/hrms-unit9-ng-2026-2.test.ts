@@ -5,6 +5,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 describe("NG-CANDIDATE-2026.2 remediation", () => {
+  const fixturePackage = JSON.parse(fs.readFileSync(path.join(process.cwd(), "tests/fixtures/ng-candidate-2026-2-expected-values.json"), "utf8")) as { candidateVersion: string; certificationStatus: string; fixtures: Array<{ id: string; evidenceClass: string; input: Record<string, string | number>; expected: Record<string, string> }> };
+
   it.each([
     ["799999.99", "0.00"], ["800000.00", "0.00"], ["800000.01", "0.00"],
     ["2999999.99", "330000.00"], ["3000000.00", "330000.00"], ["3000000.01", "330000.00"],
@@ -164,5 +166,34 @@ describe("NG-CANDIDATE-2026.2 remediation", () => {
     expect(migration).toContain("HrPayrollEmployeeRtaProfileVersion_no_overlap");
     expect(migration).toContain("HrPayrollPensionProfileVersion_no_overlap");
     expect(migration).toContain("HrPayrollStatutoryApplicabilityVersion_no_overlap");
+  });
+
+  it("makes all candidate evidence/version tables append-only at the database boundary", () => {
+    const migration = fs.readFileSync(path.join(process.cwd(), "prisma/migrations/20260815073000_hrms_unit9_ng_2026_2_immutability/migration.sql"), "utf8");
+    expect(migration).toContain("PAYROLL_EVIDENCE_IMMUTABLE");
+    expect(migration.match(/BEFORE UPDATE OR DELETE/g)).toHaveLength(7);
+    for (const table of ["BikEvidence", "TaxReliefClaim", "PriorEmployerYtd", "EmployeeRtaProfile", "PensionProfile", "StatutoryApplicability", "RetentionPolicy"]) {
+      expect(migration).toContain(`HrPayroll${table}Version_immutable`);
+    }
+  });
+
+  it("keeps the independent fixture package explicitly NOT_CERTIFIED and evidence-classified", () => {
+    expect(fixturePackage.candidateVersion).toBe("NG-CANDIDATE-2026.2");
+    expect(fixturePackage.certificationStatus).toBe("NOT_CERTIFIED");
+    expect(fixturePackage.fixtures.every((fixture) => ["OFFICIAL_NUMERIC_EXAMPLE", "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE"].includes(fixture.evidenceClass))).toBe(true);
+  });
+
+  it.each(["PAYE-STABLE-3M", "PAYE-RELIEF-6M", "PAYE-MIDYEAR-COMPENSATION-CHANGE", "PAYE-ONE-TIME-BONUS", "PAYE-BIK-50K", "PAYE-REFUND-35K"])("matches independently stored expected values for %s", (id) => {
+    const fixture = fixturePackage.fixtures.find((candidate) => candidate.id === id)!;
+    const result = calculateNg2026_2AnnualizedPaye({ expectedAnnualEmploymentIncome: fixture.input.annualIncome, eligibleAnnualDeductions: fixture.input.annualDeductions, periodsElapsed: Number(fixture.input.period), periodsInTaxYear: 12, priorPayeDeducted: fixture.input.priorDeducted, priorPayeRepaid: fixture.input.priorRepaid });
+    expect({ annualTaxable: result.annualTaxable.toFixed(2), annualTax: result.annualTax.toFixed(2), cumulativeTarget: result.cumulativeTarget.toFixed(2), currentAdjustment: result.currentAdjustment.toFixed(2) }).toEqual({ annualTaxable: fixture.expected.annualTaxable, annualTax: fixture.expected.annualTax, cumulativeTarget: fixture.expected.cumulativeTarget, currentAdjustment: fixture.expected.currentAdjustment });
+  });
+
+  it("matches the official numeric JRB rent illustration without calling the PAYE engine", () => {
+    const fixture = fixturePackage.fixtures.find((candidate) => candidate.id === "JRB-RENT-ILLUSTRATION-2026")!;
+    const attributable = Number(fixture.input.rentPaid) * Number(fixture.input.monthsAttributable) / Number(fixture.input.monthsCovered);
+    expect(attributable.toFixed(2)).toBe(fixture.expected.attributableRent);
+    expect(calculateNg2026_2RentRelief(String(attributable)).toFixed(2)).toBe(fixture.expected.rentRelief);
+    expect(fixture.evidenceClass).toBe("OFFICIAL_NUMERIC_EXAMPLE");
   });
 });

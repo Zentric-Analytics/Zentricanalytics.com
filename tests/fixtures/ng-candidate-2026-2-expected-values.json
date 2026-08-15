@@ -1,0 +1,70 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.2",
+  "certificationStatus": "NOT_CERTIFIED",
+  "fixtures": [
+    {
+      "id": "PAYE-STABLE-3M",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "3000000", "annualDeductions": "0", "period": 12, "priorDeducted": "302500", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3000000.00", "annualTax": "330000.00", "cumulativeTarget": "330000.00", "currentAdjustment": "27500.00" },
+      "derivation": "First NGN800,000 at 0%; next NGN2,200,000 at 15%."
+    },
+    {
+      "id": "PAYE-RELIEF-6M",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "6000000", "annualDeductions": "600000", "period": 12, "priorDeducted": "700000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "5400000.00", "annualTax": "762000.00", "cumulativeTarget": "762000.00", "currentAdjustment": "62000.00" },
+      "derivation": "NGN2,200,000 at 15% plus NGN2,400,000 at 18%."
+    },
+    {
+      "id": "PAYE-MIDYEAR-COMPENSATION-CHANGE",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "3600000", "annualDeductions": "0", "period": 7, "priorDeducted": "165000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3600000.00", "annualTax": "438000.00", "cumulativeTarget": "255500.00", "currentAdjustment": "90500.00" },
+      "derivation": "Expected income re-estimated to six months at NGN250,000 plus six at NGN350,000; cumulative target is 7/12."
+    },
+    {
+      "id": "PAYE-ONE-TIME-BONUS",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "4000000", "annualDeductions": "0", "period": 12, "priorDeducted": "450000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "4000000.00", "annualTax": "510000.00", "cumulativeTarget": "510000.00", "currentAdjustment": "60000.00" },
+      "derivation": "NGN3,000,000 salary plus NGN1,000,000 bonus; NGN330,000 plus NGN1,000,000 at 18%."
+    },
+    {
+      "id": "PAYE-BIK-50K",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "3050000", "annualDeductions": "0", "period": 12, "priorDeducted": "330000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3050000.00", "annualTax": "339000.00", "cumulativeTarget": "339000.00", "currentAdjustment": "9000.00" },
+      "derivation": "NGN3,000,000 cash remuneration plus governed NGN50,000 BIK."
+    },
+    {
+      "id": "PAYE-REFUND-35K",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-001", "NG2-SRC-003"],
+      "input": { "annualIncome": "3000000", "annualDeductions": "0", "period": 6, "priorDeducted": "200000", "priorRepaid": "0" },
+      "expected": { "annualTaxable": "3000000.00", "annualTax": "330000.00", "cumulativeTarget": "165000.00", "currentAdjustment": "-35000.00", "treatment": "PAYE_REFUND_CREDIT" },
+      "derivation": "Six-twelfths cumulative target less NGN200,000 already deducted."
+    },
+    {
+      "id": "JRB-RENT-ILLUSTRATION-2026",
+      "evidenceClass": "OFFICIAL_NUMERIC_EXAMPLE",
+      "sourceIds": ["NG2-SRC-003"],
+      "sourcePage": 7,
+      "input": { "rentPaid": "2000000", "monthsCovered": 24, "monthsAttributable": 12 },
+      "expected": { "attributableRent": "1000000.00", "rentRelief": "200000.00" }
+    },
+    {
+      "id": "PENSION-BHT-SPLIT",
+      "evidenceClass": "SOURCE_BACKED_INDEPENDENT_EXPECTED_VALUE",
+      "sourceIds": ["NG2-SRC-004"],
+      "input": { "basic": "100000", "housing": "20000", "transport": "10000" },
+      "expected": { "basis": "130000.00", "employee": "10400.00", "employer": "13000.00" },
+      "derivation": "BHT total; employee 8%; employer 10%."
+    }
+  ]
+}
