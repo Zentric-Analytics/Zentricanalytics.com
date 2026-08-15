@@ -69,6 +69,11 @@ describe("Unit 9 governed mutating workflows", () => {
     expect(integrity).not.toMatch(/migrationCount\s*!==\s*\d+/);
   });
 
+  it("reconciles candidate evidence, refund, acknowledgement and correction lineage", () => {
+    const integrity = read("scripts/hr-unit9-staging-integrity.mjs");
+    for (const check of ["duplicateReliefVersions", "duplicatePriorYtdVersions", "duplicateRefundTruth", "duplicateAcknowledgements", "duplicateAmendments", "brokenPayslipCorrections", "brokenRetroLineage", "orphanCandidateEvidence", "overlappingRtaProfiles", "overlappingPensionProfiles", "overlappingBikEvidence"]) expect(integrity).toContain(check);
+  });
+
   it("classifies downstream immutability without overstating database enforcement", () => {
     const boundaries = read("docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-immutability-boundaries.md");
     expect(boundaries).toContain("DATABASE ENFORCED + SERVICE ENFORCED");

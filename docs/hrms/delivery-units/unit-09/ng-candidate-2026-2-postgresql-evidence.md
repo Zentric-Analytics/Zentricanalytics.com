@@ -65,4 +65,19 @@ After inserting a relief evidence version, direct PostgreSQL `UPDATE` and `DELET
 
 Before final cleanup the proof schema contained seven tables, four exclusion constraints, seven append-only triggers, and their trigger function. The isolated schema was dropped with cascade after evidence capture. The final schema-existence query returned `PROOF_SCHEMA_REMAINING=0`.
 
-This evidence does not claim the complete PostgreSQL matrix is finished. Independent-connection prior-YTD concurrency, YTD/refund, retro duplicate processing, acknowledgement replay, amendment uniqueness, legacy-row immutability boundaries, and service/API tenant-isolation tests remain tracked until separately executed.
+## Persistent staging transaction evidence
+
+The exact merged staging candidate executed `hr:unit9-staging-concurrency` against `zentric_analytics_staging` with correlation `unit9-concurrency-1786804018841`.
+
+- independent run creation: one winner, one row;
+- calculation: one completed attempt and one selected authoritative result;
+- approval/recalculation: one winning transition and one approval;
+- prior-YTD equivalent-version race: one winner; an explicit correction appended version 2;
+- YTD retry races: one winner each for `GROSS`, `TAXABLE_INCOME`, `PAYE_DEDUCTED`, `PAYE_REPAID`, `PENSION_EMPLOYEE`, and `PENSION_EMPLOYER`; each aggregate matched its fixed expected amount;
+- retro trigger replay: one logical trigger;
+- simulated acknowledgement replay: state `ACKNOWLEDGED`, original `TEST:` reference retained, conflicting reference rejected;
+- statutory amendment replay: one version for the raced idempotency identity; a legitimate later correction appended version 2 with an explicit supersedes link.
+
+These are application/transaction proofs backed by database uniqueness. The earlier isolated-schema section remains the database-constraint and mutation-trigger proof. Service/API tenant isolation is separately covered by organization-scoped lookups and nine regression tests across all registered evidence kinds; the API returns a privacy-safe 404 for unknown or foreign IDs and excludes encrypted RTA tax identifiers and pension RSA values.
+
+The legacy/downstream boundary is classified record-by-record in `ng-candidate-2026-2-immutability-boundaries.md`; it does not overstate database enforcement where the architecture relies on a governed service boundary.
