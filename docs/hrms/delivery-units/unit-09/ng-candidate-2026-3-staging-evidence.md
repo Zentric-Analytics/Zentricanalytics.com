@@ -4,6 +4,8 @@
 - Functional candidate: `f13696df41a20f07a165215c0b1a57e376b4b16b`
 - History-preserving merge/staging implementation SHA: `0ab54d7151cf402ca0f4ce0f056ae04c3ee23fac`
 - Render staging deployment: `dep-da09uq5g1s2s73clkleg` — live
+- Evidence/status SHA: `a9d530f4f5f560fec92956ae843ea1ebb0847018`
+- Evidence/status deployment: `dep-da0a13ojo6nc73e2meqg` — live
 - Environment/database: staging / `zentric_analytics_staging`
 - Migrations: 58 present and applied; zero candidate migrations and zero pending
 - Health: `/api/health/live` = `ok`; `/api/health/ready` = `ready`, database = `ok`

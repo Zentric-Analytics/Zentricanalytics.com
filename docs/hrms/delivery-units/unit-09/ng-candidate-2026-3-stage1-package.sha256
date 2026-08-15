@@ -1,5 +1,5 @@
 a1e79fa109a74ed689e3bc64ceac34232b7e44aea7ad01a5a3d111aefd27cdae  docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-package.md
-3390421b9694222db3fa89e5725fea8c3729fa6a0a553d5f75b5162e32a9a88c  docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-manifest.json
+5d10d678e6e2a7ec2b397d26f1fc794d9679609e446ec4341fc34d3551b407dd  docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-manifest.json
 517b048c6689d1a872fdbd2d6b87401c033c83101cfe598a2fd569d1352cd7a9  docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-remediation-matrix.md
 74626d3ef8dad0916a1857e7eb56e7cc108bb44c5392660c9584905ee6fbf55f  docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-source-register.md
 e699a448cddf37b76f79b9b63ce0013aed88f69021812d5ce569526286bad491  docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-signoff-template.md
@@ -8,4 +8,4 @@ d2f82e2983dab31dc721d21a96baebc9669804fe5ad200259d24f4707f2ee46b  src/lib/hr/pay
 9cbca5487abffdff8ccb9a624f8f6c9e30c579629c258e0a928517ab40a86b0e  tests/fixtures/ng-candidate-2026-3-expected-values.json
 8b34ee0e50ab78bc012e59c0718eee3692c3d8cdee54e10ce530e012db3a4814  tests/hrms-unit9-ng-2026-3.test.ts
 ea4614067044aca6a8a2aa3b0dbcb177dabdbe19c7efe79809aa4122e5dcef22  tests/hrms-unit9-ng-2026-3-stage1-package.test.ts
-0c9d1f03652d7502f312c47f244c877e2ede93d89a382c03b19a4edee58cf13a  docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-staging-evidence.md
+889f13bf1b8acaa806f5db3b2112c8646b2397aadd636708bc0f16f06af819b4  docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-staging-evidence.md

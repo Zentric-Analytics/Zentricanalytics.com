@@ -9,8 +9,8 @@
     "mergeSha": "0ab54d7151cf402ca0f4ce0f056ae04c3ee23fac",
     "stagingImplementationSha": "0ab54d7151cf402ca0f4ce0f056ae04c3ee23fac",
     "stagingImplementationDeploymentId": "dep-da09uq5g1s2s73clkleg",
-    "evidenceSha": null,
-    "evidenceDeploymentId": null
+    "evidenceSha": "a9d530f4f5f560fec92956ae843ea1ebb0847018",
+    "evidenceDeploymentId": "dep-da0a13ojo6nc73e2meqg"
   },
   "database": {"environment":"staging","name":"zentric_analytics_staging","migrationCount":58,"pendingMigrationCount":0,"schemaChangedByCandidate":false},
   "sources": [
@@ -27,7 +27,7 @@
     "expectedValueFixtureSha256":"9cbca5487abffdff8ccb9a624f8f6c9e30c579629c258e0a928517ab40a86b0e",
     "sourceRegisterSha256":"74626d3ef8dad0916a1857e7eb56e7cc108bb44c5392660c9584905ee6fbf55f",
     "remediationMatrixSha256":"517b048c6689d1a872fdbd2d6b87401c033c83101cfe598a2fd569d1352cd7a9",
-    "stagingEvidenceSha256":"0c9d1f03652d7502f312c47f244c877e2ede93d89a382c03b19a4edee58cf13a"
+    "stagingEvidenceSha256":"889f13bf1b8acaa806f5db3b2112c8646b2397aadd636708bc0f16f06af819b4"
   },
   "quality":{"focusedTestCount":22,"packageTestCount":3,"fullTestCount":944,"fullTestFileCount":79,"typescript":"PASS","eslint":"PASS_ZERO_WARNINGS","prisma":"PASS","productionBuild":"PASS"},
   "review":{"stage1ClosureReviewer":null,"stage1ClosureDecision":"PENDING_EXTERNAL_COMPLIANCE_DECISION","stage2Certifier":null,"certificationEvent":null},
