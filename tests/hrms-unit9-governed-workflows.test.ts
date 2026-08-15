@@ -6,6 +6,13 @@ import { assertSafeRegulatoryWatchUrl } from "../src/lib/hr/payroll/unit9-domain
 const read = (name: string) => fs.readFileSync(path.join(process.cwd(), name), "utf8");
 
 describe("Unit 9 governed mutating workflows", () => {
+  it("validates retro lineage through the persisted corrected attempt and optional adjustment result", () => {
+    const integrity = read("scripts/hr-unit9-staging-integrity.mjs");
+    expect(integrity).toContain('c.id=i."correctedAttemptId"');
+    expect(integrity).toContain('a.id=i."adjustmentResultId"');
+    expect(integrity).not.toContain('i."correctionResultId"');
+  });
+
   it("preserves recalculation attempts and enforces one selected authoritative result", () => {
     const migration = read("prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql");
     expect(migration).toContain('"calculationAttemptId", "employeeId"');
