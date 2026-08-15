@@ -46,8 +46,8 @@
     "expectedValueFixtureSha256": "bc7113ecd2057f70a1215f7b9c61af018c70dfbb155cfb6177d50916dc20af30",
     "postgresqlEvidenceSha256": "bd1906347d019c23d1ccf1f01d4072bff457badca80efb5c7beeacedc59aca68",
     "deterministicReplayEvidenceSha256": "bc7113ecd2057f70a1215f7b9c61af018c70dfbb155cfb6177d50916dc20af30",
-    "stagingEvidenceSha256": "1e30972d188eb4bc8df753a82ca26135c29a3fac8d0ff28830eb12222f8bf4fa",
-    "failClosedEvidenceSha256": "1e30972d188eb4bc8df753a82ca26135c29a3fac8d0ff28830eb12222f8bf4fa",
+    "stagingEvidenceSha256": "5c9233a3b7fb597d22792c078fdc9082914303c1ddf05e06970d9bf1e1fe15a7",
+    "failClosedEvidenceSha256": "5c9233a3b7fb597d22792c078fdc9082914303c1ddf05e06970d9bf1e1fe15a7",
     "sourceRegisterSha256": "cb9f11bafa82627f389e62e97de6160143f56db94b8e3598d7ede94d91f32015",
     "remediationMatrixSha256": "f0fb1e463981ebf77a9e0f3e13ab78c8a7bc8909f8264e27ea39f37168ccff1f"
   },
