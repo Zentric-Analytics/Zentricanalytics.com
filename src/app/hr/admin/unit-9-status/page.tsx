@@ -8,13 +8,13 @@ const items = [
   ["Unit 9A–9F", "IMPLEMENTED — governed inputs, calculation, reconciliation, approval, finalization, retro and YTD"],
   ["Unit 9G–9J", "IMPLEMENTED — payslips, simulated payments, accounting, statutory outputs and Regulatory Watch"],
   ["Migrations", "54 applied — none pending on staging"],
-  ["Automated suite", "802 / 802 passing across 72 files"],
+  ["Automated suite", "805 / 805 passing across 72 files"],
   ["Nigeria certification", "NOT CERTIFIED — official finalization remains fail-closed pending complete legal evidence"],
   ["Payment boundary", "Export and simulated settlement only; no real money movement"],
-  ["Current workflow", "Signed-in browser/privacy validation and remaining certification-independent downstream gates"],
-  ["Passed staging evidence", "Lifecycle fail-closed, PostgreSQL concurrency, integrity, Regulatory Watch and 250-operation load smoke"],
+  ["Current workflow", "Certification-independent gates complete; Nigeria legal certification remains an external release boundary"],
+  ["Passed staging evidence", "Lifecycle fail-closed, scoped payment roles, privacy-safe 403s, PostgreSQL concurrency, integrity, Regulatory Watch and 250-operation load smoke"],
   ["Defects fixed", "Migration BOM, resource-heavy live runner, fixture currency mismatch, and legal-rejection evidence matcher"],
-  ["Next release gate", "Complete signed-in browser evidence and every certification-independent gate; archive follows only after those pass"],
+  ["Next release gate", "Qualified Nigeria compliance review and independent certification; finalization-dependent gates and archive follow certification"],
 ] as const;
 
 export default function Unit9StatusPage() {

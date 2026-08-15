@@ -7,11 +7,11 @@ Production was not accessed or modified. No real payment or statutory filing was
 ## Candidate and deployment
 
 - Branch: `dev`
-- Evidence candidate: `562ed839c007b3eb211fb1d9ac3d59fd9b984ccc`
-- Render staging deployment: `dep-d9vo83ugekts73dgenmg`
+- Evidence candidate: `f052d7b68ba6ec5a32e768d38695bad8a6e4222b`
+- Render staging deployment: `dep-d9vqf9nlk1mc73ed7hdg`
 - Staging database: `zentric_analytics_staging`
 - Migrations: 54 applied, none pending
-- Automated gate: 802/802 tests across 72 files; TypeScript, ESLint zero warnings, Prisma validation and production build pass
+- Automated gate: 805/805 tests across 72 files; TypeScript, ESLint zero warnings, Prisma validation and production build pass
 - Routes built: 125
 
 ## Executed staging evidence
@@ -24,9 +24,12 @@ Production was not accessed or modified. No real payment or statutory filing was
 - Legal boundary: the Nigeria jurisdiction version remains `TESTING`; finalization is rejected, run remains `APPROVED`, and `finalizedAt` remains null.
 - PostgreSQL concurrency: correlation `unit9-concurrency-1786741660210`; exactly one run, completed calculation, selected authoritative result and approval/recalculation outcome.
 - Integrity: zero relevant orphans, duplicates, gross-to-net mismatches, employer-contribution/net errors, maker/checker violations, uncertified finalizations, unbalanced journals, invalid payslips or payment instructions.
-- Regulatory Watch: source `cmstg1zf00000rjctlrqskpei`, candidate `cmstg1zq80005rjctwpazh23w`, correlation `76c2712a-e1b8-483a-9f88-e225a067cb44`; unchanged and changed replay are idempotent, exactly one review candidate is created, no rule is auto-activated, and provider failure becomes `DEGRADED`.
+- Regulatory Watch (fresh rerun): source `cmstqcxw60000rk7nkmphuciw`, candidate `cmstqcy9p0005rk7nu59ia124`, correlation `e5c88802-bf8a-4ed4-a771-46d45db4c944`; unchanged replay is idempotent, exactly one review candidate is created, no rule is auto-activated, and provider failure becomes `DEGRADED`.
 - Real FIRS reachability from the staging service timed out at the controlled eight-second boundary; no response content was accepted.
 - Load: 250 mixed frozen calculations/database reads, concurrency 10, zero failures; p50 90.3 ms, p95 299.5 ms, p99 1088.8 ms, maximum 1289.9 ms.
+- Signed-in payment-role boundary: `workingemail20266@gmail.com` temporarily held `PAYMENT_OPERATOR` plus `EMPLOYEE`; it could read the governed payroll run and payment-operator scope but received a privacy-safe 403 with no disclosed data for `/hr/admin/users`.
+- Signed-in independent approval boundary: `sweetcathytelano@gmail.com` temporarily held `PAYMENT_APPROVER` plus `EMPLOYEE`; unrelated user administration and compensation routes returned privacy-safe 403 responses with no disclosed data.
+- Governed role cleanup: both temporary payment roles were revoked, leaving each account with `EMPLOYEE` only. Revocation audit correlations are `75d262b1-f075-450e-b586-650b3a5007e7` and `9fce3f8f-5fb0-431c-8daa-c6c8035a1661`; the affected sessions were revoked automatically.
 
 ## Defects found and corrected
 
@@ -37,7 +40,7 @@ Production was not accessed or modified. No real payment or statutory filing was
 
 ## Mandatory gates still open
 
-- Signed-in browser role/privacy matrix and employee IDOR checks.
+- Remaining payroll-role/employee signed-in matrix cases not covered by the payment-operator/payment-approver evidence above.
 - Certified Nigeria NGN salaried and hourly lifecycles.
 - Finalization-dependent retro, payslip, payment, accounting and statutory/remittance staging workflows.
 - Finalization/payment concurrency and downstream worker replay tests.
@@ -45,3 +48,5 @@ Production was not accessed or modified. No real payment or statutory filing was
 - Fresh encrypted durable staging archive and isolated restore, after all non-restore gates pass.
 
 Nigeria remains **NOT CERTIFIED**. This report does not claim that the email, payment, filing, finalization, backup, restore, or overall Unit 9 release gate has passed.
+
+The blocking certification work is not an ordinary engineering task. A qualified compliance reviewer and an independent certifier must approve the complete taxable-income, exemptions, reliefs, PAYE annual/YTD, proration, rounding, pension, statutory deduction, retention, salaried, hourly and retro interpretation/reference-test matrix. The application correctly fails closed until that evidence is approved; no test fixture or developer action may substitute for the required legal certification.
