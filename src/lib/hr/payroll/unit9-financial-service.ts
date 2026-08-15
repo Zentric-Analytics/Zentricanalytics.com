@@ -165,9 +165,19 @@ export async function acknowledgeUnit9RemittanceSimulation(db: PrismaClient, act
   return db.$transaction(async (tx) => {
     const batch = await tx.hrPayrollRemittanceBatch.findFirst({ where: { id: batchId, organizationId: actor.organizationId } });
     if (!batch) throw new Error("Remittance batch is outside the tenant.");
-    if (batch.status === "ACKNOWLEDGED") return batch;
+    const externalReference = `TEST:${testReference}`;
+    if (batch.status === "ACKNOWLEDGED") {
+      if (batch.externalReference !== externalReference) throw new Error("Conflicting simulated acknowledgement reference was rejected.");
+      return batch;
+    }
     if (batch.status !== "DRAFT") throw new Error("Only a draft remittance simulation may be acknowledged.");
-    const updated = await tx.hrPayrollRemittanceBatch.update({ where: { id: batch.id }, data: { status: "ACKNOWLEDGED", externalReference: `TEST:${testReference}`, acknowledgedAt: new Date() } });
+    const claimed = await tx.hrPayrollRemittanceBatch.updateMany({ where: { id: batch.id, organizationId: actor.organizationId, status: "DRAFT", externalReference: null }, data: { status: "ACKNOWLEDGED", externalReference, acknowledgedAt: new Date() } });
+    if (claimed.count !== 1) {
+      const winner = await tx.hrPayrollRemittanceBatch.findFirst({ where: { id: batch.id, organizationId: actor.organizationId } });
+      if (winner?.status === "ACKNOWLEDGED" && winner.externalReference === externalReference) return winner;
+      throw new Error("Conflicting simulated acknowledgement won the concurrent claim.");
+    }
+    const updated = await tx.hrPayrollRemittanceBatch.findUniqueOrThrow({ where: { id: batch.id } });
     const liabilityIds = (await tx.hrPayrollRemittanceLine.findMany({ where: { organizationId: actor.organizationId, remittanceBatchId: batch.id }, select: { liabilityId: true } })).map((line) => line.liabilityId);
     await tx.hrPayrollStatutoryLiability.updateMany({ where: { organizationId: actor.organizationId, id: { in: liabilityIds } }, data: { status: "REMITTED_SIMULATION" } });
     await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollRemittanceBatch", entityId: batch.id, action: "unit9.remittance_simulation.acknowledged", newValues: { testReference: "[RECORDED]", realFiling: false }, correlationId: batch.correlationId });

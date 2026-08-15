@@ -45,6 +45,9 @@ describe("Unit 9 governed mutating workflows", () => {
     expect(service).toContain("if (batch.status === input.to) return batch");
     expect(service).toContain("unit9.remittance_simulation.acknowledged");
     expect(service).toContain("realFiling: false");
+    expect(service).toContain('externalReference = `TEST:${testReference}`');
+    expect(service).toContain("Conflicting simulated acknowledgement reference was rejected");
+    expect(service).toContain('status: "DRAFT", externalReference: null');
   });
 
   it("persists balanced accounting and distinct statutory liability categories", () => {
