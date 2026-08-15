@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertNg2026_2EarningMapped, calculateNg2026_2AnnualizedPaye, calculateNg2026_2RentRelief, NG_2026_2_STATUS } from "../src/lib/hr/payroll/nigeria-2026-2";
+import { annualEmployerReturnDueDate, assertNg2026_2EarningMapped, assertNg2026_2JoinerYtd, assertRtaConfiguration, assertStatutoryApplicability, calculateNg2026_2AnnualizedPaye, calculateNg2026_2Pension, calculateNg2026_2RentRelief, evaluateNg2026_2Relief, NG_2026_2_STATUS, payeRemittanceDueDate, pensionRemittanceDueDate, taxRetentionUntil, valueNg2026_2Bik } from "../src/lib/hr/payroll/nigeria-2026-2";
 
 describe("NG-CANDIDATE-2026.2 remediation", () => {
   it.each([
@@ -27,5 +27,45 @@ describe("NG-CANDIDATE-2026.2 remediation", () => {
     expect(() => assertNg2026_2EarningMapped({ code: "UNKNOWN", employmentRemuneration: true })).toThrow("CERTIFICATION_BLOCKER");
     expect(() => assertNg2026_2EarningMapped({ code: "EXPENSE", employmentRemuneration: true, taxableClassification: "SOURCED_EXCLUSION" })).toThrow("sourced rule");
     expect(assertNg2026_2EarningMapped({ code: "BONUS", employmentRemuneration: true, taxableClassification: "INCLUDED" })).toBe("INCLUDED");
+  });
+
+  it("values BIK separately and blocks unsourced treatment", () => {
+    expect(valueNg2026_2Bik({ code: "CAR", method: "PERCENT_OF_ASSET_VALUE", assetValue: "1000000", ratePercent: "5", effectiveFrom: new Date("2026-01-01"), sourceRuleId: "NG-BIK-001" }).taxableValue.toFixed(2)).toBe("50000.00");
+    expect(() => valueNg2026_2Bik({ code: "CAR", method: "FIXED", fixedValue: "1", effectiveFrom: new Date("2026-01-01") })).toThrow("CERTIFICATION_BLOCKER");
+  });
+
+  it("requires evidence and remittance before relief eligibility", () => {
+    expect(() => evaluateNg2026_2Relief({ type: "PENSION", amount: "80000", taxYear: 2026, elected: true, evidenceReference: "e1", sourceRuleId: "NG-PEN", remittanceStatus: "DEDUCTED" })).toThrow("actual remittance");
+    expect(evaluateNg2026_2Relief({ type: "PENSION", amount: "80000", taxYear: 2026, elected: true, evidenceReference: "e1", sourceRuleId: "NG-PEN", remittanceStatus: "ACKNOWLEDGED", ytdUsed: "10000" }).eligibleAmount.toFixed(2)).toBe("70000.00");
+    expect(() => evaluateNg2026_2Relief({ type: "NHF", amount: "1", taxYear: 2026, elected: false })).toThrow("RELIEF_EVIDENCE_BLOCKER");
+  });
+
+  it("blocks incomplete joiner YTD and accepts evidenced continuity", () => {
+    expect(() => assertNg2026_2JoinerYtd({ taxYear: 2026 })).toThrow("PRIOR_YTD_BLOCKER");
+    expect(assertNg2026_2JoinerYtd({ taxYear: 2026, priorEmployer: "Prior", gross: "100", eligibleDeductions: "10", taxableIncome: "90", payeDeducted: "5", payeRepaid: "0", evidenceReference: "doc", handling: "EVIDENCED" }).taxableIncome.toFixed(2)).toBe("90.00");
+  });
+
+  it("uses BHT minimum pension basis and reviewed 8/10 or employer-all 20 rates", () => {
+    const split = calculateNg2026_2Pension({ applicability: "COVERED", basic: "100000", housing: "20000", transport: "10000", contractualBasis: "120000" });
+    expect([split.basis.toFixed(2), split.employee.toFixed(2), split.employer.toFixed(2)]).toEqual(["130000.00", "10400.00", "13000.00"]);
+    expect(calculateNg2026_2Pension({ applicability: "COVERED", basic: "100000", housing: "20000", transport: "10000", employerPaysAll: true }).employer.toFixed(2)).toBe("26000.00");
+    expect(() => calculateNg2026_2Pension({ applicability: "REVIEW_REQUIRED", basic: "1", housing: "0", transport: "0" })).toThrow("PENSION_APPLICABILITY_REVIEW_REQUIRED");
+  });
+
+  it("calculates candidate statutory due dates without external submission", () => {
+    expect(pensionRemittanceDueDate(new Date("2026-08-14T00:00:00Z")).toISOString().slice(0,10)).toBe("2026-08-25");
+    expect(payeRemittanceDueDate(2026, 12).toISOString().slice(0,10)).toBe("2027-01-10");
+    expect(annualEmployerReturnDueDate(2026).toISOString().slice(0,10)).toBe("2027-01-31");
+  });
+
+  it("blocks unresolved schemes and missing State/FCT RTA routing", () => {
+    expect(() => assertStatutoryApplicability({ NHF: "REVIEW_REQUIRED", NHIS: "OUT_OF_SCOPE", NSITF_ECA: "OUT_OF_SCOPE", ITF: "OUT_OF_SCOPE", GROUP_LIFE: "OUT_OF_SCOPE" })).toThrow("APPLICABILITY_REVIEW_REQUIRED");
+    expect(() => assertRtaConfiguration({ stateOrFct: "Lagos" })).toThrow("RTA_CONFIGURATION_BLOCKER");
+    expect(assertRtaConfiguration({ stateOrFct: "Lagos", rtaId: "LIRS", taxIdentifier: "redacted", adapterVersion: "test-v1", effectiveFrom: new Date("2026-01-01") })).toHaveLength(64);
+  });
+
+  it("retains tax evidence for at least six years after assessment and honors longer holds", () => {
+    expect(taxRetentionUntil(2026).toISOString().slice(0,10)).toBe("2033-01-01");
+    expect(taxRetentionUntil(2026, new Date("2035-06-01")).toISOString().slice(0,10)).toBe("2035-06-01");
   });
 });
