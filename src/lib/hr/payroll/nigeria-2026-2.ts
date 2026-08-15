@@ -181,3 +181,24 @@ export function buildNg2026_2PayeLiability(input: { rta: { stateOrFct?: string; 
   const output = { candidateVersion: NG_2026_2_VERSION, simulationOnly: true, rtaCode: input.rta.rtaId!, periodKey: `${input.taxYear}-${String(input.month).padStart(2, "0")}`, dueDate: payeRemittanceDueDate(input.taxYear, input.month).toISOString(), grossEmoluments: roundPayroll(input.grossEmoluments), bik: roundPayroll(input.bik), eligibleReliefs: roundPayroll(input.eligibleReliefs), taxableIncome: roundPayroll(input.taxableIncome), payeDeducted: roundPayroll(Prisma.Decimal.max(0, adjustment)), payeRepaid: roundPayroll(Prisma.Decimal.max(0, adjustment.negated())), resultReference: input.resultReference, version: input.version, supersedesId: input.supersedesId ?? null };
   return { ...output, hash: payrollDigest(output) };
 }
+
+export function selectEffectiveNg2026_2Rta<T extends { effectiveFrom: Date; effectiveTo?: Date | null; adapterVersion: string }>(profiles: T[], at: Date) {
+  const matches = profiles.filter((profile) => profile.effectiveFrom <= at && (!profile.effectiveTo || profile.effectiveTo > at));
+  if (matches.length !== 1) throw new Error(matches.length ? "RTA_CONFIGURATION_OVERLAP_BLOCKER" : "RTA_CONFIGURATION_BLOCKER");
+  return matches[0];
+}
+
+export function calculateNg2026_2Overtime(input: { lockedTime: boolean; approved: boolean; hours: Unit9Money; hourlyRate: Unit9Money; multiplier?: Unit9Money; policyReference?: string; pensionBasisTreatment: "INCLUDED" | "EXCLUDED" }) {
+  if (!input.lockedTime) throw new Error("OVERTIME_LOCKED_TIME_BLOCKER");
+  if (!input.approved) throw new Error("OVERTIME_APPROVAL_BLOCKER");
+  if (input.multiplier === undefined || !input.policyReference) throw new Error("OVERTIME_POLICY_BLOCKER");
+  const amount = roundPayroll(payrollMoney(input.hours).mul(payrollMoney(input.hourlyRate)).mul(payrollMoney(input.multiplier)), 2);
+  return { amount, taxableEmploymentIncome: amount, pensionableAmount: input.pensionBasisTreatment === "INCLUDED" ? amount : roundPayroll(0), policyReference: input.policyReference };
+}
+
+export function buildNg2026_2AnnualEmployerReturn(input: { taxYear: number; rta: { stateOrFct?: string; rtaId?: string; taxIdentifier?: string; adapterVersion?: string; effectiveFrom?: Date }; employees: Array<{ employeeReference: string; grossEmoluments: Unit9Money; allowances: Unit9Money; bik: Unit9Money; eligibleDeductions: Unit9Money; taxableIncome: Unit9Money; payeDeducted: Unit9Money; payeRepaid: Unit9Money }> }) {
+  assertRtaConfiguration(input.rta);
+  const rows = input.employees.map((employee) => ({ ...employee, grossEmoluments: roundPayroll(employee.grossEmoluments), allowances: roundPayroll(employee.allowances), bik: roundPayroll(employee.bik), eligibleDeductions: roundPayroll(employee.eligibleDeductions), taxableIncome: roundPayroll(employee.taxableIncome), payeDeducted: roundPayroll(employee.payeDeducted), payeRepaid: roundPayroll(employee.payeRepaid) }));
+  const output = { candidateVersion: NG_2026_2_VERSION, simulationOnly: true, adapterVersion: input.rta.adapterVersion!, rtaCode: input.rta.rtaId!, taxYear: input.taxYear, dueDate: annualEmployerReturnDueDate(input.taxYear).toISOString(), rows };
+  return { ...output, hash: payrollDigest(output) };
+}

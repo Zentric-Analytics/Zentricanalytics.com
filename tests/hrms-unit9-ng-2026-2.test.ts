@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { annualEmployerReturnDueDate, assertNg2026_2EarningMapped, assertNg2026_2JoinerYtd, assertRtaConfiguration, assertStatutoryApplicability, buildNg2026_2CandidatePayslip, buildNg2026_2PayeLiability, calculateNg2026_2AnnualizedPaye, calculateNg2026_2Pension, calculateNg2026_2Proration, calculateNg2026_2RentRelief, evaluateNg2026_2MinimumWage, evaluateNg2026_2Relief, NG_2026_2_STATUS, payeRemittanceDueDate, pensionRemittanceDueDate, taxRetentionUntil, valueNg2026_2Bik } from "../src/lib/hr/payroll/nigeria-2026-2";
+import { annualEmployerReturnDueDate, assertNg2026_2EarningMapped, assertNg2026_2JoinerYtd, assertRtaConfiguration, assertStatutoryApplicability, buildNg2026_2AnnualEmployerReturn, buildNg2026_2CandidatePayslip, buildNg2026_2PayeLiability, calculateNg2026_2AnnualizedPaye, calculateNg2026_2Overtime, calculateNg2026_2Pension, calculateNg2026_2Proration, calculateNg2026_2RentRelief, evaluateNg2026_2MinimumWage, evaluateNg2026_2Relief, NG_2026_2_STATUS, payeRemittanceDueDate, pensionRemittanceDueDate, selectEffectiveNg2026_2Rta, taxRetentionUntil, valueNg2026_2Bik } from "../src/lib/hr/payroll/nigeria-2026-2";
 import { calculateFrozenPayroll } from "../src/lib/hr/payroll/unit9-engine";
 import fs from "node:fs";
 import path from "node:path";
@@ -132,5 +132,37 @@ describe("NG-CANDIDATE-2026.2 remediation", () => {
     expect(output.dueDate.slice(0, 10)).toBe("2027-01-10");
     expect([output.payeDeducted.toFixed(2), output.payeRepaid.toFixed(2)]).toEqual(["0.00", "35000.00"]);
     expect(output.simulationOnly).toBe(true);
+  });
+
+  it("selects exactly one effective RTA and rejects gaps or overlaps", () => {
+    const old = { adapterVersion: "v1", effectiveFrom: new Date("2026-01-01"), effectiveTo: new Date("2026-07-01") };
+    const current = { adapterVersion: "v2", effectiveFrom: new Date("2026-07-01"), effectiveTo: null };
+    expect(selectEffectiveNg2026_2Rta([old, current], new Date("2026-08-01")).adapterVersion).toBe("v2");
+    expect(() => selectEffectiveNg2026_2Rta([], new Date("2026-08-01"))).toThrow("RTA_CONFIGURATION_BLOCKER");
+    expect(() => selectEffectiveNg2026_2Rta([current, { ...current, adapterVersion: "overlap" }], new Date("2026-08-01"))).toThrow("RTA_CONFIGURATION_OVERLAP_BLOCKER");
+  });
+
+  it("requires locked approved overtime and an explicit multiplier policy", () => {
+    expect(() => calculateNg2026_2Overtime({ lockedTime: false, approved: true, hours: "10", hourlyRate: "1000", multiplier: "1.5", policyReference: "contract-v1", pensionBasisTreatment: "INCLUDED" })).toThrow("OVERTIME_LOCKED_TIME_BLOCKER");
+    expect(() => calculateNg2026_2Overtime({ lockedTime: true, approved: false, hours: "10", hourlyRate: "1000", multiplier: "1.5", policyReference: "contract-v1", pensionBasisTreatment: "INCLUDED" })).toThrow("OVERTIME_APPROVAL_BLOCKER");
+    const included = calculateNg2026_2Overtime({ lockedTime: true, approved: true, hours: "10", hourlyRate: "1000", multiplier: "1.5", policyReference: "contract-v1", pensionBasisTreatment: "INCLUDED" });
+    const excluded = calculateNg2026_2Overtime({ lockedTime: true, approved: true, hours: "10", hourlyRate: "1000", multiplier: "1.5", policyReference: "contract-v1", pensionBasisTreatment: "EXCLUDED" });
+    expect([included.amount.toFixed(2), included.taxableEmploymentIncome.toFixed(2), included.pensionableAmount.toFixed(2), excluded.pensionableAmount.toFixed(2)]).toEqual(["15000.00", "15000.00", "15000.00", "0.00"]);
+  });
+
+  it("builds a candidate-only annual employer return with the reviewed January 31 due date", () => {
+    const result = buildNg2026_2AnnualEmployerReturn({ taxYear: 2026, rta: { stateOrFct: "FCT", rtaId: "FCT-IRS", taxIdentifier: "encrypted", adapterVersion: "fct-candidate-v1", effectiveFrom: new Date("2026-01-01") }, employees: [{ employeeReference: "EMP-TEST", grossEmoluments: "3000000", allowances: "0", bik: "0", eligibleDeductions: "0", taxableIncome: "3000000", payeDeducted: "330000", payeRepaid: "0" }] });
+    expect(result.dueDate.slice(0, 10)).toBe("2027-01-31");
+    expect(result.simulationOnly).toBe(true);
+    expect(result.hash).toHaveLength(64);
+  });
+
+  it("adds PostgreSQL exclusion constraints without modifying migration 55", () => {
+    const migration = fs.readFileSync(path.join(process.cwd(), "prisma/migrations/20260815064500_hrms_unit9_ng_2026_2_overlap_guards/migration.sql"), "utf8");
+    expect(migration).toContain('CREATE EXTENSION IF NOT EXISTS "btree_gist"');
+    expect(migration.match(/EXCLUDE USING GIST/g)).toHaveLength(4);
+    expect(migration).toContain("HrPayrollEmployeeRtaProfileVersion_no_overlap");
+    expect(migration).toContain("HrPayrollPensionProfileVersion_no_overlap");
+    expect(migration).toContain("HrPayrollStatutoryApplicabilityVersion_no_overlap");
   });
 });
