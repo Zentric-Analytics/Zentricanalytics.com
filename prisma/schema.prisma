@@ -5998,6 +5998,9 @@ model HrPayrollCalendarPeriod {
   calculationOpensAt DateTime
   approvalDueAt      DateTime
   intendedPaymentAt  DateTime
+  nominalPaymentAt   DateTime?
+  paymentCalendarVersionId String?
+  paymentDateRule    String?
   accountingDate     DateTime
   taxYear            Int
   taxPeriod          Int
@@ -6208,6 +6211,103 @@ model HrPayrollCertificationIssue {
   @@unique([payrollRunId, employeeId, code, sourceId])
   @@unique([organizationId, correlationId])
   @@index([organizationId, payrollRunId, severity, resolvedAt])
+}
+
+model HrPayrollComplianceException {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  employeeId            String
+  payGroupId             String
+  payrollPeriodId        String
+  payrollRunId           String
+  calculationAttemptId   String
+  jurisdictionCode       String
+  rtaCode                String
+  blockerCode            String
+  blockerCategory        String
+  affectedInput          String?
+  candidateVersion       String
+  sourceRequirement      String
+  status                 String   @default("OPEN")
+  assignedOwnerId        String?
+  notesMetadata          Json?
+  resolutionType         String?
+  authorityEvidenceId    String?
+  approvedRuleVersion    String?
+  recalculationAttemptId String?
+  logicalKey             String
+  correlationId          String
+  openedAt               DateTime @default(now())
+  resolvedAt             DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@unique([organizationId, logicalKey])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, payrollRunId, status])
+  @@index([organizationId, employeeId, openedAt])
+}
+
+model HrPayrollComplianceExceptionEvent {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  complianceExceptionId String
+  fromStatus             String?
+  toStatus               String
+  actorUserId            String
+  reason                 String?
+  evidence               Json
+  correlationId          String
+  createdAt              DateTime @default(now())
+
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, complianceExceptionId, createdAt])
+}
+
+model HrPayrollPopulationPartition {
+  id                      String   @id @default(cuid())
+  organizationId          String
+  payrollRunId             String
+  calculationAttemptId     String
+  originalPopulationCount  Int
+  readyCount               Int
+  heldCount                Int
+  readyEmployeeIds         Json
+  heldPopulation           Json
+  partitionHash            String
+  decision                 String?
+  reason                   String?
+  preparedById             String
+  approvedById             String?
+  approvedAt               DateTime?
+  expectedResolutionPath   String?
+  correlationId            String
+  createdAt                DateTime @default(now())
+
+  @@unique([organizationId, payrollRunId, calculationAttemptId])
+  @@unique([organizationId, partitionHash])
+  @@unique([organizationId, correlationId])
+}
+
+model HrPayrollCapabilityAssignment {
+  id             String   @id @default(cuid())
+  organizationId String
+  subjectUserId  String
+  capability     String
+  effect         String
+  effectiveFrom  DateTime
+  expiresAt      DateTime?
+  reason         String
+  assignedById   String
+  approvedById   String?
+  beforeState    Json
+  afterState     Json
+  correlationId  String
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, subjectUserId, capability, effectiveFrom])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, subjectUserId, expiresAt])
 }
 
 model HrPayrollReconciliation {
