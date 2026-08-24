@@ -49,7 +49,9 @@ export async function resolveComplianceException(db: PrismaClient, actor: Actor,
     const current = await tx.hrPayrollComplianceException.findFirstOrThrow({ where: { id: exceptionId, organizationId: actor.organizationId } });
     if (current.status === "RESOLVED") return current;
     const resolvedAt = new Date();
-    const updated = await tx.hrPayrollComplianceException.update({ where: { id: current.id }, data: { status: "RESOLVED", resolutionType: input.resolutionType, authorityEvidenceId: input.authorityEvidenceId, approvedRuleVersion: input.approvedRuleVersion, recalculationAttemptId: input.recalculationAttemptId, resolvedAt } });
+    const claim = await tx.hrPayrollComplianceException.updateMany({ where: { id: current.id, organizationId: actor.organizationId, status: { not: "RESOLVED" } }, data: { status: "RESOLVED", resolutionType: input.resolutionType, authorityEvidenceId: input.authorityEvidenceId, approvedRuleVersion: input.approvedRuleVersion, recalculationAttemptId: input.recalculationAttemptId, resolvedAt } });
+    if (claim.count === 0) return tx.hrPayrollComplianceException.findFirstOrThrow({ where: { id: current.id, organizationId: actor.organizationId } });
+    const updated = await tx.hrPayrollComplianceException.findFirstOrThrow({ where: { id: current.id, organizationId: actor.organizationId } });
     await tx.hrPayrollComplianceExceptionEvent.create({ data: { organizationId: actor.organizationId, complianceExceptionId: current.id, fromStatus: current.status, toStatus: "RESOLVED", actorUserId: actor.userId, evidence: input, correlationId: crypto.randomUUID() } });
     await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollComplianceException", entityId: current.id, action: "unit9.compliance_exception.resolved", previousValues: { status: current.status }, newValues: { status: "RESOLVED", recalculationAttemptId: input.recalculationAttemptId }, correlationId: current.correlationId });
     return updated;
