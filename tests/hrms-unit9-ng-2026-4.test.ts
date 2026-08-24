@@ -129,6 +129,8 @@ describe("NG-CANDIDATE-2026.4 Salary and Bonus-only controls", () => {
     expect(harness).toContain('candidateVersion: "NG-CANDIDATE-2026.4"');
     expect(harness).toContain('blockerCode: "RTA_REFUND_PROCEDURE_REQUIRED"');
     expect(harness).toContain('affectedInput: "PAYE_REFUND_CREDIT"');
+    expect(harness).toContain("latestAttempt.attemptNumber + 1");
+    expect(harness).toContain('purpose: "STAGING_CONCURRENCY_EVIDENCE"');
     expect(harness).not.toContain('candidateVersion: "NG-CANDIDATE-2026.3"');
   });
 });
