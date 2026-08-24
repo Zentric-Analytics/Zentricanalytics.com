@@ -1,5 +1,13 @@
 # Unit 9 Nigeria limited-launch final staging evidence
 
+## NG-CANDIDATE-2026.4 closure-review evidence
+
+Status: **READY FOR STAGE 1 CLOSURE REVIEW — NOT CERTIFIED**.
+
+The immutable 2026.4 package establishes `UNIT 9 ORDINARY EARNINGS = SALARY + BONUS ONLY` while preserving Unit 8 Pay & Rewards as a separate bounded context. Final implementation SHA `5a4e9bdec15a68036b4ec130977a9a45a54ad7b6` is live in staging deployment `dep-da6996ijnfac73a7r360`. Fresh evidence is recorded in `ng-candidate-2026-4-staging-validation.md`: 981/981 tests, all quality/build gates, 60 migrations with none pending, real PostgreSQL exactly-once correlations, integrity reconciliation, signed-in authorization denials, preservation hashes and the fail-closed official-finalization probe all pass. Production remained untouched.
+
+The candidate is not legally certified. External minimum-wage edge cases, RTA refund/offset procedure and archival 2024 Gazette evidence remain held for qualified review.
+
 Status: **UNIT 9 NIGERIA LIMITED-LAUNCH OPERATING CONTROLS — STAGING READY**.
 
 `NG-CANDIDATE-2026.3` remains **NOT CERTIFIED**. Production was not accessed or modified. No real payment, payslip publication, filing, submission, settlement, or remittance occurred.
