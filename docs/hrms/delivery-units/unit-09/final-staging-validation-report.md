@@ -1,4 +1,56 @@
-# Unit 9 NG-CANDIDATE-2026.2 final staging evidence
+# Unit 9 Nigeria limited-launch final staging evidence
+
+Status: **UNIT 9 NIGERIA LIMITED-LAUNCH OPERATING CONTROLS — STAGING READY**.
+
+`NG-CANDIDATE-2026.3` remains **NOT CERTIFIED**. Production was not accessed or modified. No real payment, payslip publication, filing, submission, settlement, or remittance occurred.
+
+## Limited-launch candidate and deployment
+
+- History-preserving feature merge: `854073f07d6f20411bfc9bfd2b1f77c9779e4f84`.
+- Repeatable concurrency correction: `e88b49f1b18d95e88227c232754f41f758656221`.
+- Atomic exception-resolution correction: `27ff5d53779889a8e08648c8e8afd51f3395217b`.
+- Persisted tenant-RBAC backfill: `7cde24b0b9326d6f6aab51af0fa85f8bbbb860d4`.
+- Canonical guarded-release RBAC reconciliation correction: `0a367bbc79ef9f9bb041ab6ff839abfeacd0b7f6`.
+- Corrected staging deployment: `dep-da67hcfqj5pc73ean2og`.
+- Staging database: `zentric_analytics_staging`; 60 migrations applied, none pending or failed.
+
+## Limited-launch gate evidence
+
+- Full repository gate: 959/959 tests across 81 files.
+- Focused limited-launch and concurrency suites: 15/15.
+- TypeScript: PASS.
+- ESLint: PASS with zero warnings.
+- Prisma validation: PASS.
+- Production build: PASS; 125 routes generated.
+- Health and readiness: PASS (`status=ok`; database ready).
+- PostgreSQL Unit 9 concurrency: PASS at correlation `unit9-concurrency-1787588153889`.
+- Limited-launch exactly-once concurrency: PASS at correlation `limited-launch-1787588448587`; one exception creation winner, one resolution winner and one population-partition winner.
+- Integrity: zero checked duplicates, orphans, maker/checker violations, uncertified finalizations, or broken limited-launch relationships.
+- Bounded load: 250 requests, zero failures; p95 300.8 ms in the recorded final Unit 9 staging load run.
+- Candidate preservation: byte hashes recorded in `ng-candidate-2026-3-limited-launch-preservation.md`; the certified-status boundary remains unchanged and fail-closed.
+
+## Browser privacy and authorization
+
+- A generic `ADMIN` received the expected 403 for the payroll workspace with the explicit no-data-disclosed response.
+- A staging-safe employee was temporarily granted `PAYROLL_COMPLIANCE_ADMIN` through the governed Users UI.
+- Initial positive access found a release defect: the application catalog contained the limited-launch permissions, but persisted tenant RBAC did not. The first migration-only correction was then removed by the guarded release reconciler because its canonical list was stale.
+- The smallest correct fix backfilled the database grants and aligned the guarded reconciler, with regression coverage for both paths.
+- On corrected deployment `dep-da67hcfqj5pc73ean2og`, the compliance account accessed `/hr/admin/payroll/unit9/compliance-exceptions` successfully.
+- The rendered queue exposed only Employee, Run, RTA, Blocker, Input, Opened, Owner and Status. Bank, tax identifier, pension identifier and reviewer-note fields were omitted.
+- Direct access to `/hr/admin/users` returned 403 and disclosed no sensitive payload.
+- Cross-tenant and unknown-record denial are covered by the server-side tenant filters and automated privacy contracts; staging contains no authorized second-tenant fixture from which to fabricate live evidence.
+- The temporary role was removed through the governed UI. The account is again `EMPLOYEE` only. Audit correlations: assignment `7d43c45a-7532-4f00-af9c-c764564ec6e0`; revocation `b2b9d0c5-8e47-4eee-a216-7d82a8fa86c5`.
+
+## External compliance boundary
+
+- Lagos, Oyo and FCT are the only limited-launch RTAs; Ibadan deterministically resolves to Oyo.
+- Monthly nominal payment date is the 29th, adjusted to the immediately preceding business day using a frozen versioned calendar.
+- `SALARY` is recurring. `COMPENSATION` and `BONUS` are non-periodic and remain held where an authoritative RTA allocation rule is unresolved. Sick-leave payroll earning is excluded.
+- `NOT_CONFIGURED` pension setup is not treated as a legal exemption.
+- Unsupported minimum-wage edge cases and unresolved RTA rules remain structured compliance holds; held employees are not silently dropped.
+- Official finalization, official payslips, real payments and statutory filing remain prohibited while the candidate is `NOT CERTIFIED`.
+
+## Prior NG-CANDIDATE-2026.2 evidence
 
 Status: **READY FOR NEW QUALIFIED STAGE 1 COMPLIANCE REVIEW — NOT CERTIFIED**.
 
