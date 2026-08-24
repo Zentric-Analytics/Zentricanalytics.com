@@ -1,0 +1,32 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.4",
+  "certificationStatus": "NOT_CERTIFIED",
+  "taxYear": 2026,
+  "jurisdiction": "NG",
+  "launchRtas": ["LAGOS", "OYO", "FCT"],
+  "cityMapping": { "IBADAN": "OYO" },
+  "activeEarnings": [
+    { "code": "SALARY", "classification": "RECURRING", "source": "UNIT8_EFFECTIVE_BASE_PAY_HANDOFF" },
+    { "code": "BONUS", "classification": "NON_PERIODIC", "source": "UNIT8_APPROVED_EFFECTIVE_BONUS_AWARD" }
+  ],
+  "deprecatedReplayOnlyEarnings": ["COMPENSATION"],
+  "minimumWage": {
+    "monthlyNgn": "70000.00",
+    "standardMethod": "ACTUAL_MONTHLY_SALARY_WITH_BONUS_REASSESSMENT",
+    "ambiguousCases": "COMPLIANCE_HOLD"
+  },
+  "bonusPaye": {
+    "recognition": "PAYMENT_PERIOD",
+    "method": "CUMULATIVE_ANNUAL_TARGET_MINUS_VALID_PRIOR_PAYE",
+    "specialBonusRate": false
+  },
+  "negativePaye": {
+    "calculation": "PRESERVE_REFUND_CREDIT_CANDIDATE",
+    "execution": "COMPLIANCE_HOLD_RTA_REFUND_PROCEDURE_REQUIRED"
+  },
+  "rounding": { "calculation": "FULL_PRECISION", "currencyScale": 2 },
+  "authoritativeUse": false,
+  "officialPayslipPublication": false,
+  "realPayment": false,
+  "statutoryFiling": false
+}

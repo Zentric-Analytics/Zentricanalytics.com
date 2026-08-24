@@ -1,0 +1,28 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.4",
+  "certificationStatus": "NOT_CERTIFIED",
+  "ownerDecision": "UNIT 9 ORDINARY EARNINGS = SALARY + BONUS ONLY",
+  "artifacts": {
+    "ruleConfigurationSha256": "27e13bedd22408f6efff4dd460e91ef4c1d68b60834771a190ba8a609eb7c237",
+    "sharedEngineSha256": "aac43d4081025fdd45e3ad9a4da8af27270f34b6239805510904e08ae19db7ff",
+    "candidateEngineAdapterSha256": "4f896c52bd32df6149782c00e7e33dee11cbfc1058b5104985edae4f19ab19e7",
+    "expectedValueFixtureSha256": "65adb3de211185d10bf108a8d940392249c26b257e083cdf1ef3851d435fcdb7",
+    "sourceRegisterSha256": "dc214bba07ec466051c37da740a77c9c1f244faaf7c95fba0575dec42278f4e3",
+    "ownerDecisionSha256": "7f91786dbe523036f8dbfc91221f5f181e5cc44f8c1ece512e52691b6fe316fd",
+    "earningTaxonomySha256": "c411cca17b9064d6c42df730f2fd280847d1086f93eab7ce8f0c09bd440aae1d",
+    "compensationInventorySha256": "68bbb088d784e0cb97d52a0b7b17d2d2f59761a93843a40b802e017c7c269315",
+    "remediationMatrixSha256": "ef5909919da8afa33384b20b1e7fae95ee0d1285bd726f2a8f0b11dec8706eea",
+    "preservationProofSha256": "e9f147046454060019ce4d9d2ab171d7df62803e136dd9d4d43d72a9551059b0",
+    "calculationManifestSha256": "adcb0fc388665a41d0eaae60375b69cc5c283bdce4aea66de7f60d660235fc6a",
+    "stage1PackageSha256": "4c3e1309b8ba7c150fb07c4ff9dd08ae1281cac3fe97991f0e689ea0202a9658"
+  },
+  "review": { "stage1ClosureReviewer": null, "stage1Decision": null, "stage2Certifier": null },
+  "restrictions": { "authoritativeFinalization": false, "officialPayslip": false, "realPayment": false, "statutoryFiling": false, "productionDeployment": false },
+  "externalEvidenceGaps": [
+    "Variable-month minimum-wage comparison method",
+    "Ambiguous multi-employer minimum-wage classification",
+    "Unusual partial-year minimum-wage arrangements",
+    "RTA refund or offset execution procedure",
+    "Canonical enacted 2024 Gazette identifier and retrospective treatment"
+  ]
+}

@@ -7,6 +7,7 @@ const root = process.cwd();
 const evidence = path.join(root, "docs/hrms/delivery-units/unit-09");
 const manifest = JSON.parse(fs.readFileSync(path.join(evidence, "ng-candidate-2026-3-stage1-manifest.json"), "utf8"));
 const sha256 = (file: string) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+const sha256CanonicalCrlf = (file: string) => crypto.createHash("sha256").update(fs.readFileSync(file, "utf8").replace(/\r?\n/g, "\r\n")).digest("hex");
 
 describe("NG-CANDIDATE-2026.3 immutable Stage 1 closure package", () => {
   it("binds exact candidate identity and remains uncertified", () => {
@@ -18,7 +19,9 @@ describe("NG-CANDIDATE-2026.3 immutable Stage 1 closure package", () => {
   });
   it("binds deterministic implementation, fixture and evidence bytes", () => {
     expect(sha256(path.join(root, "src/lib/hr/payroll/nigeria-2026-3.ts"))).toBe(manifest.artifacts.ruleConfigurationSha256);
-    expect(sha256(path.join(root, "src/lib/hr/payroll/unit9-engine.ts"))).toBe(manifest.artifacts.engineSha256);
+    // The immutable 2026.3 manifest was sealed from a Windows checkout. Canonicalize
+    // line endings so the same source bytes verify on both Windows and Linux runners.
+    expect(sha256CanonicalCrlf(path.join(root, "src/lib/hr/payroll/unit9-engine.ts"))).toBe(manifest.artifacts.engineSha256);
     expect(sha256(path.join(root, "tests/fixtures/ng-candidate-2026-3-expected-values.json"))).toBe(manifest.artifacts.expectedValueFixtureSha256);
     expect(sha256(path.join(evidence, "ng-candidate-2026-3-source-register.md"))).toBe(manifest.artifacts.sourceRegisterSha256);
     expect(sha256(path.join(evidence, "ng-candidate-2026-3-remediation-matrix.md"))).toBe(manifest.artifacts.remediationMatrixSha256);
