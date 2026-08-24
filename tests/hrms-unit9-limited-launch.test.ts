@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { approveSupportedPopulation, assertExceptionResolution, assertPaymentExportState, classifyEarning, complianceEligibility, exceptionLogicalKey, NIGERIA_ACCOUNTING_STATE, NIGERIA_LAUNCH_SUPPORT_MATRIX, NIGERIA_PAYMENT_MODEL, partitionPayrollPopulation, resolveMonthlyPaymentDate, resolveNigeriaRta } from "../src/lib/hr/payroll/unit9-limited-launch";
 import { canAssignRole, permissionsForRole } from "../src/lib/hr/permissions/catalog";
+import { readFileSync } from "node:fs";
 
 const calendar = (holidays: string[] = []) => ({ versionId: "ng-calendar-2026-v1", weekendDays: [0, 6], holidays });
 const eligible = (extra = {}) => complianceEligibility({ rta: "LAGOS", earnings: [{ type: "SALARY", amount: "100000" }], pensionOperationalState: "NOT_CONFIGURED", ...extra });
@@ -71,6 +72,14 @@ describe("Unit 9 Nigeria limited-launch operating controls", () => {
     expect(permissionsForRole("ADMIN")).not.toContain("payroll.read");
     expect(permissionsForRole("PAYROLL_COMPLIANCE_ADMIN")).toEqual(expect.arrayContaining(["payroll.exception.read", "payroll.exception.resolve"]));
     expect(permissionsForRole("PAYROLL_PROCESSOR")).not.toContain("payroll.approve");
+  });
+
+  it("backfills limited-launch permissions into persisted tenant RBAC", () => {
+    const migration = readFileSync("prisma/migrations/20260824143000_hrms_unit9_limited_launch_permission_backfill/migration.sql", "utf8");
+    expect(migration).toContain("'PAYROLL_COMPLIANCE_ADMIN'::\"HrRoleKey\", 'payroll.exception.read'");
+    expect(migration).toContain("'PAYROLL_COMPLIANCE_ADMIN'::\"HrRoleKey\", 'payroll.exception.resolve'");
+    expect(migration).toContain("'PAYROLL_ADMIN'::\"HrRoleKey\", 'payroll.population_partition.approve'");
+    expect(migration).toContain('ON CONFLICT ("roleId", "permissionId") DO NOTHING');
   });
 
   it("uses governed exports without falsely settling payments", () => {
