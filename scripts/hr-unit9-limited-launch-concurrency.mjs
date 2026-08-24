@@ -7,7 +7,8 @@ const prisma = new PrismaClient();
 const marker = `limited-launch-${Date.now()}`;
 try {
   const run = await prisma.hrPayrollAuthoritativeRun.findFirstOrThrow({ orderBy: { createdAt: "desc" } });
-  const attempt = await prisma.hrPayrollCalculationAttempt.findFirstOrThrow({ where: { payrollRunId: run.id }, orderBy: { attemptNumber: "desc" } });
+  const latestAttempt = await prisma.hrPayrollCalculationAttempt.findFirstOrThrow({ where: { payrollRunId: run.id }, orderBy: { attemptNumber: "desc" } });
+  const attempt = await prisma.hrPayrollCalculationAttempt.create({ data: { organizationId: run.organizationId, payrollRunId: run.id, attemptNumber: latestAttempt.attemptNumber + 1, inputSetHash: `${marker}:input`, ruleSetHash: `${marker}:rules`, engineVersion: "unit9-ng-2026.4-validation", outputHash: `${marker}:output`, manifest: { candidateVersion: "NG-CANDIDATE-2026.4", purpose: "STAGING_CONCURRENCY_EVIDENCE" }, status: "COMPLETED", completedAt: new Date(), correlationId: `${marker}:attempt` } });
   const snapshot = await prisma.hrPayrollInputSnapshot.findFirstOrThrow({ where: { payrollRunId: run.id } });
   const data = { id: crypto.randomUUID(), organizationId: run.organizationId, employeeId: snapshot.employeeId, payGroupId: run.payGroupId, payrollPeriodId: run.calendarPeriodId, payrollRunId: run.id, calculationAttemptId: attempt.id, jurisdictionCode: "NG", rtaCode: "LAGOS", blockerCode: "RTA_REFUND_PROCEDURE_REQUIRED", blockerCategory: "TAX", affectedInput: "PAYE_REFUND_CREDIT", candidateVersion: "NG-CANDIDATE-2026.4", sourceRequirement: "Approved RTA refund or offset execution procedure", logicalKey: marker, correlationId: crypto.randomUUID() };
   const created = await Promise.allSettled([0, 1].map(() => prisma.hrPayrollComplianceException.create({ data: { ...data, id: crypto.randomUUID(), correlationId: crypto.randomUUID() } })));
