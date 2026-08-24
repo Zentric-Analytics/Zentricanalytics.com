@@ -1,0 +1,3074 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.4",
+  "generatedFromGitHead": "b17bd2270e301d6a0f764fff19c677587053af32",
+  "decision": "Unit 8 compensation terminology is preserved; Unit 9 COMPENSATION is legacy-only and prohibited for new input.",
+  "counts": {
+    "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT": 385,
+    "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING": 21,
+    "C_GENERIC_DOCUMENTATION_WORDING": 29,
+    "D_STATUTORY_LOSS_OF_EMPLOYMENT": 1,
+    "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER": 74
+  },
+  "occurrences": [
+    {
+      "file": "docs/hrms/authorization-matrix.md",
+      "line": 7,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "| Bank/compensation | Explicit payroll permissions | Denied | Explicit payroll permissions | Masked/owned outputs only | Denied |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-02/operations.md",
+      "line": 25,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "Support users receive safe, organization-scoped diagnostics by correlation ID: command/state, entity IDs, validation code, retry state, and audit/outbox references. Protected tax, identity, compensation, and address values are excluded."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-02/overview.md",
+      "line": 50,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- Compensation budgets beyond position/grade validation (Unit 5)."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-04/blueprint.md",
+      "line": 7,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "Provide one governed, effective-dated, auditable engine for workforce changes that coordinates organization assignments, position occupancy, employee status, supervisor authority, compensation effects, payroll boundaries, lifecycle tasks, system access, notifications, and documents without rewriting history."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-04/blueprint.md",
+      "line": 17,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- compensation-impacting events through existing salary/payroll approval controls."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-04/blueprint.md",
+      "line": 25,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- Explicit DRAFT, SUBMITTED, IN_REVIEW, APPROVED, SCHEDULED, EXECUTING, COMPLETED, REJECTED, CANCELLED, FAILED, and COMPENSATION_REQUIRED states."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-04/blueprint.md",
+      "line": 61,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- Whether compensation-impacting events are one composite event or linked governed sub-events."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-04/repository-audit.md",
+      "line": 22,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- No common state machine for promotion, demotion, transfer, secondment, employment-type change, location change, manager change, compensation-linked change, leave of absence, return, suspension, termination, or rescission."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-04/repository-audit.md",
+      "line": 24,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- No immutable event snapshot tying approvals, impacted records, policy version, evidence, execution attempts, and rollback/compensation actions together."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-05/blueprint.md",
+      "line": 108,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "Governed exits: `SUBMITTED/UNDER_REVIEW → RETURNED | REJECTED | WITHDRAWN`; `APPROVED/SCHEDULED → CANCELLATION_PENDING → CANCELLED`; `IN_PROGRESS → CANCELLED` only through HR correction with ledger compensation. Any edit after submission creates a new version and restarts review."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-07/blueprint.md",
+      "line": 20,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- Keep `HrGrade` separate. A level may map to allowed grades through versioned configuration, but level is career scope and grade is organizational/compensation structure."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-07/blueprint.md",
+      "line": 118,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "Compensation calculation is out of scope. Stable outputs may later feed compensation. Succession planning and “high potential” labels are deferred pending separate approval."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-07/blueprint.md",
+      "line": 234,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- Compensation/reward calculation, broad succession planning, “high potential” labels, AI scoring, automated promotion decisions, and attendance-derived performance are deferred."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-07/repository-audit.md",
+      "line": 47,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "2. Grade level is compensation/organization data, not automatically a career level; Unit 7 must not equate them."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-07/repository-audit.md",
+      "line": 57,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "Unit 7 should add tenant-owned performance aggregates beside—not inside—the existing workforce masters. It should extend job architecture through versioned expectation records, reuse generic workflow and notification infrastructure, and hand only an approved promotion decision to Unit 4. General succession/high-potential classification and compensation calculation remain deferred."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 1,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "# Unit 8 — Compensation & Rewards Management blueprint"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 7,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Job Architecture → Compensation Market → Band Version → Policy Version → Employee Compensation → Eligibility → Recommendation → Budget/Range Validation → Exception → Approval → Immutable Decision → Effective Record → Unit 9 payroll handoff."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 11,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- Unit 8 owns compensation structures, authoritative compensation history, recommendations, budgets, exceptions, rewards and approved payroll inputs."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 15,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "## 8A — Compensation architecture"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 27,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- `HrCompGrade`: stable compensation-grade identity, separate from Unit 7 Z-level and legacy `HrGrade`."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 28,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- `HrCompBand`: stable tuple of organization + job profile/family + optional company level + compensation grade + market + currency + pay basis."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 37,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "`HrEmployeeCompensation` is the stable aggregate for organization + employee + work relationship. Rehire normally creates a new aggregate for the new work relationship; Person identity is preserved."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 39,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "`HrCompensationRecord` is append-only and effective-dated. It records employee/work relationship/assignment, event type, currency, pay basis, base amount, annualized reference, market version, band version, grade, policy version, decision, effective range, recorded/approved/payroll-ready dates, correlation and content hash. A PostgreSQL exclusion constraint prevents overlapping authoritative records for one work relationship and component."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 47,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "## 8C — merit and compensation cycles"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 78,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Employee **My Compensation** shows only their finalized current base pay, basis, currency, bonus target, approved awards, effective history and released statements. It excludes peer pay, manager notes, calibration deliberation, exception rationale and diagnostics."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 84,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "`HrPayrollCompHandoff` is an immutable, idempotent contract containing employee/work relationship/assignment, compensation record or award ID, event type, amount/currency/basis, effective date, retroactive affected window, correlation, schema version and claim state. It excludes manager notes, diagnostics, benchmark internals and unapproved data. During transition, a reconciler may project effective Unit 8 base records into `HrSalaryRecord`; provenance and hash must prove exact equivalence until"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 94,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| `HrCompGrade` | Compensation grade identity | Archived, not deleted; not equal to Z-level |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 97,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| `HrEmployeeCompensation` | Work-relationship aggregate | Stable; highly confidential |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 98,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| `HrCompensationRecord` | Effective authoritative base history | Append-only; exclusion constraint; indefinite employment/audit retention |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 111,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "## Promotion compensation"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 117,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Eligibility is a separate versioned evaluation with machine-readable reasons: recent hire, cutoff, separation, pending promotion/compensation event, leave, contract/employment type and policy exclusion. Ineligibility blocks recommendation but can enter an explicit exception workflow if policy permits. No performance label directly determines an increase without an exact policy rule and human approval."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 126,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| Compensation administrator | Markets, bands, policy, cycles, budgets and decisions | Self-approval; unrelated tenant |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 130,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| General administrator | System administration only | Individual compensation unless separately granted |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 132,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Proposed permission families: `compensation.architecture.*`, `compensation.cycle.*`, `compensation.budget.*`, `compensation.recommendation.*`, `compensation.decision.*`, `compensation.exception.*`, `compensation.reward.*`, `compensation.read_self`, `compensation.read_team`, `compensation.read_scoped`, `compensation.payroll_handoff.read`, `compensation.audit.read`. Scope and field policy are enforced server-side; UI hiding is supplementary."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 144,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Register templates under the existing HR sender category: cycle open, recommendation due/returned, exception requested/decided, compensation approved/effective, statement available and bonus awarded. Outbox idempotency key includes template + subject/version + recipient. No new sender identity."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 146,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Idempotent tenant-aware workers: cycle opening, population snapshot, reminders, budget reconciliation, effective compensation, statement generation, payroll handoff, retroactive signal and integrity reconciliation. Each uses claim/lease/attempt/dead-letter evidence and authenticates through the existing internal-worker mechanism."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 153,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "2. Compensation grade/band identity and versions, then policy and benchmark snapshots."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 154,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "3. Employee compensation aggregate, events and append-only effective records."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 171,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Browser matrix: employee own view; manager direct-report scope; HRBP assigned scope; compensation admin; budget owner; payroll reader; auditor read-only; general admin denied individual pay. Test UI and forged direct requests."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 173,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Full staging lifecycle: assignment/job/Z-level → market and band → initial compensation → Unit 7 outcome → merit cycle/population → manager recommendation → budget reservation → calibration → exception/approval → effective record → Unit 7 promotion → target band/promotion decision → retroactive correction → bonus award → employee statement → payroll handoff → encrypted backup → isolated restore."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 175,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Restore must prove Person → work relationship → assignment → job profile/Z-level → market → band version → employee compensation → recommendation → budget/exception → decision → effective record → award → statement → payroll handoff → audit, with zero duplicates/orphans, balanced ledger, correct effective history and preserved privacy."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 181,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- Compensation confidentiality raises insider/direct-ID and report-export risk; role names alone are insufficient."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 185,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- The accepted global GoDaddy Inbox-delivery exception is not a Unit 8 architecture issue, but compensation notifications inherit it and must be reaccepted or resolved before release."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 193,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "3. Z-level display — recommend contextual display beside, never as, compensation grade."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 196,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "6. Above-band policy — recommend mandatory compensation-admin and executive exception approval."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 200,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "10. Approval workflow — recommend manager → compensation/HR → budget owner; executive for exception; strict maker/checker."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/blueprint.md",
+      "line": 202,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "12. Pay-equity diagnostics — recommend minimum cohort thresholds and restricted compensation/auditor access."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/final-staging-validation-report.md",
+      "line": 27,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "The read-only integrity gate passed with zero orphan compensation records, invalid current-record pointers, authoritative overlaps, broken correction lineage, orphan or duplicate payroll handoffs, duplicate recommendation decisions, missing fixture audits, failed compensation outbox records, or invalid budget ledgers. Ten budgets reconciled."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/final-staging-validation-report.md",
+      "line": 31,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- Exactly one `hr-compensation-effective` outbox record was observed in `DELIVERED` state."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/final-staging-validation-report.md",
+      "line": 37,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "The live browser and direct-route matrix passed for employee self-service, effective direct-report manager scope, HR administration, Compensation Administrator, Budget Owner, Payroll Reader, and Auditor. Denied requests returned 403 or privacy-safe 404, contained no sensitive partial payload, and exposed no unauthorized mutation controls. Payroll Reader was limited to effective payroll-authoritative fields; Auditor received correlation metadata with amounts and deliberations redacted. All tempor"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/final-staging-validation-report.md",
+      "line": 73,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- Serialized compensation-cycle and budget reservation races."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/production-release-report.md",
+      "line": 45,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- General administrator compensation boundary: compensation, budget, and payroll-handoff routes returned an accessible 403 with no sensitive data."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/production-release-report.md",
+      "line": 50,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Production contains no Unit 8 business population yet, so validation did not fabricate compensation employees, recommendations, email deliveries, or payroll handoffs. Direct integrity queries returned:"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/production-release-report.md",
+      "line": 52,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- compensation records: 0"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/production-release-report.md",
+      "line": 58,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- authoritative compensation overlaps: 0"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/production-release-report.md",
+      "line": 59,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- orphan compensation records: 0"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 7,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "- The blueprint branch `feature/hrms-unit-08-compensation-rewards-blueprint` was created from a clean `dev` worktree."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 16,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| Person, employee, work relationship, assignment | Reusable | `HrPerson`, `HrEmployee`, `HrWorkRelationship`, and effective `HrEmployeeAssignment` are authoritative. Compensation must bind to the applicable work relationship and assignment episode. |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 19,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| Recruitment/offer salary | Reusable input only | Vacancy ranges and immutable accepted offer versions capture proposed/contracted starting terms. The accepted offer may seed an `INITIAL` compensation decision, but must not become ongoing compensation history. |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 24,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| Compensation market/bands/benchmarks/policy | Missing | No market identity/version, geographic differential, immutable market band version, benchmark snapshot or compensation philosophy exists. |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 25,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| Merit cycle/budget/recommendation/exception | Missing | No compensation cycle, population snapshot, atomic budget reservation, manager recommendation, calibration, exception or final decision exists. |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 26,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| Unit 7 performance/promotion | Reusable | Finalized review/calibration and `HrPromotionDecision` provide immutable input IDs. Unit 7 never writes pay; Unit 8 must reference exact versions and independently approve compensation. |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 27,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| Unit 4 workforce events | Reusable | Versioned events, effective worker, execution attempts and conflict checks remain authoritative for promotion/transfer/separation. Unit 8 reads workforce state and emits compensation decisions, never overwrites assignments. |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 31,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| Permissions | Partial | Existing granular permissions and manager scope are reusable. `ADMIN` currently has broad catalog access, while the owner requires admin alone not to reveal salary. New compensation permissions and field-level policies are mandatory. |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 32,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "| Documents/storage | Reusable | Private exact-version documents, scanning, retention and access logging can store finalized statements. Do not store generated files in compensation tables. |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 48,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "5. General administrator access must be decoupled from individual compensation visibility."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-08/repository-audit.md",
+      "line": 56,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "Unit 8 should be an additive compensation bounded context beside workforce and payroll. It should introduce stable identities plus immutable versions, append-only effective compensation records, atomic budget ledgers, governed recommendations/exceptions/decisions, and a narrow payroll-authoritative handoff. Existing salary and grade range fields remain compatibility data until a reconciled cutover; they are not silently rewritten or deleted."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/README.md",
+      "line": 5,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "This directory defines and evidences the additive Nigeria-first, globally extensible architecture for turning governed workforce, leave, time, and compensation truth into reproducible payroll results, employee outputs, payment instructions, accounting outputs, and statutory outputs. The global engine and governed staging workflows are implemented. Nigeria remains fail-closed and `NOT CERTIFIED`; no filing, bank integration, real payment, or legal certification is claimed."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/README.md",
+      "line": 12,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- Unit 8 owns effective compensation decisions, bonuses, corrections, and the versioned payroll handoff."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/final-staging-validation-report.md",
+      "line": 48,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "- `SALARY` is recurring. `COMPENSATION` and `BONUS` are non-periodic and remain held where an authoritative RTA allocation rule is unresolved. Sick-leave payroll earning is excluded."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-source-register.md",
+      "line": 21,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- p. 9 severance example: NGN 12,000,000 annual salary plus NGN 75,000,000 severance; NGN 50,000,000 exempt compensation; NGN 25,000,000 taxable compensation; NGN 2,500,000 WHT at 10%, with final tax computed using the applicable bands and credits."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-calculation-manifest.json",
+      "line": 12,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "\"deprecatedReplayOnlyEarnings\": [\"COMPENSATION\"],"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-earning-taxonomy.md",
+      "line": 10,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "`COMPENSATION` is retained as a storage-compatible deprecated historical code only where prior candidate replay requires it. It is prohibited for new input. Draft legacy input is blocked by `LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED` until an authorized user explicitly chooses Salary or Bonus with a reason; the old snapshot hash remains linked to the new snapshot hash."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-owner-decision.md",
+      "line": 9,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "- `COMPENSATION`, `VARIABLE_COMPENSATION`, `DISCRETIONARY_COMPENSATION`, sick-leave pay and generic substitutes are not active Unit 9 earnings."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-owner-decision.md",
+      "line": 11,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "- Historical Unit 9 `COMPENSATION` values remain readable only for exact replay. New input is rejected; a draft requires an explicit governed reclassification to Salary or Bonus and a new snapshot."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-remediation-matrix.md",
+      "line": 7,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "| Legacy Compensation | Implemented | Replay-only deprecated classification; new creation rejected; draft explicit reclassification |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/nigeria-certification-handoff.md",
+      "line": 7,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "Unit 9 consumes governed employment (Unit 4), leave (Unit 5), locked time (Unit 6), and compensation (Unit 8) facts. It freezes exact inputs, calculates deterministic candidate earnings/PAYE/deductions/contributions, reconciles, records approval and risk evidence, and—only for an ACTIVE certified package—may finalize and produce payslip, simulated-payment, accounting, and statutory outputs. Contractors, real bank movement, real filing/remittance, benefits enrolment, and legal advice are out of s"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/nigeria-certification-test-matrix.md",
+      "line": 16,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "| NG-T-010 | Retro compensation/time/leave | immutable original plus deltas/YTD | `retroDelta`, late-input tests | MECHANISM PASS; legal allocation pending |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/nigeria-limited-launch-operating-decisions.md",
+      "line": 11,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "| Earnings | `SALARY` (recurring), `COMPENSATION` (non-periodic), `BONUS` (non-periodic) |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/nigeria-paye-calculation-spec.md",
+      "line": 7,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "Frozen employee/work relationship/assignment, period, approved compensation and awards, locked approved time, governed leave, prior accumulator/YTD values, exact jurisdiction/rule versions, taxable-base mappings, deductions/contributions, currency, and source hashes. Missing or unsupported identity, employment, jurisdiction, compensation, currency, or time evidence produces a blocker."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/nigeria-proration-overtime-rounding.md",
+      "line": 10,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "| Compensation change | split exact effective versions; preserve both sources | technical invariant + policy | REVIEW REQUIRED |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/nigeria-rule-source-matrix.md",
+      "line": 15,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "| NG-SAL-001 | Salaried earnings | Full-period fixed salary is sourced from an approved compensation version | policy date + legal review | employment/payroll policy plus NG-SRC-002 taxable treatment | `calculateEarnings` and frozen source manifest | salaried deterministic test | REVIEW REQUIRED (policy and tax treatment) |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/nigeria-ytd-retro-spec.md",
+      "line": 9,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "| Unit 8 compensation correction | old/new effective versions and affected interval | recompute historical hypothetical; append earning/tax/deduction/contribution/YTD deltas | tax/YTD allocation and filing correction |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/unit-09-audit.md",
+      "line": 25,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "| Subject | exactly one compensation record or bonus award; optional retroactive signal |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/unit-09-calculation-reproducibility.md",
+      "line": 20,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "- compensation/bonus handoff version;"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/unit-09-retroactivity-model.md",
+      "line": 7,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "Triggers may originate from Unit 4 effective-dated workforce corrections, Unit 5 leave corrections/reversals, Unit 6 locked-time corrections, Unit 8 compensation/bonus handoffs, tax/deduction configuration corrections, provider settlement returns or authorized payroll adjustments."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/unit-09-security-privacy-model.md",
+      "line": 15,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "| Statutory Operator | scoped statutory identifiers/outputs and submission state | bank details, unrelated HR or compensation deliberation |"
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/unit-09-security-privacy-model.md",
+      "line": 20,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "`ADMIN`, `HR_ADMIN`, `COMPENSATION_ADMIN`, and the current `PAYROLL_ADMIN` do not automatically receive the new end-to-end role set. The legacy role is migrated into scoped bundles and cannot satisfy maker/checker by itself."
+    },
+    {
+      "file": "docs/hrms/delivery-units/unit-09/unit-09-validation-plan.md",
+      "line": 24,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "`Nigeria salaried/hourly worker → assignment/legal entity → pay group/calendar → Unit 8 compensation → Unit 6 locked time/overtime candidate where applicable → Unit 5 leave → certification → frozen snapshot → certified Nigeria package → earnings/taxable base/PAYE/deductions/employer contributions → simulation → exception/risk review → calculation → employee/run reconciliation → independent approval → immutable finalization → secure payslip publication → payment batch → independent payment approv"
+    },
+    {
+      "file": "docs/hrms/employee-provisioning.md",
+      "line": 5,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "The employee provisioning workflow replaces direct employee creation with a resumable, approval-controlled process. It creates the employee, first assignment, reporting line, optional compensation/payroll records, optional user account, and optional onboarding instance as one database transaction."
+    },
+    {
+      "file": "docs/hrms/employee-provisioning.md",
+      "line": 11,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "3. Readiness checks identify missing personal, employment, assignment, manager, compensation, payroll, access, and onboarding data."
+    },
+    {
+      "file": "docs/hrms/payroll-model.md",
+      "line": 5,
+      "category": "C_GENERIC_DOCUMENTATION_WORDING",
+      "text": "## Compensation and policy"
+    },
+    {
+      "file": "prisma/migrations/20260730020000_hrms_payroll/migration.sql",
+      "line": 1,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "-- Additive HRMS payroll: effective-dated compensation, immutable payroll snapshots,"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 1,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "ALTER TYPE \"HrRoleKey\" ADD VALUE IF NOT EXISTS 'COMPENSATION_ADMIN';"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 85,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"compensationGradeCode\" TEXT,"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 174,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE TABLE \"HrEmployeeCompensation\" ("
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 184,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CONSTRAINT \"HrEmployeeCompensation_pkey\" PRIMARY KEY (\"id\")"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 188,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE TABLE \"HrCompensationRecord\" ("
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 191,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"employeeCompensationId\" TEXT NOT NULL,"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 216,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CONSTRAINT \"HrCompensationRecord_pkey\" PRIMARY KEY (\"id\")"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 254,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"compensationRecordId\" TEXT NOT NULL,"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 503,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"compensationRecordId\" TEXT,"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 597,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE UNIQUE INDEX \"HrEmployeeCompensation_currentRecordId_key\" ON \"HrEmployeeCompensation\"(\"currentRecordId\");"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 600,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE INDEX \"HrEmployeeCompensation_organizationId_employeeId_state_idx\" ON \"HrEmployeeCompensation\"(\"organizationId\", \"employeeId\", \"state\");"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 603,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE UNIQUE INDEX \"HrEmployeeCompensation_organizationId_workRelationshipId_key\" ON \"HrEmployeeCompensation\"(\"organizationId\", \"workRelationshipId\");"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 606,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE UNIQUE INDEX \"HrCompensationRecord_decisionId_key\" ON \"HrCompensationRecord\"(\"decisionId\");"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 609,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE INDEX \"HrCompensationRecord_organizationId_employeeId_effectiveFro_idx\" ON \"HrCompensationRecord\"(\"organizationId\", \"employeeId\", \"effectiveFrom\", \"effectiveTo\");"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 612,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE INDEX \"HrCompensationRecord_workRelationshipId_status_effectiveFro_idx\" ON \"HrCompensationRecord\"(\"workRelationshipId\", \"status\", \"effectiveFrom\");"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 615,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE UNIQUE INDEX \"HrCompensationRecord_organizationId_idempotencyKey_key\" ON \"HrCompensationRecord\"(\"organizationId\", \"idempotencyKey\");"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 618,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE UNIQUE INDEX \"HrCompensationRecord_organizationId_correlationId_key\" ON \"HrCompensationRecord\"(\"organizationId\", \"correlationId\");"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 748,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "ALTER TABLE \"HrCompensationRecord\" ADD CONSTRAINT \"HrCompensationRecord_amount_check\" CHECK (\"amount\" >= 0 AND (\"annualizedAmount\" IS NULL OR \"annualizedAmount\" >= 0));"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 749,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "ALTER TABLE \"HrCompensationRecord\" ADD CONSTRAINT \"HrCompensationRecord_effective_range_check\" CHECK (\"effectiveTo\" IS NULL OR \"effectiveTo\" > \"effectiveFrom\");"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 756,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "ALTER TABLE \"HrPayrollCompHandoff\" ADD CONSTRAINT \"HrPayrollCompHandoff_subject_check\" CHECK ((\"compensationRecordId\" IS NOT NULL)::int + (\"bonusAwardId\" IS NOT NULL)::int = 1);"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 759,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "ALTER TABLE \"HrCompensationRecord\" ADD CONSTRAINT \"HrCompensationRecord_no_authoritative_overlap\" EXCLUDE USING gist ("
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 768,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "IF TG_OP = 'DELETE' AND TG_TABLE_NAME IN ('HrCompBudgetEntry','HrCompCalibrationDecision','HrCompDecision','HrCompRetroactiveSignal','HrCompensationRecord') THEN"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 769,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "RAISE EXCEPTION 'Authoritative compensation evidence cannot be deleted';"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 773,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "RAISE EXCEPTION 'Published compensation versions are immutable';"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 776,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "RAISE EXCEPTION 'Approved compensation evidence is immutable';"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 787,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": ") THEN RAISE EXCEPTION 'Approved compensation decision content is immutable'; END IF;"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 788,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "IF TG_TABLE_NAME = 'HrCompensationRecord' AND ("
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 796,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": ") THEN RAISE EXCEPTION 'Authoritative compensation content is immutable'; END IF;"
+    },
+    {
+      "file": "prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+      "line": 809,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "CREATE TRIGGER hr_comp_record_content_immutable BEFORE UPDATE OR DELETE ON \"HrCompensationRecord\" FOR EACH ROW EXECUTE FUNCTION hr_comp_protect_immutable();"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 3,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'Compensation Administrator', 'Governed compensation architecture, cycle, budget, decision and reward authority.'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 4,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'Compensation Budget Owner', 'Scoped compensation budget and decision approval authority.'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('PAYROLL_READER'::\"HrRoleKey\", 'Payroll Compensation Reader', 'Read-only access to approved payroll-authoritative compensation handoffs.')"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 14,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.read_self'), ('compensation.read_team'), ('compensation.read_scoped'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 15,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.architecture.manage'), ('compensation.cycle.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 16,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.budget.manage'), ('compensation.budget.approve'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 17,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.recommendation.create'), ('compensation.recommendation.review'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 18,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.calibration.manage'), ('compensation.exception.approve'), ('compensation.decision.approve'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 19,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.reward.manage'), ('compensation.statement.read'), ('compensation.report.read'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 20,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.payroll_handoff.read'), ('compensation.audit.read')"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 29,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.read_self'), ('compensation.read_team'), ('compensation.read_scoped'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 30,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.architecture.manage'), ('compensation.cycle.manage'), ('compensation.budget.manage'), ('compensation.budget.approve'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 31,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.recommendation.create'), ('compensation.recommendation.review'), ('compensation.calibration.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 32,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.exception.approve'), ('compensation.decision.approve'), ('compensation.reward.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 33,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('compensation.statement.read'), ('compensation.report.read'), ('compensation.payroll_handoff.read'), ('compensation.audit.read')"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 34,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "), employee_keys(\"key\") AS (VALUES ('compensation.read_self'), ('compensation.statement.read')),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 35,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "budget_keys(\"key\") AS (VALUES ('compensation.read_scoped'), ('compensation.budget.approve'), ('compensation.decision.approve'), ('compensation.report.read')),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 36,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "payroll_keys(\"key\") AS (VALUES ('compensation.read_scoped'), ('compensation.payroll_handoff.read')),"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 40,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "WHERE (r.\"key\" = 'COMPENSATION_ADMIN' AND p.\"key\" IN (SELECT \"key\" FROM comp_keys))"
+    },
+    {
+      "file": "prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+      "line": 44,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "OR (r.\"key\" = 'AUDITOR' AND p.\"key\" = 'compensation.audit.read')"
+    },
+    {
+      "file": "prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "IF TG_OP = 'DELETE' AND TG_TABLE_NAME IN ('HrCompBudgetEntry','HrCompCalibrationDecision','HrCompDecision','HrCompRetroactiveSignal','HrCompensationRecord') THEN"
+    },
+    {
+      "file": "prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "RAISE EXCEPTION 'Authoritative compensation evidence cannot be deleted';"
+    },
+    {
+      "file": "prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql",
+      "line": 10,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "RAISE EXCEPTION 'Published compensation versions are immutable';"
+    },
+    {
+      "file": "prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql",
+      "line": 13,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "RAISE EXCEPTION 'Approved compensation evidence is immutable';"
+    },
+    {
+      "file": "prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql",
+      "line": 24,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": ") THEN RAISE EXCEPTION 'Approved compensation decision content is immutable'; END IF;"
+    },
+    {
+      "file": "prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql",
+      "line": 25,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "IF TG_TABLE_NAME = 'HrCompensationRecord' AND ("
+    },
+    {
+      "file": "prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql",
+      "line": 33,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": ") THEN RAISE EXCEPTION 'Authoritative compensation content is immutable'; END IF;"
+    },
+    {
+      "file": "prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "IF TG_OP = 'DELETE' AND TG_TABLE_NAME IN ('HrCompBudgetEntry','HrCompCalibrationDecision','HrCompDecision','HrCompRetroactiveSignal','HrCompensationRecord') THEN"
+    },
+    {
+      "file": "prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "RAISE EXCEPTION 'Authoritative compensation evidence cannot be deleted';"
+    },
+    {
+      "file": "prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql",
+      "line": 9,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "IF OLD.\"status\"::text <> 'DRAFT' THEN RAISE EXCEPTION 'Published compensation versions are immutable'; END IF;"
+    },
+    {
+      "file": "prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql",
+      "line": 12,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "RAISE EXCEPTION 'Approved compensation evidence is immutable';"
+    },
+    {
+      "file": "prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql",
+      "line": 23,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "THEN RAISE EXCEPTION 'Approved compensation decision content is immutable'; END IF;"
+    },
+    {
+      "file": "prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql",
+      "line": 25,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "IF TG_TABLE_NAME = 'HrCompensationRecord' AND TG_OP = 'UPDATE' THEN"
+    },
+    {
+      "file": "prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql",
+      "line": 33,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "THEN RAISE EXCEPTION 'Authoritative compensation content is immutable'; END IF;"
+    },
+    {
+      "file": "prisma/migrations/20260813203000_hrms_unit8_manager_compensation_scope/migration.sql",
+      "line": 3,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "-- permission exposes no unrelated compensation to ordinary employees."
+    },
+    {
+      "file": "prisma/migrations/20260813203000_hrms_unit8_manager_compensation_scope/migration.sql",
+      "line": 9,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "AND p.\"key\" = 'compensation.recommendation.create'"
+    },
+    {
+      "file": "prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.budget.read'),"
+    },
+    {
+      "file": "prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.exception.review'),"
+    },
+    {
+      "file": "prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql",
+      "line": 7,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.read_all'),"
+    },
+    {
+      "file": "prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql",
+      "line": 8,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.bonus.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql",
+      "line": 9,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.retroactive.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql",
+      "line": 10,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.read'),"
+    },
+    {
+      "file": "prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql",
+      "line": 11,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql",
+      "line": 12,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'compensation.recommendation.review')"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.budget.read'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.exception.review'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 7,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.read_all'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 8,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.bonus.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 9,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.retroactive.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 10,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.read'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 11,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 12,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'compensation.recommendation.review')"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 22,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.budget.read'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 23,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.exception.review'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 24,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.read_all'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 25,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.bonus.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 26,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('COMPENSATION_ADMIN'::\"HrRoleKey\", 'compensation.retroactive.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 27,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.read'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 28,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'compensation.budget.manage'),"
+    },
+    {
+      "file": "prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+      "line": 29,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "('BUDGET_OWNER'::\"HrRoleKey\", 'compensation.recommendation.review')"
+    },
+    {
+      "file": "prisma/schema.prisma",
+      "line": 257,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "COMPENSATION_ADMIN"
+    },
+    {
+      "file": "prisma/schema.prisma",
+      "line": 5242,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "compensationGradeCode String?"
+    },
+    {
+      "file": "prisma/schema.prisma",
+      "line": 5333,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "model HrEmployeeCompensation {"
+    },
+    {
+      "file": "prisma/schema.prisma",
+      "line": 5347,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "model HrCompensationRecord {"
+    },
+    {
+      "file": "prisma/schema.prisma",
+      "line": 5350,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "employeeCompensationId String"
+    },
+    {
+      "file": "prisma/schema.prisma",
+      "line": 5416,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "compensationRecordId String"
+    },
+    {
+      "file": "prisma/schema.prisma",
+      "line": 5669,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "compensationRecordId String?"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 4,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"user.create\",\"user.read\",\"user.update\",\"user.suspend\",\"user.invite\",\"user.role.assign\",\"user.role.revoke\",\"employee.create\",\"employee.read_all\",\"employee.read_assigned\",\"employee.read_self\",\"employee.update\",\"employee.update_self\",\"department.manage\",\"position.manage\",\"assignment.create\",\"assignment.update\",\"assignment.end\",\"assignment.override\",\"organization.structure.manage\",\"organization.structure.import\",\"organization.position.create\",\"organization.position.approve\",\"organization.position.m"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export const HR_ROLE_KEYS = [\"ADMIN\", \"HR_ADMIN\", \"PAYROLL_ADMIN\", \"PAYROLL_PROCESSOR\", \"PAYROLL_APPROVER\", \"PAYROLL_COMPLIANCE_ADMIN\", \"PAYMENT_OPERATOR\", \"PAYMENT_APPROVER\", \"FINANCE_READER\", \"PAYROLL_AUDITOR\", \"STATUTORY_COMPLIANCE_OPERATOR\", \"COMPENSATION_ADMIN\", \"BUDGET_OWNER\", \"PAYROLL_READER\", \"EMPLOYEE\", \"AUDITOR\"];"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 29,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "ADMIN: HR_PERMISSION_KEYS.filter((key) => !key.startsWith(\"compensation.\") && !key.startsWith(\"payroll.\")),"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 30,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "HR_ADMIN: HR_PERMISSION_KEYS.filter((key) => !key.startsWith(\"payroll.\") && !key.startsWith(\"compensation.\") && ![\"user.role.assign\", \"user.role.revoke\", \"settings.manage\"].includes(key)),"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 31,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "COMPENSATION_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith(\"compensation.\")),"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 32,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "BUDGET_OWNER: [\"compensation.budget.read\", \"compensation.budget.manage\", \"compensation.recommendation.review\", \"compensation.decision.approve\", \"compensation.report.read\"],"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 33,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "PAYROLL_READER: [\"compensation.payroll_handoff.read\"],"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 35,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "PAYROLL_PROCESSOR: [\"payroll.read\", \"payroll.create\", \"payroll.certify\", \"payroll.freeze\", \"payroll.calculate\", \"payroll.review\", \"payroll.read_salary\", \"time.authoritative.read\", \"compensation.payroll_handoff.read\"],"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 43,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "EMPLOYEE: [\"employee.read_self\", \"employee.update_self\", \"leave.request\", \"leave.read_self\", \"time.capture_self\", \"time.read_self\", \"time.correction.request\", \"time.timesheet.submit\", \"performance.goal.read_self\", \"performance.goal.manage_self\", \"performance.feedback.create\", \"performance.feedback.read_self\", \"performance.checkin.manage_self\", \"performance.review.submit_self\", \"performance.review.read_self\", \"performance.career.manage_self\", \"performance.development.manage_self\", \"performance.re"
+    },
+    {
+      "file": "scripts/hr-bootstrap-lib.mjs",
+      "line": 44,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "AUDITOR: [\"audit.read\", \"report.read\", \"performance.audit.read\", \"compensation.audit.read\"],"
+    },
+    {
+      "file": "scripts/hr-unit8-restore-validation.mjs",
+      "line": 19,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "orphanCompensationRecords: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" r LEFT JOIN \"HrEmployee\" e ON e.id=r.\"employeeId\" AND e.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrWorkRelationship\" w ON w.id=r.\"workRelationshipId\" AND w.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrEmployeeAssignment\" a ON a.id=r.\"assignmentId\" AND a.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrCompDecision\" d ON d.id=r.\"decisionId\" AND d.\"organizationId\"=r.\"organiz"
+    },
+    {
+      "file": "scripts/hr-unit8-restore-validation.mjs",
+      "line": 20,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "invalidCurrentRecordPointers: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrEmployeeCompensation\" c LEFT JOIN \"HrCompensationRecord\" r ON r.id=c.\"currentRecordId\" AND r.\"employeeCompensationId\"=c.id AND r.\"organizationId\"=c.\"organizationId\" WHERE c.\"currentRecordId\" IS NOT NULL AND r.id IS NULL`),"
+    },
+    {
+      "file": "scripts/hr-unit8-restore-validation.mjs",
+      "line": 21,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "authoritativeOverlaps: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" a JOIN \"HrCompensationRecord\" b ON a.id < b.id AND a.\"organizationId\"=b.\"organizationId\" AND a.\"employeeCompensationId\"=b.\"employeeCompensationId\" AND tsrange(a.\"effectiveFrom\", COALESCE(a.\"effectiveTo\", 'infinity'::timestamp), '[)') && tsrange(b.\"effectiveFrom\", COALESCE(b.\"effectiveTo\", 'infinity'::timestamp), '[)')`),"
+    },
+    {
+      "file": "scripts/hr-unit8-restore-validation.mjs",
+      "line": 22,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "orphanRecommendations: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompRecommendation\" r LEFT JOIN \"HrCompCyclePopulation\" p ON p.id=r.\"cyclePopulationId\" AND p.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrCompensationRecord\" c ON c.id=r.\"currentRecordId\" AND c.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrCompBandVersion\" b ON b.id=r.\"bandVersionId\" AND b.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrCompPolicyVersion\" v ON v.id=r.\"policyVersionId\" AND v.\"organ"
+    },
+    {
+      "file": "scripts/hr-unit8-restore-validation.mjs",
+      "line": 26,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "brokenCorrectionLineage: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" r LEFT JOIN \"HrCompensationRecord\" old ON old.id=r.\"correctedRecordId\" AND old.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrCompRetroactiveSignal\" s ON s.\"newRecordId\"=r.id AND s.\"organizationId\"=r.\"organizationId\" WHERE r.\"eventType\"='CORRECTION' AND (r.\"correctedRecordId\" IS NULL OR old.id IS NULL OR s.id IS NULL)`),"
+    },
+    {
+      "file": "scripts/hr-unit8-restore-validation.mjs",
+      "line": 28,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "orphanPayrollHandoffs: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrPayrollCompHandoff\" h LEFT JOIN \"HrEmployee\" e ON e.id=h.\"employeeId\" AND e.\"organizationId\"=h.\"organizationId\" LEFT JOIN \"HrWorkRelationship\" w ON w.id=h.\"workRelationshipId\" AND w.\"organizationId\"=h.\"organizationId\" LEFT JOIN \"HrEmployeeAssignment\" a ON a.id=h.\"assignmentId\" AND a.\"organizationId\"=h.\"organizationId\" LEFT JOIN \"HrCompensationRecord\" r ON r.id=h.\"compensationRecordId\" AND r.\"organizationId"
+    },
+    {
+      "file": "scripts/hr-unit8-restore-validation.mjs",
+      "line": 31,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "missingCompensationAudit: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" r LEFT JOIN \"HrAuditEvent\" a ON a.\"organizationId\"=r.\"organizationId\" AND (a.\"entityId\"=r.id OR a.\"correlationId\"=r.\"correlationId\") WHERE r.\"idempotencyKey\" LIKE 'unit8-%' AND a.id IS NULL`),"
+    },
+    {
+      "file": "scripts/hr-unit8-restore-validation.mjs",
+      "line": 32,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "privacyGrantViolations: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrRolePermission\" rp JOIN \"HrRole\" r ON r.id=rp.\"roleId\" JOIN \"HrPermission\" p ON p.id=rp.\"permissionId\" WHERE (r.key='PAYROLL_READER' AND p.key <> 'compensation.payroll_handoff.read') OR (r.key='HR_ADMIN' AND p.key LIKE 'compensation.%') OR (r.key='COMPENSATION_ADMIN' AND p.key NOT LIKE 'compensation.%')`),"
+    },
+    {
+      "file": "scripts/hr-unit8-restore-validation.mjs",
+      "line": 55,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "decisions: await prisma.hrCompDecision.count(), records: await prisma.hrCompensationRecord.count(), corrections: await prisma.hrCompRetroactiveSignal.count(),"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-audit-reconcile.mjs",
+      "line": 10,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const records = await prisma.hrCompensationRecord.findMany({ where: { idempotencyKey: { startsWith: \"unit8-validation-\" } }, orderBy: { createdAt: \"asc\" } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-audit-reconcile.mjs",
+      "line": 13,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const existing = await prisma.hrAuditEvent.findFirst({ where: { organizationId: record.organizationId, entityType: \"HrCompensationRecord\", entityId: record.id } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-audit-reconcile.mjs",
+      "line": 17,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await prisma.hrAuditEvent.create({ data: { organizationId: record.organizationId, actorUserId, actorRole: \"COMPENSATION_ADMIN\", entityType: \"HrCompensationRecord\", entityId: record.id, action: \"hr.compensation.record.audit_reconciled\", reason: \"Append-only Unit 8 staging audit reconciliation; authoritative compensation was not modified\", newValues: { decisionId: record.decisionId, eventType: record.eventType, effectiveFrom: record.effectiveFrom, contentHash: record.contentHash }, correlationId: "
+    },
+    {
+      "file": "scripts/hr-unit8-staging-audit-reconcile.mjs",
+      "line": 20,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const missing = await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" r LEFT JOIN \"HrAuditEvent\" a ON a.\"organizationId\"=r.\"organizationId\" AND a.\"entityType\"='HrCompensationRecord' AND a.\"entityId\"=r.id WHERE r.\"idempotencyKey\" LIKE 'unit8-validation-%' AND a.id IS NULL`;"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-concurrency.mjs",
+      "line": 76,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "exactlyOne(\"approval_vs_compensation_correction\", await Promise.allSettled(["
+    },
+    {
+      "file": "scripts/hr-unit8-staging-concurrency.mjs",
+      "line": 134,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const notifications = await Promise.allSettled([0, 1].map(() => prisma.hrNotification.create({ data: { organizationId: organization.id, userId: actors[0].id, category: \"hr-compensation\", title: \"Unit 8 concurrency validation\", body: \"Replay-safe notification evidence\", idempotencyKey: duplicateNotificationKey } })));"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-concurrency.mjs",
+      "line": 138,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const handoffs = await Promise.allSettled([0, 1].map(() => prisma.hrPayrollCompHandoff.create({ data: { organizationId: organization.id, employeeId: handoff.employeeId, workRelationshipId: handoff.workRelationshipId, assignmentId: handoff.assignmentId, compensationRecordId: handoff.compensationRecordId, bonusAwardId: handoff.bonusAwardId, eventType: handoff.eventType, amount: handoff.amount, currency: handoff.currency, payBasis: handoff.payBasis, effectiveAt: handoff.effectiveAt, status: \"READY\""
+    },
+    {
+      "file": "scripts/hr-unit8-staging-concurrency.mjs",
+      "line": 141,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const retroHandoff = await prisma.hrPayrollCompHandoff.create({ data: { organizationId: organization.id, employeeId: handoff.employeeId, workRelationshipId: handoff.workRelationshipId, assignmentId: handoff.assignmentId, compensationRecordId: handoff.compensationRecordId, bonusAwardId: handoff.bonusAwardId, retroactiveSignalId: handoff.retroactiveSignalId, eventType: \"CORRECTION\", amount: handoff.amount, currency: handoff.currency, payBasis: handoff.payBasis, effectiveAt: handoff.effectiveAt, af"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-concurrency.mjs",
+      "line": 154,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await prisma.hrAuditEvent.createMany({ data: Object.entries(evidence).map(([race, result]) => ({ organizationId: organization.id, actorUserId: actors[0].id, actorRole: \"COMPENSATION_ADMIN\", entityType: \"Unit8ConcurrencyRace\", entityId: race, action: \"hr.compensation.concurrency.validated\", reason: \"Real PostgreSQL Unit 8 race validation\", newValues: result, correlationId: run })) });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-concurrency.mjs",
+      "line": 155,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const auditCount = await prisma.hrAuditEvent.count({ where: { correlationId: run, action: \"hr.compensation.concurrency.validated\" } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 27,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const occupiedRelationships = new Set((await prisma.hrEmployeeCompensation.findMany({ where: { organizationId: organization.id }, select: { workRelationshipId: true } })).map(({ workRelationshipId }) => workRelationshipId));"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 37,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (!minimum.lessThan(midpoint) || !midpoint.lessThan(maximum)) throw new Error(\"Legacy position range cannot produce a valid three-point compensation band.\");"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 43,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const band = await prisma.hrCompBand.create({ data: { organizationId: organization.id, code: `U8-BAND-${Date.now()}`, name: `Unit 8 staging band ${run}`, jobProfileId: assignment.position.jobProfileId, companyLevelId: null, compensationGradeCode: assignment.position.gradeId, marketId: market.id, currency, payBasis: \"SALARIED\" } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 48,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const aggregate = await prisma.hrEmployeeCompensation.create({ data: { organizationId: organization.id, employeeId: assignment.employeeId, workRelationshipId: workRelationship.id } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 49,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const initialDecision = await prisma.hrCompDecision.create({ data: { organizationId: organization.id, eventType: \"INITIAL\", status: \"EFFECTIVE\", newAmount: minimum, currency, payBasis: \"SALARIED\", marketVersionId: marketVersion.id, bandVersionId: bandVersion.id, policyVersionId: policyVersion.id, effectiveAt: initialFrom, approverUserIds: [approver.id], rationale: \"Initial staging compensation derived from governed position range\", idempotencyKey: `${run}:initial-decision`, correlationId: correl"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 50,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const initialRecord = await prisma.hrCompensationRecord.create({ data: { organizationId: organization.id, employeeCompensationId: aggregate.id, employeeId: assignment.employeeId, workRelationshipId: workRelationship.id, assignmentId: assignment.id, decisionId: initialDecision.id, eventType: \"INITIAL\", status: \"EFFECTIVE\", amount: minimum, annualizedAmount: minimum, currency, payBasis: \"SALARIED\", marketVersionId: marketVersion.id, bandVersionId: bandVersion.id, policyVersionId: policyVersion.id,"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 51,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await prisma.hrEmployeeCompensation.update({ where: { id: aggregate.id }, data: { currentRecordId: initialRecord.id } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 54,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const population = await prisma.hrCompCyclePopulation.create({ data: { organizationId: organization.id, cycleId: cycle.id, employeeId: assignment.employeeId, workRelationshipId: workRelationship.id, assignmentId: assignment.id, managerUserId: manager.id, compensationRecordId: initialRecord.id, bandVersionId: bandVersion.id, promotionDecisionId: promotion?.id, eligible: true, eligibilityReasons: { eligible: true, promotionReference: Boolean(promotion) }, snapshot: { assignmentId: assignment.id, p"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 62,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const consume = await prisma.hrCompBudgetEntry.create({ data: { organizationId: organization.id, budgetId: budget.id, recommendationId: recommendation.id, decisionId: decision.id, entryType: \"CONSUME\", amount: budgetImpact, currency, reason: \"Final compensation decision consumption\", idempotencyKey: `${run}:consume`, correlationId: correlation(\"consume\"), createdById: approver.id } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 63,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await prisma.hrCompensationRecord.update({ where: { id: initialRecord.id }, data: { status: \"SUPERSEDED\", effectiveTo: now } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 64,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const effectiveRecord = await prisma.hrCompensationRecord.create({ data: { organizationId: organization.id, employeeCompensationId: aggregate.id, employeeId: assignment.employeeId, workRelationshipId: workRelationship.id, assignmentId: assignment.id, previousRecordId: initialRecord.id, decisionId: decision.id, eventType: promotion ? \"PROMOTION\" : \"MERIT\", status: \"EFFECTIVE\", amount: midpoint, annualizedAmount: midpoint, currency, payBasis: \"SALARIED\", marketVersionId: marketVersion.id, bandVers"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 65,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await prisma.hrEmployeeCompensation.update({ where: { id: aggregate.id }, data: { currentRecordId: effectiveRecord.id } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 67,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const payrollHandoff = await prisma.hrPayrollCompHandoff.create({ data: { organizationId: organization.id, employeeId: assignment.employeeId, workRelationshipId: workRelationship.id, assignmentId: assignment.id, compensationRecordId: effectiveRecord.id, eventType: effectiveRecord.eventType, amount: effectiveRecord.amount, currency, payBasis: \"SALARIED\", effectiveAt: effectiveRecord.effectiveFrom, status: \"READY\", idempotencyKey: `${run}:record-handoff`, correlationId: correlation(\"record-handoff"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 70,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await prisma.hrCompensationRecord.update({ where: { id: effectiveRecord.id }, data: { status: \"CORRECTED\", effectiveTo: correctionAt } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 71,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const correctedRecord = await prisma.hrCompensationRecord.create({ data: { organizationId: organization.id, employeeCompensationId: aggregate.id, employeeId: assignment.employeeId, workRelationshipId: workRelationship.id, assignmentId: assignment.id, previousRecordId: effectiveRecord.id, correctedRecordId: effectiveRecord.id, decisionId: correctionDecision.id, eventType: \"CORRECTION\", status: \"EFFECTIVE\", amount: midpoint, annualizedAmount: midpoint, currency, payBasis: \"SALARIED\", marketVersion"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 72,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await prisma.hrEmployeeCompensation.update({ where: { id: aggregate.id }, data: { currentRecordId: correctedRecord.id } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 81,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await prisma.hrAuditEvent.createMany({ data: auditEntities.map((entity) => ({ organizationId: organization.id, actorUserId: approver.id, actorRole: \"COMPENSATION_ADMIN\", entityType: entity.constructor?.name ?? \"Unit8Entity\", entityId: entity.id, action: \"hr.compensation.staging.validated\", reason: \"Unit 8 governed staging lifecycle evidence\", newValues: { run, entityId: entity.id }, correlationId: run })) });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 82,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await prisma.hrNotification.create({ data: { organizationId: organization.id, userId: assignment.employee.userId ?? approver.id, category: \"hr-compensation\", title: \"Compensation update available\", body: \"A finalized staging compensation update is available.\", href: \"/hr/employee/compensation\", idempotencyKey: `${run}:notification` } });"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 84,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const overlapCount = await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" a JOIN \"HrCompensationRecord\" b ON a.id < b.id AND a.\"organizationId\" = b.\"organizationId\" AND a.\"workRelationshipId\" = b.\"workRelationshipId\" AND tsrange(a.\"effectiveFrom\", COALESCE(a.\"effectiveTo\", 'infinity'::timestamp), '[)') && tsrange(b.\"effectiveFrom\", COALESCE(b.\"effectiveTo\", 'infinity'::timestamp), '[)') WHERE a.\"employeeCompensationId\" = ${aggregate.id} AND b.\"employeeCompensationId\" "
+    },
+    {
+      "file": "scripts/hr-unit8-staging-fixture.mjs",
+      "line": 85,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (overlapCount[0].count !== 0) throw new Error(\"Unit 8 authoritative compensation timeline overlaps.\");"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-integrity.mjs",
+      "line": 13,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "orphanCompensationRecords: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" r LEFT JOIN \"HrEmployee\" e ON e.id=r.\"employeeId\" AND e.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrWorkRelationship\" w ON w.id=r.\"workRelationshipId\" AND w.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrEmployeeAssignment\" a ON a.id=r.\"assignmentId\" AND a.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrCompDecision\" d ON d.id=r.\"decisionId\" AND d.\"organizationId\"=r.\"organiz"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-integrity.mjs",
+      "line": 14,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "invalidCurrentRecordPointers: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrEmployeeCompensation\" c LEFT JOIN \"HrCompensationRecord\" r ON r.id=c.\"currentRecordId\" AND r.\"employeeCompensationId\"=c.id AND r.\"organizationId\"=c.\"organizationId\" WHERE c.\"currentRecordId\" IS NOT NULL AND r.id IS NULL`),"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-integrity.mjs",
+      "line": 15,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "authoritativeOverlaps: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" a JOIN \"HrCompensationRecord\" b ON a.id < b.id AND a.\"organizationId\"=b.\"organizationId\" AND a.\"employeeCompensationId\"=b.\"employeeCompensationId\" AND tsrange(a.\"effectiveFrom\", COALESCE(a.\"effectiveTo\", 'infinity'::timestamp), '[)') && tsrange(b.\"effectiveFrom\", COALESCE(b.\"effectiveTo\", 'infinity'::timestamp), '[)')`),"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-integrity.mjs",
+      "line": 16,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "brokenCorrectionLineage: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" r LEFT JOIN \"HrCompensationRecord\" old ON old.id=r.\"correctedRecordId\" AND old.\"organizationId\"=r.\"organizationId\" LEFT JOIN \"HrCompRetroactiveSignal\" s ON s.\"newRecordId\"=r.id AND s.\"organizationId\"=r.\"organizationId\" WHERE r.\"eventType\"='CORRECTION' AND (r.\"correctedRecordId\" IS NULL OR old.id IS NULL OR s.id IS NULL)`),"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-integrity.mjs",
+      "line": 17,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "orphanPayrollHandoffs: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrPayrollCompHandoff\" h LEFT JOIN \"HrCompensationRecord\" r ON r.id=h.\"compensationRecordId\" AND r.\"organizationId\"=h.\"organizationId\" LEFT JOIN \"HrBonusAward\" a ON a.id=h.\"bonusAwardId\" AND a.\"organizationId\"=h.\"organizationId\" LEFT JOIN \"HrCompRetroactiveSignal\" s ON s.id=h.\"retroactiveSignalId\" AND s.\"organizationId\"=h.\"organizationId\" WHERE (h.\"compensationRecordId\" IS NOT NULL AND r.id IS NULL) OR (h.\"bo"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-integrity.mjs",
+      "line": 20,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "missingFixtureRecordAudit: scalar(await prisma.$queryRaw`SELECT COUNT(*)::int AS count FROM \"HrCompensationRecord\" r LEFT JOIN \"HrAuditEvent\" a ON a.\"organizationId\"=r.\"organizationId\" AND a.\"entityId\"=r.id WHERE r.\"idempotencyKey\" LIKE 'unit8-validation-%' AND a.id IS NULL`),"
+    },
+    {
+      "file": "scripts/hr-unit8-staging-integrity.mjs",
+      "line": 21,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "failedCompensationOutbox: await prisma.hrEmailOutbox.count({ where: { template: { startsWith: \"hr-compensation\" }, status: { in: [\"FAILED\", \"ABANDONED\"] } } }),"
+    },
+    {
+      "file": "scripts/hr-unit9-ng-2026-4-inventory.mjs",
+      "line": 6,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const output = path.join(root, \"docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-compensation-inventory.json\");"
+    },
+    {
+      "file": "scripts/hr-unit9-ng-2026-4-inventory.mjs",
+      "line": 7,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const raw = execFileSync(\"git\", [\"grep\", \"-n\", \"-i\", \"-E\", \"compensation|variable_compensation|discretionary_compensation\", \"--\", \":(exclude)docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-compensation-inventory.json\", \":(exclude)docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-stage1-manifest.json\", \":(exclude)docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-stage1-package.sha256\"], { cwd: root, encoding: \"utf8\", maxBuffer: 10 * 1024 * 1024 });"
+    },
+    {
+      "file": "scripts/hr-unit9-ng-2026-4-inventory.mjs",
+      "line": 11,
+      "category": "D_STATUTORY_LOSS_OF_EMPLOYMENT",
+      "text": "if (/loss of employment|statutory compensation/i.test(text)) return \"D_STATUTORY_LOSS_OF_EMPLOYMENT\";"
+    },
+    {
+      "file": "scripts/hr-unit9-ng-2026-4-inventory.mjs",
+      "line": 13,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (/compensation|unit-08|unit8|schema\\.prisma|permissions|hr-bootstrap|email|notification/i.test(normalized)) return \"A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT\";"
+    },
+    {
+      "file": "scripts/hr-unit9-ng-2026-4-inventory.mjs",
+      "line": 20,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (!match) throw new Error(`Unparseable compensation inventory line: ${line}`);"
+    },
+    {
+      "file": "scripts/hr-unit9-ng-2026-4-inventory.mjs",
+      "line": 24,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const inventory = { candidateVersion: \"NG-CANDIDATE-2026.4\", generatedFromGitHead: execFileSync(\"git\", [\"rev-parse\", \"HEAD\"], { cwd: root, encoding: \"utf8\" }).trim(), decision: \"Unit 8 compensation terminology is preserved; Unit 9 COMPENSATION is legacy-only and prohibited for new input.\", counts, occurrences };"
+    },
+    {
+      "file": "scripts/hr-unit9-ng-2026-4-inventory.mjs",
+      "line": 27,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (!fs.existsSync(output)) throw new Error(\"Compensation inventory evidence is missing.\");"
+    },
+    {
+      "file": "scripts/hr-unit9-ng-2026-4-inventory.mjs",
+      "line": 29,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (JSON.stringify(existing.occurrences) !== JSON.stringify(occurrences)) throw new Error(\"Compensation inventory evidence is stale.\");"
+    },
+    {
+      "file": "scripts/hr-unit9-ng-2026-4-inventory.mjs",
+      "line": 30,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "console.info(`PASS compensation inventory current; occurrences=${occurrences.length}`);"
+    },
+    {
+      "file": "scripts/hr-unit9-staging-lifecycle.ts",
+      "line": 39,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const candidate = { employeeId: employee.id, personId: employee.personId!, workRelationshipId: relationship.id, assignmentId: assignment.id, employmentStatus: employee.employmentStatus, legalEntityId: assignment.legalEntityId!, jurisdictionCode: \"NG\", payGroupId: payGroup.id, workerType: \"SALARIED\" as const, compensationHandoffId: handoff.id, compensationCurrency: handoff.currency, payrollCurrency, taxProfileVersionId: `staging-tax-${employee.id}`, paymentDestinationVersionId: verifiedDestinatio"
+    },
+    {
+      "file": "scripts/start-with-hr-workers.mjs",
+      "line": 39,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "await invoke(\"/api/internal/hr/compensation\", process.env.ORGANIZATION_WORKER_SECRET);"
+    },
+    {
+      "file": "src/app/admin/applications/[id]/page.tsx",
+      "line": 1332,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "Salary/compensation"
+    },
+    {
+      "file": "src/app/admin/applications/[id]/page.tsx",
+      "line": 1441,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{[ [\"title\",\"Agreement title\", agreement?.title ?? \"Employment Agreement + Role Schedule\"], [\"version\",\"Agreement version\", agreement?.version ?? 1], [\"roleOffered\",\"Role offered\", roleSchedule.roleOffered ?? offer?.roleOffered ?? application.roleAppliedFor], [\"departmentTeam\",\"Department/team\", roleSchedule.departmentTeam ?? \"\"], [\"reportingManager\",\"Reporting manager\", roleSchedule.reportingManager ?? offer?.reportingManager ?? \"\"], [\"workMode\",\"Work mode\", roleSchedule.workMode ?? offer?.work"
+    },
+    {
+      "file": "src/app/api/hr/payroll/unit9/runs/[id]/route.ts",
+      "line": 11,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const candidate = z.object({ employeeId: z.string(), personId: z.string().optional(), workRelationshipId: z.string().optional(), assignmentId: z.string().optional(), employmentStatus: z.string(), legalEntityId: z.string().optional(), jurisdictionCode: z.string().optional(), payGroupId: z.string().optional(), workerType: z.enum([\"SALARIED\", \"HOURLY\"]), compensationHandoffId: z.string().optional(), compensationCurrency: z.string().optional(), payrollCurrency: z.string(), lockedTimeReference: z.str"
+    },
+    {
+      "file": "src/app/api/internal/hr/compensation/route.ts",
+      "line": 3,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "import { replayCompensationDeadLetter, runCompensationOperationalWindow } from \"@/lib/hr/compensation/worker\";"
+    },
+    {
+      "file": "src/app/api/internal/hr/compensation/route.ts",
+      "line": 10,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const replayed = await replayCompensationDeadLetter(input.organizationId, input.windowKey!);"
+    },
+    {
+      "file": "src/app/api/internal/hr/compensation/route.ts",
+      "line": 13,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const results = await runCompensationOperationalWindow();"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/budgets/page.tsx",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export default async function ScopedCompensationBudgetsPage() {"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/budgets/page.tsx",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const auth = await requirePermission(\"compensation.budget.read\");"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/budgets/page.tsx",
+      "line": 7,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const canReadAll = auth.permissions.has(\"compensation.architecture.manage\");"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/budgets/page.tsx",
+      "line": 21,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return <><h1 className=\"text-3xl font-bold\">Scoped compensation budgets</h1><p className=\"mt-2 text-slate-600\">Budget owners see only budgets explicitly scoped to their user identity. Employee rationale, calibration notes, peer pay, and unrelated budgets are excluded.</p><section className=\"mt-6 space-y-4\">{budgets.length ? budgets.map((budget) => { const state = entries.filter((entry) => entry.budgetId === budget.id).reduce((result, entry) => { const amount = new Prisma.Decimal(entry.amount); i"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/page.tsx",
+      "line": 4,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export default async function CompensationAdministrationPage() {"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/page.tsx",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const auth = await requirePermission(\"compensation.architecture.manage\");"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/page.tsx",
+      "line": 13,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return <><h1 className=\"text-3xl font-bold\">Compensation &amp; rewards governance</h1><p className=\"mt-2 text-slate-600\">Tenant-scoped markets, immutable band and policy versions, cycles, budgets, decisions, rewards, and payroll-ready handoffs.</p><div className=\"mt-6 grid gap-4 sm:grid-cols-3 lg:grid-cols-6\">{[[\"Markets\", markets], [\"Bands\", bands], [\"Policies\", policies], [\"Recommendations\", recommendations], [\"Exceptions\", exceptions], [\"Decisions\", decisions], [\"Awards\", awards]].map(([label"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/payroll-handoffs/page.tsx",
+      "line": 4,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export default async function PayrollCompensationHandoffsPage() {"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/payroll-handoffs/page.tsx",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const auth = await requirePermission(\"compensation.payroll_handoff.read\");"
+    },
+    {
+      "file": "src/app/hr/admin/compensation/payroll-handoffs/page.tsx",
+      "line": 12,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return <><h1 className=\"text-3xl font-bold\">Payroll-authoritative compensation handoffs</h1><p className=\"mt-2 text-slate-600\">Only final effective payroll fields are shown. Draft recommendations, manager rationale, calibration deliberation, exceptions, benchmarks, and diagnostics are excluded.</p><div className=\"mt-6 overflow-x-auto rounded-2xl bg-white p-5\"><table className=\"w-full text-left text-sm\"><thead><tr className=\"border-b\"><th className=\"py-3\">Effective</th><th>Relationship / assignme"
+    },
+    {
+      "file": "src/app/hr/admin/employees/[id]/page.tsx",
+      "line": 55,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "<nav aria-label=\"Employee profile sections\" className=\"mt-5 flex flex-wrap gap-2 text-sm\">{[\"Overview\",\"Personal\",\"Employment\",\"Assignments\",\"Compensation\",\"Payroll\",\"Leave\",\"Documents\",\"Assets\",\"Onboarding\",\"User access\",\"Audit history\"].map(label => <a className=\"rounded-full border bg-white px-3 py-2\" href={`#${label.toLowerCase().replaceAll(\" \", \"-\")}`} key={label}>{label}</a>)}</nav>"
+    },
+    {
+      "file": "src/app/hr/admin/employees/new/actions.ts",
+      "line": 11,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const sections: Array<keyof ProvisioningPayload> = [\"personal\", \"employment\", \"assignment\", \"compensation\", \"payroll\", \"access\", \"onboarding\"];"
+    },
+    {
+      "file": "src/app/hr/admin/employees/page.tsx",
+      "line": 19,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{auth.permissions.has(\"employee.create\") && <section className=\"hr-card hr-callout\"><span className=\"hr-icon\"><UserPlus /></span><div><h2>Provision an employee</h2><p>Create the personnel record, assignment, manager, compensation, payroll details, access, and onboarding through one controlled workflow.</p></div><Link className=\"btn btn-primary\" href=\"/hr/admin/employees/new\">Start provisioning wizard</Link></section>}"
+    },
+    {
+      "file": "src/app/hr/admin/handovers/[id]/page.tsx",
+      "line": 43,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "<section className=\"rounded-2xl border bg-white p-5\"><h2 className=\"text-xl font-bold\">Accepted exact offer</h2>{accepted ? <dl className=\"mt-3 grid gap-2 sm:grid-cols-2\"><Info name=\"Version\" value={`v${accepted.version}`} /><Info name=\"Role\" value={accepted.positionTitle} /><Info name=\"Department\" value={accepted.departmentId} /><Info name=\"Legal entity\" value={accepted.legalEntityId} /><Info name=\"Start date\" value={accepted.startDate.toLocaleDateString()} /><Info name=\"Compensation\" value={`$"
+    },
+    {
+      "file": "src/app/hr/admin/layout.tsx",
+      "line": 6,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const links: Array<[string, string, HrPermissionKey?]> = [[\"Dashboard\",\"/hr/admin/dashboard\",\"employee.read_all\"],[\"Compensation governance\",\"/hr/admin/compensation\",\"compensation.architecture.manage\"],[\"Scoped budgets\",\"/hr/admin/compensation/budgets\",\"compensation.budget.read\"],[\"Payroll handoffs\",\"/hr/admin/compensation/payroll-handoffs\",\"compensation.payroll_handoff.read\"],[\"Performance & Career\",\"/hr/admin/performance\",\"performance.framework.manage\"],[\"Time & Attendance\",\"/hr/admin/time\",\"t"
+    },
+    {
+      "file": "src/app/hr/admin/positions/PositionReviewModal.tsx",
+      "line": 6,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "export function PositionReviewModal({position,controls}:{position:Position;controls:React.ReactNode}){const[open,setOpen]=useState(false),[tab,setTab]=useState(\"Overview\");const tabs=[[\"Overview\",BriefcaseBusiness],[\"Job Details\",FileText],[\"Compensation\",Settings],[\"Requirements\",ClipboardCheck],[\"Approval History\",ClipboardCheck],[\"Activity Log\",ClipboardCheck]] as const;return <><button className=\"hr-row-trigger\" onClick={()=>setOpen(true)}>Review</button><HrModal open={open} title=\"Review Po"
+    },
+    {
+      "file": "src/app/hr/admin/unit-8-status/page.tsx",
+      "line": 16,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "[\"Privacy\", \"PASS — employee, manager, HR, compensation, budget, payroll-reader and auditor boundaries verified\"],"
+    },
+    {
+      "file": "src/app/hr/admin/unit-8-status/page.tsx",
+      "line": 23,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "return <main><div className=\"flex flex-wrap items-start justify-between gap-4\"><div><p className=\"text-sm font-semibold uppercase tracking-[0.18em] text-indigo-700\">Implementation status</p><h1 className=\"mt-2 text-3xl font-bold text-slate-950\">Unit 8 — Compensation &amp; Rewards Management</h1><p className=\"mt-2 max-w-3xl text-slate-600\">Non-sensitive engineering status. No individual compensation data appears here.</p></div><span className=\"rounded-full bg-emerald-100 px-4 py-2 text-sm font-bo"
+    },
+    {
+      "file": "src/app/hr/auditor/compensation/page.tsx",
+      "line": 4,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export default async function CompensationAuditPage() {"
+    },
+    {
+      "file": "src/app/hr/auditor/compensation/page.tsx",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const auth = await requirePermission(\"compensation.audit.read\");"
+    },
+    {
+      "file": "src/app/hr/auditor/compensation/page.tsx",
+      "line": 10,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "prisma.hrAuditEvent.findMany({ where: { organizationId, action: { startsWith: \"hr.compensation.\" } }, select: { id: true, entityType: true, entityId: true, action: true, correlationId: true, createdAt: true }, orderBy: { createdAt: \"desc\" }, take: 200 }),"
+    },
+    {
+      "file": "src/app/hr/auditor/compensation/page.tsx",
+      "line": 12,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return <><h1 className=\"text-3xl font-bold\">Compensation audit evidence</h1><p className=\"mt-2 text-slate-600\">Read-only decision and correlation metadata. Amounts, manager rationale, calibration deliberation, and exception narratives are redacted.</p><div className=\"mt-6 grid gap-4 sm:grid-cols-3\">{[[\"Decisions\", decisions.length], [\"Payroll handoffs\", handoffs.length], [\"Audit events\", audits.length]].map(([label,value]) => <article className=\"rounded-2xl bg-white p-5\" key={label}><p className"
+    },
+    {
+      "file": "src/app/hr/auditor/layout.tsx",
+      "line": 4,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const links: Array<[string, string]> = [[\"Audit evidence\", \"/hr/auditor\"], [\"Performance evidence\", \"/hr/auditor/performance\"], [\"Compensation evidence\", \"/hr/auditor/compensation\"]];"
+    },
+    {
+      "file": "src/app/hr/employee/compensation/page.tsx",
+      "line": 4,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export default async function MyCompensationPage() {"
+    },
+    {
+      "file": "src/app/hr/employee/compensation/page.tsx",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const auth = await requirePermission(\"compensation.read_self\");"
+    },
+    {
+      "file": "src/app/hr/employee/compensation/page.tsx",
+      "line": 9,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "prisma.hrCompensationRecord.findMany({ where: { organizationId, employeeId, status: { in: [\"EFFECTIVE\", \"SUPERSEDED\", \"CORRECTED\"] } }, select: { id: true, eventType: true, amount: true, currency: true, payBasis: true, effectiveFrom: true, effectiveTo: true, status: true }, orderBy: { effectiveFrom: \"desc\" }, take: 50 }),"
+    },
+    {
+      "file": "src/app/hr/employee/compensation/page.tsx",
+      "line": 14,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return <><h1 className=\"text-3xl font-bold\">My compensation</h1><p className=\"mt-2 text-slate-600\">Finalized compensation only. Manager rationale, calibration discussion, exceptions, budgets, and peer pay are never shown here.</p><section className=\"mt-6 rounded-2xl bg-white p-5\"><h2 className=\"font-bold\">Current base compensation</h2>{current ? <p className=\"mt-3 text-2xl font-bold\">{current.currency} {current.amount.toFixed(2)} <span className=\"text-sm font-normal text-slate-500\">{current.payB"
+    },
+    {
+      "file": "src/app/hr/employee/layout.tsx",
+      "line": 4,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const links: Array<[string,string]> = [[\"Dashboard\",\"/hr/employee\"],[\"My Profile\",\"/hr/employee/profile\"],[\"My compensation\",\"/hr/employee/compensation\"],[\"Performance & Career\",\"/hr/employee/performance\"],[\"My Tasks\",\"/hr/employee/tasks\"],[\"My Approvals\",\"/hr/employee/approvals\"],[\"My Leave\",\"/hr/employee/leave\"],[\"My Time\",\"/hr/employee/time\"],[\"My Payslips\",\"/hr/employee/payslips\"],[\"My Documents\",\"/hr/employee/documents\"],[\"My Assets\",\"/hr/employee/assets\"],[\"Notifications\",\"/hr/employee/not"
+    },
+    {
+      "file": "src/app/hr/page.tsx",
+      "line": 7,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (auth.roles.includes(\"COMPENSATION_ADMIN\")) redirect(\"/hr/admin/compensation\");"
+    },
+    {
+      "file": "src/app/hr/page.tsx",
+      "line": 8,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (auth.roles.includes(\"BUDGET_OWNER\")) redirect(\"/hr/admin/compensation/budgets\");"
+    },
+    {
+      "file": "src/app/hr/page.tsx",
+      "line": 9,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (auth.roles.includes(\"PAYROLL_READER\")) redirect(\"/hr/admin/compensation/payroll-handoffs\");"
+    },
+    {
+      "file": "src/app/hr/supervisor/compensation/page.tsx",
+      "line": 4,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export default async function TeamCompensationPage() {"
+    },
+    {
+      "file": "src/app/hr/supervisor/compensation/page.tsx",
+      "line": 5,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const auth = await requirePermission(\"compensation.recommendation.create\");"
+    },
+    {
+      "file": "src/app/hr/supervisor/compensation/page.tsx",
+      "line": 11,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "prisma.hrCompensationRecord.findMany({ where: { organizationId, employeeId: { in: employeeIds }, status: \"EFFECTIVE\" }, select: { employeeId: true, amount: true, currency: true, payBasis: true, bandVersionId: true }, take: 200 }),"
+    },
+    {
+      "file": "src/app/hr/supervisor/compensation/page.tsx",
+      "line": 14,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return <><h1 className=\"text-3xl font-bold\">Team compensation</h1><p className=\"mt-2 text-slate-600\">Only effective direct-report scope is queried server-side. Managers cannot edit markets, bands, policies, or view unrelated employees.</p><section className=\"mt-6 rounded-2xl bg-white p-5\"><h2 className=\"font-bold\">Authorized population</h2>{scopes.map(({ assignedEmployee }) => { const record = records.find((item) => item.employeeId === assignedEmployee?.id); const recommendation = recommendation"
+    },
+    {
+      "file": "src/app/hr/supervisor/layout.tsx",
+      "line": 5,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const links: Array<[string,string]> = [[\"Dashboard\",\"/hr/supervisor\"],[\"My Team\",\"/hr/supervisor/team\"],[\"Team Performance\",\"/hr/supervisor/performance\"],[\"Team compensation\",\"/hr/supervisor/compensation\"],[\"Team Time\",\"/hr/supervisor/time\"],[\"Workforce Requests\",\"/hr/supervisor/workforce\"],[\"Review Tasks\",\"/hr/supervisor/tasks\"],[\"Leave Requests\",\"/hr/supervisor/leave\"],[\"Onboarding Tasks\",\"/hr/supervisor/onboarding\"],[\"Assigned Workflows\",\"/hr/supervisor/reviews\"],[\"Notifications\",\"/hr/notific"
+    },
+    {
+      "file": "src/app/track/portal/page.tsx",
+      "line": 242,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "<p><strong>Compensation:</strong> {governedOffer.activeVersion.currency} {governedOffer.activeVersion.salary.toString()} {governedOffer.activeVersion.payFrequency}</p>"
+    },
+    {
+      "file": "src/app/track/portal/page.tsx",
+      "line": 1019,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "<strong>Salary/compensation:</strong> {offer?.salary}"
+    },
+    {
+      "file": "src/app/track/portal/page.tsx",
+      "line": 1110,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{[ [\"Role offered\", roleSchedule.roleOffered], [\"Department/team\", roleSchedule.departmentTeam], [\"Reporting manager\", roleSchedule.reportingManager], [\"Start date\", roleSchedule.startDate], [\"Work mode\", roleSchedule.workMode], [\"Compensation/salary\", roleSchedule.compensationSalary], [\"Probation period\", roleSchedule.probationPeriod], [\"Working hours/schedule\", roleSchedule.workingHours], [\"Duties and responsibilities\", roleSchedule.dutiesAndResponsibilities], [\"Confidentiality/data protection"
+    },
+    {
+      "file": "src/components/EmployeeProvisioningWizard.tsx",
+      "line": 7,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const steps = [\"Personal\", \"Employment\", \"Assignment\", \"Compensation\", \"Payroll\", \"Access\", \"Onboarding\", \"Review\"];"
+    },
+    {
+      "file": "src/components/EmployeeProvisioningWizard.tsx",
+      "line": 17,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "<input type=\"hidden\" name=\"draftId\" value={draft.id} /><input type=\"hidden\" name=\"section\" value={[\"personal\",\"employment\",\"assignment\",\"compensation\",\"payroll\",\"access\",\"onboarding\"][step - 1]} /><input type=\"hidden\" name=\"nextStep\" value={step + 1} />"
+    },
+    {
+      "file": "src/components/EmployeeProvisioningWizard.tsx",
+      "line": 21,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{step === 4 && <><input className=\"input\" name=\"currency\" defaultValue={payload.compensation?.currency ?? \"NGN\"} maxLength={3} required /><input className=\"input\" name=\"baseSalary\" inputMode=\"decimal\" defaultValue={value(payload.compensation?.baseSalary)} placeholder=\"Base salary\" required /><select className=\"input\" name=\"payFrequency\" defaultValue={payload.compensation?.payFrequency ?? \"MONTHLY\"}><option>MONTHLY</option><option>BIWEEKLY</option><option>WEEKLY</option></select><input className="
+    },
+    {
+      "file": "src/components/HrAdminShell.tsx",
+      "line": 36,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{ label: \"Compensation\", href: \"/hr/admin/compensation\", icon: Banknote },"
+    },
+    {
+      "file": "src/components/HrAdminShell.tsx",
+      "line": 37,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{ label: \"Scoped budgets\", href: \"/hr/admin/compensation/budgets\", icon: WalletCards },"
+    },
+    {
+      "file": "src/components/HrAdminShell.tsx",
+      "line": 38,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{ label: \"Payroll handoffs\", href: \"/hr/admin/compensation/payroll-handoffs\", icon: ScrollText },"
+    },
+    {
+      "file": "src/lib/email-senders.ts",
+      "line": 58,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-cycle-open\", \"hr-compensation-recommendation-due\", \"hr-compensation-recommendation-returned\","
+    },
+    {
+      "file": "src/lib/email-senders.ts",
+      "line": 59,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-exception-requested\", \"hr-compensation-exception-decided\", \"hr-compensation-approved\","
+    },
+    {
+      "file": "src/lib/email-senders.ts",
+      "line": 60,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-effective\", \"hr-compensation-statement-available\", \"hr-compensation-bonus-awarded\","
+    },
+    {
+      "file": "src/lib/hiring.ts",
+      "line": 606,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "salary: z.string().trim().min(2, \"Enter compensation details.\").max(500),"
+    },
+    {
+      "file": "src/lib/hiring.ts",
+      "line": 651,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "compensationSalary: z.string().trim().min(2, \"Enter compensation details.\").max(500),"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "import { assertBudgetAvailable, assertCurrency, assertIndependentCompensationApproval, compensationHash, parseMoney, payrollHandoffKey, promotionRecommendationFloor, reconcileBudget } from \"./domain\";"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 8,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export type CompensationContext = { organizationId: string; actorUserId: string; actorRole?: string };"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 10,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export async function withCompensationSerializableRetry<T>(operation: () => Promise<T>, maximumAttempts = 4): Promise<T> {"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 22,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export async function reserveCompensationBudget(context: CompensationContext, input: { budgetId: string; recommendationId: string; amount: string; idempotencyKey: string; correlationId?: string }) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 23,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return withCompensationSerializableRetry(() => prisma.$transaction(async (tx) => {"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 27,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (![\"OPEN\", \"REVIEW\"].includes(cycle.status)) throw new Error(\"Compensation budget reservations require an open or review-stage cycle.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 34,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const entry = await tx.hrCompBudgetEntry.create({ data: { organizationId: context.organizationId, budgetId: budget.id, recommendationId: input.recommendationId, entryType: \"RESERVE\", amount: parseMoney(input.amount), currency: budget.currency, reason: \"Approved compensation recommendation budget reservation\", idempotencyKey: input.idempotencyKey, correlationId: input.correlationId ?? crypto.randomUUID(), createdById: context.actorUserId } });"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 35,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await appendHrAudit(tx, { ...context, entityType: \"HrCompBudgetEntry\", entityId: entry.id, action: \"hr.compensation.budget.reserved\", newValues: { budgetId: budget.id, recommendationId: input.recommendationId, currency: budget.currency }, correlationId: entry.correlationId });"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 40,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export async function releaseCompensationBudget(context: CompensationContext, input: { budgetId: string; recommendationId: string; amount: string; reason: string; idempotencyKey: string }) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 41,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return withCompensationSerializableRetry(() => prisma.$transaction(async (tx) => {"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 51,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export async function finalizeCompensationDecision(context: CompensationContext, input: { recommendationId: string; recommendationVersion: number; budgetId: string; effectiveAt: Date; eventType: HrCompEventType; rationale: string; exceptionId?: string; correlationId?: string }) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 52,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return withCompensationSerializableRetry(() => prisma.$transaction(async (tx) => {"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 57,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (![\"REVIEW\", \"FINALIZING\"].includes(cycle.status)) throw new Error(\"Final compensation approval requires a review or finalizing cycle.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 60,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (relationship.status !== \"ACTIVE\") throw new Error(\"Compensation cannot be approved for an inactive work relationship.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 62,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (pendingSeparation) throw new Error(\"Compensation approval is blocked while an employment separation is pending.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 67,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "assertIndependentCompensationApproval({ actorUserId: context.actorUserId, managerUserId: recommendation.managerUserId });"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 74,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (recommendation.proposedAmount.greaterThan(band.maximum) && !exceptionApproved) throw new Error(\"Above-band compensation requires an approved exception.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 82,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await tx.hrCompBudgetEntry.upsert({ where: { budgetId_idempotencyKey: { budgetId: budget.id, idempotencyKey: `consume:${decision.id}` } }, update: {}, create: { organizationId: context.organizationId, budgetId: budget.id, recommendationId: recommendation.id, decisionId: decision.id, entryType: \"CONSUME\", amount: recommendation.budgetImpact, currency: budget.currency, reason: \"Final compensation decision\", idempotencyKey: `consume:${decision.id}`, correlationId: crypto.randomUUID(), createdById: "
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 84,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await appendHrAudit(tx, { ...context, entityType: \"HrCompDecision\", entityId: decision.id, action: \"hr.compensation.decision.approved\", newValues: { eventType: input.eventType, effectiveAt: input.effectiveAt, bandVersionId: band.id, policyVersionId: policy.id }, reason: input.rationale, correlationId: decision.correlationId });"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 89,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export async function activateCompensationDecision(context: CompensationContext, decisionId: string, now = new Date()) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 90,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "return withCompensationSerializableRetry(() => prisma.$transaction(async (tx) => {"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 92,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const existing = await tx.hrCompensationRecord.findUnique({ where: { decisionId: decision.id } });"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 95,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (!recommendation) throw new Error(\"A base compensation decision requires its approved recommendation.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 97,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const aggregate = await tx.hrEmployeeCompensation.findFirstOrThrow({ where: { organizationId: context.organizationId, employeeId: recommendation.employeeId, workRelationshipId: population.workRelationshipId } });"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 98,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const prior = aggregate.currentRecordId ? await tx.hrCompensationRecord.findUnique({ where: { id: aggregate.currentRecordId } }) : null;"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 99,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (prior && prior.effectiveFrom < decision.effectiveAt && (!prior.effectiveTo || prior.effectiveTo > decision.effectiveAt)) await tx.hrCompensationRecord.update({ where: { id: prior.id }, data: { effectiveTo: decision.effectiveAt, status: \"SUPERSEDED\" } });"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 101,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (!decision.marketVersionId || !decision.bandVersionId || !decision.payBasis) throw new Error(\"Decision is missing payroll-authoritative compensation references.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 102,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const record = await tx.hrCompensationRecord.create({ data: { organizationId: context.organizationId, employeeCompensationId: aggregate.id, employeeId: recommendation.employeeId, workRelationshipId: population.workRelationshipId, assignmentId: population.assignmentId, previousRecordId: prior?.id, decisionId: decision.id, eventType: decision.eventType as HrCompEventType, status: \"EFFECTIVE\", amount: decision.newAmount, currency: decision.currency, payBasis: decision.payBasis, marketVersionId: dec"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 103,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await tx.hrEmployeeCompensation.update({ where: { id: aggregate.id }, data: { currentRecordId: record.id } });"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 105,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await tx.hrPayrollCompHandoff.upsert({ where: { organizationId_idempotencyKey: { organizationId: context.organizationId, idempotencyKey: payrollHandoffKey(\"record\", record.id) } }, update: {}, create: { organizationId: context.organizationId, employeeId: record.employeeId, workRelationshipId: record.workRelationshipId, assignmentId: record.assignmentId, compensationRecordId: record.id, eventType: record.eventType, amount: record.amount, currency: record.currency, payBasis: record.payBasis, effec"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 108,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (recipient) await enqueueHrEmail(tx, { organizationId: context.organizationId, recipient, template: \"hr-compensation-effective\", subject: \"Your compensation update is effective\", payload: { recipientName: employee.preferredName ?? employee.legalFirstName, href: \"/hr/employee/compensation\", decisionId: decision.id }, idempotencyKey: `unit8-effective:${decision.id}:${recipient}` });"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 109,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await appendHrAudit(tx, { organizationId: context.organizationId, actorUserId: context.actorUserId === \"WORKER\" ? undefined : context.actorUserId, actorRole: context.actorRole ?? (context.actorUserId === \"WORKER\" ? \"WORKER\" : undefined), entityType: \"HrCompensationRecord\", entityId: record.id, action: \"hr.compensation.record.effective\", newValues: { decisionId: decision.id, eventType: record.eventType, effectiveFrom: record.effectiveFrom, currency: record.currency }, correlationId: record.correl"
+    },
+    {
+      "file": "src/lib/hr/compensation/commands.ts",
+      "line": 114,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export async function compensationBudgetState(organizationId: string, budgetId: string) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export function compensationHash(value: unknown) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 40,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (proposedAmount.lessThan(currentAmount)) throw new Error(\"Promotion compensation cannot reduce base pay through the promotion path.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 41,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (proposedAmount.lessThan(minimum) && !exceptionApproved) throw new Error(\"Promotion compensation must reach the target band minimum or use an approved exception.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 64,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (new Prisma.Decimal(parseMoney(requested, \"requested budget\")).greaterThan(state.available)) throw new Error(\"Insufficient compensation budget remains for this reservation.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 85,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export const transitionCompCycle = (from: HrCompCycleStatus, to: HrCompCycleStatus) => transition(cycleTransitions, from, to, \"compensation cycle\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 86,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export const transitionCompDecision = (from: HrCompDecisionStatus, to: HrCompDecisionStatus) => transition(decisionTransitions, from, to, \"compensation decision\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 88,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export function assertIndependentCompensationApproval(input: { actorUserId: string; managerUserId?: string | null; employeeUserId?: string | null; priorApproverIds?: string[] }) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 89,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if ([input.managerUserId, input.employeeUserId, ...(input.priorApproverIds ?? [])].filter(Boolean).includes(input.actorUserId)) throw new Error(\"Independent compensation approval is required.\");"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 92,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export type CompensationViewer = { userId: string; employeeId?: string | null; isEffectiveManager?: boolean; hasScopedHrGrant?: boolean; hasCompensationGrant?: boolean; isBudgetOwner?: boolean; isPayrollReader?: boolean; isAuditor?: boolean };"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 94,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export function compensationAccess(viewer: CompensationViewer, subjectEmployeeId: string) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 97,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "finalizedPay: own || viewer.isEffectiveManager === true || viewer.hasScopedHrGrant === true || viewer.hasCompensationGrant === true || viewer.isPayrollReader === true || viewer.isAuditor === true,"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 98,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "restrictedNarrative: viewer.hasCompensationGrant === true,"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 99,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "budget: viewer.hasCompensationGrant === true || viewer.isBudgetOwner === true,"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 100,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "payrollFields: viewer.hasCompensationGrant === true || viewer.isPayrollReader === true,"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 101,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "mutateArchitecture: viewer.hasCompensationGrant === true,"
+    },
+    {
+      "file": "src/lib/hr/compensation/domain.ts",
+      "line": 112,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (existing.some((event) => conflicts[proposed]?.includes(event))) throw new Error(`Compensation event ${proposed} conflicts with an unresolved event.`);"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "import { activateCompensationDecision, compensationBudgetState } from \"./commands\";"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 10,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export async function replayCompensationDeadLetter(organizationId: string, windowKey: string) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 12,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const run = await tx.hrCompJobRun.findFirstOrThrow({ where: { organizationId, jobType: \"COMPENSATION_OPERATIONAL_SWEEP\", windowKey, status: \"DEAD_LETTER\" } });"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 14,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await appendHrAudit(tx, { organizationId, actorRole: \"WORKER\", entityType: \"HrCompJobRun\", entityId: run.id, action: \"hr.compensation.worker.dead_letter_replayed\", previousValues: { status: run.status, attemptCount: run.attemptCount }, newValues: { status: replayed.status, attemptCount: replayed.attemptCount }, correlationId: run.correlationId });"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 21,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const jobType = \"COMPENSATION_OPERATIONAL_SWEEP\";"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 38,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await appendHrAudit(prisma, { organizationId, actorRole: \"WORKER\", entityType: \"HrCompCycle\", entityId: cycle.id, action: \"hr.compensation.cycle.opened\", previousValues: { status: cycle.status, version: cycle.version }, newValues: { status: \"OPEN\", version: cycle.version + 1 }, correlationId: cycle.correlationId });"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 53,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await enqueueHrEmail(prisma, { organizationId, recipient: manager.email, template: \"hr-compensation-recommendation-due\", subject: \"Compensation recommendation due\", payload: { recipientName: manager.employee?.preferredName ?? manager.employee?.legalFirstName ?? manager.email.split(\"@\")[0], href: \"/hr/supervisor/compensation\", recommendationId: item.id }, idempotencyKey: `unit8-recommendation-due:${item.id}:v${item.version}` });"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 63,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const state = await compensationBudgetState(organizationId, budget.id);"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 64,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "if (!state.balanced) throw new Error(`Compensation budget ${budget.id} is imbalanced.`);"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 74,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await activateCompensationDecision({ organizationId, actorUserId: \"WORKER\" }, decision.id, now);"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 80,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "export async function runCompensationOperationalWindow(now = new Date()) {"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 94,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "await appendHrAudit(prisma, { organizationId, actorRole: \"WORKER\", entityType: \"HrCompJobRun\", entityId: run.id, action: \"hr.compensation.worker.completed\", newValues: checkpoint, correlationId: run.correlationId });"
+    },
+    {
+      "file": "src/lib/hr/compensation/worker.ts",
+      "line": 97,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const safeError = (error instanceof Error ? error.message : \"Compensation worker failed\").slice(0, 1000);"
+    },
+    {
+      "file": "src/lib/hr/employees/finalize-provisioning.ts",
+      "line": 23,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (payload.compensation?.baseSalary && (!payload.compensation.currency || !payload.compensation.effectiveFrom || !payload.compensation.reason)) {"
+    },
+    {
+      "file": "src/lib/hr/employees/finalize-provisioning.ts",
+      "line": 24,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "throw new Error(\"Compensation requires currency, effective date, and approval reason.\");"
+    },
+    {
+      "file": "src/lib/hr/employees/finalize-provisioning.ts",
+      "line": 80,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (payload.compensation?.baseSalary) await tx.hrSalaryRecord.create({ data: {"
+    },
+    {
+      "file": "src/lib/hr/employees/finalize-provisioning.ts",
+      "line": 81,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "organizationId: input.organizationId, employeeId: employee.id, amount: payload.compensation.baseSalary,"
+    },
+    {
+      "file": "src/lib/hr/employees/finalize-provisioning.ts",
+      "line": 82,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "currency: payload.compensation.currency!.toUpperCase(), payFrequency: payload.compensation.payFrequency ?? \"MONTHLY\","
+    },
+    {
+      "file": "src/lib/hr/employees/finalize-provisioning.ts",
+      "line": 83,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "effectiveFrom: new Date(payload.compensation.effectiveFrom!), reason: payload.compensation.reason!, createdById: draft.createdById,"
+    },
+    {
+      "file": "src/lib/hr/employees/finalize-provisioning.ts",
+      "line": 88,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "currency: payload.compensation?.currency?.toUpperCase() ?? \"NGN\","
+    },
+    {
+      "file": "src/lib/hr/employees/provisioning.ts",
+      "line": 40,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "compensation: z.object({"
+    },
+    {
+      "file": "src/lib/hr/employees/provisioning.ts",
+      "line": 79,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{ key: \"compensation\", label: \"Compensation complete\", ready: Boolean(payload.compensation?.baseSalary && payload.compensation?.currency && payload.compensation?.effectiveFrom && payload.compensation?.reason) },"
+    },
+    {
+      "file": "src/lib/hr/notifications/worker.ts",
+      "line": 109,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-cycle-open\": { title: \"Compensation review cycle open\", body: \"A governed compensation review cycle is open for authorized action.\", ctaLabel: \"Review Compensation\", defaultHref: \"/hr/supervisor/compensation\" },"
+    },
+    {
+      "file": "src/lib/hr/notifications/worker.ts",
+      "line": 110,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-recommendation-due\": { title: \"Compensation recommendation due\", body: \"An authorized team compensation recommendation is due.\", ctaLabel: \"Review Recommendation\", defaultHref: \"/hr/supervisor/compensation\" },"
+    },
+    {
+      "file": "src/lib/hr/notifications/worker.ts",
+      "line": 111,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-recommendation-returned\": { title: \"Compensation recommendation returned\", body: \"A compensation recommendation was returned for governed revision.\", ctaLabel: \"Review Recommendation\", defaultHref: \"/hr/supervisor/compensation\" },"
+    },
+    {
+      "file": "src/lib/hr/notifications/worker.ts",
+      "line": 112,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-exception-requested\": { title: \"Compensation exception requested\", body: \"A restricted compensation exception requires authorized review.\", ctaLabel: \"Review Exception\", defaultHref: \"/hr/admin/compensation\" },"
+    },
+    {
+      "file": "src/lib/hr/notifications/worker.ts",
+      "line": 113,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-exception-decided\": { title: \"Compensation exception decision\", body: \"A governed compensation exception decision has been recorded.\", ctaLabel: \"Review Decision\", defaultHref: \"/hr/admin/compensation\" },"
+    },
+    {
+      "file": "src/lib/hr/notifications/worker.ts",
+      "line": 114,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-approved\": { title: \"Compensation decision approved\", body: \"A compensation decision has completed its governed approval workflow.\", ctaLabel: \"Review Compensation\", defaultHref: \"/hr/admin/compensation\" },"
+    },
+    {
+      "file": "src/lib/hr/notifications/worker.ts",
+      "line": 115,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-effective\": { title: \"Compensation update effective\", body: \"Your finalized compensation update is effective and available securely.\", ctaLabel: \"View My Compensation\", defaultHref: \"/hr/employee/compensation\" },"
+    },
+    {
+      "file": "src/lib/hr/notifications/worker.ts",
+      "line": 116,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-statement-available\": { title: \"Compensation statement available\", body: \"A finalized compensation statement is available in your secure HR workspace.\", ctaLabel: \"View Statement\", defaultHref: \"/hr/employee/compensation\" },"
+    },
+    {
+      "file": "src/lib/hr/notifications/worker.ts",
+      "line": 117,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-bonus-awarded\": { title: \"Reward award approved\", body: \"A finalized reward award is available in your secure compensation history.\", ctaLabel: \"View Reward\", defaultHref: \"/hr/employee/compensation\" },"
+    },
+    {
+      "file": "src/lib/hr/payroll/nigeria-2026-4.ts",
+      "line": 8,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "export type Ng2026_4StoredEarningType = Ng2026_4EarningType | \"COMPENSATION\";"
+    },
+    {
+      "file": "src/lib/hr/payroll/nigeria-2026-4.ts",
+      "line": 24,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (normalized === \"COMPENSATION\" && mode === \"HISTORICAL_REPLAY\") return { type: \"COMPENSATION\" as const, classification: \"LEGACY_NON_PERIODIC\" as const, deprecated: true };"
+    },
+    {
+      "file": "src/lib/hr/payroll/nigeria-2026-4.ts",
+      "line": 25,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (normalized === \"COMPENSATION\") throw new Error(\"LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED\");"
+    },
+    {
+      "file": "src/lib/hr/payroll/nigeria-2026-4.ts",
+      "line": 30,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (input.originalType.trim().toUpperCase() !== \"COMPENSATION\") throw new Error(\"LEGACY_COMPENSATION_INPUT_REQUIRED\");"
+    },
+    {
+      "file": "src/lib/hr/payroll/nigeria-2026-4.ts",
+      "line": 31,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (!input.replacementType || !input.reason?.trim()) throw new Error(\"LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED\");"
+    },
+    {
+      "file": "src/lib/hr/payroll/nigeria-2026-4.ts",
+      "line": 33,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const snapshot = { originalType: \"COMPENSATION\", replacementType: replacement.type, reason: input.reason.trim(), priorSnapshotHash: input.priorSnapshotHash };"
+    },
+    {
+      "file": "src/lib/hr/payroll/unit9-engine.ts",
+      "line": 10,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "workerType: \"SALARIED\" | \"HOURLY\"; compensationHandoffId?: string; compensationCurrency?: string;"
+    },
+    {
+      "file": "src/lib/hr/payroll/unit9-engine.ts",
+      "line": 23,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (!candidate.compensationHandoffId) add(\"COMPENSATION_MISSING\", \"EMPLOYEE_BLOCKER\", \"An approved Unit 8 compensation handoff is required.\");"
+    },
+    {
+      "file": "src/lib/hr/payroll/unit9-engine.ts",
+      "line": 24,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "if (candidate.compensationCurrency !== candidate.payrollCurrency) add(\"CURRENCY_POLICY_REQUIRED\", \"EMPLOYEE_BLOCKER\", \"Currency conversion requires an explicit effective-dated policy.\");"
+    },
+    {
+      "file": "src/lib/hr/payroll/unit9-limited-launch.ts",
+      "line": 7,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "export type ComplianceReason = \"PAYE_MINIMUM_WAGE_RTA_RULE_REQUIRED\" | \"NON_PERIODIC_PAY_RTA_RULE_REQUIRED\" | \"PENSION_APPLICABILITY_REVIEW_REQUIRED\" | \"PENSION_SETUP_REQUIRED\" | \"PRIOR_EMPLOYER_YTD_REQUIRED\" | \"JURISDICTION_RULE_NOT_CERTIFIED\" | \"REGULATORY_SOURCE_REQUIRED\" | \"LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED\" | \"RTA_REFUND_PROCEDURE_REQUIRED\";"
+    },
+    {
+      "file": "src/lib/hr/payroll/unit9-limited-launch.ts",
+      "line": 12,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "if (normalized === \"COMPENSATION\") throw new Error(\"LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED\");"
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 22,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"compensation.architecture.manage\", \"compensation.cycle.manage\", \"compensation.budget.manage\", \"compensation.budget.read\", \"compensation.recommendation.create\", \"compensation.recommendation.review\", \"compensation.calibration.manage\", \"compensation.exception.review\", \"compensation.decision.approve\", \"compensation.read_all\", \"compensation.read_self\", \"compensation.statement.read\", \"compensation.payroll_handoff.read\", \"compensation.audit.read\", \"compensation.bonus.manage\", \"compensation.retroactive"
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 55,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"COMPENSATION_ADMIN\","
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 66,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith(\"compensation.\") && !permission.startsWith(\"payroll.\")),"
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 67,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "HR_ADMIN: HR_PERMISSIONS.filter((permission) => !permission.startsWith(\"payroll.\") && !permission.startsWith(\"compensation.\") && ![\"user.role.assign\", \"user.role.revoke\", \"settings.manage\"].includes(permission)),"
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 69,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "PAYROLL_PROCESSOR: [\"payroll.read\", \"payroll.create\", \"payroll.certify\", \"payroll.freeze\", \"payroll.calculate\", \"payroll.review\", \"payroll.read_salary\", \"time.authoritative.read\", \"compensation.payroll_handoff.read\"],"
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 77,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "COMPENSATION_ADMIN: HR_PERMISSIONS.filter((permission) => permission.startsWith(\"compensation.\")),"
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 78,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "BUDGET_OWNER: [\"compensation.budget.read\", \"compensation.budget.manage\", \"compensation.recommendation.review\", \"compensation.decision.approve\", \"compensation.report.read\"],"
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 79,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "PAYROLL_READER: [\"compensation.payroll_handoff.read\"],"
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 80,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "EMPLOYEE: [\"employee.read_self\", \"employee.update_self\", \"employee.profile_change.request\", \"workforce_event.read_self\", \"leave.request\", \"leave.read_self\", \"time.capture_self\", \"time.read_self\", \"time.correction.request\", \"time.timesheet.submit\", \"performance.goal.read_self\", \"performance.goal.manage_self\", \"performance.feedback.create\", \"performance.feedback.read_self\", \"performance.checkin.manage_self\", \"performance.review.submit_self\", \"performance.review.read_self\", \"performance.career.mana"
+    },
+    {
+      "file": "src/lib/hr/permissions/catalog.ts",
+      "line": 81,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "AUDITOR: [\"audit.read\", \"report.read\", \"performance.audit.read\", \"compensation.audit.read\"],"
+    },
+    {
+      "file": "tests/email-sender-registry.test.ts",
+      "line": 47,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-cycle-open\", \"hr-compensation-recommendation-due\", \"hr-compensation-recommendation-returned\","
+    },
+    {
+      "file": "tests/email-sender-registry.test.ts",
+      "line": 48,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-exception-requested\", \"hr-compensation-exception-decided\", \"hr-compensation-approved\","
+    },
+    {
+      "file": "tests/email-sender-registry.test.ts",
+      "line": 49,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-effective\", \"hr-compensation-statement-available\", \"hr-compensation-bonus-awarded\","
+    },
+    {
+      "file": "tests/fixtures/ng-candidate-2026-2-expected-values.json",
+      "line": 22,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "\"id\": \"PAYE-MIDYEAR-COMPENSATION-CHANGE\","
+    },
+    {
+      "file": "tests/fixtures/ng-candidate-2026-4-expected-values.json",
+      "line": 18,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{ \"id\": \"NEW-LEGACY-COMPENSATION\", \"expected\": \"LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED\" },"
+    },
+    {
+      "file": "tests/fixtures/ng-candidate-2026-4-expected-values.json",
+      "line": 19,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{ \"id\": \"HISTORICAL-LEGACY-COMPENSATION\", \"expected\": \"REPLAYABLE_DEPRECATED\" },"
+    },
+    {
+      "file": "tests/fixtures/ng-candidate-2026-4-expected-values.json",
+      "line": 20,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "{ \"id\": \"DRAFT-LEGACY-COMPENSATION\", \"expected\": \"EXPLICIT_RECLASSIFICATION_REQUIRED\" },"
+    },
+    {
+      "file": "tests/hrms-email-template-registry.test.ts",
+      "line": 25,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-cycle-open\", \"hr-compensation-recommendation-due\", \"hr-compensation-recommendation-returned\","
+    },
+    {
+      "file": "tests/hrms-email-template-registry.test.ts",
+      "line": 26,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-exception-requested\", \"hr-compensation-exception-decided\", \"hr-compensation-approved\","
+    },
+    {
+      "file": "tests/hrms-email-template-registry.test.ts",
+      "line": 27,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "\"hr-compensation-effective\", \"hr-compensation-statement-available\", \"hr-compensation-bonus-awarded\","
+    },
+    {
+      "file": "tests/hrms-employee-provisioning.test.ts",
+      "line": 9,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "compensation: { currency: \"NGN\", baseSalary: \"1000000.00\", effectiveFrom: \"2026-08-03\", reason: \"Approved offer\" },"
+    },
+    {
+      "file": "tests/hrms-employee-provisioning.test.ts",
+      "line": 30,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "it(\"rejects floating-point salary input outside a decimal string\", () => expect(() => provisioningPayloadSchema.parse({ compensation: { baseSalary: 1000.1 } })).toThrow());"
+    },
+    {
+      "file": "tests/hrms-employee-provisioning.test.ts",
+      "line": 37,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "expect(service).toContain(\"Compensation requires currency\");"
+    },
+    {
+      "file": "tests/hrms-foundation.test.ts",
+      "line": 54,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "expect(permissionsForRole(\"AUDITOR\")).toEqual([\"audit.read\", \"report.read\", \"performance.audit.read\", \"compensation.audit.read\"]);"
+    },
+    {
+      "file": "tests/hrms-unit7-integration.test.ts",
+      "line": 30,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "expect(bootstrap).toContain('AUDITOR: [\"audit.read\", \"report.read\", \"performance.audit.read\", \"compensation.audit.read\"]');"
+    },
+    {
+      "file": "tests/hrms-unit7-integration.test.ts",
+      "line": 101,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "expect(permissionsForRole(\"AUDITOR\")).toEqual([\"audit.read\", \"report.read\", \"performance.audit.read\", \"compensation.audit.read\"]);"
+    },
+    {
+      "file": "tests/hrms-unit8-blueprint.test.ts",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "describe(\"Unit 8 compensation and rewards blueprint\", () => {"
+    },
+    {
+      "file": "tests/hrms-unit8-blueprint.test.ts",
+      "line": 17,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "it(\"keeps the implementation status artifact free of compensation records\", () => {"
+    },
+    {
+      "file": "tests/hrms-unit8-blueprint.test.ts",
+      "line": 25,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(status).toContain(\"No individual compensation data\");"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 2,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "import { assertBudgetAvailable, assertCurrency, assertIndependentCompensationApproval, assertNoConflictingEvent, compensationAccess, compensationHash, parseMoney, payrollHandoffKey, promotionRecommendationFloor, rangePosition, reconcileBudget, transitionCompCycle, transitionCompDecision, transitionRecommendation } from \"../src/lib/hr/compensation/domain\";"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 4,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "describe(\"Unit 8 compensation domain\", () => {"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 6,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(compensationHash({ b: 2, a: { d: 4, c: 3 } })).toBe(compensationHash({ a: { c: 3, d: 4 }, b: 2 }));"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 62,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "it(\"requires independent compensation approval\", () => {"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 63,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(() => assertIndependentCompensationApproval({ actorUserId: \"manager\", managerUserId: \"manager\" })).toThrow(\"Independent\");"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 64,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(() => assertIndependentCompensationApproval({ actorUserId: \"approver\", priorApproverIds: [\"approver\"] })).toThrow(\"Independent\");"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 65,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(() => assertIndependentCompensationApproval({ actorUserId: \"approver\", managerUserId: \"manager\" })).not.toThrow();"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 68,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "it(\"does not give general administrators implicit compensation access\", () => {"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 69,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const generalAdmin = compensationAccess({ userId: \"admin\" }, \"employee\");"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 71,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(compensationAccess({ userId: \"comp\", hasCompensationGrant: true }, \"employee\").restrictedNarrative).toBe(true);"
+    },
+    {
+      "file": "tests/hrms-unit8-domain.test.ts",
+      "line": 72,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(compensationAccess({ userId: \"employee-user\", employeeId: \"employee\" }, \"employee\").finalizedPay).toBe(true);"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 8,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "describe(\"Unit 8 compensation integration safeguards\", () => {"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 10,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(permissionsForRole(\"ADMIN\").some((key) => key.startsWith(\"compensation.\"))).toBe(false);"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 11,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(permissionsForRole(\"HR_ADMIN\").some((key) => key.startsWith(\"compensation.\"))).toBe(false);"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 12,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(permissionsForRole(\"COMPENSATION_ADMIN\")).toContain(\"compensation.architecture.manage\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 13,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(permissionsForRole(\"COMPENSATION_ADMIN\").every((key) => key.startsWith(\"compensation.\"))).toBe(true);"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 14,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(permissionsForRole(\"BUDGET_OWNER\")).toContain(\"compensation.budget.read\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 15,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(permissionsForRole(\"PAYROLL_READER\")).toEqual([\"compensation.payroll_handoff.read\"]);"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 20,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(bootstrap).toContain('PAYROLL_READER: [\"compensation.payroll_handoff.read\"]');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 21,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(bootstrap).toContain('COMPENSATION_ADMIN: HR_PERMISSION_KEYS.filter((key) => key.startsWith(\"compensation.\"))');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 25,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(HR_ASSIGNABLE_ROLES).toEqual(expect.arrayContaining([\"COMPENSATION_ADMIN\", \"BUDGET_OWNER\", \"PAYROLL_READER\"]));"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 33,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(read(\"src/app/hr/employee/compensation/page.tsx\")).toContain('requirePermission(\"compensation.read_self\")');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 34,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(read(\"src/app/hr/supervisor/compensation/page.tsx\")).toContain('requirePermission(\"compensation.recommendation.create\")');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 35,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(read(\"src/app/hr/admin/compensation/page.tsx\")).toContain('requirePermission(\"compensation.architecture.manage\")');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 36,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const auditor = read(\"src/app/hr/auditor/compensation/page.tsx\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 37,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(auditor).toContain('requirePermission(\"compensation.audit.read\")');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 40,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const budgets = read(\"src/app/hr/admin/compensation/budgets/page.tsx\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 41,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(budgets).toContain('requirePermission(\"compensation.budget.read\")');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 44,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const handoffs = read(\"src/app/hr/admin/compensation/payroll-handoffs/page.tsx\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 45,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(handoffs).toContain('requirePermission(\"compensation.payroll_handoff.read\")');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 49,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "it(\"routes specialized roles and supervisor compensation without widening general administration\", () => {"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 51,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(home).toContain('auth.roles.includes(\"COMPENSATION_ADMIN\")');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 56,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(HR_ADMIN_WORKSPACE_ROLES).toEqual(expect.arrayContaining([\"COMPENSATION_ADMIN\", \"BUDGET_OWNER\", \"PAYROLL_READER\"]));"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 59,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(read(\"src/app/hr/supervisor/layout.tsx\")).toContain('/hr/supervisor/compensation');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 60,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(read(\"src/app/hr/employee/layout.tsx\")).toContain('/hr/employee/compensation');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 61,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(read(\"src/app/hr/auditor/layout.tsx\")).toContain('/hr/auditor/compensation');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 62,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(permissionsForRole(\"EMPLOYEE\")).toContain(\"compensation.recommendation.create\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 63,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(read(\"prisma/migrations/20260813203000_hrms_unit8_manager_compensation_scope/migration.sql\")).toContain(\"ON CONFLICT\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 68,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(migration).toContain(\"'BUDGET_OWNER'::\\\"HrRoleKey\\\", 'compensation.budget.read'\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 69,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(migration).toContain(\"'BUDGET_OWNER'::\\\"HrRoleKey\\\", 'compensation.recommendation.review'\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 70,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(migration).toContain(\"'COMPENSATION_ADMIN'::\\\"HrRoleKey\\\", 'compensation.read_all'\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 74,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(remediation).toContain(\"'BUDGET_OWNER'::\\\"HrRoleKey\\\", 'compensation.budget.read'\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 77,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "it(\"registers a guarded replay-safe compensation worker\", () => {"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 78,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const route = read(\"src/app/api/internal/hr/compensation/route.ts\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 79,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const worker = read(\"src/lib/hr/compensation/worker.ts\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 85,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const commands = read(\"src/lib/hr/compensation/commands.ts\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 86,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(commands.indexOf(\"if (existing) return existing\")).toBeLessThan(commands.indexOf(\"A base compensation decision requires its approved recommendation\"));"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 89,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(worker).toContain(\"replayCompensationDeadLetter\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 90,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(worker).toContain(\"hr.compensation.worker.dead_letter_replayed\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 92,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(read(\"scripts/start-with-hr-workers.mjs\")).toContain('/api/internal/hr/compensation');"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 116,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const commands = read(\"src/lib/hr/compensation/commands.ts\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 117,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const domain = read(\"src/lib/hr/compensation/domain.ts\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 126,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(commands).toContain(\"Compensation approval is blocked while an employment separation is pending.\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 127,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(commands).toContain(\"Compensation budget reservations require an open or review-stage cycle.\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 131,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const migration = read(\"prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 137,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const remediation = read(\"prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 140,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "const guarded = read(\"prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 142,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(guarded).toContain(\"IF TG_TABLE_NAME = 'HrCompensationRecord' AND TG_OP = 'UPDATE' THEN\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 156,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(fixture).toContain(\"authoritative compensation timeline overlaps\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 164,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(script).toContain(\"hr.compensation.record.audit_reconciled\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 176,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(script).toContain(\"hr.compensation.concurrency.validated\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 183,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(script).toContain(\"orphanCompensationRecords\");"
+    },
+    {
+      "file": "tests/hrms-unit8-integration.test.ts",
+      "line": 185,
+      "category": "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT",
+      "text": "expect(script).toContain(\"failedCompensationOutbox\");"
+    },
+    {
+      "file": "tests/hrms-unit9-domain.test.ts",
+      "line": 134,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "expect(bootstrap).toContain('!key.startsWith(\"compensation.\") && !key.startsWith(\"payroll.\")');"
+    },
+    {
+      "file": "tests/hrms-unit9-engine.test.ts",
+      "line": 5,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "const eligible = { employeeId: \"e1\", personId: \"p1\", workRelationshipId: \"w1\", assignmentId: \"a1\", employmentStatus: \"ACTIVE\", legalEntityId: \"l1\", jurisdictionCode: \"NG\", payGroupId: \"pg1\", workerType: \"SALARIED\" as const, compensationHandoffId: \"c1\", compensationCurrency: \"NGN\", payrollCurrency: \"NGN\", taxProfileVersionId: \"t1\", paymentDestinationVersionId: \"d1\" };"
+    },
+    {
+      "file": "tests/hrms-unit9-limited-launch.test.ts",
+      "line": 19,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "expect(() => classifyEarning(\"COMPENSATION\")).toThrow(\"LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED\");"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-2.test.ts",
+      "line": 210,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "it.each([\"PAYE-STABLE-3M\", \"PAYE-RELIEF-6M\", \"PAYE-MIDYEAR-COMPENSATION-CHANGE\", \"PAYE-ONE-TIME-BONUS\", \"PAYE-BIK-50K\", \"PAYE-REFUND-35K\"])(\"deterministically replays %s from frozen independent fixture inputs\", (id) => {"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4-package.test.ts",
+      "line": 29,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "compensationInventorySha256: \"docs/hrms/delivery-units/unit-09/ng-candidate-2026-4-compensation-inventory.json\","
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 29,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "for (const forbidden of [\"COMPENSATION\", \"VARIABLE_COMPENSATION\", \"DISCRETIONARY_COMPENSATION\", \"SICK_LEAVE_PAY\", \"SICK_LEAVE\", \"OTHER\"]) expect(() => classifyNg2026_4Earning(forbidden)).toThrow();"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 32,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "it(\"preserves legacy Compensation for replay but requires explicit draft reclassification\", () => {"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 33,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "expect(classifyNg2026_4Earning(\"COMPENSATION\", \"HISTORICAL_REPLAY\")).toEqual({ type: \"COMPENSATION\", classification: \"LEGACY_NON_PERIODIC\", deprecated: true });"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 34,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "expect(() => reclassifyLegacyDraft({ originalType: \"COMPENSATION\", priorSnapshotHash: \"old\" })).toThrow(\"LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED\");"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 35,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "const first = reclassifyLegacyDraft({ originalType: \"COMPENSATION\", replacementType: \"BONUS\", reason: \"Approved award classification\", priorSnapshotHash: \"old\" });"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 36,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "const replay = reclassifyLegacyDraft({ originalType: \"COMPENSATION\", replacementType: \"BONUS\", reason: \"Approved award classification\", priorSnapshotHash: \"old\" });"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 38,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "expect(first).toMatchObject({ originalType: \"COMPENSATION\", replacementType: \"BONUS\", priorSnapshotHash: \"old\" });"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 108,
+      "category": "B_UNIT9_LEGACY_OR_HISTORICAL_EARNING",
+      "text": "expect(() => calculateFrozenPayroll2026_4({ ...manifest, earnings: [{ ...manifest.earnings[1], code: \"COMPENSATION\" }] }, \"legacy-draft\")).toThrow(\"LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED\");"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 122,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "expect(limitedLaunch).not.toContain('\"SALARY\" | \"COMPENSATION\" | \"BONUS\"');"
+    },
+    {
+      "file": "tests/hrms-unit9-ng-2026-4.test.ts",
+      "line": 123,
+      "category": "E_UNRELATED_OR_IMPLEMENTATION_IDENTIFIER",
+      "text": "expect(limitedLaunch).not.toContain('compensation: \"BLOCKED_PENDING_RTA_AUTHORITY\"');"
+    }
+  ]
+}

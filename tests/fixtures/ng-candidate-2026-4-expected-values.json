@@ -1,0 +1,24 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.4",
+  "certificationStatus": "NOT_CERTIFIED",
+  "ownerDecision": "UNIT 9 ORDINARY EARNINGS = SALARY + BONUS ONLY",
+  "cases": [
+    { "id": "SALARY-NORMAL", "expected": "PAYE_CALCULATED" },
+    { "id": "SALARY-EXACT-70000", "expected": "MINIMUM_WAGE_EXEMPT" },
+    { "id": "SALARY-70000-01", "expected": "NORMAL_PAYE_REQUIRED" },
+    { "id": "PARTIAL-YEAR-80000-X4", "expected": "NORMAL_PAYE_REQUIRED" },
+    { "id": "SALARY-70000-PLUS-BONUS", "expected": "NORMAL_PAYE_REQUIRED" },
+    { "id": "BONUS-PAYMENT-PERIOD", "expected": "PAYE_DEDUCTION" },
+    { "id": "BONUS-CUMULATIVE-RECALCULATION", "expected": "CUMULATIVE_TARGET_RECALCULATED" },
+    { "id": "CURRENT-PAYE-SHORTFALL", "expected": "TARGET_MINUS_VALID_PRIOR_PAYE" },
+    { "id": "VERIFIED-PRIOR-EMPLOYER-CREDIT", "expected": "CREDIT_APPLIED" },
+    { "id": "UNVERIFIED-PRIOR-EMPLOYER-CREDIT", "expected": "CREDIT_IGNORED" },
+    { "id": "NEGATIVE-PAYE", "expected": "PAYE_REFUND_CREDIT_CANDIDATE" },
+    { "id": "NEGATIVE-PAYE-EXECUTION", "expected": "COMPLIANCE_HOLD_RTA_REFUND_PROCEDURE_REQUIRED" },
+    { "id": "NEW-LEGACY-COMPENSATION", "expected": "LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED" },
+    { "id": "HISTORICAL-LEGACY-COMPENSATION", "expected": "REPLAYABLE_DEPRECATED" },
+    { "id": "DRAFT-LEGACY-COMPENSATION", "expected": "EXPLICIT_RECLASSIFICATION_REQUIRED" },
+    { "id": "SICK-LEAVE", "expected": "ZERO_NEW_EARNINGS" },
+    { "id": "ACTIVE-TAXONOMY", "expected": ["SALARY", "BONUS"] }
+  ]
+}

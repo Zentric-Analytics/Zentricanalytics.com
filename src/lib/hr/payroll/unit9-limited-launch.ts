@@ -2,13 +2,14 @@ import { payrollDigest, payrollMoney, type Unit9Money } from "./unit9-domain";
 
 export const NG_LIMITED_LAUNCH_RTAS = ["LAGOS", "OYO", "FCT"] as const;
 export type NgLaunchRta = typeof NG_LIMITED_LAUNCH_RTAS[number];
-export type EarningType = "SALARY" | "COMPENSATION" | "BONUS";
+export type EarningType = "SALARY" | "BONUS";
 export type EarningClassification = "RECURRING" | "NON_PERIODIC";
-export type ComplianceReason = "PAYE_MINIMUM_WAGE_RTA_RULE_REQUIRED" | "NON_PERIODIC_PAY_RTA_RULE_REQUIRED" | "PENSION_APPLICABILITY_REVIEW_REQUIRED" | "PENSION_SETUP_REQUIRED" | "PRIOR_EMPLOYER_YTD_REQUIRED" | "JURISDICTION_RULE_NOT_CERTIFIED" | "REGULATORY_SOURCE_REQUIRED";
+export type ComplianceReason = "PAYE_MINIMUM_WAGE_RTA_RULE_REQUIRED" | "NON_PERIODIC_PAY_RTA_RULE_REQUIRED" | "PENSION_APPLICABILITY_REVIEW_REQUIRED" | "PENSION_SETUP_REQUIRED" | "PRIOR_EMPLOYER_YTD_REQUIRED" | "JURISDICTION_RULE_NOT_CERTIFIED" | "REGULATORY_SOURCE_REQUIRED" | "LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED" | "RTA_REFUND_PROCEDURE_REQUIRED";
 
-const classifications: Record<EarningType, EarningClassification> = { SALARY: "RECURRING", COMPENSATION: "NON_PERIODIC", BONUS: "NON_PERIODIC" };
+const classifications: Record<EarningType, EarningClassification> = { SALARY: "RECURRING", BONUS: "NON_PERIODIC" };
 export function classifyEarning(type: string) {
   const normalized = type.trim().toUpperCase();
+  if (normalized === "COMPENSATION") throw new Error("LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED");
   if (!(normalized in classifications)) throw new Error("AMBIGUOUS_OR_UNSUPPORTED_EARNING_TYPE");
   return { type: normalized as EarningType, classification: classifications[normalized as EarningType] };
 }
@@ -34,10 +35,11 @@ export function resolveMonthlyPaymentDate(year: number, month: number, calendar:
 export type EligibilityFinding = { code: ComplianceReason; category: "TAX" | "PENSION" | "EVIDENCE" | "JURISDICTION"; affectedInput?: string };
 export function complianceEligibility(input: { rta: string; earnings: Array<{ type: string; amount: Unit9Money }>; certifiedNonPeriodicTypes?: string[]; pensionOperationalState: "CONFIGURED" | "NOT_CONFIGURED"; pensionLegallyRequired?: boolean; priorEmployerYtdRequired?: boolean; priorEmployerYtdPresent?: boolean; jurisdictionCertified?: boolean }) {
   const findings: EligibilityFinding[] = [];
+  const supportedNonPeriodicTypes = input.certifiedNonPeriodicTypes ?? ["BONUS"];
   if (!NG_LIMITED_LAUNCH_RTAS.includes(input.rta as NgLaunchRta) || input.jurisdictionCertified === false) findings.push({ code: "JURISDICTION_RULE_NOT_CERTIFIED", category: "JURISDICTION" });
   for (const earning of input.earnings) {
     const classified = classifyEarning(earning.type);
-    if (classified.classification === "NON_PERIODIC" && payrollMoney(earning.amount).greaterThan(0) && !input.certifiedNonPeriodicTypes?.includes(classified.type)) findings.push({ code: "NON_PERIODIC_PAY_RTA_RULE_REQUIRED", category: "TAX", affectedInput: classified.type });
+    if (classified.classification === "NON_PERIODIC" && payrollMoney(earning.amount).greaterThan(0) && !supportedNonPeriodicTypes.includes(classified.type)) findings.push({ code: "NON_PERIODIC_PAY_RTA_RULE_REQUIRED", category: "TAX", affectedInput: classified.type });
   }
   if (input.pensionLegallyRequired && input.pensionOperationalState === "NOT_CONFIGURED") findings.push({ code: "PENSION_SETUP_REQUIRED", category: "PENSION" });
   if (input.priorEmployerYtdRequired && !input.priorEmployerYtdPresent) findings.push({ code: "PRIOR_EMPLOYER_YTD_REQUIRED", category: "EVIDENCE" });
@@ -76,6 +78,6 @@ export function assertPaymentExportState(input: { batchStatus: string; actorUser
   return { nextStatus: "EXPORTED" as const, settlementStatus: "NOT_SETTLED" as const };
 }
 
-export const NIGERIA_LAUNCH_SUPPORT_MATRIX = NG_LIMITED_LAUNCH_RTAS.map((rta) => ({ rta, recurringSalary: "SIMULATION_SUPPORTED" as const, normalPaye: "SIMULATION_SUPPORTED" as const, minimumWageEdgeCases: "BLOCKED_PENDING_RTA_AUTHORITY" as const, compensation: "BLOCKED_PENDING_RTA_AUTHORITY" as const, bonus: "BLOCKED_PENDING_RTA_AUTHORITY" as const, priorEmployerYtd: "EVIDENCE_REQUIRED" as const, candidate: "NG-CANDIDATE-2026.3" as const, certification: "NOT_CERTIFIED" as const }));
+export const NIGERIA_LAUNCH_SUPPORT_MATRIX = NG_LIMITED_LAUNCH_RTAS.map((rta) => ({ rta, recurringSalary: "SIMULATION_SUPPORTED" as const, normalPaye: "SIMULATION_SUPPORTED" as const, minimumWageStandardCases: "SIMULATION_SUPPORTED" as const, minimumWageEdgeCases: "BLOCKED_PENDING_RTA_AUTHORITY" as const, bonus: "SIMULATION_SUPPORTED" as const, priorEmployerYtd: "EVIDENCE_REQUIRED" as const, candidate: "NG-CANDIDATE-2026.4" as const, certification: "NOT_CERTIFIED" as const }));
 export const NIGERIA_PAYMENT_MODEL = "GOVERNED_EXPORT" as const;
 export const NIGERIA_ACCOUNTING_STATE = "ACCOUNTING_ADAPTER_NOT_CONFIGURED" as const;

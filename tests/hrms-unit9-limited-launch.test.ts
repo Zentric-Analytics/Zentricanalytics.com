@@ -15,8 +15,8 @@ describe("Unit 9 Nigeria limited-launch operating controls", () => {
 
   it("uses the exact unambiguous earning taxonomy", () => {
     expect(classifyEarning("SALARY").classification).toBe("RECURRING");
-    expect(classifyEarning("COMPENSATION").classification).toBe("NON_PERIODIC");
     expect(classifyEarning("BONUS").classification).toBe("NON_PERIODIC");
+    expect(() => classifyEarning("COMPENSATION")).toThrow("LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED");
     for (const excluded of ["SICK_PAY", "SICK_LEAVE_PAY", "OTHER"]) expect(() => classifyEarning(excluded)).toThrow("AMBIGUOUS_OR_UNSUPPORTED_EARNING_TYPE");
   });
 
@@ -28,17 +28,16 @@ describe("Unit 9 Nigeria limited-launch operating controls", () => {
     expect(resolveMonthlyPaymentDate(2026, 8, calendar(["2026-08-28", "2026-08-27"])).resolvedPaymentDate.toISOString().slice(0, 10)).toBe("2026-08-26");
   });
 
-  it.each(["LAGOS", "OYO", "FCT"])("holds Compensation and Bonus for %s without a certified RTA adapter", (rta) => {
-    for (const type of ["COMPENSATION", "BONUS"]) {
-      const result = complianceEligibility({ rta, earnings: [{ type, amount: "180000" }], pensionOperationalState: "NOT_CONFIGURED" });
-      expect(result.status).toBe("COMPLIANCE_HOLD");
-      expect(result.findings).toContainEqual(expect.objectContaining({ code: "NON_PERIODIC_PAY_RTA_RULE_REQUIRED", affectedInput: type }));
-    }
+  it.each(["LAGOS", "OYO", "FCT"])("uses the common supported Bonus path for %s without inventing an RTA difference", (rta) => {
+    const result = complianceEligibility({ rta, earnings: [{ type: "BONUS", amount: "180000" }], pensionOperationalState: "NOT_CONFIGURED" });
+    expect(result.status).toBe("READY");
+    expect(result.findings).not.toContainEqual(expect.objectContaining({ code: "NON_PERIODIC_PAY_RTA_RULE_REQUIRED" }));
   });
 
   it("allows supported salary simulations without claiming certification", () => {
     expect(eligible().status).toBe("READY");
     expect(NIGERIA_LAUNCH_SUPPORT_MATRIX.every((row) => row.certification === "NOT_CERTIFIED")).toBe(true);
+    expect(NIGERIA_LAUNCH_SUPPORT_MATRIX.every((row) => row.candidate === "NG-CANDIDATE-2026.4")).toBe(true);
   });
 
   it("does not treat pension not configured as legal exemption", () => {
@@ -46,7 +45,7 @@ describe("Unit 9 Nigeria limited-launch operating controls", () => {
   });
 
   it("partitions deterministically and never silently drops held workers", () => {
-    const held = eligible({ earnings: [{ type: "BONUS", amount: "1" }] });
+    const held = eligible({ pensionLegallyRequired: true });
     const first = partitionPayrollPopulation([{ employeeId: "e2", eligibility: held }, { employeeId: "e1", eligibility: eligible() }]);
     const replay = partitionPayrollPopulation([{ employeeId: "e1", eligibility: eligible() }, { employeeId: "e2", eligibility: held }]);
     expect(first).toEqual(replay);

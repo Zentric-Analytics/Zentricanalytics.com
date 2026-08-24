@@ -16,7 +16,7 @@ export async function createComplianceException(db: PrismaClient, actor: Actor, 
     const correlationId = crypto.randomUUID();
     const exception = await tx.hrPayrollComplianceException.upsert({
       where: { organizationId_logicalKey: { organizationId: actor.organizationId, logicalKey } },
-      create: { organizationId: actor.organizationId, employeeId: input.employeeId, payGroupId: input.payGroupId, payrollPeriodId: input.payrollPeriodId, payrollRunId: run.id, calculationAttemptId: input.calculationAttemptId, jurisdictionCode: input.jurisdictionCode, rtaCode: input.rtaCode, blockerCode: input.blockerCode, blockerCategory: input.blockerCategory, affectedInput: input.affectedInput, candidateVersion: "NG-CANDIDATE-2026.3", sourceRequirement: input.sourceRequirement, logicalKey, correlationId },
+      create: { organizationId: actor.organizationId, employeeId: input.employeeId, payGroupId: input.payGroupId, payrollPeriodId: input.payrollPeriodId, payrollRunId: run.id, calculationAttemptId: input.calculationAttemptId, jurisdictionCode: input.jurisdictionCode, rtaCode: input.rtaCode, blockerCode: input.blockerCode, blockerCategory: input.blockerCategory, affectedInput: input.affectedInput, candidateVersion: "NG-CANDIDATE-2026.4", sourceRequirement: input.sourceRequirement, logicalKey, correlationId },
       update: {},
     });
     if (exception.correlationId === correlationId) {

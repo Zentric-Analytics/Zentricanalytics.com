@@ -52,6 +52,13 @@ Unit 9 never silently rewrites the upstream authorities and never treats a draft
 - [NG-CANDIDATE-2026.3 remediation matrix](ng-candidate-2026-3-remediation-matrix.md)
 - [NG-CANDIDATE-2026.3 deterministic package hashes](ng-candidate-2026-3-stage1-package.sha256)
 - [NG-CANDIDATE-2026.3 staging evidence](ng-candidate-2026-3-staging-evidence.md)
+- [NG-CANDIDATE-2026.4 Stage 1 closure-review package](ng-candidate-2026-4-stage1-package.md)
+- [NG-CANDIDATE-2026.4 owner decision](ng-candidate-2026-4-owner-decision.md)
+- [NG-CANDIDATE-2026.4 earning taxonomy](ng-candidate-2026-4-earning-taxonomy.md)
+- [NG-CANDIDATE-2026.4 source register](ng-candidate-2026-4-source-register.md)
+- [NG-CANDIDATE-2026.4 remediation matrix](ng-candidate-2026-4-remediation-matrix.md)
+- [NG-CANDIDATE-2026.4 deterministic package hashes](ng-candidate-2026-4-stage1-package.sha256)
+- [NG-CANDIDATE-2026.4 staging validation](ng-candidate-2026-4-staging-validation.md)
 
 ## Implementation decomposition after owner approval
 
