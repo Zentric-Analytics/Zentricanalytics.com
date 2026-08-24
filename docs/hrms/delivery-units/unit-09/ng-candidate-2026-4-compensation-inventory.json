@@ -1,6 +1,6 @@
 {
   "candidateVersion": "NG-CANDIDATE-2026.4",
-  "generatedFromGitHead": "b17bd2270e301d6a0f764fff19c677587053af32",
+  "generatedFromGitHead": "29c21bf258abea61b76a949abb12b0238f0e08a2",
   "decision": "Unit 8 compensation terminology is preserved; Unit 9 COMPENSATION is legacy-only and prohibited for new input.",
   "counts": {
     "A_UNIT8_PAY_REWARDS_BOUNDED_CONTEXT": 385,

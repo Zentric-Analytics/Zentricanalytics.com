@@ -123,4 +123,12 @@ describe("NG-CANDIDATE-2026.4 Salary and Bonus-only controls", () => {
     expect(limitedLaunch).not.toContain('compensation: "BLOCKED_PENDING_RTA_AUTHORITY"');
     expect(service).toContain('candidateVersion: "NG-CANDIDATE-2026.4"');
   });
+
+  it("runs the real PostgreSQL race against the 2026.4 refund-execution hold", () => {
+    const harness = fs.readFileSync(path.join(process.cwd(), "scripts/hr-unit9-limited-launch-concurrency.mjs"), "utf8");
+    expect(harness).toContain('candidateVersion: "NG-CANDIDATE-2026.4"');
+    expect(harness).toContain('blockerCode: "RTA_REFUND_PROCEDURE_REQUIRED"');
+    expect(harness).toContain('affectedInput: "PAYE_REFUND_CREDIT"');
+    expect(harness).not.toContain('candidateVersion: "NG-CANDIDATE-2026.3"');
+  });
 });
