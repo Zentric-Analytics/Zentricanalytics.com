@@ -80,6 +80,9 @@ describe("Unit 9 Nigeria limited-launch operating controls", () => {
     expect(migration).toContain("'PAYROLL_COMPLIANCE_ADMIN'::\"HrRoleKey\", 'payroll.exception.resolve'");
     expect(migration).toContain("'PAYROLL_ADMIN'::\"HrRoleKey\", 'payroll.population_partition.approve'");
     expect(migration).toContain('ON CONFLICT ("roleId", "permissionId") DO NOTHING');
+    const releaseReconciler = readFileSync("scripts/hr-bootstrap-lib.mjs", "utf8");
+    expect(releaseReconciler).toContain('"payroll.exception.read","payroll.exception.manage","payroll.exception.resolve","payroll.population_partition.approve","payroll.roles.assign"');
+    expect(releaseReconciler).toContain('PAYROLL_COMPLIANCE_ADMIN: ["payroll.read", "payroll.rules.manage", "payroll.rules.certify", "payroll.regulatory_watch.manage", "payroll.statutory.read", "payroll.audit.read", "payroll.exception.read", "payroll.exception.manage", "payroll.exception.resolve"]');
   });
 
   it("uses governed exports without falsely settling payments", () => {
