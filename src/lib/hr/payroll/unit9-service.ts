@@ -4,9 +4,57 @@ import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { assertCertifiedJurisdictionPackage, payrollDigest } from "./unit9-domain";
 import { assertFinalizationReady, calculateFrozenPayroll, certifyPayrollInput, type FrozenPayrollManifest, type PayrollInputCandidate } from "./unit9-engine";
+import { approveSupportedPopulation, assertExceptionResolution, exceptionLogicalKey, partitionPayrollPopulation, type ComplianceReason, type PopulationMember } from "./unit9-limited-launch";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 type Actor = { organizationId: string; userId: string; role: string };
+
+export async function createComplianceException(db: PrismaClient, actor: Actor, input: { employeeId: string; payGroupId: string; payrollPeriodId: string; payrollRunId: string; calculationAttemptId: string; jurisdictionCode: string; rtaCode: string; blockerCode: ComplianceReason; blockerCategory: string; affectedInput?: string; sourceRequirement: string }) {
+  return db.$transaction(async (tx) => {
+    const run = await tx.hrPayrollAuthoritativeRun.findFirstOrThrow({ where: { id: input.payrollRunId, organizationId: actor.organizationId, payGroupId: input.payGroupId, calendarPeriodId: input.payrollPeriodId } });
+    const logicalKey = exceptionLogicalKey({ organizationId: actor.organizationId, payrollRunId: run.id, employeeId: input.employeeId, calculationAttemptId: input.calculationAttemptId, blockerCode: input.blockerCode, affectedInput: input.affectedInput });
+    const correlationId = crypto.randomUUID();
+    const exception = await tx.hrPayrollComplianceException.upsert({
+      where: { organizationId_logicalKey: { organizationId: actor.organizationId, logicalKey } },
+      create: { organizationId: actor.organizationId, employeeId: input.employeeId, payGroupId: input.payGroupId, payrollPeriodId: input.payrollPeriodId, payrollRunId: run.id, calculationAttemptId: input.calculationAttemptId, jurisdictionCode: input.jurisdictionCode, rtaCode: input.rtaCode, blockerCode: input.blockerCode, blockerCategory: input.blockerCategory, affectedInput: input.affectedInput, candidateVersion: "NG-CANDIDATE-2026.3", sourceRequirement: input.sourceRequirement, logicalKey, correlationId },
+      update: {},
+    });
+    if (exception.correlationId === correlationId) {
+      await tx.hrPayrollComplianceExceptionEvent.create({ data: { organizationId: actor.organizationId, complianceExceptionId: exception.id, toStatus: "OPEN", actorUserId: actor.userId, evidence: { blockerCode: input.blockerCode, sourceRequirement: input.sourceRequirement }, correlationId: crypto.randomUUID() } });
+      await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollComplianceException", entityId: exception.id, action: "unit9.compliance_exception.opened", correlationId: exception.correlationId });
+    }
+    return exception;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+export async function persistPopulationPartition(db: PrismaClient, actor: Actor, input: { payrollRunId: string; calculationAttemptId: string; members: PopulationMember[] }) {
+  const partition = partitionPayrollPopulation(input.members);
+  return db.hrPayrollPopulationPartition.upsert({ where: { organizationId_payrollRunId_calculationAttemptId: { organizationId: actor.organizationId, payrollRunId: input.payrollRunId, calculationAttemptId: input.calculationAttemptId } }, create: { organizationId: actor.organizationId, payrollRunId: input.payrollRunId, calculationAttemptId: input.calculationAttemptId, originalPopulationCount: partition.originalPopulationCount, readyCount: partition.readyCount, heldCount: partition.heldCount, readyEmployeeIds: partition.readyEmployeeIds, heldPopulation: partition.held, partitionHash: partition.partitionHash, preparedById: actor.userId, correlationId: crypto.randomUUID() }, update: {} });
+}
+
+export async function approvePopulationPartition(db: PrismaClient, actor: Actor, partitionId: string, input: { decision: string; reason: string; expectedPartitionHash: string; expectedResolutionPath: string }) {
+  return db.$transaction(async (tx) => {
+    const partition = await tx.hrPayrollPopulationPartition.findFirstOrThrow({ where: { id: partitionId, organizationId: actor.organizationId } });
+    const approval = approveSupportedPopulation({ actorUserId: actor.userId, preparedById: partition.preparedById, decision: input.decision, reason: input.reason, partitionHash: partition.partitionHash, expectedPartitionHash: input.expectedPartitionHash });
+    if (partition.approvedAt) return { partition, idempotent: true };
+    const updated = await tx.hrPayrollPopulationPartition.update({ where: { id: partition.id }, data: { decision: input.decision, reason: input.reason, approvedById: actor.userId, approvedAt: new Date(), expectedResolutionPath: input.expectedResolutionPath } });
+    await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollPopulationPartition", entityId: updated.id, action: "unit9.population_partition.approved", newValues: { decision: input.decision, partitionHash: partition.partitionHash, expectedResolutionPath: input.expectedResolutionPath }, correlationId: updated.correlationId });
+    return { partition: updated, approval, idempotent: false };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+export async function resolveComplianceException(db: PrismaClient, actor: Actor, exceptionId: string, input: { authorityEvidenceId: string; approvedRuleVersion: string; recalculationAttemptId: string; resolutionType: string }) {
+  assertExceptionResolution({ status: "RESOLVED", ...input });
+  return db.$transaction(async (tx) => {
+    const current = await tx.hrPayrollComplianceException.findFirstOrThrow({ where: { id: exceptionId, organizationId: actor.organizationId } });
+    if (current.status === "RESOLVED") return current;
+    const resolvedAt = new Date();
+    const updated = await tx.hrPayrollComplianceException.update({ where: { id: current.id }, data: { status: "RESOLVED", resolutionType: input.resolutionType, authorityEvidenceId: input.authorityEvidenceId, approvedRuleVersion: input.approvedRuleVersion, recalculationAttemptId: input.recalculationAttemptId, resolvedAt } });
+    await tx.hrPayrollComplianceExceptionEvent.create({ data: { organizationId: actor.organizationId, complianceExceptionId: current.id, fromStatus: current.status, toStatus: "RESOLVED", actorUserId: actor.userId, evidence: input, correlationId: crypto.randomUUID() } });
+    await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollComplianceException", entityId: current.id, action: "unit9.compliance_exception.resolved", previousValues: { status: current.status }, newValues: { status: "RESOLVED", recalculationAttemptId: input.recalculationAttemptId }, correlationId: current.correlationId });
+    return updated;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
 
 async function notifyPayrollRoles(tx: Prisma.TransactionClient, input: { organizationId: string; roleKeys: HrRoleKey[]; template: "hr-payroll-review-ready" | "hr-payroll-approval-ready" | "hr-payroll-approved"; subject: string; runId: string; idempotencyStage: string }) {
   const recipients = await tx.hrUser.findMany({ where: { organizationId: input.organizationId, status: "ACTIVE", deletedAt: null, roles: { some: { revokedAt: null, role: { key: { in: input.roleKeys } } } } }, select: { id: true, email: true } });

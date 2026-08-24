@@ -1,0 +1,82 @@
+import { describe, expect, it } from "vitest";
+import { approveSupportedPopulation, assertExceptionResolution, assertPaymentExportState, classifyEarning, complianceEligibility, exceptionLogicalKey, NIGERIA_ACCOUNTING_STATE, NIGERIA_LAUNCH_SUPPORT_MATRIX, NIGERIA_PAYMENT_MODEL, partitionPayrollPopulation, resolveMonthlyPaymentDate, resolveNigeriaRta } from "../src/lib/hr/payroll/unit9-limited-launch";
+import { canAssignRole, permissionsForRole } from "../src/lib/hr/permissions/catalog";
+
+const calendar = (holidays: string[] = []) => ({ versionId: "ng-calendar-2026-v1", weekendDays: [0, 6], holidays });
+const eligible = (extra = {}) => complianceEligibility({ rta: "LAGOS", earnings: [{ type: "SALARY", amount: "100000" }], pensionOperationalState: "NOT_CONFIGURED", ...extra });
+
+describe("Unit 9 Nigeria limited-launch operating controls", () => {
+  it("limits launch RTAs and maps Ibadan to Oyo", () => {
+    expect(NIGERIA_LAUNCH_SUPPORT_MATRIX.map((x) => x.rta)).toEqual(["LAGOS", "OYO", "FCT"]);
+    expect(resolveNigeriaRta({ residenceStateCode: "Ibadan" })).toBe("OYO");
+    expect(() => resolveNigeriaRta({ residenceStateCode: "KANO" })).toThrow("JURISDICTION_RULE_NOT_CERTIFIED");
+  });
+
+  it("uses the exact unambiguous earning taxonomy", () => {
+    expect(classifyEarning("SALARY").classification).toBe("RECURRING");
+    expect(classifyEarning("COMPENSATION").classification).toBe("NON_PERIODIC");
+    expect(classifyEarning("BONUS").classification).toBe("NON_PERIODIC");
+    for (const excluded of ["SICK_PAY", "SICK_LEAVE_PAY", "OTHER"]) expect(() => classifyEarning(excluded)).toThrow("AMBIGUOUS_OR_UNSUPPORTED_EARNING_TYPE");
+  });
+
+  it("resolves the 29th against a frozen previous-business-day calendar", () => {
+    expect(resolveMonthlyPaymentDate(2026, 9, calendar()).resolvedPaymentDate.toISOString().slice(0, 10)).toBe("2026-09-29");
+    expect(resolveMonthlyPaymentDate(2026, 8, calendar()).resolvedPaymentDate.toISOString().slice(0, 10)).toBe("2026-08-28");
+    expect(resolveMonthlyPaymentDate(2026, 11, calendar()).resolvedPaymentDate.toISOString().slice(0, 10)).toBe("2026-11-27");
+    expect(resolveMonthlyPaymentDate(2026, 6, calendar(["2026-06-29"])).resolvedPaymentDate.toISOString().slice(0, 10)).toBe("2026-06-26");
+    expect(resolveMonthlyPaymentDate(2026, 8, calendar(["2026-08-28", "2026-08-27"])).resolvedPaymentDate.toISOString().slice(0, 10)).toBe("2026-08-26");
+  });
+
+  it.each(["LAGOS", "OYO", "FCT"])("holds Compensation and Bonus for %s without a certified RTA adapter", (rta) => {
+    for (const type of ["COMPENSATION", "BONUS"]) {
+      const result = complianceEligibility({ rta, earnings: [{ type, amount: "180000" }], pensionOperationalState: "NOT_CONFIGURED" });
+      expect(result.status).toBe("COMPLIANCE_HOLD");
+      expect(result.findings).toContainEqual(expect.objectContaining({ code: "NON_PERIODIC_PAY_RTA_RULE_REQUIRED", affectedInput: type }));
+    }
+  });
+
+  it("allows supported salary simulations without claiming certification", () => {
+    expect(eligible().status).toBe("READY");
+    expect(NIGERIA_LAUNCH_SUPPORT_MATRIX.every((row) => row.certification === "NOT_CERTIFIED")).toBe(true);
+  });
+
+  it("does not treat pension not configured as legal exemption", () => {
+    expect(eligible({ pensionLegallyRequired: true }).findings).toContainEqual(expect.objectContaining({ code: "PENSION_SETUP_REQUIRED" }));
+  });
+
+  it("partitions deterministically and never silently drops held workers", () => {
+    const held = eligible({ earnings: [{ type: "BONUS", amount: "1" }] });
+    const first = partitionPayrollPopulation([{ employeeId: "e2", eligibility: held }, { employeeId: "e1", eligibility: eligible() }]);
+    const replay = partitionPayrollPopulation([{ employeeId: "e1", eligibility: eligible() }, { employeeId: "e2", eligibility: held }]);
+    expect(first).toEqual(replay);
+    expect(first).toMatchObject({ originalPopulationCount: 2, readyCount: 1, heldCount: 1, readyEmployeeIds: ["e1"], decisionRequired: true });
+    expect(first.held[0].employeeId).toBe("e2");
+  });
+
+  it("requires independent explicit partition approval and stable idempotency", () => {
+    const input = { actorUserId: "checker", preparedById: "maker", decision: "APPROVE_SUPPORTED_POPULATION_AND_DEFER_HELD_POPULATION", reason: "Defer to governed off-cycle", partitionHash: "abc", expectedPartitionHash: "abc" };
+    expect(approveSupportedPopulation(input)).toEqual(approveSupportedPopulation(input));
+    expect(() => approveSupportedPopulation({ ...input, actorUserId: "maker" })).toThrow("INDEPENDENT_PARTITION_APPROVAL_REQUIRED");
+  });
+
+  it("makes exception creation idempotent and forbids manual tax guessing", () => {
+    const facts = { organizationId: "o", payrollRunId: "r", employeeId: "e", calculationAttemptId: "a", blockerCode: "NON_PERIODIC_PAY_RTA_RULE_REQUIRED" as const, affectedInput: "BONUS" };
+    expect(exceptionLogicalKey(facts)).toBe(exceptionLogicalKey(facts));
+    expect(() => assertExceptionResolution({ status: "RESOLVED", resolutionType: "MANUAL", manualTaxAmount: "1" })).toThrow("MANUAL_TAX_GUESS_FORBIDDEN");
+    expect(() => assertExceptionResolution({ status: "RESOLVED", resolutionType: "RULE" })).toThrow("RULE_BACKED_RECALCULATION_REQUIRED");
+  });
+
+  it("keeps role assignment authority separate from payroll access", () => {
+    expect(canAssignRole(["ADMIN"], "PAYROLL_PROCESSOR")).toBe(true);
+    expect(permissionsForRole("ADMIN")).not.toContain("payroll.read");
+    expect(permissionsForRole("PAYROLL_COMPLIANCE_ADMIN")).toEqual(expect.arrayContaining(["payroll.exception.read", "payroll.exception.resolve"]));
+    expect(permissionsForRole("PAYROLL_PROCESSOR")).not.toContain("payroll.approve");
+  });
+
+  it("uses governed exports without falsely settling payments", () => {
+    expect(NIGERIA_PAYMENT_MODEL).toBe("GOVERNED_EXPORT");
+    expect(NIGERIA_ACCOUNTING_STATE).toBe("ACCOUNTING_ADAPTER_NOT_CONFIGURED");
+    expect(assertPaymentExportState({ batchStatus: "APPROVED", actorUserId: "operator", createdById: "maker", approvedById: "checker", currency: "NGN" })).toEqual({ nextStatus: "EXPORTED", settlementStatus: "NOT_SETTLED" });
+    expect(() => assertPaymentExportState({ batchStatus: "APPROVED", actorUserId: "maker", createdById: "maker", currency: "NGN" })).toThrow("PAYMENT_MAKER_CHECKER_REQUIRED");
+  });
+});
