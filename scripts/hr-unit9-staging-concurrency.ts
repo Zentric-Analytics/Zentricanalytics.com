@@ -47,12 +47,14 @@ async function main() {
       assert(await prisma.hrPayrollAuthoritativeResult.count({ where: { payrollRunId: run.value.id, authoritativeAt: { not: null } } }) === 1, "Decision race duplicated the authoritative result.");
       const authoritativeResult = await prisma.hrPayrollAuthoritativeResult.findFirstOrThrow({ where: { organizationId: source.organizationId, payrollRunId: run.value.id, authoritativeAt: { not: null } } });
 
-      const priorYtd = { organizationId: source.organizationId, employeeId: sourceSnapshot.employeeId, taxYear: 2026, version: 1, priorEmployerReference: `${marker}:prior-employer`, gross: new Prisma.Decimal("100000"), eligibleDeductions: new Prisma.Decimal("10000"), taxableIncome: new Prisma.Decimal("90000"), payeDeducted: new Prisma.Decimal("9000"), payeRepaid: new Prisma.Decimal("0"), handling: "EVIDENCED", evidenceReference: `${marker}:evidence`, correlationId: `${marker}:prior-ytd-v1` };
+      const latestPriorYtd = await prisma.hrPayrollPriorEmployerYtdVersion.findFirst({ where: { organizationId: source.organizationId, employeeId: sourceSnapshot.employeeId, taxYear: 2026 }, orderBy: { version: "desc" }, select: { version: true } });
+      const priorYtdVersion = (latestPriorYtd?.version ?? 0) + 1;
+      const priorYtd = { organizationId: source.organizationId, employeeId: sourceSnapshot.employeeId, taxYear: 2026, version: priorYtdVersion, priorEmployerReference: `${marker}:prior-employer`, gross: new Prisma.Decimal("100000"), eligibleDeductions: new Prisma.Decimal("10000"), taxableIncome: new Prisma.Decimal("90000"), payeDeducted: new Prisma.Decimal("9000"), payeRepaid: new Prisma.Decimal("0"), handling: "EVIDENCED", evidenceReference: `${marker}:evidence`, correlationId: `${marker}:prior-ytd-v1` };
       const priorYtdRace = await Promise.allSettled([0, 1].map(() => prisma.hrPayrollPriorEmployerYtdVersion.create({ data: priorYtd })));
       assert(priorYtdRace.filter(({ status }) => status === "fulfilled").length === 1, "Prior-YTD equivalent evidence race did not produce one winner.");
-      assert(await prisma.hrPayrollPriorEmployerYtdVersion.count({ where: { organizationId: source.organizationId, employeeId: sourceSnapshot.employeeId, taxYear: 2026, version: 1 } }) === 1, "Prior-YTD race persisted duplicate truth.");
+      assert(await prisma.hrPayrollPriorEmployerYtdVersion.count({ where: { organizationId: source.organizationId, employeeId: sourceSnapshot.employeeId, taxYear: 2026, version: priorYtdVersion } }) === 1, "Prior-YTD race persisted duplicate truth.");
       const priorV1 = await prisma.hrPayrollPriorEmployerYtdVersion.findFirstOrThrow({ where: { organizationId: source.organizationId, correlationId: priorYtd.correlationId } });
-      await prisma.hrPayrollPriorEmployerYtdVersion.create({ data: { ...priorYtd, version: 2, payeDeducted: new Prisma.Decimal("9500"), supersedesId: priorV1.id, correlationId: `${marker}:prior-ytd-v2` } });
+      await prisma.hrPayrollPriorEmployerYtdVersion.create({ data: { ...priorYtd, version: priorYtdVersion + 1, payeDeducted: new Prisma.Decimal("9500"), supersedesId: priorV1.id, correlationId: `${marker}:prior-ytd-v2` } });
 
       const accumulatorAmounts = { GROSS: "100000", TAXABLE_INCOME: "90000", PAYE_DEDUCTED: "9000", PAYE_REPAID: "3500", PENSION_EMPLOYEE: "8000", PENSION_EMPLOYER: "10000" } as const;
       const ytdRaceWinners: Record<string, number> = {};
