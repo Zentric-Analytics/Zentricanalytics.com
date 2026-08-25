@@ -37,6 +37,7 @@
     "hr:unit9-ng-2026-5-staging": "node --import ./scripts/hr-ts-loader.mjs scripts/hr-unit9-ng-2026-5-staging.ts",
     "hr:unit9-ng-2026-6-staging": "node --import ./scripts/hr-ts-loader.mjs scripts/hr-unit9-ng-2026-6-staging.ts",
     "hr:unit9-ng-2026-6-concurrency": "node --import ./scripts/hr-ts-loader.mjs scripts/hr-unit9-ng-2026-6-concurrency.ts",
+    "hr:unit9-ng-2026-7-concurrency": "node --import ./scripts/hr-ts-loader.mjs scripts/hr-unit9-ng-2026-7-concurrency.ts",
     "hr:unit6-repair-synthetic-lineage": "node scripts/hr-unit6-repair-synthetic-lineage.mjs",
     "hr:staging-document-conflict": "node scripts/hr-staging-document-conflict.mjs",
     "postinstall": "prisma generate"

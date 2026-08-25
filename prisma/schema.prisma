@@ -6637,6 +6637,30 @@ model HrPayrollPriorEmployerYtdVersion {
   @@unique([organizationId, correlationId])
 }
 
+model HrPayrollAnnualizationRuleVersion {
+  id                  String   @id @default(cuid())
+  organizationId      String
+  jurisdictionVersion String
+  taxYear             Int
+  frequency           String
+  periodsInTaxYear    Int
+  method              String
+  version             Int
+  certificationStatus String
+  effectiveFrom       DateTime
+  effectiveTo         DateTime?
+  ownerDecisionRef    String
+  sourceReference     String
+  contentHash         String
+  supersedesId        String?
+  correlationId       String
+  createdAt           DateTime @default(now())
+
+  @@unique([organizationId, jurisdictionVersion, taxYear, frequency, version])
+  @@unique([organizationId, correlationId])
+  @@index([organizationId, jurisdictionVersion, taxYear, frequency, certificationStatus, effectiveFrom, effectiveTo])
+}
+
 model HrPayrollEmployeeRtaProfileVersion {
   id                     String    @id @default(cuid())
   organizationId         String
