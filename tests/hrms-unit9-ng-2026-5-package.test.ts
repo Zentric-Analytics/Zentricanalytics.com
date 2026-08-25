@@ -20,4 +20,12 @@ describe("NG-CANDIDATE-2026.5 immutable Stage 1 package", () => {
     expect(sha("src/lib/hr/payroll/unit9-engine-2026-4.ts")).toBe("bc9ab141cae647411910048d58acc8ee93689a14b9ea043c33d439639cfc890d");
     expect(sha("tests/fixtures/ng-candidate-2026-4-expected-values.json")).toBe("4b72633a68af1771690ccf3b9ae1eaeea5b1e0c5e78f61916b84f0143dbb0157");
   });
+
+  it("keeps the staging status counters on the 2026.5 evidence baseline", () => {
+    const status = fs.readFileSync(path.join(root, "src/app/hr/admin/unit-9-status/page.tsx"), "utf8");
+    expect(status).toContain("61 applied; none pending or failed");
+    expect(status).toContain("999 / 999 across 85 files PASS; focused candidate gate 18 / 18 PASS");
+    expect(status).not.toContain("dep-da6996ijnfac73a7r360");
+    expect(status).not.toContain("981 / 981");
+  });
 });
