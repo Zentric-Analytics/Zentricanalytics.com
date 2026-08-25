@@ -1,0 +1,13 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.6",
+  "certificationStatus": "NOT_CERTIFIED",
+  "rounding": "Prisma.Decimal; ROUND_HALF_UP only at final current-period PAYE to 2 decimals",
+  "cases": [
+    { "id": "standard-70k-exempt", "salary": "70000.00", "expectedAnnualSalary": "840000.00", "priorBonusYtd": "0.00", "currentBonus": "0.00", "priorEmployerIncome": "0.00", "classification": "MINIMUM_WAGE_EXEMPT", "currentPaye": "0.00" },
+    { "id": "bonus-bound-normal", "salary": "250000.00", "expectedAnnualSalary": "3000000.00", "priorBonusYtd": "150000.00", "currentBonus": "250000.00", "totalBonus": "400000.00", "priorEmployerIncome": "500000.00", "eligibleDeductions": "100000.00", "annualTaxable": "3800000.00", "annualLiability": "474000.00", "salaryOnlyLiability": "402000.00", "periodsElapsed": 8, "periodsInTaxYear": 12, "salaryCumulativeTarget": "268000.00", "incrementalBonusTax": "72000.00", "cumulativeTarget": "340000.00", "priorPayeDeducted": "180000.00", "priorPayeRepaid": "0.00", "priorEmployerPaye": "30000.00", "validPriorPaye": "210000.00", "unroundedCurrentPaye": "130000.00", "currentPaye": "130000.00", "refundCandidate": "0.00", "refundExecution": "NOT_APPLICABLE", "classification": "NORMAL_PAYE_REQUIRED" },
+    { "id": "salary-evidence-mismatch", "evidenceSalary": "70000.00", "actualSalary": "80000.00", "blocker": "PAYROLL_INCOME_BINDING_MISMATCH" },
+    { "id": "bonus-input-mismatch", "actualBonus": "100000.00", "payeCurrentBonus": "0.00", "blocker": "BONUS_INPUT_BINDING_MISMATCH" },
+    { "id": "prior-bonus-ytd-prevents-reexemption", "salary": "70000.00", "currentBonus": "0.00", "priorBonusYtd": "100000.00", "classification": "NORMAL_PAYE_REQUIRED" },
+    { "id": "prior-employer-potential-exempt-hold", "salary": "70000.00", "priorEmployerIncome": "500000.00", "blocker": "PAYE_MINIMUM_WAGE_PRIOR_EMPLOYER_RULE_REQUIRED" }
+  ]
+}
