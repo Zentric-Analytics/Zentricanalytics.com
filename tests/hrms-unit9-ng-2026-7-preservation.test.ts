@@ -4,6 +4,9 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const expected: Record<string, string> = {
+  "docs/hrms/delivery-units/unit-09/nigeria-certification-manifest.json": "2284c4a25008cb352ee44158b8bbb2c803af820e5d151d8164163a0844e5aab8",
+  "docs/hrms/delivery-units/unit-09/nigeria-certification-handoff.md": "5a3656082ae078bc1e76c5d0e75686a0b9479ac39312b92d3e36dfa6e6762efd",
+  "docs/hrms/delivery-units/unit-09/nigeria-certification-signoff-template.md": "cdc2ad424b60cde6f1c12498a9d68e457a96cd02ccd6c70747c8e09a3a48006c",
   "src/lib/hr/payroll/nigeria-2026-2.ts": "2bb4273852b4c5cb5685b57fb3852e95886ee3e91b6a18ba523afa8c3b8b8da5",
   "src/lib/hr/payroll/nigeria-2026-3.ts": "d2f82e2983dab31dc721d21a96baebc9669804fe5ad200259d24f4707f2ee46b",
   "src/lib/hr/payroll/nigeria-2026-4.ts": "b3682380a416bbb1fe88bdb192bdf518f8e77a155a35383c1823fd1cbacfa25e",

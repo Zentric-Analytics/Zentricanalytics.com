@@ -31,13 +31,13 @@ export type Ng2026_7AuthoritativeSources = {
   annualization: { ruleId: string; ruleVersion: number; frequency: string; periodsInTaxYear: number; method: string; taxYear: number; certificationStatus: string };
   ytd: { sourceLedgerHash: string; cutoff: string; priorBonusYtd: Unit9Money; payeDeducted: Unit9Money; payeRepaid: Unit9Money; entryIds: string[] };
   priorEmployer: { state: "NONE" | "VERIFIED" | "UNKNOWN"; recordId?: string; recordVersion?: number; income: Unit9Money; paye: Unit9Money; payeRepaid: Unit9Money; evidenceReference?: string };
-  deductions: { amount: Unit9Money; sourceReference: string; sourceVersion: string };
+  deductions: { amount: Unit9Money; sourceType: "TAX_RELIEF_CLAIM_VERSIONS"; sourceRecordIds: string[]; sourceVersions: string[]; evidenceReferences: string[]; aggregateHash: string };
 };
 
 export type Ng2026_7BindingInput = {
   evidence: Ng2026_7Evidence; sources: Ng2026_7AuthoritativeSources;
   auditExpectedAnnualSalary?: Unit9Money; payeExpectedAnnualSalary?: Unit9Money;
-  auditPriorBonusYtd?: Unit9Money; auditPayeDeductedYtd?: Unit9Money; auditPayeRepaidYtd?: Unit9Money;
+  auditPriorBonusYtd?: Unit9Money; auditPayeDeductedYtd?: Unit9Money; auditPayeRepaidYtd?: Unit9Money; auditEligibleAnnualDeductions?: Unit9Money;
   periodsElapsed: number; periodsInTaxYear: number;
 };
 
@@ -48,6 +48,19 @@ const validMoney = (value: Unit9Money) => {
   return parsed.isFinite() && !parsed.isNegative();
 };
 const validInteger = (value: number) => Number.isFinite(value) && Number.isInteger(value);
+
+export function requireSingleNg2026_7SalarySource<T extends { currency: string; payFrequency: string }>(sources: T[]): T {
+  if (!sources.length) throw new Error("AUTHORITATIVE_SALARY_SOURCE_REQUIRED");
+  if (sources.length !== 1) throw new Error("AUTHORITATIVE_SALARY_SOURCE_AMBIGUOUS");
+  if (sources[0].currency !== "NGN") throw new Error("AUTHORITATIVE_SALARY_CURRENCY_MISMATCH");
+  if (sources[0].payFrequency !== "MONTHLY") throw new Error("ANNUALIZATION_RULE_REQUIRED");
+  return sources[0];
+}
+
+export function selectNg2026_7PriorYtdEntries<T extends { id: string; effectiveAt: Date; payrollResultId: string }>(entries: T[], cutoff: Date, currentResultIds: string[]): T[] {
+  const current = new Set(currentResultIds);
+  return entries.filter((entry) => entry.effectiveAt < cutoff && !current.has(entry.payrollResultId)).sort((a, b) => a.effectiveAt.getTime() - b.effectiveAt.getTime() || a.id.localeCompare(b.id));
+}
 
 export function deriveNg2026_7Binding(input: Ng2026_7BindingInput) {
   const { evidence, sources } = input;
@@ -68,6 +81,8 @@ export function deriveNg2026_7Binding(input: Ng2026_7BindingInput) {
   if (input.auditPriorBonusYtd !== undefined && !equal(input.auditPriorBonusYtd, sources.ytd.priorBonusYtd)) blockers.push("YTD_INPUT_BINDING_MISMATCH");
   if (input.auditPayeDeductedYtd !== undefined && !equal(input.auditPayeDeductedYtd, sources.ytd.payeDeducted)) blockers.push("YTD_INPUT_BINDING_MISMATCH");
   if (input.auditPayeRepaidYtd !== undefined && !equal(input.auditPayeRepaidYtd, sources.ytd.payeRepaid)) blockers.push("YTD_INPUT_BINDING_MISMATCH");
+  if (input.auditEligibleAnnualDeductions === undefined) throw new Error("ELIGIBLE_DEDUCTION_SOURCE_REQUIRED");
+  if (!equal(input.auditEligibleAnnualDeductions, sources.deductions.amount)) throw new Error("ELIGIBLE_DEDUCTION_BINDING_MISMATCH");
   if (sources.priorEmployer.state === "UNKNOWN" || (sources.priorEmployer.state === "VERIFIED" && (!sources.priorEmployer.recordId || !sources.priorEmployer.recordVersion || !sources.priorEmployer.evidenceReference))) blockers.push("PRIOR_EMPLOYER_INPUT_BINDING_MISMATCH");
   if (!evidence.evidenceCompletenessCertified || !evidence.evidenceReferences.length || evidence.otherTaxableEmploymentIncome === "UNKNOWN") blockers.push("EMPLOYMENT_GROSS_INCOME_EVIDENCE_INCOMPLETE");
   if (evidence.otherTaxableEmploymentIncome === "PRESENT") blockers.push("OTHER_TAXABLE_EMPLOYMENT_INCOME_UNSUPPORTED");
@@ -82,7 +97,7 @@ export function deriveNg2026_7Binding(input: Ng2026_7BindingInput) {
     annualization: { ruleId: sources.annualization.ruleId, ruleVersion: sources.annualization.ruleVersion, frequency: sources.annualization.frequency, certifiedPeriodsInTaxYear: sources.annualization.periodsInTaxYear, method: sources.annualization.method, taxYear: sources.annualization.taxYear, derivedExpectedAnnualSalary: money(derivedAnnualSalary), periodsElapsed: input.periodsElapsed },
     ytd: { sourceLedgerHash: sources.ytd.sourceLedgerHash, cutoff: sources.ytd.cutoff, entryIds: [...sources.ytd.entryIds].sort(), priorBonusYtd: money(sources.ytd.priorBonusYtd), currentEmployerPayeDeducted: money(sources.ytd.payeDeducted), currentEmployerPayeRepaid: money(sources.ytd.payeRepaid) },
     priorEmployer: { state: sources.priorEmployer.state, recordId: sources.priorEmployer.recordId ?? null, recordVersion: sources.priorEmployer.recordVersion ?? null, income: money(sources.priorEmployer.income), paye: money(sources.priorEmployer.paye), payeRepaid: money(sources.priorEmployer.payeRepaid), evidenceReference: sources.priorEmployer.evidenceReference ?? null },
-    eligibleAnnualDeductions: { amount: money(sources.deductions.amount), sourceReference: sources.deductions.sourceReference, sourceVersion: sources.deductions.sourceVersion },
+    eligibleAnnualDeductions: { amount: money(sources.deductions.amount), sourceType: sources.deductions.sourceType, sourceRecordIds: [...sources.deductions.sourceRecordIds].sort(), sourceVersions: [...sources.deductions.sourceVersions].sort(), evidenceReferences: [...sources.deductions.evidenceReferences].sort(), aggregateHash: sources.deductions.aggregateHash },
     otherTaxableIncomeState: evidence.otherTaxableEmploymentIncome,
     inputCertification: { id: evidence.inputCertificationId, version: evidence.inputCertificationVersion, references: [...evidence.evidenceReferences].sort() },
   };

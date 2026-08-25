@@ -4,7 +4,8 @@
 |---|---|
 | Approved effective `HrSalaryRecord` | Canonical recurring Salary |
 | Certified `HrPayrollAnnualizationRuleVersion` | Monthly × 12 engineering control |
-| `HrPayrollYtdLedgerEntry` before period start | Bonus/PAYE YTD authority |
+| `HrPayrollYtdLedgerEntry` before serializable freeze, excluding current-run results | Bonus/PAYE YTD authority, including earlier same-period off-cycle results |
+| Eligible `HrPayrollTaxReliefClaimVersion` set at freeze | Annual PAYE-deduction authority |
 | `HrPayrollPriorEmployerYtdVersion` | Versioned prior-employer evidence |
 | `nigeria-2026-4.ts` | Reviewed ordinary PAYE arithmetic |
 | 2026.1–2026.6 packages | Immutable predecessor context |

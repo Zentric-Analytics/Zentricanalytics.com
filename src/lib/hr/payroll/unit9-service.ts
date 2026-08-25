@@ -8,12 +8,12 @@ import { approveSupportedPopulation, assertExceptionResolution, exceptionLogical
 import { calculateFrozenPayroll2026_5, evaluateFrozenNg2026_5Eligibility, type Candidate2026_5Manifest } from "./unit9-engine-2026-5";
 import { calculateFrozenPayroll2026_6, deriveFrozenNg2026_6Binding, type Candidate2026_6Manifest } from "./unit9-engine-2026-6";
 import { calculateFrozenPayroll2026_7, deriveFrozenNg2026_7Binding, type Candidate2026_7Manifest } from "./unit9-engine-2026-7";
-import { NG_2026_7_VERSION } from "./nigeria-2026-7";
+import { NG_2026_7_VERSION, requireSingleNg2026_7SalarySource } from "./nigeria-2026-7";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 type Actor = { organizationId: string; userId: string; role: string };
 
-export async function resolveNg2026_7AuthoritativeManifest(tx: Db, actor: Actor, run: { calendarPeriodId: string }, supplied: Candidate2026_7Manifest): Promise<Candidate2026_7Manifest> {
+export async function resolveNg2026_7AuthoritativeManifest(tx: Db, actor: Actor, run: { id?: string; calendarPeriodId: string }, supplied: Candidate2026_7Manifest, ytdCutoff = new Date()): Promise<Candidate2026_7Manifest> {
   const period = await tx.hrPayrollCalendarPeriod.findFirstOrThrow({ where: { id: run.calendarPeriodId, organizationId: actor.organizationId } });
   const employee = await tx.hrEmployee.findFirstOrThrow({ where: { id: supplied.employeeId, organizationId: actor.organizationId }, select: { id: true } });
   if (employee.id !== supplied.incomeEvidence.employeeId || supplied.payrollPeriodId !== period.id) throw new Error("EMPLOYMENT_INCOME_BINDING_IDENTITY_MISMATCH");
@@ -22,21 +22,29 @@ export async function resolveNg2026_7AuthoritativeManifest(tx: Db, actor: Actor,
     tx.hrEmployeeAssignment.findFirst({ where: { id: supplied.assignmentId, organizationId: actor.organizationId, employeeId: supplied.employeeId } }),
   ]);
   if (!relationship || !assignment) throw new Error("EMPLOYMENT_INCOME_BINDING_IDENTITY_MISMATCH");
-  const salary = await tx.hrSalaryRecord.findFirst({ where: { organizationId: actor.organizationId, employeeId: supplied.employeeId, approvedAt: { not: null }, effectiveFrom: { lte: period.endsAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: period.startsAt } }] }, orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] });
-  if (!salary) throw new Error("AUTHORITATIVE_SALARY_SOURCE_REQUIRED");
+  const salaries = await tx.hrSalaryRecord.findMany({ where: { organizationId: actor.organizationId, employeeId: supplied.employeeId, approvedAt: { not: null }, effectiveFrom: { lte: period.endsAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: period.startsAt } }] }, orderBy: [{ effectiveFrom: "asc" }, { id: "asc" }], take: 2 });
+  const salary = requireSingleNg2026_7SalarySource(salaries);
   const annualization = await tx.hrPayrollAnnualizationRuleVersion.findFirst({ where: { organizationId: actor.organizationId, jurisdictionVersion: NG_2026_7_VERSION, taxYear: period.taxYear, frequency: salary.payFrequency, certificationStatus: "CERTIFIED", effectiveFrom: { lte: period.endsAt }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: period.startsAt } }] }, orderBy: { version: "desc" } });
   if (!annualization) throw new Error("ANNUALIZATION_RULE_REQUIRED");
-  const ytdEntries = await tx.hrPayrollYtdLedgerEntry.findMany({ where: { organizationId: actor.organizationId, employeeId: supplied.employeeId, taxYear: period.taxYear, effectiveAt: { lt: period.startsAt }, accumulatorCode: { in: ["BONUS", "PAYE_DEDUCTED", "PAYE_REPAID"] } }, orderBy: [{ effectiveAt: "asc" }, { id: "asc" }] });
+  const currentResultIds = run.id ? (await tx.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id }, select: { id: true } })).map((result) => result.id) : [];
+  const ytdEntries = await tx.hrPayrollYtdLedgerEntry.findMany({ where: { organizationId: actor.organizationId, employeeId: supplied.employeeId, taxYear: period.taxYear, effectiveAt: { lt: ytdCutoff }, payrollResultId: { notIn: currentResultIds }, accumulatorCode: { in: ["BONUS", "PAYE_DEDUCTED", "PAYE_REPAID"] } }, orderBy: [{ effectiveAt: "asc" }, { id: "asc" }] });
   const sum = (code: string) => ytdEntries.filter((entry) => entry.accumulatorCode === code).reduce((total, entry) => total.plus(entry.amount), new Prisma.Decimal(0));
   const prior = await tx.hrPayrollPriorEmployerYtdVersion.findFirst({ where: { organizationId: actor.organizationId, employeeId: supplied.employeeId, taxYear: period.taxYear }, orderBy: { version: "desc" } });
+  const supportedReliefs = new Set(["PENSION", "NHF", "NHIS", "MORTGAGE_INTEREST", "LIFE_ANNUITY", "RENT"]);
+  const reliefCandidates = await tx.hrPayrollTaxReliefClaimVersion.findMany({ where: { organizationId: actor.organizationId, employeeId: supplied.employeeId, taxYear: period.taxYear, effectiveFrom: { lt: ytdCutoff } }, orderBy: [{ claimType: "asc" }, { version: "desc" }] });
+  if (reliefCandidates.some((claim) => !supportedReliefs.has(claim.claimType))) throw new Error("UNSUPPORTED_ELIGIBLE_DEDUCTION_TYPE");
+  const latestReliefs = [...new Map(reliefCandidates.map((claim) => [claim.claimType, claim])).values()];
+  if (latestReliefs.some((claim) => claim.status !== "ELIGIBLE_FOR_PAYE_RELIEF" || !claim.electionRecorded || !claim.evidenceReference || !claim.sourceRuleId)) throw new Error("ELIGIBLE_DEDUCTION_SOURCE_REQUIRED");
+  const eligibleDeductions = latestReliefs.reduce((total, claim) => total.plus(claim.eligibleAmount), new Prisma.Decimal(0));
+  const deductionAggregate = latestReliefs.map((claim) => ({ id: claim.id, type: claim.claimType, version: claim.version, eligibleAmount: claim.eligibleAmount.toFixed(4), evidenceReference: claim.evidenceReference, sourceRuleId: claim.sourceRuleId }));
   const salaryVersionHash = payrollDigest({ id: salary.id, amount: salary.amount.toFixed(2), currency: salary.currency, payFrequency: salary.payFrequency, effectiveFrom: salary.effectiveFrom.toISOString(), effectiveTo: salary.effectiveTo?.toISOString() ?? null, approvedAt: salary.approvedAt?.toISOString() ?? null });
   const sourceLedgerHash = payrollDigest(ytdEntries.map((entry) => ({ id: entry.id, code: entry.accumulatorCode, amount: entry.amount.toFixed(4), effectiveAt: entry.effectiveAt.toISOString(), payrollResultId: entry.payrollResultId })));
   return { ...supplied, authoritativeSources: {
     salary: { recordId: salary.id, versionHash: salaryVersionHash, monthlyAmount: salary.amount, currency: salary.currency, payFrequency: salary.payFrequency, effectiveFrom: salary.effectiveFrom.toISOString(), effectiveTo: salary.effectiveTo?.toISOString() },
     annualization: { ruleId: annualization.id, ruleVersion: annualization.version, frequency: annualization.frequency, periodsInTaxYear: annualization.periodsInTaxYear, method: annualization.method, taxYear: annualization.taxYear, certificationStatus: annualization.certificationStatus },
-    ytd: { sourceLedgerHash, cutoff: period.startsAt.toISOString(), priorBonusYtd: sum("BONUS"), payeDeducted: sum("PAYE_DEDUCTED"), payeRepaid: sum("PAYE_REPAID"), entryIds: ytdEntries.map((entry) => entry.id) },
+    ytd: { sourceLedgerHash, cutoff: ytdCutoff.toISOString(), priorBonusYtd: sum("BONUS"), payeDeducted: sum("PAYE_DEDUCTED"), payeRepaid: sum("PAYE_REPAID"), entryIds: ytdEntries.map((entry) => entry.id) },
     priorEmployer: prior ? { state: prior.handling === "EVIDENCED" ? "VERIFIED" : "UNKNOWN", recordId: prior.id, recordVersion: prior.version, income: prior.gross ?? 0, paye: prior.payeDeducted ?? 0, payeRepaid: prior.payeRepaid ?? 0, evidenceReference: prior.evidenceReference } : { state: "NONE", income: 0, paye: 0, payeRepaid: 0 },
-    deductions: supplied.authoritativeSources.deductions,
+    deductions: { amount: eligibleDeductions, sourceType: "TAX_RELIEF_CLAIM_VERSIONS", sourceRecordIds: latestReliefs.map((claim) => claim.id), sourceVersions: latestReliefs.map((claim) => `${claim.claimType}:v${claim.version}`), evidenceReferences: latestReliefs.map((claim) => claim.evidenceReference), aggregateHash: payrollDigest(deductionAggregate) },
   } };
 }
 
@@ -142,7 +150,7 @@ export async function freezeUnit9Inputs(db: PrismaClient, actor: Actor, runId: s
       const certification = certifyPayrollInput(snapshot.candidate);
       if (certification.runBlocked || certification.employeeBlocked) continue;
       const suppliedManifest = snapshot.sourceManifest as unknown as FrozenPayrollManifest;
-      const resolvedManifest = suppliedManifest.jurisdictionVersion === NG_2026_7_VERSION ? await resolveNg2026_7AuthoritativeManifest(tx, actor, run, snapshot.sourceManifest as unknown as Candidate2026_7Manifest) : snapshot.sourceManifest as unknown as Candidate2026_7Manifest;
+      const resolvedManifest = suppliedManifest.jurisdictionVersion === NG_2026_7_VERSION ? await resolveNg2026_7AuthoritativeManifest(tx, actor, run, snapshot.sourceManifest as unknown as Candidate2026_7Manifest, frozenAt) : snapshot.sourceManifest as unknown as Candidate2026_7Manifest;
       const manifest = resolvedManifest as unknown as FrozenPayrollManifest;
       const legacyDecision = manifest.jurisdictionVersion === "NG-CANDIDATE-2026.5" ? evaluateFrozenNg2026_5Eligibility(resolvedManifest as unknown as Candidate2026_5Manifest) : null;
       const incomeBinding = manifest.jurisdictionVersion === "NG-CANDIDATE-2026.7" ? deriveFrozenNg2026_7Binding(resolvedManifest) : manifest.jurisdictionVersion === "NG-CANDIDATE-2026.6" ? deriveFrozenNg2026_6Binding(resolvedManifest as unknown as Candidate2026_6Manifest) : null;
