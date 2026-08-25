@@ -115,13 +115,14 @@ describe("NG-CANDIDATE-2026.4 Salary and Bonus-only controls", () => {
     expect(sha("tests/fixtures/ng-candidate-2026-3-expected-values.json")).toBe("9cbca5487abffdff8ccb9a624f8f6c9e30c579629c258e0a928517ab40a86b0e");
   });
 
-  it("makes 2026.4 the active limited-launch persistence boundary", () => {
+  it("preserves the 2026.4 persistence evidence after the active boundary advances", () => {
     const limitedLaunch = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/payroll/unit9-limited-launch.ts"), "utf8");
     const service = fs.readFileSync(path.join(process.cwd(), "src/lib/hr/payroll/unit9-service.ts"), "utf8");
     expect(limitedLaunch).toContain('export type EarningType = "SALARY" | "BONUS"');
     expect(limitedLaunch).not.toContain('"SALARY" | "COMPENSATION" | "BONUS"');
     expect(limitedLaunch).not.toContain('compensation: "BLOCKED_PENDING_RTA_AUTHORITY"');
-    expect(service).toContain('candidateVersion: "NG-CANDIDATE-2026.4"');
+    expect(service).toContain('candidateVersion: "NG-CANDIDATE-2026.5"');
+    expect(service).toContain("calculateFrozenPayroll2026_5");
   });
 
   it("runs the real PostgreSQL race against the 2026.4 refund-execution hold", () => {

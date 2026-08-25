@@ -1,0 +1,10 @@
+43eea85d7729ad84c964f853df434569153fa76dc37db9a57bda9726992f6c94  src/lib/hr/payroll/nigeria-2026-5.ts
+00266e304eba35576d6dcd7e1ad10022020af1ee14f169dbc2a4e77c0a4b5eac  src/lib/hr/payroll/unit9-engine-2026-5.ts
+1c141f878d7bbe4f6c9c24f054d2638bcd239a3d532786259a1782865f93e0c7  tests/fixtures/ng-candidate-2026-5-expected-values.json
+8b4167d92758747995ea7471a3e657616aecdea288aa0b21ebae0842db58b8fb  docs/hrms/delivery-units/unit-09/ng-candidate-2026-5-owner-decision.md
+ac13d15edeb66f0dde0cc6d0707000620938511b9ea57215b67047be3ee8da20  docs/hrms/delivery-units/unit-09/ng-candidate-2026-5-source-register.md
+d2dd2b16c540ba6d0f8d85affa12ee1d20def75078cc9cb969de427bb0d8e848  docs/hrms/delivery-units/unit-09/ng-candidate-2026-5-remediation-matrix.md
+27adbe9ef829c99b2b9a599e6ac39fe3a6c646fa538a342295f6e4ab289a96ce  docs/hrms/delivery-units/unit-09/ng-candidate-2026-5-gross-income-evidence-design.md
+ac7419a909a6fe13e3af95381a52e1de8ce2e2d67558e4148de9e89051427c41  docs/hrms/delivery-units/unit-09/ng-candidate-2026-5-runtime-integration.md
+7853ef9ee4de85d2ff7fd4ce13f61acc0185d01780c797ad5b8e5ab9314863d0  docs/hrms/delivery-units/unit-09/ng-candidate-2026-5-preservation.md
+f1c61a52d336d9f29dd29958adbbf8d7e9c574e000c410a0118c8eb2a8c2b485  docs/hrms/delivery-units/unit-09/ng-candidate-2026-5-stage1-package.md

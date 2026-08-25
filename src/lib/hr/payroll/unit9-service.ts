@@ -5,6 +5,7 @@ import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { assertCertifiedJurisdictionPackage, payrollDigest } from "./unit9-domain";
 import { assertFinalizationReady, calculateFrozenPayroll, certifyPayrollInput, type FrozenPayrollManifest, type PayrollInputCandidate } from "./unit9-engine";
 import { approveSupportedPopulation, assertExceptionResolution, exceptionLogicalKey, partitionPayrollPopulation, type ComplianceReason, type PopulationMember } from "./unit9-limited-launch";
+import { calculateFrozenPayroll2026_5, evaluateFrozenNg2026_5Eligibility, type Candidate2026_5Manifest } from "./unit9-engine-2026-5";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 type Actor = { organizationId: string; userId: string; role: string };
@@ -16,7 +17,7 @@ export async function createComplianceException(db: PrismaClient, actor: Actor, 
     const correlationId = crypto.randomUUID();
     const exception = await tx.hrPayrollComplianceException.upsert({
       where: { organizationId_logicalKey: { organizationId: actor.organizationId, logicalKey } },
-      create: { organizationId: actor.organizationId, employeeId: input.employeeId, payGroupId: input.payGroupId, payrollPeriodId: input.payrollPeriodId, payrollRunId: run.id, calculationAttemptId: input.calculationAttemptId, jurisdictionCode: input.jurisdictionCode, rtaCode: input.rtaCode, blockerCode: input.blockerCode, blockerCategory: input.blockerCategory, affectedInput: input.affectedInput, candidateVersion: "NG-CANDIDATE-2026.4", sourceRequirement: input.sourceRequirement, logicalKey, correlationId },
+      create: { organizationId: actor.organizationId, employeeId: input.employeeId, payGroupId: input.payGroupId, payrollPeriodId: input.payrollPeriodId, payrollRunId: run.id, calculationAttemptId: input.calculationAttemptId, jurisdictionCode: input.jurisdictionCode, rtaCode: input.rtaCode, blockerCode: input.blockerCode, blockerCategory: input.blockerCategory, affectedInput: input.affectedInput, candidateVersion: "NG-CANDIDATE-2026.5", sourceRequirement: input.sourceRequirement, logicalKey, correlationId },
       update: {},
     });
     if (exception.correlationId === correlationId) {
@@ -29,7 +30,7 @@ export async function createComplianceException(db: PrismaClient, actor: Actor, 
 
 export async function persistPopulationPartition(db: PrismaClient, actor: Actor, input: { payrollRunId: string; calculationAttemptId: string; members: PopulationMember[] }) {
   const partition = partitionPayrollPopulation(input.members);
-  return db.hrPayrollPopulationPartition.upsert({ where: { organizationId_payrollRunId_calculationAttemptId: { organizationId: actor.organizationId, payrollRunId: input.payrollRunId, calculationAttemptId: input.calculationAttemptId } }, create: { organizationId: actor.organizationId, payrollRunId: input.payrollRunId, calculationAttemptId: input.calculationAttemptId, originalPopulationCount: partition.originalPopulationCount, readyCount: partition.readyCount, heldCount: partition.heldCount, readyEmployeeIds: partition.readyEmployeeIds, heldPopulation: partition.held, partitionHash: partition.partitionHash, preparedById: actor.userId, correlationId: crypto.randomUUID() }, update: {} });
+  return db.hrPayrollPopulationPartition.upsert({ where: { organizationId_payrollRunId_calculationAttemptId: { organizationId: actor.organizationId, payrollRunId: input.payrollRunId, calculationAttemptId: input.calculationAttemptId } }, create: { organizationId: actor.organizationId, payrollRunId: input.payrollRunId, calculationAttemptId: input.calculationAttemptId, originalPopulationCount: partition.originalPopulationCount, readyCount: partition.readyCount, heldCount: partition.heldCount, readyEmployeeIds: partition.readyEmployeeIds, heldPopulation: partition.held, minimumWageDecisionHashes: partition.minimumWageDecisionHashes, partitionHash: partition.partitionHash, preparedById: actor.userId, correlationId: crypto.randomUUID() }, update: {} });
 }
 
 export async function approvePopulationPartition(db: PrismaClient, actor: Actor, partitionId: string, input: { decision: string; reason: string; expectedPartitionHash: string; expectedResolutionPath: string }) {
@@ -110,7 +111,9 @@ export async function freezeUnit9Inputs(db: PrismaClient, actor: Actor, runId: s
     for (const snapshot of snapshots) {
       const certification = certifyPayrollInput(snapshot.candidate);
       if (certification.runBlocked || certification.employeeBlocked) continue;
-      await tx.hrPayrollInputSnapshot.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, employeeId: snapshot.candidate.employeeId, personId: snapshot.candidate.personId!, workRelationshipId: snapshot.candidate.workRelationshipId!, assignmentId: snapshot.candidate.assignmentId!, sourceManifest: snapshot.sourceManifest, inputHash: payrollDigest(snapshot.sourceManifest), certificationStatus: "CERTIFIED", frozenAt, correlationId: crypto.randomUUID() } });
+      const manifest = snapshot.sourceManifest as unknown as FrozenPayrollManifest;
+      const minimumWageDecision = manifest.jurisdictionVersion === "NG-CANDIDATE-2026.5" ? evaluateFrozenNg2026_5Eligibility(snapshot.sourceManifest as unknown as Candidate2026_5Manifest) : null;
+      await tx.hrPayrollInputSnapshot.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, employeeId: snapshot.candidate.employeeId, personId: snapshot.candidate.personId!, workRelationshipId: snapshot.candidate.workRelationshipId!, assignmentId: snapshot.candidate.assignmentId!, sourceManifest: snapshot.sourceManifest, inputHash: payrollDigest(snapshot.sourceManifest), minimumWageEvidence: minimumWageDecision ? (snapshot.sourceManifest as unknown as Candidate2026_5Manifest).minimumWageEvidence as unknown as Prisma.InputJsonValue : undefined, minimumWageDecisionHash: minimumWageDecision?.decisionHash, minimumWageClassification: minimumWageDecision?.classification, certificationStatus: "CERTIFIED", frozenAt, correlationId: crypto.randomUUID() } });
     }
     const count = await tx.hrPayrollInputSnapshot.count({ where: { organizationId: actor.organizationId, payrollRunId: run.id } });
     if (!count) throw new Error("Payroll cannot freeze without at least one certified employee snapshot.");
@@ -140,9 +143,14 @@ export async function calculateUnit9Run(db: PrismaClient, actor: Actor, runId: s
       const run = await tx.hrPayrollAuthoritativeRun.findFirst({ where: { id: runId, organizationId: actor.organizationId } });
       if (!run || run.status !== "CALCULATING") throw new Error("Calculation claim is no longer active.");
       const snapshots = await tx.hrPayrollInputSnapshot.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, certificationStatus: "CERTIFIED" }, orderBy: { employeeId: "asc" } });
-      const computed: Array<{ snapshot: typeof snapshots[number]; value: ReturnType<typeof calculateFrozenPayroll> }> = [];
+      const has2026_5 = snapshots.some((snapshot) => (snapshot.sourceManifest as { jurisdictionVersion?: string }).jurisdictionVersion === "NG-CANDIDATE-2026.5");
+      const approvedPartition = has2026_5 ? await tx.hrPayrollPopulationPartition.findFirst({ where: { organizationId: actor.organizationId, payrollRunId: run.id, approvedAt: { not: null } }, orderBy: { approvedAt: "desc" } }) : null;
+      if (has2026_5 && !approvedPartition) throw new Error("APPROVED_MINIMUM_WAGE_PARTITION_REQUIRED");
+      const approvedDecisionHashes = new Map<string, string | null>(((approvedPartition?.minimumWageDecisionHashes as Array<{ employeeId: string; decisionHash: string | null }> | null) ?? []).map((item) => [item.employeeId, item.decisionHash]));
+      const computed: Array<{ snapshot: typeof snapshots[number]; value: ReturnType<typeof calculateFrozenPayroll> | ReturnType<typeof calculateFrozenPayroll2026_5> }> = [];
       for (const snapshot of snapshots) {
         const manifest = snapshot.sourceManifest as unknown as FrozenPayrollManifest;
+        if (manifest.jurisdictionVersion === "NG-CANDIDATE-2026.5" && approvedDecisionHashes.get(snapshot.employeeId) !== snapshot.minimumWageDecisionHash) throw new Error("STALE_MINIMUM_WAGE_DECISION");
         const earningDefinitions = manifest.earnings.map((line) => line.ruleVersionReference);
         const deductionDefinitions = (manifest.deductions ?? []).map((line) => line.definitionVersion);
         const contributionDefinitions = (manifest.employerContributions ?? []).map((line) => line.definitionVersion);
@@ -156,11 +164,14 @@ export async function calculateUnit9Run(db: PrismaClient, actor: Actor, runId: s
           const approved = await tx.hrPayrollManualAdjustment.findFirst({ where: { id: adjustment.sourceId, organizationId: actor.organizationId, payrollRunId: run.id, employeeId: snapshot.employeeId, status: "APPROVED", createdById: adjustment.createdById, approvedById: adjustment.approvedById, amount: adjustment.amount } });
           if (!approved) throw new Error("Frozen payroll references an unapproved or cross-tenant manual adjustment.");
         }
-        computed.push({ snapshot, value: calculateFrozenPayroll(manifest, snapshot.inputHash) });
+        const value = manifest.jurisdictionVersion === "NG-CANDIDATE-2026.5"
+          ? calculateFrozenPayroll2026_5(snapshot.sourceManifest as unknown as Candidate2026_5Manifest, snapshot.inputHash)
+          : calculateFrozenPayroll(manifest, snapshot.inputHash);
+        computed.push({ snapshot, value });
       }
       await tx.hrPayrollAuthoritativeResult.updateMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, authoritativeAt: { not: null } }, data: { authoritativeAt: null } });
       for (const { snapshot, value } of computed) {
-        const result = await tx.hrPayrollAuthoritativeResult.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, calculationAttemptId: attempt.id, inputSnapshotId: snapshot.id, employeeId: snapshot.employeeId, currency: (snapshot.sourceManifest as { currency?: string }).currency ?? "NGN", grossEarnings: value.gross, taxableIncome: value.taxableIncome, paye: value.paye.currentPaye, employeeDeductions: value.employeeDeductions, employerContributions: value.employerContributions, adjustments: value.adjustments, netPay: value.output.net, outputHash: value.hash, authoritativeAt: new Date(), correlationId: crypto.randomUUID() } });
+        const result = await tx.hrPayrollAuthoritativeResult.create({ data: { organizationId: actor.organizationId, payrollRunId: run.id, calculationAttemptId: attempt.id, inputSnapshotId: snapshot.id, employeeId: snapshot.employeeId, currency: (snapshot.sourceManifest as { currency?: string }).currency ?? "NGN", grossEarnings: value.gross, taxableIncome: value.taxableIncome, paye: value.paye.currentPaye, employeeDeductions: value.employeeDeductions, employerContributions: value.employerContributions, adjustments: value.adjustments, netPay: value.output.net, outputHash: value.hash, minimumWageDecisionHash: "minimumWageDecision" in value ? value.minimumWageDecision.decisionHash : undefined, minimumWageClassification: "minimumWageDecision" in value ? value.minimumWageDecision.classification : undefined, authoritativeAt: new Date(), correlationId: crypto.randomUUID() } });
         const details = new Map<string, { source?: string; rule: string; explanation: Prisma.InputJsonValue }>();
         value.earnings.forEach((line) => details.set(`EARNING:${line.code}`, { source: `${line.sourceType}:${line.sourceId}`, rule: line.ruleVersionReference, explanation: line.explanation }));
         value.deductions.forEach((line) => details.set(`EMPLOYEE_DEDUCTION:${line.code}`, { source: line.sourceId, rule: line.definitionVersion, explanation: line.explanation }));
