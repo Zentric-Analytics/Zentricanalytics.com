@@ -43,8 +43,8 @@ Runtime call trace: `unit9-service.freezeUnit9Inputs` evaluates frozen eligibili
 
 ## Fresh release gates
 
-- Focused 2026.5 package/runtime tests: 17/17
-- Unit 9 and full repository suite: 998/998 across 85 files
+- Focused 2026.5 package/runtime tests: 18/18
+- Unit 9 and full repository suite: 999/999 across 85 files
 - TypeScript: PASS
 - ESLint: PASS, zero warnings
 - Prisma validation: PASS
@@ -53,6 +53,8 @@ Runtime call trace: `unit9-service.freezeUnit9Inputs` evaluates frozen eligibili
 - Readiness: `/api/health/ready` 200 `ready`, database `ok`
 - Deterministic replay, stale-decision rejection, ambiguous/unknown fail-close, Salary/Bonus-only taxonomy, legacy-candidate preservation and finalization denial: PASS in focused and full suites
 
-## Remaining evidence action
+## Signed-in authorization and privacy
 
-Fresh signed-in browser authorization/privacy verification is awaiting restoration of the staging browser session. No credentials are handled by the evidence harness. This item must be completed before the closure-review readiness statement is issued.
+The authenticated staging browser session for `admin@zentricanalytics.com` reached the non-sensitive Unit 9 status page. A direct navigation to `/hr/admin/payroll/unit9` returned the accessible 403 experience and explicitly confirmed that no data was disclosed because the role lacks payroll authority. The status page exposed no employee payroll, tax, bank, payment, evidence-document or BIK detail. Automated permission, tenant, direct-ID and mutation tests remained green in the fresh 999-test run.
+
+During this check the status page was found to contain stale 2026.4 deployment counters despite rendering the current 2026.5 candidate and SHA. The counters were corrected to the 61-migration, 998-test 2026.5 baseline, covered by the existing status-page regression checks, and redeployed before closure.
