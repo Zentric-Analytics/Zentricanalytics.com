@@ -8,7 +8,7 @@ import { approveSupportedPopulation, assertExceptionResolution, exceptionLogical
 import { calculateFrozenPayroll2026_5, evaluateFrozenNg2026_5Eligibility, type Candidate2026_5Manifest } from "./unit9-engine-2026-5";
 import { calculateFrozenPayroll2026_6, deriveFrozenNg2026_6Binding, type Candidate2026_6Manifest } from "./unit9-engine-2026-6";
 import { calculateFrozenPayroll2026_7, deriveFrozenNg2026_7Binding, type Candidate2026_7Manifest } from "./unit9-engine-2026-7";
-import { NG_2026_7_VERSION, requireSingleNg2026_7SalarySource } from "./nigeria-2026-7";
+import { deriveNg2026_7ReliefAggregate, NG_2026_7_VERSION, requireSingleNg2026_7SalarySource } from "./nigeria-2026-7";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 type Actor = { organizationId: string; userId: string; role: string };
@@ -30,13 +30,8 @@ export async function resolveNg2026_7AuthoritativeManifest(tx: Db, actor: Actor,
   const ytdEntries = await tx.hrPayrollYtdLedgerEntry.findMany({ where: { organizationId: actor.organizationId, employeeId: supplied.employeeId, taxYear: period.taxYear, effectiveAt: { lt: ytdCutoff }, payrollResultId: { notIn: currentResultIds }, accumulatorCode: { in: ["BONUS", "PAYE_DEDUCTED", "PAYE_REPAID"] } }, orderBy: [{ effectiveAt: "asc" }, { id: "asc" }] });
   const sum = (code: string) => ytdEntries.filter((entry) => entry.accumulatorCode === code).reduce((total, entry) => total.plus(entry.amount), new Prisma.Decimal(0));
   const prior = await tx.hrPayrollPriorEmployerYtdVersion.findFirst({ where: { organizationId: actor.organizationId, employeeId: supplied.employeeId, taxYear: period.taxYear }, orderBy: { version: "desc" } });
-  const supportedReliefs = new Set(["PENSION", "NHF", "NHIS", "MORTGAGE_INTEREST", "LIFE_ANNUITY", "RENT"]);
   const reliefCandidates = await tx.hrPayrollTaxReliefClaimVersion.findMany({ where: { organizationId: actor.organizationId, employeeId: supplied.employeeId, taxYear: period.taxYear, effectiveFrom: { lt: ytdCutoff } }, orderBy: [{ claimType: "asc" }, { version: "desc" }] });
-  if (reliefCandidates.some((claim) => !supportedReliefs.has(claim.claimType))) throw new Error("UNSUPPORTED_ELIGIBLE_DEDUCTION_TYPE");
-  const latestReliefs = [...new Map(reliefCandidates.map((claim) => [claim.claimType, claim])).values()];
-  if (latestReliefs.some((claim) => claim.status !== "ELIGIBLE_FOR_PAYE_RELIEF" || !claim.electionRecorded || !claim.evidenceReference || !claim.sourceRuleId)) throw new Error("ELIGIBLE_DEDUCTION_SOURCE_REQUIRED");
-  const eligibleDeductions = latestReliefs.reduce((total, claim) => total.plus(claim.eligibleAmount), new Prisma.Decimal(0));
-  const deductionAggregate = latestReliefs.map((claim) => ({ id: claim.id, type: claim.claimType, version: claim.version, eligibleAmount: claim.eligibleAmount.toFixed(4), evidenceReference: claim.evidenceReference, sourceRuleId: claim.sourceRuleId }));
+  const deductionResolution = deriveNg2026_7ReliefAggregate(reliefCandidates);
   const salaryVersionHash = payrollDigest({ id: salary.id, amount: salary.amount.toFixed(2), currency: salary.currency, payFrequency: salary.payFrequency, effectiveFrom: salary.effectiveFrom.toISOString(), effectiveTo: salary.effectiveTo?.toISOString() ?? null, approvedAt: salary.approvedAt?.toISOString() ?? null });
   const sourceLedgerHash = payrollDigest(ytdEntries.map((entry) => ({ id: entry.id, code: entry.accumulatorCode, amount: entry.amount.toFixed(4), effectiveAt: entry.effectiveAt.toISOString(), payrollResultId: entry.payrollResultId })));
   return { ...supplied, authoritativeSources: {
@@ -44,7 +39,7 @@ export async function resolveNg2026_7AuthoritativeManifest(tx: Db, actor: Actor,
     annualization: { ruleId: annualization.id, ruleVersion: annualization.version, frequency: annualization.frequency, periodsInTaxYear: annualization.periodsInTaxYear, method: annualization.method, taxYear: annualization.taxYear, certificationStatus: annualization.certificationStatus },
     ytd: { sourceLedgerHash, cutoff: ytdCutoff.toISOString(), priorBonusYtd: sum("BONUS"), payeDeducted: sum("PAYE_DEDUCTED"), payeRepaid: sum("PAYE_REPAID"), entryIds: ytdEntries.map((entry) => entry.id) },
     priorEmployer: prior ? { state: prior.handling === "EVIDENCED" ? "VERIFIED" : "UNKNOWN", recordId: prior.id, recordVersion: prior.version, income: prior.gross ?? 0, paye: prior.payeDeducted ?? 0, payeRepaid: prior.payeRepaid ?? 0, evidenceReference: prior.evidenceReference } : { state: "NONE", income: 0, paye: 0, payeRepaid: 0 },
-    deductions: { amount: eligibleDeductions, sourceType: "TAX_RELIEF_CLAIM_VERSIONS", sourceRecordIds: latestReliefs.map((claim) => claim.id), sourceVersions: latestReliefs.map((claim) => `${claim.claimType}:v${claim.version}`), evidenceReferences: latestReliefs.map((claim) => claim.evidenceReference), aggregateHash: payrollDigest(deductionAggregate) },
+    deductions: { amount: deductionResolution.amount, sourceType: deductionResolution.sourceType, sourceRecordIds: deductionResolution.sourceRecordIds, sourceVersions: deductionResolution.sourceVersions, evidenceReferences: deductionResolution.evidenceReferences, aggregateHash: deductionResolution.aggregateHash },
   } };
 }
 

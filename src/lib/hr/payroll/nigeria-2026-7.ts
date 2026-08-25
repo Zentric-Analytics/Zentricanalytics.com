@@ -62,6 +62,55 @@ export function selectNg2026_7PriorYtdEntries<T extends { id: string; effectiveA
   return entries.filter((entry) => entry.effectiveAt < cutoff && !current.has(entry.payrollResultId)).sort((a, b) => a.effectiveAt.getTime() - b.effectiveAt.getTime() || a.id.localeCompare(b.id));
 }
 
+const NG_2026_7_SUPPORTED_RELIEF_TYPES = new Set(["PENSION", "NHF", "NHIS", "MORTGAGE_INTEREST", "LIFE_ANNUITY", "RENT"]);
+
+export function selectLatestNg2026_7ReliefVersions<T extends { claimType: string; version: number }>(claims: T[]): T[] {
+  const ordered = [...claims].sort((left, right) => left.claimType.localeCompare(right.claimType) || right.version - left.version);
+  const selected = new Map<string, T>();
+  for (const claim of ordered) if (!selected.has(claim.claimType)) selected.set(claim.claimType, claim);
+  return [...selected.values()];
+}
+
+export function assertUsableNg2026_7ReliefVersions<T extends { claimType: string; version: number; status: string; electionRecorded: boolean; evidenceReference: string; sourceRuleId: string }>(claims: T[]): T[] {
+  const latest = selectLatestNg2026_7ReliefVersions(claims);
+  if (latest.some((claim) => !NG_2026_7_SUPPORTED_RELIEF_TYPES.has(claim.claimType))) throw new Error("UNSUPPORTED_ELIGIBLE_DEDUCTION_TYPE");
+  if (latest.some((claim) => claim.status !== "ELIGIBLE_FOR_PAYE_RELIEF" || !claim.electionRecorded || !claim.evidenceReference || !claim.sourceRuleId)) throw new Error("ELIGIBLE_DEDUCTION_SOURCE_REQUIRED");
+  return latest;
+}
+
+type Ng2026_7ReliefVersion = {
+  id: string;
+  claimType: string;
+  version: number;
+  status: string;
+  electionRecorded: boolean;
+  evidenceReference: string;
+  sourceRuleId: string;
+  eligibleAmount: Unit9Money;
+};
+
+export function deriveNg2026_7ReliefAggregate<T extends Ng2026_7ReliefVersion>(claims: T[]) {
+  const authoritativeClaims = assertUsableNg2026_7ReliefVersions(claims);
+  const sources = authoritativeClaims.map((claim) => ({
+    id: claim.id,
+    type: claim.claimType,
+    version: claim.version,
+    eligibleAmount: payrollMoney(claim.eligibleAmount).toFixed(4),
+    evidenceReference: claim.evidenceReference,
+    sourceRuleId: claim.sourceRuleId,
+  }));
+  const amount = authoritativeClaims.reduce((total, claim) => total.plus(payrollMoney(claim.eligibleAmount)), new Prisma.Decimal(0));
+  return {
+    authoritativeClaims,
+    amount: roundPayroll(amount),
+    sourceType: "TAX_RELIEF_CLAIM_VERSIONS" as const,
+    sourceRecordIds: sources.map((claim) => claim.id),
+    sourceVersions: sources.map((claim) => `${claim.type}:v${claim.version}`),
+    evidenceReferences: sources.map((claim) => claim.evidenceReference),
+    aggregateHash: payrollDigest(sources),
+  };
+}
+
 export function deriveNg2026_7Binding(input: Ng2026_7BindingInput) {
   const { evidence, sources } = input;
   if (evidence.candidateVersion !== NG_2026_7_VERSION) throw new Error("NG_2026_7_EVIDENCE_VERSION_REQUIRED");
