@@ -11,14 +11,14 @@ const items = [
   ["Income binding", "Frozen Salary, Bonus, YTD, annualization and prior-employer facts share one deterministic hash"],
   ["Compliance", "Amount mismatches, unsupported facts, ambiguity and stale hashes fail closed"],
   ["Payments/accounting", "Governed export only; not settled on export; accounting adapter not configured"],
-  ["Deployment", "Current Render staging deployment must match the HEAD SHA above"],
-  ["Migrations", "62 expected; additive income-binding migration pending staging deployment"],
-  ["Automated suite", "1,014 / 1,014 across 86 files PASS; focused candidate gate 15 / 15 PASS"],
+  ["Deployment", "dep-da6tvv3l550s73fe0asg validated exact evidence SHA 492f8f47c72eff4aa435ae2dc7fd21fc1fd50623"],
+  ["Migrations", "62 applied; none pending or failed"],
+  ["Automated suite", "1,025 / 1,025 across 88 files PASS; focused candidate, preservation and package gate 26 / 26 PASS"],
   ["Quality gates", "TypeScript, ESLint zero warnings, Prisma and production build PASS"],
-  ["PostgreSQL", "Fresh database-backed race and integrity validation pending exact-SHA staging deployment"],
-  ["Browser authorization", "Signed-in staging privacy/RBAC rerun pending"],
+  ["PostgreSQL", "Real races PASS: one writer; frozen binding immutable; zero stale or mixed-version results"],
+  ["Browser authorization", "PASS: signed-in status is non-sensitive; evidence routes remain permission- and tenant-scoped"],
   ["Nigeria certification", "NOT CERTIFIED — official finalization remains fail-closed"],
-  ["Next release gate", "Exact-SHA staging deployment and governed income-binding validation"],
+  ["Next release gate", "Independent Stage 1 closure review; Stage 2 remains out of scope"],
 ] as const;
 
 export default function Unit9StatusPage() {

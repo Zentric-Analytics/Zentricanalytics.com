@@ -1,0 +1,17 @@
+aa32d1f5fc48b965028b8fbb701bcdb321109e59a12a55a2bde6f25f991e56b5  src/lib/hr/payroll/nigeria-2026-6.ts
+c932c175899c9bcdeb3d648316ac013b88bbf818015c8aad44cb85c57c20e121  src/lib/hr/payroll/unit9-engine-2026-6.ts
+af1b44f92f4ecc462f023dfa2b3681832c55d39e91867c548c82b955ab2b5132  prisma/migrations/20260825120000_hrms_unit9_ng_2026_6_income_binding/migration.sql
+01edf1f219d124fa58b55fef1f7faff18e89bb3e5075605ae615de411a46ffb5  scripts/hr-unit9-ng-2026-6-staging.ts
+23df723b6134f93fdc41001042e4fb7eefe8c149fae124632e95692a48471f9e  scripts/hr-unit9-ng-2026-6-concurrency.ts
+c45ee28cc0e251c9daf58c3b059b7f1e7a33fb6b9f8c16631a9efb4ead1f0cb7  tests/fixtures/ng-candidate-2026-6-expected-values.json
+5e7c5fa1ecf62d0d5b0143c331ac9652c2a446223c943e69d1af5dcb12e22f4f  tests/hrms-unit9-ng-2026-6.test.ts
+d5cd045940437cac716346e54aa19ad9900d2517bb17b22bb6e25ecc34987c8c  tests/hrms-unit9-ng-2026-6-preservation.test.ts
+f6479c151b96b7d613bcdc1058fe3630a1c771fb24f08b138b49753214faf8f4  tests/hrms-unit9-ng-2026-6-package.test.ts
+ca309ecd0c84f5a1e8fcf506c57df7ab90d30441ff348ffe9d1c58b2d678d918  docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-owner-decision.md
+7e9fd31aef086a1db820a647d7e2bd2068b6197dac89494b9400e2d6da5911be  docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-stage2-remediation-matrix.md
+12d5439dc979a5089f50eb4d40fbc6943e2c4d0167b5b32a0118eadb55575711  docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-income-binding-design.md
+1c2699a649659f764e5d619163a0efef3aa84eadc534268bec94ea0be2cc7b08  docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-runtime-integration.md
+2926ec7ad166b71253e10ccf791251f3fe0d54fc78d8a50e04a51f7a6f63ef8b  docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-source-register.md
+79f2093f9593c6efca08cf9a7718c1477974c7424961d21bb0e028d4cc30e6ac  docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-preservation.md
+f92937652c51ddc3dd37d36d73ecee414256c1bd812e235bb225e318da197af2  docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-stage1-package.md
+696493a2f7e5cc023806079002d3fca396f50d60b77e2b80c0214b065115e30d  docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-stage1-manifest.json

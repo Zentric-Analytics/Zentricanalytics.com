@@ -67,6 +67,16 @@ Unit 9 never silently rewrites the upstream authorities and never treats a draft
 - [NG-CANDIDATE-2026.5 runtime integration](ng-candidate-2026-5-runtime-integration.md)
 - [NG-CANDIDATE-2026.5 preservation proof](ng-candidate-2026-5-preservation.md)
 - [NG-CANDIDATE-2026.5 staging validation](ng-candidate-2026-5-staging-validation.md)
+- [NG-CANDIDATE-2026.6 Stage 1 closure-review package](ng-candidate-2026-6-stage1-package.md)
+- [NG-CANDIDATE-2026.6 owner decision](ng-candidate-2026-6-owner-decision.md)
+- [NG-CANDIDATE-2026.6 source register](ng-candidate-2026-6-source-register.md)
+- [NG-CANDIDATE-2026.6 Stage 2 remediation matrix](ng-candidate-2026-6-stage2-remediation-matrix.md)
+- [NG-CANDIDATE-2026.6 income-binding design](ng-candidate-2026-6-income-binding-design.md)
+- [NG-CANDIDATE-2026.6 runtime integration](ng-candidate-2026-6-runtime-integration.md)
+- [NG-CANDIDATE-2026.6 preservation proof](ng-candidate-2026-6-preservation.md)
+- [NG-CANDIDATE-2026.6 machine-readable manifest](ng-candidate-2026-6-stage1-manifest.json)
+- [NG-CANDIDATE-2026.6 deterministic package hashes](ng-candidate-2026-6-stage1-package.sha256)
+- [NG-CANDIDATE-2026.6 staging validation](ng-candidate-2026-6-staging-validation.md)
 
 ## Implementation decomposition after owner approval
 

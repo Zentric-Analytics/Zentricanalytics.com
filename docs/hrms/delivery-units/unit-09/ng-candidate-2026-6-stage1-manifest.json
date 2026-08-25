@@ -1,0 +1,15 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.6",
+  "status": "READY_FOR_STAGE_1_CLOSURE_REVIEW_NOT_CERTIFIED",
+  "immutablePredecessor": "NG-CANDIDATE-2026.5",
+  "predecessorVerdict": "STAGE_2_CHANGES_REQUIRED_NOT_CERTIFIED",
+  "implementationMerge": "d9ee15ba151db8c35cd7c49cca735a72324a5be6",
+  "stagingEvidenceCommit": "492f8f47c72eff4aa435ae2dc7fd21fc1fd50623",
+  "stagingDeployment": "dep-da6tvv3l550s73fe0asg",
+  "migrationCount": 62,
+  "pendingMigrations": 0,
+  "activeOrdinaryEarnings": ["SALARY", "BONUS"],
+  "finalizationAllowed": false,
+  "stage2Started": false,
+  "packageHashFile": "ng-candidate-2026-6-stage1-package.sha256"
+}
