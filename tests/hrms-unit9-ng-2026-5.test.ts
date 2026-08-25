@@ -80,5 +80,9 @@ describe("NG-CANDIDATE-2026.5 governed minimum-wage runtime", () => {
     expect(engine).toContain("assertNg2026_5Decision");
     expect(service).toContain("evaluateFrozenNg2026_5Eligibility");
     expect(service).toContain("calculateFrozenPayroll2026_5");
+    const staging = fs.readFileSync(path.join(process.cwd(), "scripts/hr-unit9-ng-2026-5-staging.ts"), "utf8");
+    expect(staging).toContain("calculateUnit9Run");
+    expect(staging).toContain("OTHER_TAXABLE_EMPLOYMENT_INCOME_UNSUPPORTED");
+    expect(staging).toContain("minimumWageDecisionHash");
   });
 });
