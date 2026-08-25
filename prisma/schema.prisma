@@ -6053,6 +6053,8 @@ model HrPayrollInputSnapshot {
   minimumWageEvidence Json?
   minimumWageDecisionHash String?
   minimumWageClassification String?
+  employmentIncomeBinding Json?
+  employmentIncomeBindingHash String?
   certificationStatus String
   blockerCount        Int      @default(0)
   warningCount        Int      @default(0)
@@ -6064,6 +6066,7 @@ model HrPayrollInputSnapshot {
   @@unique([organizationId, correlationId])
   @@index([organizationId, payrollRunId, certificationStatus])
   @@index([organizationId, minimumWageDecisionHash])
+  @@index([organizationId, employmentIncomeBindingHash])
 }
 
 model HrPayrollCalculationAttempt {
@@ -6106,6 +6109,7 @@ model HrPayrollAuthoritativeResult {
   outputHash            String
   minimumWageDecisionHash String?
   minimumWageClassification String?
+  employmentIncomeBindingHash String?
   authoritativeAt       DateTime?
   finalizedAt           DateTime?
   supersedesResultId    String?
@@ -6117,6 +6121,7 @@ model HrPayrollAuthoritativeResult {
   @@index([organizationId, payrollRunId, employeeId, authoritativeAt])
   @@index([organizationId, employeeId, createdAt])
   @@index([organizationId, minimumWageDecisionHash])
+  @@index([organizationId, employmentIncomeBindingHash])
 }
 
 model HrPayrollResultLine {
@@ -6282,6 +6287,7 @@ model HrPayrollPopulationPartition {
   readyEmployeeIds         Json
   heldPopulation           Json
   minimumWageDecisionHashes Json?
+  employmentIncomeBindingHashes Json?
   partitionHash            String
   decision                 String?
   reason                   String?

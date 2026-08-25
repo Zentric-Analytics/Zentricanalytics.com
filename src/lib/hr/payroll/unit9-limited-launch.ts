@@ -4,7 +4,7 @@ export const NG_LIMITED_LAUNCH_RTAS = ["LAGOS", "OYO", "FCT"] as const;
 export type NgLaunchRta = typeof NG_LIMITED_LAUNCH_RTAS[number];
 export type EarningType = "SALARY" | "BONUS";
 export type EarningClassification = "RECURRING" | "NON_PERIODIC";
-export type ComplianceReason = "PAYE_MINIMUM_WAGE_RTA_RULE_REQUIRED" | "OTHER_TAXABLE_EMPLOYMENT_INCOME_UNSUPPORTED" | "EMPLOYMENT_GROSS_INCOME_EVIDENCE_INCOMPLETE" | "NON_PERIODIC_PAY_RTA_RULE_REQUIRED" | "PENSION_APPLICABILITY_REVIEW_REQUIRED" | "PENSION_SETUP_REQUIRED" | "PRIOR_EMPLOYER_YTD_REQUIRED" | "JURISDICTION_RULE_NOT_CERTIFIED" | "REGULATORY_SOURCE_REQUIRED" | "LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED" | "RTA_REFUND_PROCEDURE_REQUIRED";
+export type ComplianceReason = "PAYE_MINIMUM_WAGE_RTA_RULE_REQUIRED" | "PAYE_MINIMUM_WAGE_PRIOR_EMPLOYER_RULE_REQUIRED" | "OTHER_TAXABLE_EMPLOYMENT_INCOME_UNSUPPORTED" | "EMPLOYMENT_GROSS_INCOME_EVIDENCE_INCOMPLETE" | "PAYROLL_INCOME_BINDING_MISMATCH" | "BONUS_INPUT_BINDING_MISMATCH" | "ANNUAL_SALARY_BINDING_MISMATCH" | "PRIOR_EMPLOYER_INPUT_BINDING_MISMATCH" | "YTD_INPUT_BINDING_MISMATCH" | "NON_PERIODIC_PAY_RTA_RULE_REQUIRED" | "PENSION_APPLICABILITY_REVIEW_REQUIRED" | "PENSION_SETUP_REQUIRED" | "PRIOR_EMPLOYER_YTD_REQUIRED" | "JURISDICTION_RULE_NOT_CERTIFIED" | "REGULATORY_SOURCE_REQUIRED" | "LEGACY_COMPENSATION_CLASSIFICATION_REQUIRED" | "RTA_REFUND_PROCEDURE_REQUIRED";
 
 const classifications: Record<EarningType, EarningClassification> = { SALARY: "RECURRING", BONUS: "NON_PERIODIC" };
 export function classifyEarning(type: string) {
@@ -43,20 +43,21 @@ export function complianceEligibility(input: { rta: string; earnings: Array<{ ty
   }
   if (input.pensionLegallyRequired && input.pensionOperationalState === "NOT_CONFIGURED") findings.push({ code: "PENSION_SETUP_REQUIRED", category: "PENSION" });
   if (input.priorEmployerYtdRequired && !input.priorEmployerYtdPresent) findings.push({ code: "PRIOR_EMPLOYER_YTD_REQUIRED", category: "EVIDENCE" });
-  if (input.candidateVersion === "NG-CANDIDATE-2026.5") {
+  if (["NG-CANDIDATE-2026.5", "NG-CANDIDATE-2026.6"].includes(input.candidateVersion ?? "")) {
     if (!input.minimumWageDecision) findings.push({ code: "EMPLOYMENT_GROSS_INCOME_EVIDENCE_INCOMPLETE", category: "EVIDENCE", affectedInput: "MINIMUM_WAGE_DECISION" });
     else if (input.minimumWageDecision.status === "COMPLIANCE_HOLD") for (const code of input.minimumWageDecision.blockerCodes) findings.push({ code: code as ComplianceReason, category: "TAX", affectedInput: "MINIMUM_WAGE_DECISION" });
   }
   return { status: findings.length ? "COMPLIANCE_HOLD" as const : "READY" as const, findings, digest: payrollDigest(findings) };
 }
 
-export type PopulationMember = { employeeId: string; eligibility: ReturnType<typeof complianceEligibility>; minimumWageDecisionHash?: string };
+export type PopulationMember = { employeeId: string; eligibility: ReturnType<typeof complianceEligibility>; minimumWageDecisionHash?: string; employmentIncomeBindingHash?: string };
 export function partitionPayrollPopulation(members: PopulationMember[]) {
   const ordered = [...members].sort((a, b) => a.employeeId.localeCompare(b.employeeId));
   const readyEmployeeIds = ordered.filter((x) => x.eligibility.status === "READY").map((x) => x.employeeId);
   const held = ordered.filter((x) => x.eligibility.status === "COMPLIANCE_HOLD").map((x) => ({ employeeId: x.employeeId, reasons: x.eligibility.findings.map((f) => f.code).sort() }));
   const minimumWageDecisionHashes = ordered.map((member) => ({ employeeId: member.employeeId, decisionHash: member.minimumWageDecisionHash ?? null }));
-  const manifest = { originalPopulationCount: ordered.length, readyCount: readyEmployeeIds.length, heldCount: held.length, readyEmployeeIds, held, minimumWageDecisionHashes };
+  const employmentIncomeBindingHashes = ordered.map((member) => ({ employeeId: member.employeeId, bindingHash: member.employmentIncomeBindingHash ?? null }));
+  const manifest = { originalPopulationCount: ordered.length, readyCount: readyEmployeeIds.length, heldCount: held.length, readyEmployeeIds, held, minimumWageDecisionHashes, employmentIncomeBindingHashes };
   return { ...manifest, partitionHash: payrollDigest(manifest), decisionRequired: held.length > 0 };
 }
 
