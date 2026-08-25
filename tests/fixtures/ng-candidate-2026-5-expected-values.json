@@ -1,0 +1,12 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.5",
+  "certificationStatus": "NOT_CERTIFIED",
+  "ownerDecision": "UNIT 9 ORDINARY EARNINGS = SALARY + BONUS ONLY",
+  "cases": [
+    "70000-exempt", "69999.99-exempt", "70000.01-normal", "80000-partial-year-normal",
+    "70000-bonus-normal", "allowance-present-hold", "bik-present-hold", "other-income-unknown-hold",
+    "variable-unknown-hold", "variable-yes-hold", "multi-employer-unknown-hold", "partial-year-yes-hold",
+    "missing-evidence-hold", "decision-hash-mismatch", "stale-partition", "exempt-bypasses-bands",
+    "ordinary-zero-distinct", "held-not-finalizable", "2026.4-replay-preserved", "salary-bonus-only"
+  ]
+}

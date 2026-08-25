@@ -37,7 +37,7 @@ describe("Unit 9 Nigeria limited-launch operating controls", () => {
   it("allows supported salary simulations without claiming certification", () => {
     expect(eligible().status).toBe("READY");
     expect(NIGERIA_LAUNCH_SUPPORT_MATRIX.every((row) => row.certification === "NOT_CERTIFIED")).toBe(true);
-    expect(NIGERIA_LAUNCH_SUPPORT_MATRIX.every((row) => row.candidate === "NG-CANDIDATE-2026.4")).toBe(true);
+    expect(NIGERIA_LAUNCH_SUPPORT_MATRIX.every((row) => row.candidate === "NG-CANDIDATE-2026.5")).toBe(true);
   });
 
   it("does not treat pension not configured as legal exemption", () => {

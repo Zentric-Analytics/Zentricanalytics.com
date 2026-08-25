@@ -1,0 +1,9 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.5",
+  "status": "NOT_CERTIFIED",
+  "supersedesForReview": "NG-CANDIDATE-2026.4",
+  "priorVerdict": "CHANGES REQUIRED — STAGE 1 NOT CLOSED",
+  "activeOrdinaryEarnings": ["SALARY", "BONUS"],
+  "minimumWageThresholdMonthlyNgn": "70000.00",
+  "packageHashFile": "ng-candidate-2026-5-stage1-package.sha256"
+}

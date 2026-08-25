@@ -6050,6 +6050,9 @@ model HrPayrollInputSnapshot {
   assignmentId        String
   sourceManifest      Json
   inputHash           String
+  minimumWageEvidence Json?
+  minimumWageDecisionHash String?
+  minimumWageClassification String?
   certificationStatus String
   blockerCount        Int      @default(0)
   warningCount        Int      @default(0)
@@ -6060,6 +6063,7 @@ model HrPayrollInputSnapshot {
   @@unique([payrollRunId, employeeId])
   @@unique([organizationId, correlationId])
   @@index([organizationId, payrollRunId, certificationStatus])
+  @@index([organizationId, minimumWageDecisionHash])
 }
 
 model HrPayrollCalculationAttempt {
@@ -6100,6 +6104,8 @@ model HrPayrollAuthoritativeResult {
   adjustments           Decimal   @db.Decimal(20, 4)
   netPay                Decimal   @db.Decimal(20, 4)
   outputHash            String
+  minimumWageDecisionHash String?
+  minimumWageClassification String?
   authoritativeAt       DateTime?
   finalizedAt           DateTime?
   supersedesResultId    String?
@@ -6110,6 +6116,7 @@ model HrPayrollAuthoritativeResult {
   @@unique([organizationId, correlationId])
   @@index([organizationId, payrollRunId, employeeId, authoritativeAt])
   @@index([organizationId, employeeId, createdAt])
+  @@index([organizationId, minimumWageDecisionHash])
 }
 
 model HrPayrollResultLine {
@@ -6274,6 +6281,7 @@ model HrPayrollPopulationPartition {
   heldCount                Int
   readyEmployeeIds         Json
   heldPopulation           Json
+  minimumWageDecisionHashes Json?
   partitionHash            String
   decision                 String?
   reason                   String?
