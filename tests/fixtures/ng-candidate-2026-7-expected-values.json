@@ -1,0 +1,5 @@
+{
+  "standard": { "monthlySalary": "70000.00", "periods": 12, "derivedAnnualSalary": "840000.00", "priorBonusYtd": "0.00", "currentBonus": "0.00", "totalBonus": "0.00", "priorEmployerIncome": "0.00", "eligibleDeductions": "0.00", "currentPaye": "0.00" },
+  "rejectedAnnualMismatch": { "monthlySalary": "70000.00", "derivedAnnualSalary": "840000.00", "callerAnnual1": "1200000.00", "callerAnnual2": "1200000.00", "error": "ANNUAL_SALARY_BINDING_MISMATCH" },
+  "bonus": { "derivedAnnualSalary": "3000000.00", "priorBonusYtd": "150000.00", "currentBonus": "250000.00", "totalBonus": "400000.00", "priorEmployerIncome": "500000.00", "eligibleDeductions": "100000.00", "annualTaxable": "3800000.00", "cumulativeTarget": "340000.00", "priorPaye": "210000.00", "currentPaye": "130000.00", "refundCandidate": "0.00", "rounding": "2dp" }
+}
