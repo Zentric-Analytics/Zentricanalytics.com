@@ -1,0 +1,60 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.7",
+  "status": "NOT_CERTIFIED",
+  "runtimeImplementationSha": "d9556924247461e9c8fcb4db0343d8b2bc8b28b1",
+  "tests": {
+    "focused": { "passed": 56, "failed": 0 },
+    "repository": { "filesPassed": 93, "passed": 1093, "failed": 0 },
+    "rolePermissionSecurity": { "passed": 12, "failed": 0 }
+  },
+  "quality": {
+    "typescript": "PASS",
+    "eslint": "PASS_ZERO_WARNINGS",
+    "prismaValidate": "PASS",
+    "productionBuild": "PASS",
+    "predecessorHashes": "PASS"
+  },
+  "database": {
+    "environment": "staging",
+    "name": "zentric_analytics_staging",
+    "migrationsApplied": 63,
+    "migrationsPending": 0,
+    "migrationsFailed": 0
+  },
+  "release": {
+    "yarnHrRelease": "PASS",
+    "health": { "status": "ok" },
+    "readiness": { "status": "ready", "database": "ok" }
+  },
+  "postgresqlConcurrency": {
+    "result": "PASS",
+    "duplicateBindingWinners": 1,
+    "authoritativeStaleResults": 0,
+    "mixedVersionResults": 0,
+    "latestReliefVersion": "PASS",
+    "pendingLatestFailsClosed": "PASS",
+    "samePeriodOffCycleYtd": "PASS",
+    "salaryAmbiguity": "PASS",
+    "staleBinding": "PASS",
+    "frozenBindingImmutable": "PASS",
+    "deterministicReplay": "PASS"
+  },
+  "authorization": {
+    "signedInGeneralAdminPayrollWorkspace": "403_NO_DATA_DISCLOSED",
+    "tenantIsolation": "PASS",
+    "idor": "PASS",
+    "makerChecker": "PASS",
+    "payrollEvidenceIsolation": "PASS",
+    "adminPayrollOrCompensationWildcard": false,
+    "hrAdminPayrollOrCompensationWildcard": false
+  },
+  "certificationBoundary": {
+    "officialFinalization": "REJECTED_NOT_CERTIFIED",
+    "stage2Started": false,
+    "productionDeployment": false,
+    "payrollActivation": false,
+    "realPayment": false,
+    "statutoryFiling": false,
+    "unit10Started": false
+  }
+}
