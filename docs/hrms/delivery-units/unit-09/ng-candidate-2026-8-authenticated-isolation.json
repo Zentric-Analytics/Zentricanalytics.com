@@ -1,0 +1,9 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.8",
+  "status": "NOT_CERTIFIED",
+  "runtimeSha": null,
+  "stagingService": "srv-d8s6ovvavr4c73fctksg",
+  "signedIn": true,
+  "result": "PENDING_EXACT_SHA_STAGING_DEPLOYMENT",
+  "requests": []
+}

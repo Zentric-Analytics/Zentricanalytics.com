@@ -4,8 +4,16 @@ import { appendHrAudit } from "@/lib/hr/audit";
 import { sealHrCredential } from "@/lib/hr/auth/crypto";
 import { payrollDigest, paymentInstructionKey } from "./unit9-domain";
 import { assertPaymentTransition, reconcileJournal, type PaymentState } from "./unit9-engine";
+import { assertOfficialPayrollCandidateCertified } from "./unit9-candidate-certification";
 
 type Actor = { organizationId: string; userId: string; role: string };
+
+async function assertRemittanceCandidateCertified(tx: Prisma.TransactionClient, organizationId: string, remittanceBatchId: string) {
+  const liabilityIds = (await tx.hrPayrollRemittanceLine.findMany({ where: { organizationId, remittanceBatchId }, select: { liabilityId: true } })).map((line) => line.liabilityId);
+  const runIds = [...new Set((await tx.hrPayrollStatutoryLiability.findMany({ where: { organizationId, id: { in: liabilityIds } }, select: { payrollRunId: true } })).map((liability) => liability.payrollRunId))];
+  if (!runIds.length) throw new Error("PAYROLL_CANDIDATE_VERSION_MISMATCH");
+  for (const runId of runIds) await assertOfficialPayrollCandidateCertified(tx, organizationId, runId);
+}
 
 export async function createPaymentDestinationVersion(db: PrismaClient, actor: Actor, input: { employeeId: string; bankName: string; accountName: string; accountNumber: string; currency: string; effectiveFrom: Date }) {
   if (!/^\d{6,34}$/.test(input.accountNumber)) throw new Error("Payment destination account number is invalid.");
@@ -37,6 +45,7 @@ export async function generateUnit9Payslips(db: PrismaClient, actor: Actor, runI
   return db.$transaction(async (tx) => {
     const run = await tx.hrPayrollAuthoritativeRun.findFirst({ where: { id: runId, organizationId: actor.organizationId, status: "FINALIZED" } });
     if (!run) throw new Error("Official payslips require finalized authoritative payroll.");
+    await assertOfficialPayrollCandidateCertified(tx, actor.organizationId, run.id);
     const results = await tx.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, authoritativeAt: { not: null }, finalizedAt: { not: null } }, orderBy: { employeeId: "asc" } });
     for (const result of results) {
       const contentHash = payrollDigest({ resultId: result.id, outputHash: result.outputHash, jurisdictionVersionId: run.jurisdictionVersionId, generationVersion: "unit9-payslip-1" });
@@ -53,6 +62,7 @@ export async function publishUnit9Payslip(db: PrismaClient, actor: Actor, paysli
     if (!payslip) throw new Error("Generated tenant payslip was not found.");
     const result = await tx.hrPayrollAuthoritativeResult.findFirst({ where: { id: payslip.payrollResultId, organizationId: actor.organizationId, finalizedAt: { not: null } } });
     if (!result) throw new Error("Payslip publication requires a finalized result.");
+    await assertOfficialPayrollCandidateCertified(tx, actor.organizationId, result.payrollRunId);
     const published = await tx.hrPayrollPayslipVersion.update({ where: { id: payslip.id }, data: { status: "PUBLISHED", publishedAt: new Date() } });
     await appendHrAudit(tx, { organizationId: actor.organizationId, actorUserId: actor.userId, actorRole: actor.role, entityType: "HrPayrollPayslipVersion", entityId: payslip.id, action: "unit9.payslip.published", newValues: { employeeId: payslip.employeeId, contentHash: payslip.contentHash }, correlationId: payslip.correlationId });
     return published;
@@ -66,6 +76,7 @@ export async function createCorrectedUnit9Payslip(db: PrismaClient, actor: Actor
       tx.hrPayrollPayslipVersion.findFirst({ where: { id: input.supersedesPayslipId, organizationId: actor.organizationId, status: "PUBLISHED" } }),
     ]);
     if (!result || !original || result.employeeId !== original.employeeId) throw new Error("Corrected payslip lineage is invalid or outside the tenant.");
+    await assertOfficialPayrollCandidateCertified(tx, actor.organizationId, result.payrollRunId);
     const version = original.version + 1;
     const contentHash = payrollDigest({ resultId: result.id, outputHash: result.outputHash, supersedesId: original.id, generationVersion: "unit9-payslip-1" });
     const corrected = await tx.hrPayrollPayslipVersion.create({ data: { organizationId: actor.organizationId, employeeId: result.employeeId, payrollResultId: result.id, version, artifactKey: `payroll/${actor.organizationId}/${result.employeeId}/${result.id}/v${version}-${contentHash}.pdf`, contentHash, supersedesId: original.id, correlationId: crypto.randomUUID() } });
@@ -79,6 +90,7 @@ export async function createUnit9PaymentBatch(db: PrismaClient, actor: Actor, ru
   return db.$transaction(async (tx) => {
     const run = await tx.hrPayrollAuthoritativeRun.findFirst({ where: { id: runId, organizationId: actor.organizationId, status: "FINALIZED" } });
     if (!run) throw new Error("Payment batches require finalized tenant payroll.");
+    await assertOfficialPayrollCandidateCertified(tx, actor.organizationId, run.id);
     const existing = await tx.hrPayrollPaymentBatch.findFirst({ where: { organizationId: actor.organizationId, payrollRunId: run.id, version: 1 } });
     if (existing) return { batch: existing, idempotent: true };
     const results = await tx.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, authoritativeAt: { not: null }, finalizedAt: { not: null } } });
@@ -105,6 +117,7 @@ export async function transitionUnit9PaymentBatch(db: PrismaClient, actor: Actor
   return db.$transaction(async (tx) => {
     const batch = await tx.hrPayrollPaymentBatch.findFirst({ where: { id: batchId, organizationId: actor.organizationId } });
     if (!batch) throw new Error("Payment batch is outside the tenant.");
+    if (!['REJECTED', 'RETURNED'].includes(input.to)) await assertOfficialPayrollCandidateCertified(tx, actor.organizationId, batch.payrollRunId);
     if (batch.status === input.to) return batch;
     if (input.to === "APPROVED" && batch.createdById === actor.userId) throw new Error("Payment maker/checker separation prohibits self-approval.");
     assertPaymentTransition(batch.status as PaymentState, input.to);
@@ -123,6 +136,7 @@ export async function generateUnit9FinancialOutputs(db: PrismaClient, actor: Act
   return db.$transaction(async (tx) => {
     const run = await tx.hrPayrollAuthoritativeRun.findFirst({ where: { id: runId, organizationId: actor.organizationId, status: "FINALIZED" } });
     if (!run) throw new Error("Accounting and statutory outputs require finalized tenant payroll.");
+    await assertOfficialPayrollCandidateCertified(tx, actor.organizationId, run.id);
     const existing = await tx.hrPayrollJournalBatch.findFirst({ where: { organizationId: actor.organizationId, payrollRunId: run.id, version: 1 } });
     if (existing) return { journalBatchId: existing.id, idempotent: true };
     const results = await tx.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, authoritativeAt: { not: null }, finalizedAt: { not: null } } });
@@ -149,9 +163,11 @@ export async function generateUnit9FinancialOutputs(db: PrismaClient, actor: Act
 export async function createUnit9RemittanceBatch(db: PrismaClient, actor: Actor, input: { jurisdictionVersionId: string; periodKey: string; category: string }) {
   return db.$transaction(async (tx) => {
     const existing = await tx.hrPayrollRemittanceBatch.findFirst({ where: { organizationId: actor.organizationId, jurisdictionVersionId: input.jurisdictionVersionId, periodKey: input.periodKey, category: input.category, version: 1 } });
-    if (existing) return { batch: existing, idempotent: true };
+    if (existing) { await assertRemittanceCandidateCertified(tx, actor.organizationId, existing.id); return { batch: existing, idempotent: true }; }
     const liabilities = await tx.hrPayrollStatutoryLiability.findMany({ where: { organizationId: actor.organizationId, jurisdictionVersionId: input.jurisdictionVersionId, periodKey: input.periodKey, category: input.category, status: "OPEN" } });
     if (!liabilities.length) throw new Error("No open statutory liabilities match the remittance scope.");
+    const sourceRunIds = [...new Set(liabilities.map((liability) => liability.payrollRunId))];
+    for (const sourceRunId of sourceRunIds) await assertOfficialPayrollCandidateCertified(tx, actor.organizationId, sourceRunId);
     const total = liabilities.reduce((sum, liability) => sum.plus(liability.amount), new Prisma.Decimal(0));
     const batch = await tx.hrPayrollRemittanceBatch.create({ data: { organizationId: actor.organizationId, jurisdictionVersionId: input.jurisdictionVersionId, periodKey: input.periodKey, category: input.category, version: 1, totalAmount: total, correlationId: crypto.randomUUID() } });
     await tx.hrPayrollRemittanceLine.createMany({ data: liabilities.map((liability) => ({ organizationId: actor.organizationId, remittanceBatchId: batch.id, liabilityId: liability.id, amount: liability.amount })) });
@@ -165,6 +181,7 @@ export async function acknowledgeUnit9RemittanceSimulation(db: PrismaClient, act
   return db.$transaction(async (tx) => {
     const batch = await tx.hrPayrollRemittanceBatch.findFirst({ where: { id: batchId, organizationId: actor.organizationId } });
     if (!batch) throw new Error("Remittance batch is outside the tenant.");
+    await assertRemittanceCandidateCertified(tx, actor.organizationId, batch.id);
     const externalReference = `TEST:${testReference}`;
     if (batch.status === "ACKNOWLEDGED") {
       if (batch.externalReference !== externalReference) throw new Error("Conflicting simulated acknowledgement reference was rejected.");
@@ -190,6 +207,7 @@ export async function createUnit9RemittanceAmendmentSimulation(db: PrismaClient,
   return db.$transaction(async (tx) => {
     const batch = await tx.hrPayrollRemittanceBatch.findFirst({ where: { id: batchId, organizationId: actor.organizationId, status: "ACKNOWLEDGED" } });
     if (!batch) throw new Error("Only an acknowledged tenant remittance simulation may be amended.");
+    await assertRemittanceCandidateCertified(tx, actor.organizationId, batch.id);
     const existing = await tx.hrPayrollStatutoryAmendment.findUnique({ where: { organizationId_idempotencyKey: { organizationId: actor.organizationId, idempotencyKey: input.idempotencyKey } } });
     if (existing) {
       if (existing.originalRemittanceBatchId !== batch.id || existing.contentHash !== contentHash) throw new Error("Statutory amendment idempotency key was reused with conflicting content.");
