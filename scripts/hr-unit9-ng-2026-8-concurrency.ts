@@ -3,6 +3,9 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { calculateFrozenPayroll2026_8, type Candidate2026_8Manifest } from "../src/lib/hr/payroll/unit9-engine-2026-8";
 import { NG_2026_8_MONTHLY_RULE, NG_2026_8_VERSION, type Ng2026_8Evidence } from "../src/lib/hr/payroll/nigeria-2026-8";
 import { assertUnit9CalculationBindingsTx, calculateUnit9Run, certifyUnit9Population, createUnit9Run, finalizeUnit9RunTx, freezeUnit9Inputs, freezeUnit9InputsTx, resolveNg2026_7AuthoritativeManifest as resolveNg2026_8AuthoritativeManifest } from "../src/lib/hr/payroll/unit9-service";
+import { deriveNg2026_7ReliefAggregate } from "../src/lib/hr/payroll/nigeria-2026-7";
+import { payrollDigest } from "../src/lib/hr/payroll/unit9-domain";
+import { acknowledgeUnit9RemittanceSimulation, createCorrectedUnit9Payslip, createUnit9PaymentBatch, createUnit9RemittanceAmendmentSimulation, createUnit9RemittanceBatch, generateUnit9FinancialOutputs, generateUnit9Payslips, publishUnit9Payslip, transitionUnit9PaymentBatch } from "../src/lib/hr/payroll/unit9-financial-service";
 
 const databaseUrl = new URL(process.env.DATABASE_URL ?? "postgresql://missing/missing");
 if (process.env.HR_UNIT9_NG_2026_8_CONCURRENCY_CONFIRM !== "staging-only" || databaseUrl.pathname.slice(1) !== "zentric_analytics_staging") throw new Error("REFUSE TO RUN: NG-CANDIDATE-2026.8 concurrency evidence requires explicit staging-only confirmation and the known staging database.");
@@ -13,6 +16,78 @@ const correlation = (suffix: string) => `${marker}:${suffix}:${crypto.randomUUID
 
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason?: unknown) => void; const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; }); return { promise, resolve, reject }; }
 function clientFor(label: string) { const url = new URL(process.env.DATABASE_URL!); url.searchParams.set("application_name", `${marker}:${label}`); return new PrismaClient({ datasourceUrl: url.toString() }); }
+const moneyEquals = (left: unknown, right: unknown) => new Prisma.Decimal(String(left)).equals(new Prisma.Decimal(String(right)));
+async function validatePersistedLineage(db: PrismaClient, snapshotId: string) {
+  const errors: string[] = [];
+  const snapshot = await db.hrPayrollInputSnapshot.findUnique({ where: { id: snapshotId } });
+  if (!snapshot) return { snapshotIdHash: digest(snapshotId), lineageValid: false, lineageErrors: ["SNAPSHOT_MISSING"] };
+  const manifest = snapshot.sourceManifest as unknown as Candidate2026_8Manifest;
+  const sources = manifest.authoritativeSources;
+  if (manifest.jurisdictionVersion !== NG_2026_8_VERSION) errors.push("CANDIDATE_VERSION_MISMATCH");
+
+  const salary = await db.hrSalaryRecord.findFirst({ where: { id: sources.salary.recordId, organizationId: snapshot.organizationId, employeeId: snapshot.employeeId } });
+  if (!salary) errors.push("SALARY_SOURCE_MISSING");
+  else {
+    const salaryHash = payrollDigest({ id: salary.id, amount: salary.amount.toFixed(2), currency: salary.currency, payFrequency: salary.payFrequency, effectiveFrom: salary.effectiveFrom.toISOString(), effectiveTo: salary.effectiveTo?.toISOString() ?? null, approvedAt: salary.approvedAt?.toISOString() ?? null });
+    if (!moneyEquals(salary.amount, sources.salary.monthlyAmount)) errors.push("SALARY_AMOUNT_MISMATCH");
+    if (salary.currency !== sources.salary.currency) errors.push("SALARY_CURRENCY_MISMATCH");
+    if (salary.payFrequency !== sources.salary.payFrequency) errors.push("SALARY_FREQUENCY_MISMATCH");
+    if (salary.effectiveFrom.toISOString() !== sources.salary.effectiveFrom || (salary.effectiveTo?.toISOString() ?? null) !== (sources.salary.effectiveTo ?? null)) errors.push("SALARY_EFFECTIVE_DATE_MISMATCH");
+    if (salaryHash !== sources.salary.versionHash) errors.push("SALARY_VERSION_HASH_MISMATCH");
+  }
+
+  const annualization = await db.hrPayrollAnnualizationRuleVersion.findFirst({ where: { id: sources.annualization.ruleId, organizationId: snapshot.organizationId } });
+  if (!annualization) errors.push("ANNUALIZATION_SOURCE_MISSING");
+  else {
+    if (annualization.jurisdictionVersion !== NG_2026_8_VERSION) errors.push("ANNUALIZATION_CANDIDATE_MISMATCH");
+    if (annualization.version !== sources.annualization.ruleVersion) errors.push("ANNUALIZATION_VERSION_MISMATCH");
+    if (annualization.frequency !== sources.annualization.frequency) errors.push("ANNUALIZATION_FREQUENCY_MISMATCH");
+    if (annualization.periodsInTaxYear !== sources.annualization.periodsInTaxYear) errors.push("ANNUALIZATION_PERIODS_MISMATCH");
+    if (annualization.method !== sources.annualization.method) errors.push("ANNUALIZATION_METHOD_MISMATCH");
+    if (annualization.taxYear !== sources.annualization.taxYear) errors.push("ANNUALIZATION_TAX_YEAR_MISMATCH");
+    if (annualization.certificationStatus !== sources.annualization.certificationStatus) errors.push("ANNUALIZATION_CERTIFICATION_MISMATCH");
+  }
+
+  const ytdEntries = await db.hrPayrollYtdLedgerEntry.findMany({ where: { id: { in: sources.ytd.entryIds } }, orderBy: [{ effectiveAt: "asc" }, { id: "asc" }] });
+  if (ytdEntries.length !== sources.ytd.entryIds.length) errors.push("YTD_ENTRY_MISSING");
+  const cutoff = new Date(sources.ytd.cutoff);
+  for (const entry of ytdEntries) if (entry.organizationId !== snapshot.organizationId || entry.employeeId !== snapshot.employeeId || entry.taxYear !== sources.annualization.taxYear || !["BONUS", "PAYE_DEDUCTED", "PAYE_REPAID"].includes(entry.accumulatorCode) || entry.effectiveAt >= cutoff) errors.push("YTD_ENTRY_SCOPE_MISMATCH");
+  const sumYtd = (code: string) => ytdEntries.filter((entry) => entry.accumulatorCode === code).reduce((total, entry) => total.plus(entry.amount), new Prisma.Decimal(0));
+  const ledgerHash = payrollDigest(ytdEntries.map((entry) => ({ id: entry.id, code: entry.accumulatorCode, amount: entry.amount.toFixed(4), effectiveAt: entry.effectiveAt.toISOString(), payrollResultId: entry.payrollResultId })));
+  if (!moneyEquals(sumYtd("BONUS"), sources.ytd.priorBonusYtd)) errors.push("YTD_BONUS_MISMATCH");
+  if (!moneyEquals(sumYtd("PAYE_DEDUCTED"), sources.ytd.payeDeducted)) errors.push("YTD_PAYE_DEDUCTED_MISMATCH");
+  if (!moneyEquals(sumYtd("PAYE_REPAID"), sources.ytd.payeRepaid)) errors.push("YTD_PAYE_REPAID_MISMATCH");
+  if (ledgerHash !== sources.ytd.sourceLedgerHash) errors.push("YTD_LEDGER_HASH_MISMATCH");
+
+  const reliefs = await db.hrPayrollTaxReliefClaimVersion.findMany({ where: { id: { in: sources.deductions.sourceRecordIds } }, orderBy: [{ claimType: "asc" }, { version: "desc" }] });
+  if (reliefs.length !== sources.deductions.sourceRecordIds.length) errors.push("RELIEF_SOURCE_MISSING");
+  const reliefTypes = new Set<string>();
+  for (const relief of reliefs) {
+    if (relief.organizationId !== snapshot.organizationId || relief.employeeId !== snapshot.employeeId || relief.taxYear !== sources.annualization.taxYear) errors.push("RELIEF_SCOPE_MISMATCH");
+    if (reliefTypes.has(relief.claimType)) errors.push("RELIEF_MULTIPLE_FROZEN_VERSIONS");
+    reliefTypes.add(relief.claimType);
+    if (!sources.deductions.sourceVersions.includes(`${relief.claimType}:v${relief.version}`)) errors.push("RELIEF_VERSION_MISMATCH");
+    if (!sources.deductions.evidenceReferences.includes(relief.evidenceReference)) errors.push("RELIEF_EVIDENCE_MISMATCH");
+  }
+  const reliefAggregate = deriveNg2026_7ReliefAggregate(reliefs);
+  if (!moneyEquals(reliefAggregate.amount, sources.deductions.amount)) errors.push("RELIEF_AMOUNT_MISMATCH");
+  if (reliefAggregate.aggregateHash !== sources.deductions.aggregateHash) errors.push("RELIEF_AGGREGATE_HASH_MISMATCH");
+  if (digest([...reliefAggregate.sourceRecordIds].sort()) !== digest([...sources.deductions.sourceRecordIds].sort())) errors.push("RELIEF_RECORD_SET_MISMATCH");
+
+  const priorSource = sources.priorEmployer;
+  if (priorSource.state === "NONE") {
+    if (priorSource.recordId || !moneyEquals(priorSource.income, 0) || !moneyEquals(priorSource.paye, 0) || !moneyEquals(priorSource.payeRepaid, 0)) errors.push("PRIOR_EMPLOYER_NONE_INCOHERENT");
+  } else {
+    const prior = priorSource.recordId ? await db.hrPayrollPriorEmployerYtdVersion.findFirst({ where: { id: priorSource.recordId, organizationId: snapshot.organizationId, employeeId: snapshot.employeeId } }) : null;
+    if (!prior) errors.push("PRIOR_EMPLOYER_SOURCE_MISSING");
+    else {
+      if (prior.version !== priorSource.recordVersion) errors.push("PRIOR_EMPLOYER_VERSION_MISMATCH");
+      if (!moneyEquals(prior.gross ?? 0, priorSource.income) || !moneyEquals(prior.payeDeducted ?? 0, priorSource.paye) || !moneyEquals(prior.payeRepaid ?? 0, priorSource.payeRepaid)) errors.push("PRIOR_EMPLOYER_AMOUNT_MISMATCH");
+      if (prior.evidenceReference !== priorSource.evidenceReference) errors.push("PRIOR_EMPLOYER_EVIDENCE_MISMATCH");
+    }
+  }
+  return { snapshotIdHash: digest(snapshot.id), lineageValid: errors.length === 0, lineageErrors: [...new Set(errors)].sort(), sourceHashes: { salary: digest(sources.salary), annualization: digest(sources.annualization), ytd: digest(sources.ytd), relief: digest(sources.deductions), priorEmployer: digest(sources.priorEmployer) } };
+}
 async function runCompletedBodyOverlap(label: string, bodyA: (tx: Prisma.TransactionClient) => Promise<string>, bodyB: (tx: Prisma.TransactionClient) => Promise<string>, rollbackB = false) {
   const a = clientFor(`${label}:A`), b = clientFor(`${label}:B`), observer = clientFor(`${label}:observer`);
   const bReady = deferred<{ pid: number; xid: string; outcome: string }>(), aReady = deferred<{ pid: number; xid: string; outcome: string }>(), releaseA = deferred<void>(), releaseB = deferred<void>();
@@ -144,9 +219,9 @@ async function runActualSourceRace(db: PrismaClient, kind: SourceRaceKind) {
     const persisted = await db.hrPayrollInputSnapshot.findFirstOrThrow({ where: { payrollRunId: raceRun.id, employeeId: employee.id } });
     const lineage = persisted.sourceManifest as unknown as Candidate2026_8Manifest;
     const sourceExcluded = kind === "salary" ? lineage.authoritativeSources.salary.recordId !== mutation.sourceId : kind === "ytd" ? !lineage.authoritativeSources.ytd.entryIds.includes(mutation.sourceId) : kind === "relief" ? !lineage.authoritativeSources.deductions.sourceRecordIds.includes(mutation.sourceId) : kind === "annualization" ? lineage.authoritativeSources.annualization.ruleId !== mutation.sourceId : lineage.authoritativeSources.priorEmployer.recordId !== mutation.sourceId;
-    const mixedVersionSnapshotCount = await db.hrPayrollInputSnapshot.count({ where: { id: persisted.id, sourceManifest: { path: ["jurisdictionVersion"], not: NG_2026_8_VERSION } } });
-    assert(sourceExcluded && mixedVersionSnapshotCount === 0, `${kind}: persisted pre-mutation lineage was not coherent.`);
-    return { raceName: `${kind}-mutation-vs-freeze`, mutationKind: kind, clientA: { backendPidHash: digest(frozen.pid), transactionIdHash: digest(frozen.txid), transactionStartedAt: frozen.startedAt }, clientB: { backendPidHash: digest(mutation.pid), transactionIdHash: digest(mutation.txid), transactionStartedAt: mutation.startedAt }, mutationExecutedAt: mutation.executedAt, freezeBodyExecutedAt: frozen.executedAt, overlapObservedAt, overlapObserved, transactionAOutcome, transactionBOutcome, persistedSnapshotIdHash: digest(persisted.id), persistedSourceLineageHash: digest(lineage.authoritativeSources), mixedVersionSnapshotCount, result: "PASS" };
+    const persistedLineage = await validatePersistedLineage(db, persisted.id);
+    assert(sourceExcluded && persistedLineage.lineageValid, `${kind}: persisted pre-mutation lineage was not coherent: ${persistedLineage.lineageErrors.join(",")}.`);
+    return { raceName: `${kind}-mutation-vs-freeze`, mutationKind: kind, clientA: { backendPidHash: digest(frozen.pid), transactionIdHash: digest(frozen.txid), transactionStartedAt: frozen.startedAt }, clientB: { backendPidHash: digest(mutation.pid), transactionIdHash: digest(mutation.txid), transactionStartedAt: mutation.startedAt }, mutationExecutedAt: mutation.executedAt, freezeBodyExecutedAt: frozen.executedAt, overlapObservedAt, overlapObserved, transactionAOutcome, transactionBOutcome, persistedSnapshotIdHash: digest(persisted.id), persistedSourceLineageHash: digest(lineage.authoritativeSources), sourceExcluded, persistedLineage, result: "PASS" };
   } finally { releaseA.resolve(); releaseB.resolve(); await Promise.all([clientA.$disconnect(), clientB.$disconnect(), observer.$disconnect()]); }
 }
 
@@ -256,11 +331,7 @@ async function main() {
     try { await freeze("relief-pending", reliefSuppliedManifest); } catch (error) { pendingFailedClosed = String(error).includes("ELIGIBLE_DEDUCTION_SOURCE_REQUIRED"); }
     assert(pendingFailedClosed, "Pending newest relief fell back to an older version.");
 
-    const duplicateRun = await newRun("duplicate-binding");
-    const snapshotData = { organizationId: sourceSnapshot.organizationId, payrollRunId: duplicateRun.id, employeeId: sourceSnapshot.employeeId, personId: sourceSnapshot.personId, workRelationshipId: sourceSnapshot.workRelationshipId, assignmentId: sourceSnapshot.assignmentId, sourceManifest: sourceSnapshot.sourceManifest as Prisma.InputJsonValue, inputHash: sourceSnapshot.inputHash, minimumWageEvidence: sourceSnapshot.minimumWageEvidence ?? undefined, minimumWageDecisionHash: sourceSnapshot.minimumWageDecisionHash, minimumWageClassification: sourceSnapshot.minimumWageClassification, employmentIncomeBinding: sourceSnapshot.employmentIncomeBinding ?? undefined, employmentIncomeBindingHash: sourceSnapshot.employmentIncomeBindingHash, certificationStatus: "CERTIFIED", frozenAt: new Date(), correlationId: `${marker}:duplicate` };
-    const duplicateRace = await Promise.allSettled([0, 1].map(() => db.hrPayrollInputSnapshot.create({ data: snapshotData })));
-    const duplicateBindingWinners = duplicateRace.filter((result) => result.status === "fulfilled").length;
-    assert(duplicateBindingWinners === 1, "Duplicate binding persistence did not produce exactly one winner.");
+    const snapshotData = { organizationId: sourceSnapshot.organizationId, employeeId: sourceSnapshot.employeeId, personId: sourceSnapshot.personId, workRelationshipId: sourceSnapshot.workRelationshipId, assignmentId: sourceSnapshot.assignmentId, sourceManifest: sourceSnapshot.sourceManifest as Prisma.InputJsonValue, inputHash: sourceSnapshot.inputHash, minimumWageEvidence: sourceSnapshot.minimumWageEvidence ?? undefined, minimumWageDecisionHash: sourceSnapshot.minimumWageDecisionHash, minimumWageClassification: sourceSnapshot.minimumWageClassification, employmentIncomeBinding: sourceSnapshot.employmentIncomeBinding ?? undefined, employmentIncomeBindingHash: sourceSnapshot.employmentIncomeBindingHash, certificationStatus: "CERTIFIED", frozenAt: new Date() };
     const actualDuplicateRun = await newRun("actual-duplicate-binding");
     const actualDuplicateData = { ...snapshotData, payrollRunId: actualDuplicateRun.id, correlationId: `${marker}:actual-duplicate` };
     const duplicateA = clientFor("actual-duplicate:A"), duplicateB = clientFor("actual-duplicate:B"), duplicateObserver = clientFor("actual-duplicate:observer");
@@ -298,31 +369,94 @@ async function main() {
     const candidateAfterRace = await db.hrPayrollJurisdictionVersion.findUniqueOrThrow({ where: { id: sourceRun.jurisdictionVersionId } });
     assert((candidateAfterRace.ruleManifest as { certification?: string }).certification === "NOT_CERTIFIED" && candidateAfterRace.status === "TESTING", "Actual staging candidate certification state changed.");
 
+    const [finalizedRunRows, finalizedResultRows, periodResultRows, finalizationAuditRows] = await Promise.all([
+      db.hrPayrollAuthoritativeRun.count({ where: { id: finalizationRun.id, status: "FINALIZED" } }),
+      db.hrPayrollAuthoritativeResult.count({ where: { payrollRunId: finalizationRun.id, finalizedAt: { not: null } } }),
+      db.$queryRaw<Array<{ count: number }>>`SELECT COUNT(*)::int AS count FROM "HrPayrollYtdLedgerEntry" ytd JOIN "HrPayrollAuthoritativeResult" result ON result.id = ytd."payrollResultId" WHERE result."payrollRunId" = ${finalizationRun.id} AND ytd."entryType" = 'PERIOD_RESULT'`,
+      db.hrAuditEvent.count({ where: { organizationId: sourceRun.organizationId, entityType: "HrPayrollAuthoritativeRun", entityId: finalizationRun.id, action: "unit9.payroll_run.finalized" } }),
+    ]);
+    const finalizationMutationCounts = { finalizedRunCount: finalizedRunRows, finalizedResultCount: finalizedResultRows, periodResultYtdEntryCount: periodResultRows[0]?.count ?? -1, finalizationAuditEventCount: finalizationAuditRows };
+    const blockedFinalizationMutationCount = Object.values(finalizationMutationCounts).reduce((total, count) => total + count, 0);
+    assert(blockedFinalizationMutationCount === 0, `Finalization rejection mutated official state: ${JSON.stringify(finalizationMutationCounts)}.`);
+
+    const officialRun = await newRun("official-output-backstop");
+    await db.hrPayrollAuthoritativeRun.update({ where: { id: officialRun.id }, data: { status: "FINALIZED", finalizedAt: new Date(), finalizedById: actors[0].id } });
+    const officialSnapshot = await db.hrPayrollInputSnapshot.create({ data: { ...snapshotData, payrollRunId: officialRun.id, correlationId: `${marker}:official-output:snapshot` } });
+    const createAttempt = (attemptNumber: number) => db.hrPayrollCalculationAttempt.create({ data: { organizationId: sourceRun.organizationId, payrollRunId: officialRun.id, attemptNumber, inputSetHash: digest({ marker, attemptNumber, kind: "input" }), ruleSetHash: digest({ marker, attemptNumber, kind: "rules" }), engineVersion: "unit9-ng-2026.8", outputHash: digest({ marker, attemptNumber, kind: "output" }), manifest: { marker, syntheticHistoricalBackstop: true }, status: "COMPLETED", completedAt: new Date(), correlationId: correlation(`official-attempt-${attemptNumber}`) } });
+    const attemptOne = await createAttempt(1);
+    const createResult = (attemptId: string, suffix: string) => db.hrPayrollAuthoritativeResult.create({ data: { organizationId: sourceRun.organizationId, payrollRunId: officialRun.id, calculationAttemptId: attemptId, inputSnapshotId: officialSnapshot.id, employeeId: employee.id, currency: "NGN", grossEarnings: new Prisma.Decimal("70000"), taxableIncome: new Prisma.Decimal("70000"), paye: new Prisma.Decimal(0), employeeDeductions: new Prisma.Decimal(0), employerContributions: new Prisma.Decimal(0), adjustments: new Prisma.Decimal(0), netPay: new Prisma.Decimal("70000"), outputHash: digest({ marker, suffix }), minimumWageDecisionHash: officialSnapshot.minimumWageDecisionHash, minimumWageClassification: officialSnapshot.minimumWageClassification, employmentIncomeBindingHash: officialSnapshot.employmentIncomeBindingHash, authoritativeAt: new Date(), finalizedAt: new Date(), correlationId: correlation(`official-result-${suffix}`) } });
+    const officialResultOne = await createResult(attemptOne.id, "one");
+    const publishedPayslip = await db.hrPayrollPayslipVersion.create({ data: { organizationId: sourceRun.organizationId, employeeId: employee.id, payrollResultId: officialResultOne.id, version: 1, artifactKey: `${marker}/published.pdf`, contentHash: digest({ marker, payslip: "published" }), status: "PUBLISHED", publishedAt: new Date(), correlationId: correlation("official-payslip-published") } });
+    const generatedPayslip = await db.hrPayrollPayslipVersion.create({ data: { organizationId: sourceRun.organizationId, employeeId: employee.id, payrollResultId: officialResultOne.id, version: 2, artifactKey: `${marker}/generated.pdf`, contentHash: digest({ marker, payslip: "generated" }), status: "GENERATED", supersedesId: publishedPayslip.id, correlationId: correlation("official-payslip-generated") } });
+    const paymentBatch = await db.hrPayrollPaymentBatch.create({ data: { organizationId: sourceRun.organizationId, payrollRunId: officialRun.id, version: 1, status: "VALIDATED", currency: "NGN", instructionCount: 0, totalAmount: new Prisma.Decimal(0), createdById: actors[0].id, correlationId: correlation("official-payment-batch") } });
+    const liabilities = await Promise.all(["PAYE-NEW", "PAYE-ACK", "PAYE-AMEND"].map((category) => db.hrPayrollStatutoryLiability.create({ data: { organizationId: sourceRun.organizationId, payrollRunId: officialRun.id, payrollResultId: officialResultOne.id, jurisdictionVersionId: officialRun.jurisdictionVersionId, category, periodKey: `${marker}:official-period`, amount: new Prisma.Decimal("1"), ruleVersion: "synthetic-backstop", correlationId: correlation(`official-liability-${category}`) } })));
+    const createRemittanceFixture = async (suffix: string, category: string, status: "DRAFT" | "ACKNOWLEDGED") => {
+      const batch = await db.hrPayrollRemittanceBatch.create({ data: { organizationId: sourceRun.organizationId, jurisdictionVersionId: officialRun.jurisdictionVersionId, periodKey: `${marker}:official-period`, category, version: 1, status, totalAmount: new Prisma.Decimal("1"), externalReference: status === "ACKNOWLEDGED" ? `TEST:${marker}` : null, acknowledgedAt: status === "ACKNOWLEDGED" ? new Date() : null, correlationId: correlation(`official-remittance-${suffix}`) } });
+      await db.hrPayrollRemittanceLine.create({ data: { organizationId: sourceRun.organizationId, remittanceBatchId: batch.id, liabilityId: liabilities[category === "PAYE-ACK" ? 1 : 2].id, amount: new Prisma.Decimal("1") } });
+      return batch;
+    };
+    const acknowledgementBatch = await createRemittanceFixture("ack", "PAYE-ACK", "DRAFT");
+    const amendmentBatch = await createRemittanceFixture("amend", "PAYE-AMEND", "ACKNOWLEDGED");
+    const officialCountQuery = async () => {
+      const rows = await db.$queryRaw<Array<Record<string, number>>>`
+        SELECT
+          (SELECT COUNT(*)::int FROM "HrPayrollPayslipVersion" p JOIN "HrPayrollAuthoritativeResult" r ON r.id=p."payrollResultId" WHERE r."payrollRunId"=${officialRun.id}) AS "payslipVersions",
+          (SELECT COUNT(*)::int FROM "HrPayrollPayslipVersion" p JOIN "HrPayrollAuthoritativeResult" r ON r.id=p."payrollResultId" WHERE r."payrollRunId"=${officialRun.id} AND p.status='PUBLISHED') AS "publishedPayslips",
+          (SELECT COUNT(*)::int FROM "HrPayrollPaymentBatch" WHERE "payrollRunId"=${officialRun.id}) AS "paymentBatches",
+          (SELECT COUNT(*)::int FROM "HrPayrollPaymentInstruction" i JOIN "HrPayrollAuthoritativeResult" r ON r.id=i."payrollResultId" WHERE r."payrollRunId"=${officialRun.id}) AS "paymentInstructions",
+          (SELECT COUNT(*)::int FROM "HrPayrollPaymentBatch" WHERE "payrollRunId"=${officialRun.id} AND status='APPROVED') AS "paymentApproved",
+          (SELECT COUNT(*)::int FROM "HrPayrollPaymentBatch" WHERE "payrollRunId"=${officialRun.id} AND status='EXPORTED') AS "paymentExported",
+          (SELECT COUNT(*)::int FROM "HrPayrollPaymentBatch" WHERE "payrollRunId"=${officialRun.id} AND status='SUBMITTED') AS "paymentSubmitted",
+          (SELECT COUNT(*)::int FROM "HrPayrollPaymentBatch" WHERE "payrollRunId"=${officialRun.id} AND status='ACKNOWLEDGED') AS "paymentAcknowledged",
+          (SELECT COUNT(*)::int FROM "HrPayrollPaymentBatch" WHERE "payrollRunId"=${officialRun.id} AND status='SETTLED') AS "paymentSettled",
+          (SELECT COUNT(*)::int FROM "HrPayrollJournalBatch" WHERE "payrollRunId"=${officialRun.id}) AS "journalBatches",
+          (SELECT COUNT(*)::int FROM "HrPayrollJournalLine" l JOIN "HrPayrollJournalBatch" b ON b.id=l."journalBatchId" WHERE b."payrollRunId"=${officialRun.id}) AS "journalLines",
+          (SELECT COUNT(*)::int FROM "HrPayrollStatutoryLiability" WHERE "payrollRunId"=${officialRun.id}) AS "statutoryLiabilities",
+          (SELECT COUNT(DISTINCT b.id)::int FROM "HrPayrollRemittanceBatch" b JOIN "HrPayrollRemittanceLine" l ON l."remittanceBatchId"=b.id JOIN "HrPayrollStatutoryLiability" s ON s.id=l."liabilityId" WHERE s."payrollRunId"=${officialRun.id}) AS "remittanceBatches",
+          (SELECT COUNT(*)::int FROM "HrPayrollRemittanceLine" l JOIN "HrPayrollStatutoryLiability" s ON s.id=l."liabilityId" WHERE s."payrollRunId"=${officialRun.id}) AS "remittanceLines",
+          (SELECT COUNT(*)::int FROM "HrPayrollStatutoryAmendment" a JOIN "HrPayrollRemittanceBatch" b ON b.id=a."originalRemittanceBatchId" JOIN "HrPayrollRemittanceLine" l ON l."remittanceBatchId"=b.id JOIN "HrPayrollStatutoryLiability" s ON s.id=l."liabilityId" WHERE s."payrollRunId"=${officialRun.id}) AS "statutoryAmendments"`;
+      return rows[0] ?? {};
+    };
+    const officialOutputBaseline = await officialCountQuery();
+    const blockedEntrypoints: Record<string, string> = {};
+    const expectBlocked = async (name: string, action: () => Promise<unknown>) => { try { await action(); blockedEntrypoints[name] = "UNEXPECTED_SUCCESS"; } catch (error) { const outcome = String(error).includes("PAYROLL_CANDIDATE_NOT_CERTIFIED") ? "PAYROLL_CANDIDATE_NOT_CERTIFIED" : `WRONG_FAILURE:${error instanceof Error ? error.message : String(error)}`; blockedEntrypoints[name] = outcome; assert(outcome === "PAYROLL_CANDIDATE_NOT_CERTIFIED", `${name} failed for the wrong reason.`); } };
+    await expectBlocked("generateUnit9Payslips", () => generateUnit9Payslips(db, maker, officialRun.id));
+    await expectBlocked("publishUnit9Payslip", () => publishUnit9Payslip(db, maker, generatedPayslip.id));
+    await expectBlocked("createCorrectedUnit9Payslip", () => createCorrectedUnit9Payslip(db, maker, { correctedResultId: officialResultOne.id, supersedesPayslipId: publishedPayslip.id }));
+    await expectBlocked("createUnit9PaymentBatch", () => createUnit9PaymentBatch(db, maker, officialRun.id));
+    await expectBlocked("transitionUnit9PaymentBatch", () => transitionUnit9PaymentBatch(db, { ...maker, userId: actors[1].id }, paymentBatch.id, { to: "APPROVED", reason: "2026.8 backstop" }));
+    await expectBlocked("generateUnit9FinancialOutputs", () => generateUnit9FinancialOutputs(db, maker, officialRun.id, { periodKey: `${marker}:official-period` }));
+    await expectBlocked("createUnit9RemittanceBatch", () => createUnit9RemittanceBatch(db, maker, { jurisdictionVersionId: officialRun.jurisdictionVersionId, periodKey: `${marker}:official-period`, category: "PAYE-NEW" }));
+    await expectBlocked("acknowledgeUnit9RemittanceSimulation", () => acknowledgeUnit9RemittanceSimulation(db, maker, acknowledgementBatch.id, marker));
+    await expectBlocked("createUnit9RemittanceAmendmentSimulation", () => createUnit9RemittanceAmendmentSimulation(db, maker, amendmentBatch.id, { idempotencyKey: `${marker}:amendment`, reason: "2026.8 backstop", deltaManifest: { simulationOnly: true } }));
+    const officialOutputAfter = await officialCountQuery();
+    const officialOutputMutationCounts = Object.fromEntries(Object.keys(officialOutputAfter).map((key) => [key, (officialOutputAfter[key] ?? -1) - (officialOutputBaseline[key] ?? -1)]));
+    const blockedOfficialOutputMutationCount = Object.values(officialOutputMutationCounts).reduce((total, count) => total + Math.abs(count), 0);
+    assert(Object.values(blockedEntrypoints).every((outcome) => outcome === "PAYROLL_CANDIDATE_NOT_CERTIFIED") && blockedOfficialOutputMutationCount === 0, "Downstream certification backstop did not remain mutation-free.");
+
     const replayOne = calculateFrozenPayroll2026_8(approvedSalaryManifest, salaryFrozen.inputHash);
     const replayTwo = calculateFrozenPayroll2026_8(approvedSalaryManifest, salaryFrozen.inputHash);
     const deterministicReplay = replayOne.hash === replayTwo.hash && replayOne.employmentIncomeBinding.employmentIncomeBindingHash === replayTwo.employmentIncomeBinding.employmentIncomeBindingHash && replayOne.minimumWageDecision.decisionHash === replayTwo.minimumWageDecision.decisionHash && salaryReplayHash === replayTwo.hash;
     assert(deterministicReplay, "Frozen authoritative replay was not deterministic.");
     const overlapEvidence = [duplicateOperationOverlap, staleOperationOverlap, finalizationOperationOverlap];
-    const [duplicateBindingRows, staleResultRows, mixedSnapshotRows, mixedResultRows, blockedFinalizationRows, blockedOfficialOutputRows] = await Promise.all([
+    const [duplicateBindingRows, staleResultRows, markerSnapshotRows, markerResultRows] = await Promise.all([
       db.hrPayrollInputSnapshot.count({ where: { payrollRunId: actualDuplicateRun.id, employeeId: employee.id } }),
       db.hrPayrollAuthoritativeResult.count({ where: { payrollRunId: staleRun.id } }),
-      db.$queryRaw<Array<{ count: number }>>`SELECT COUNT(*)::int AS count FROM "HrPayrollInputSnapshot" snapshot JOIN "HrPayrollAuthoritativeRun" run ON run.id = snapshot."payrollRunId" WHERE run."idempotencyKey" LIKE ${`${marker}%`} AND snapshot."sourceManifest"->>'jurisdictionVersion' <> ${NG_2026_8_VERSION}`,
-      db.$queryRaw<Array<{ count: number }>>`SELECT COUNT(*)::int AS count FROM "HrPayrollAuthoritativeResult" result JOIN "HrPayrollAuthoritativeRun" run ON run.id = result."payrollRunId" JOIN "HrPayrollInputSnapshot" snapshot ON snapshot.id = result."inputSnapshotId" WHERE run."idempotencyKey" LIKE ${`${marker}%`} AND snapshot."sourceManifest"->>'jurisdictionVersion' <> ${NG_2026_8_VERSION}`,
-      db.$queryRaw<Array<{ count: number }>>`SELECT COUNT(*)::int AS count FROM "HrPayrollAuthoritativeRun" WHERE "idempotencyKey" LIKE ${`${marker}%`} AND status = 'FINALIZED'`,
-      db.$queryRaw<Array<{ count: number }>>`SELECT (SELECT COUNT(*) FROM "HrPayrollPayslipVersion" payslip JOIN "HrPayrollAuthoritativeResult" result ON result.id = payslip."payrollResultId" JOIN "HrPayrollAuthoritativeRun" run ON run.id = result."payrollRunId" WHERE run."idempotencyKey" LIKE ${`${marker}%`})::int + (SELECT COUNT(*) FROM "HrPayrollPaymentBatch" batch JOIN "HrPayrollAuthoritativeRun" run ON run.id = batch."payrollRunId" WHERE run."idempotencyKey" LIKE ${`${marker}%`})::int AS count`,
+      db.$queryRaw<Array<{ id: string }>>`SELECT snapshot.id FROM "HrPayrollInputSnapshot" snapshot JOIN "HrPayrollAuthoritativeRun" run ON run.id = snapshot."payrollRunId" WHERE run."idempotencyKey" LIKE ${`${marker}%`} ORDER BY snapshot.id`,
+      db.$queryRaw<Array<{ input_snapshot_id: string }>>`SELECT result."inputSnapshotId" AS input_snapshot_id FROM "HrPayrollAuthoritativeResult" result JOIN "HrPayrollAuthoritativeRun" run ON run.id = result."payrollRunId" WHERE run."idempotencyKey" LIKE ${`${marker}%`} ORDER BY result.id`,
     ]);
     const duplicateBindingRowCount = duplicateBindingRows;
     const authoritativeStaleResultCount = staleResultRows;
-    const mixedVersionSnapshotCount = mixedSnapshotRows[0]?.count ?? -1;
-    const mixedVersionAuthoritativeResultCount = mixedResultRows[0]?.count ?? -1;
-    const blockedFinalizationMutationCount = blockedFinalizationRows[0]?.count ?? -1;
-    const blockedOfficialOutputCount = blockedOfficialOutputRows[0]?.count ?? -1;
-    assert(duplicateBindingRowCount === 1 && authoritativeStaleResultCount === 0 && mixedVersionSnapshotCount === 0 && mixedVersionAuthoritativeResultCount === 0 && blockedFinalizationMutationCount === 0 && blockedOfficialOutputCount === 0, "Database-derived concurrency invariants failed.");
+    const persistedSnapshotLineage = await Promise.all(markerSnapshotRows.map((row) => validatePersistedLineage(db, row.id)));
+    const persistedResultLineage = await Promise.all(markerResultRows.map((row) => validatePersistedLineage(db, row.input_snapshot_id)));
+    const mixedVersionSnapshotCount = persistedSnapshotLineage.filter((row) => !row.lineageValid).length;
+    const mixedVersionAuthoritativeResultCount = persistedResultLineage.filter((row) => !row.lineageValid).length;
+    assert(duplicateBindingRowCount === 1 && authoritativeStaleResultCount === 0 && mixedVersionSnapshotCount === 0 && mixedVersionAuthoritativeResultCount === 0 && blockedFinalizationMutationCount === 0 && blockedOfficialOutputMutationCount === 0, "Database-derived concurrency invariants failed.");
     const actualOperationOverlapRaceCount = actualSourceRaces.length + overlapEvidence.length;
     const actualOperationOverlapProvenCount = [...actualSourceRaces, ...overlapEvidence].filter((race) => race.overlapObserved && race.result === "PASS").length;
     const adjacentProbeOnlyRaceCount = 0;
     assert(actualOperationOverlapRaceCount === 8 && actualOperationOverlapProvenCount === 8 && adjacentProbeOnlyRaceCount === 0, "Actual-operation overlap summary failed.");
-    const evidence = { candidateVersion: "NG-CANDIDATE-2026.8", databaseEnvironment: "staging", marker, sourceSnapshotId: sourceSnapshot.id, actualSourceRaces, overlapEvidence, requiredRaceCount: 8, actualOperationOverlapRaceCount, actualOperationOverlapProvenCount, adjacentProbeOnlyRaceCount, duplicateBindingRowCount, authoritativeStaleResultCount, mixedVersionSnapshotCount, mixedVersionAuthoritativeResultCount, blockedFinalizationMutationCount, blockedOfficialOutputCount, staleBindingRejected, immutableFrozenBinding: (await db.hrPayrollInputSnapshot.findUniqueOrThrow({ where: { id: salaryFrozen.id } })).inputHash === salaryFrozen.inputHash, deterministicReplay, result: "PASS" };
+    const evidence = { candidateVersion: "NG-CANDIDATE-2026.8", databaseEnvironment: "staging", marker, sourceSnapshotId: sourceSnapshot.id, actualSourceRaces, overlapEvidence, requiredRaceCount: 8, actualOperationOverlapRaceCount, actualOperationOverlapProvenCount, adjacentProbeOnlyRaceCount, duplicateBindingRowCount, authoritativeStaleResultCount, persistedSnapshotLineage, persistedResultLineage, mixedVersionSnapshotCount, mixedVersionAuthoritativeResultCount, finalizationMutationCounts, blockedFinalizationMutationCount, blockedEntrypoints, officialOutputBaseline, officialOutputAfter, officialOutputMutationCounts, blockedOfficialOutputMutationCount, neutralizingPaymentTransitions: { tested: false, prohibitedOutputCountImpact: 0 }, staleBindingRejected, immutableFrozenBinding: (await db.hrPayrollInputSnapshot.findUniqueOrThrow({ where: { id: salaryFrozen.id } })).inputHash === salaryFrozen.inputHash, deterministicReplay, result: "PASS" };
     await db.hrAuditEvent.create({ data: { organizationId: sourceRun.organizationId, actorUserId: maker.userId, actorRole: maker.role, entityType: "Ng2026_8ConcurrencyEvidence", entityId: sourceSnapshot.id, action: "unit9.ng_2026_8.concurrency.validated", newValues: evidence, correlationId: marker } });
     console.log(JSON.stringify(evidence));
   } finally {

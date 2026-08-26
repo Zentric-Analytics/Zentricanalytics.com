@@ -8,9 +8,9 @@ const items = [
   ["Runtime SHA", head],
   ["Service", service],
   ["Certification boundary", "Persisted manifest + snapshot lineage; finalization and official outputs fail closed"],
-  ["Concurrency", "Genuine-overlap PostgreSQL evidence pending first checkpoint"],
+  ["Genuine PostgreSQL concurrency", "Implementation-review evidence PASS; dev merge and staging application deployment pending"],
   ["Signed-in isolation", "Pending exact-SHA staging deployment"],
-  ["Next gate", "Implementation and genuine PostgreSQL checkpoint review"],
+  ["Next gate", "Independent implementation re-review before dev merge or exact-SHA staging deployment"],
 ] as const;
 
 export default function Unit9Candidate20268StatusPage() {
