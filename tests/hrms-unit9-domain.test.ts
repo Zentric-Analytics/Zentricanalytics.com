@@ -130,7 +130,8 @@ describe("Unit 9 payroll domain", () => {
       expect(bootstrap).toContain(`"${role}"`);
       expect(bootstrap).toContain(`${role}: [`);
     }
-    expect(bootstrap).toContain("existingRole ?? await tx.hrRole.create");
+    expect(bootstrap).toContain("hrRole.createMany");
+    expect(bootstrap).toContain("hrRolePermission.createMany");
     expect(bootstrap).toContain('!key.startsWith("compensation.") && !key.startsWith("payroll.")');
   });
 });

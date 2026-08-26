@@ -45,52 +45,83 @@ export const permissionKeysByRole = {
 };
 
 export async function reconcileHrRolePermissions(prisma, report = () => undefined) {
+  const startedAt = Date.now();
   const organizations = await prisma.hrOrganization.findMany({ select: { id: true } });
+  const organizationDurationsMs = [];
   let removed = 0;
   let rolesCreated = 0;
   for (const { id: organizationId } of organizations) {
+    const organizationStartedAt = Date.now();
     await prisma.$transaction(async (tx) => {
-      for (const [roleKey, allowedKeys] of Object.entries(permissionKeysByRole)) {
-        const existingRole = await tx.hrRole.findUnique({ where: { organizationId_key: { organizationId, key: roleKey } } });
-        const role = existingRole ?? await tx.hrRole.create({ data: { organizationId, key: roleKey, name: roleKey.replaceAll("_", " ") } });
-        if (!existingRole) rolesCreated += 1;
-        const allowedPermissionIds = [];
-        for (const key of allowedKeys) {
-          const permission = await tx.hrPermission.upsert({
-            where: { organizationId_key: { organizationId, key } },
-            update: {},
-            create: { organizationId, key },
-          });
-          allowedPermissionIds.push(permission.id);
-          await tx.hrRolePermission.upsert({
-            where: { roleId_permissionId: { roleId: role.id, permissionId: permission.id } },
-            update: {},
-            create: { roleId: role.id, permissionId: permission.id },
-          });
-        }
-        const stale = await tx.hrRolePermission.findMany({
-          where: { roleId: role.id, permissionId: { notIn: allowedPermissionIds } },
-          include: { permission: { select: { key: true } } },
-        });
-        if (!stale.length) continue;
-        await tx.hrRolePermission.deleteMany({ where: { id: { in: stale.map(({ id }) => id) } } });
-        removed += stale.length;
-        await tx.hrAuditEvent.create({ data: {
-          organizationId,
-          actorRole: "SYSTEM",
-          entityType: "HrRole",
-          entityId: role.id,
-          action: "hr.role.permissions.reconciled",
-          previousValues: { removedPermissionKeys: stale.map(({ permission }) => permission.key) },
-          newValues: { allowedPermissionKeys: allowedKeys },
-          reason: "Canonical built-in role permission reconciliation during guarded release.",
-          correlationId: `role-permissions:${role.id}:${Date.now()}`,
-        } });
+      const createdRoles = await tx.hrRole.createMany({
+        data: HR_ROLE_KEYS.map((key) => ({ organizationId, key, name: key.replaceAll("_", " ") })),
+        skipDuplicates: true,
+      });
+      rolesCreated += createdRoles.count;
+      await tx.hrPermission.createMany({
+        data: HR_PERMISSION_KEYS.map((key) => ({ organizationId, key })),
+        skipDuplicates: true,
+      });
+
+      const [roles, permissions] = await Promise.all([
+        tx.hrRole.findMany({ where: { organizationId, key: { in: HR_ROLE_KEYS } }, select: { id: true, key: true } }),
+        tx.hrPermission.findMany({ where: { organizationId, key: { in: HR_PERMISSION_KEYS } }, select: { id: true, key: true } }),
+      ]);
+      const roleByKey = new Map(roles.map((role) => [role.key, role]));
+      const permissionByKey = new Map(permissions.map((permission) => [permission.key, permission]));
+      const missingRoles = HR_ROLE_KEYS.filter((key) => !roleByKey.has(key));
+      const missingPermissions = HR_PERMISSION_KEYS.filter((key) => !permissionByKey.has(key));
+      if (missingRoles.length || missingPermissions.length) {
+        throw new Error(`Canonical role-permission reconciliation failed closed: missingRoles=${missingRoles.join(",") || "none"}; missingPermissions=${missingPermissions.join(",") || "none"}.`);
       }
-    });
+
+      const desiredPairs = Object.entries(permissionKeysByRole).flatMap(([roleKey, permissionKeys]) => {
+        const role = roleByKey.get(roleKey);
+        if (!role) throw new Error(`Canonical role-permission reconciliation failed closed: unresolved role ${roleKey}.`);
+        return permissionKeys.map((permissionKey) => {
+          const permission = permissionByKey.get(permissionKey);
+          if (!permission) throw new Error(`Canonical role-permission reconciliation failed closed: unresolved permission ${permissionKey}.`);
+          return { roleId: role.id, permissionId: permission.id };
+        });
+      });
+      const desiredPairKeys = new Set(desiredPairs.map(({ roleId, permissionId }) => `${roleId}:${permissionId}`));
+      await tx.hrRolePermission.createMany({ data: desiredPairs, skipDuplicates: true });
+
+      const existingPairs = await tx.hrRolePermission.findMany({
+        where: { roleId: { in: roles.map(({ id }) => id) } },
+        include: { permission: { select: { key: true } } },
+      });
+      const stalePairs = existingPairs.filter(({ roleId, permissionId }) => !desiredPairKeys.has(`${roleId}:${permissionId}`));
+      if (!stalePairs.length) return;
+      const deleted = await tx.hrRolePermission.deleteMany({ where: { id: { in: stalePairs.map(({ id }) => id) } } });
+      removed += deleted.count;
+
+      const staleByRole = new Map();
+      for (const pair of stalePairs) {
+        const keys = staleByRole.get(pair.roleId) ?? [];
+        keys.push(pair.permission.key);
+        staleByRole.set(pair.roleId, keys);
+      }
+      const roleKeyById = new Map(roles.map((role) => [role.id, role.key]));
+      const auditTimestamp = Date.now();
+      await tx.hrAuditEvent.createMany({ data: [...staleByRole.entries()].map(([roleId, removedPermissionKeys]) => ({
+        organizationId,
+        actorRole: "SYSTEM",
+        entityType: "HrRole",
+        entityId: roleId,
+        action: "hr.role.permissions.reconciled",
+        previousValues: { removedPermissionKeys },
+        newValues: { allowedPermissionKeys: permissionKeysByRole[roleKeyById.get(roleId)] ?? [] },
+        reason: "Canonical built-in role permission reconciliation during guarded release.",
+        correlationId: `role-permissions:${roleId}:${auditTimestamp}`,
+      })) });
+    }, { timeout: 15_000 });
+    organizationDurationsMs.push(Date.now() - organizationStartedAt);
   }
-  report(`PASS canonical built-in role permissions reconciled; rolesCreated=${rolesCreated}; staleGrantsRemoved=${removed}.`);
-  return { organizations: organizations.length, rolesCreated, removed };
+  const elapsedMs = Date.now() - startedAt;
+  const maxOrganizationTransactionMs = Math.max(0, ...organizationDurationsMs);
+  report(`PASS canonical built-in role permissions reconciled; rolesCreated=${rolesCreated}; staleGrantsRemoved=${removed}; elapsedMs=${elapsedMs}; maxOrganizationTransactionMs=${maxOrganizationTransactionMs}.`);
+  return { organizations: organizations.length, rolesCreated, removed, elapsedMs, maxOrganizationTransactionMs };
 }
 
 export async function runHrBootstrap(prisma, env, report = () => undefined) {
