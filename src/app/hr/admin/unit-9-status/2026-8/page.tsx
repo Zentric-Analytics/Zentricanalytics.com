@@ -8,9 +8,9 @@ const items = [
   ["Runtime SHA", head],
   ["Service", service],
   ["Certification boundary", "Persisted manifest + snapshot lineage; finalization and official outputs fail closed"],
-  ["Genuine PostgreSQL concurrency", "Implementation-review evidence PASS; dev merge and staging application deployment pending"],
-  ["Signed-in isolation", "Pending exact-SHA staging deployment"],
-  ["Next gate", "Independent implementation re-review before dev merge or exact-SHA staging deployment"],
+  ["Genuine PostgreSQL concurrency", "IMPLEMENTATION REVIEW PASS — 8/8 genuine actual-operation overlaps; exact reviewed tree preserved through dev merge"],
+  ["Signed-in isolation", "PENDING EXACT-SHA STAGING DEPLOYMENT"],
+  ["Next gate", "EXACT-SHA STAGING DEPLOYMENT + SIGNED-IN TENANT/IDOR VALIDATION"],
 ] as const;
 
 export default function Unit9Candidate20268StatusPage() {
