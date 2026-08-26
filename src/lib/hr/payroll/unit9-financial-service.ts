@@ -92,7 +92,7 @@ export async function createUnit9PaymentBatch(db: PrismaClient, actor: Actor, ru
     if (!run) throw new Error("Payment batches require finalized tenant payroll.");
     await assertOfficialPayrollCandidateCertified(tx, actor.organizationId, run.id);
     const existing = await tx.hrPayrollPaymentBatch.findFirst({ where: { organizationId: actor.organizationId, payrollRunId: run.id, version: 1 } });
-    if (existing) { await assertRemittanceCandidateCertified(tx, actor.organizationId, existing.id); return { batch: existing, idempotent: true }; }
+    if (existing) return { batch: existing, idempotent: true };
     const results = await tx.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: actor.organizationId, payrollRunId: run.id, authoritativeAt: { not: null }, finalizedAt: { not: null } } });
     let total = new Prisma.Decimal(0);
     let currency = "NGN";
@@ -163,7 +163,7 @@ export async function generateUnit9FinancialOutputs(db: PrismaClient, actor: Act
 export async function createUnit9RemittanceBatch(db: PrismaClient, actor: Actor, input: { jurisdictionVersionId: string; periodKey: string; category: string }) {
   return db.$transaction(async (tx) => {
     const existing = await tx.hrPayrollRemittanceBatch.findFirst({ where: { organizationId: actor.organizationId, jurisdictionVersionId: input.jurisdictionVersionId, periodKey: input.periodKey, category: input.category, version: 1 } });
-    if (existing) return { batch: existing, idempotent: true };
+    if (existing) { await assertRemittanceCandidateCertified(tx, actor.organizationId, existing.id); return { batch: existing, idempotent: true }; }
     const liabilities = await tx.hrPayrollStatutoryLiability.findMany({ where: { organizationId: actor.organizationId, jurisdictionVersionId: input.jurisdictionVersionId, periodKey: input.periodKey, category: input.category, status: "OPEN" } });
     if (!liabilities.length) throw new Error("No open statutory liabilities match the remittance scope.");
     const sourceRunIds = [...new Set(liabilities.map((liability) => liability.payrollRunId))];
