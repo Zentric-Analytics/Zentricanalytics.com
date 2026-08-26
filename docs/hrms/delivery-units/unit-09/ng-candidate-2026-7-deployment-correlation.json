@@ -1,0 +1,58 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.7",
+  "capturedFrom": "Render provider deployment records and the authenticated staging runtime status page",
+  "service": {
+    "id": "srv-d8s6ovvavr4c73fctksg",
+    "name": "Zentricanalytics.com-Staging",
+    "environment": "Staging",
+    "repository": "Zentric-Analytics/Zentricanalytics.com",
+    "branch": "dev"
+  },
+  "successfulDeployment": {
+    "deploymentId": "dep-da732t61egvs73f6vqlg",
+    "providerGitSha": "d9556924247461e9c8fcb4db0343d8b2bc8b28b1",
+    "createdAtProviderDisplay": "2026-08-25 17:21 PDT",
+    "buildFinishedAtProviderDisplay": "2026-08-25 17:23:19 PDT",
+    "preDeployStartedAtProviderDisplay": "2026-08-25 17:23:20 PDT",
+    "preDeployFinishedAtProviderDisplay": "2026-08-25 17:23:57 PDT",
+    "deployStartedAtProviderDisplay": "2026-08-25 17:23:58 PDT",
+    "liveAtProviderDisplay": "2026-08-25 17:24:36 PDT",
+    "buildStatus": "PASS",
+    "preDeployStatus": "PASS",
+    "finalStatus": "live",
+    "migrationCount": 63,
+    "migrationPending": 0,
+    "releasePreflight": "ready",
+    "providerRecord": "https://dashboard.render.com/web/srv-d8s6ovvavr4c73fctksg/deploys/dep-da732t61egvs73f6vqlg"
+  },
+  "previousFailedDeployment": {
+    "deploymentId": "dep-da72esnavr4c7389du90",
+    "providerGitSha": "255a7c23bf3e8efa1b4976ddf8cde70e1408c8f9",
+    "createdAtProviderDisplay": "2026-08-25 16:38 PDT",
+    "buildFinishedAtProviderDisplay": "2026-08-25 16:40:25 PDT",
+    "preDeployStartedAtProviderDisplay": "2026-08-25 16:40:26 PDT",
+    "preDeployFailedAtProviderDisplay": "2026-08-25 16:41:04 PDT",
+    "buildStatus": "PASS",
+    "preDeployStatus": "FAIL",
+    "finalStatus": "failed",
+    "failureClass": "role-permission reconciliation interactive transaction timeout",
+    "providerError": "prisma.hrRolePermission.upsert could not execute after the interactive transaction expired at the 5000 ms boundary",
+    "runtimeValidation": "NOT_RUN",
+    "providerRecord": "https://dashboard.render.com/web/srv-d8s6ovvavr4c73fctksg/deploys/dep-da72esnavr4c7389du90"
+  },
+  "runtimeSecondSignal": {
+    "statusPage": "https://staging.zentricanalytics.com/hr/admin/unit-9-status/2026-7",
+    "runtimeGitSha": "d9556924247461e9c8fcb4db0343d8b2bc8b28b1",
+    "runtimeServiceId": "srv-d8s6ovvavr4c73fctksg",
+    "candidate": "NG-CANDIDATE-2026.7",
+    "certificationStatus": "NOT_CERTIFIED",
+    "sensitivePayrollDataPresent": false
+  },
+  "sanitization": {
+    "tokensIncluded": false,
+    "secretsIncluded": false,
+    "databaseUrlIncluded": false,
+    "authenticationHeadersIncluded": false,
+    "employeePayrollDataIncluded": false
+  }
+}
