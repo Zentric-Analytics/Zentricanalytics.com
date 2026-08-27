@@ -1,0 +1,107 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.8",
+  "status": "NOT_CERTIFIED",
+  "runtimeImplementationSha": "4d233f3f70425c7b0a58e89331bc8780ba31f0cb",
+  "tests": {
+    "focused": {
+      "passed": 21,
+      "failed": 0
+    },
+    "preservation": {
+      "passed": 11,
+      "failed": 0
+    },
+    "repository": {
+      "filesPassed": 95,
+      "passed": 1115,
+      "failed": 0
+    }
+  },
+  "quality": {
+    "typescript": "PASS",
+    "eslint": "PASS_ZERO_WARNINGS",
+    "prismaValidate": "PASS",
+    "productionBuild": "PASS",
+    "staticGeneration": {
+      "generated": 125,
+      "total": 125
+    },
+    "predecessorHashes": "PASS"
+  },
+  "database": {
+    "environment": "staging",
+    "name": "zentric_analytics_staging",
+    "identity": "dpg-d8s9itj6sc1c73c6vsl0-a",
+    "migrationsApplied": 63,
+    "migrationsPending": 0,
+    "migrationsFailed": 0
+  },
+  "release": {
+    "deploymentId": "dep-da7ncu49v7es73f1ub00",
+    "providerStatus": "live",
+    "hrRelease": "PASS",
+    "health": {
+      "status": "ok"
+    },
+    "readiness": {
+      "status": "ready",
+      "database": "ok"
+    }
+  },
+  "postgresqlConcurrency": {
+    "source": "persisted Ng2026_8ConcurrencyEvidence audit event",
+    "capturedAt": "2026-08-26T23:33:13.023Z",
+    "result": "PASS",
+    "requiredRaceCount": 8,
+    "actualOperationOverlapRaceCount": 8,
+    "actualOperationOverlapProvenCount": 8,
+    "adjacentProbeOnlyRaceCount": 0,
+    "duplicateBindingRowCount": 1,
+    "authoritativeStaleResultCount": 0,
+    "mixedVersionSnapshotCount": 0,
+    "mixedVersionAuthoritativeResultCount": 0,
+    "deterministicReplay": "PASS",
+    "immutableFrozenBinding": "PASS"
+  },
+  "authorization": {
+    "signedInOwnTenantKnownId": "200_PASS",
+    "knownIdCrossTenant": "404_PRIVACY_SAFE",
+    "generalAdminEvidence": "403_NO_DATA_DISCLOSED",
+    "employeeEvidence": "403_NO_DATA_DISCLOSED",
+    "generalAdminPayrollWorkspace": "403_NO_DATA_DISCLOSED",
+    "tenantIsolation": "PASS",
+    "idor": "PASS",
+    "makerChecker": "PASS"
+  },
+  "officialBoundary": {
+    "finalizationResult": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+    "finalizedRunCount": 0,
+    "finalizedResultCount": 0,
+    "periodResultYtdEntryCount": 0,
+    "finalizationAuditEventCount": 0,
+    "nineDownstreamEntrypointsBlocked": 9,
+    "blockedOfficialOutputMutationCount": 0
+  },
+  "cleanup": {
+    "result": "PASS",
+    "temporarySessions": 0,
+    "temporaryUsers": 0,
+    "temporaryTenants": 0,
+    "temporaryEvidenceFixtures": 0,
+    "temporaryPayrollFixtures": 0,
+    "workerCreatedSyntheticRows": 0,
+    "triggersRestored": true
+  },
+  "certificationBoundary": {
+    "stage1ClosureReviewPerformed": false,
+    "professionalNigeriaCertification": false,
+    "officialFinalization": false,
+    "payslipPublication": false,
+    "productionPayrollActivation": false,
+    "realPaymentOrSettlement": false,
+    "statutoryFilingOrRemittance": false,
+    "stage2Started": false,
+    "unit10Started": false
+  }
+}
+
