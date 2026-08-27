@@ -1,0 +1,40 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.8",
+  "candidateStatus": "NOT_CERTIFIED",
+  "runtimeImplementationSha": "4d233f3f70425c7b0a58e89331bc8780ba31f0cb",
+  "runtimeTreeSha": "6598170c7f45ecd0b215a3a93305a131a5a4c46d",
+  "deploymentId": "dep-da7ncu49v7es73f1ub00",
+  "serviceId": "srv-d8s6ovvavr4c73fctksg",
+  "serviceName": "Zentricanalytics.com-Staging",
+  "environment": "staging",
+  "repository": "Zentric-Analytics/Zentricanalytics.com",
+  "branch": "dev",
+  "providerReportedSha": "4d233f3f70425c7b0a58e89331bc8780ba31f0cb",
+  "runtimeReportedSha": "4d233f3f70425c7b0a58e89331bc8780ba31f0cb",
+  "providerStatus": "live",
+  "buildStatus": "PASS",
+  "preDeployStatus": "PASS",
+  "providerTimestamps": {
+    "createdAt": "2026-08-26T16:27:00-07:00",
+    "buildCompletedAt": "2026-08-26T16:29:51-07:00",
+    "preDeployStartedAt": "2026-08-26T16:29:52-07:00",
+    "preDeployCompletedAt": "2026-08-26T16:30:29-07:00",
+    "serviceStartedAt": "2026-08-26T16:30:58-07:00",
+    "readyAt": "2026-08-26T16:31:00-07:00",
+    "liveAt": "2026-08-26T16:31:07-07:00"
+  },
+  "runtimeHttp": {
+    "capturedAt": "2026-08-27T00:18:23.905Z",
+    "httpStatus": 200,
+    "cacheControl": "private, no-store",
+    "responseBodySha256": "7d0869c16c0eac96a216640aeba6a49c8ea2cdc6ccfc719b68ce350515ce4fc7"
+  },
+  "healthStatus": "PASS",
+  "readinessStatus": "PASS",
+  "migrationAppliedCount": 63,
+  "migrationPendingCount": 0,
+  "migrationFailedCount": 0,
+  "capturedAt": "2026-08-27T00:18:23.905Z",
+  "result": "PASS"
+}
+

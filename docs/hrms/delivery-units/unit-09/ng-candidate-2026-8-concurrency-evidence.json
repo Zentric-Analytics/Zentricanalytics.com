@@ -1,0 +1,577 @@
+{
+  "createdAt": "2026-08-26T23:33:13.023Z",
+  "newValues": {
+    "result": "PASS",
+    "overlapEvidence": [
+      {
+        "result": "PASS",
+        "clientA": {
+          "backendPidHash": "2eba669c1fe3c594235c05dbf06b0dd2a94361b82d18cf540d5b9d7d293399ec",
+          "operationOutcome": "INSERTED_AND_COMMITTED",
+          "transactionIdHash": "34831d9ddfdb623eab7ffce56408bb49d279d9f014931327bc423f593735a728"
+        },
+        "clientB": {
+          "backendPidHash": "f6bd2afd8878821f604e3e93636af8aff9fe08daf0a0aa4eb8794f4791499ef3",
+          "operationOutcome": "UNIQUE_CONSTRAINT_LOSER",
+          "transactionIdHash": "2b7cbc5015ba97b64ca147784e2cc72bf6485e1b3227dc5ae3571da2c576f460"
+        },
+        "raceName": "duplicate-binding-persistence",
+        "overlapObserved": true,
+        "databaseRowCount": 1,
+        "transactionAOutcome": "COMMITTED",
+        "transactionBOutcome": "REJECTED"
+      },
+      {
+        "result": "PASS",
+        "clientA": {
+          "backendPidHash": "715988feef26063dad4619e2d1eeb573223a8f326be39566118f67b09f7abaee",
+          "operationOutcome": "STALE_EMPLOYMENT_INCOME_BINDING",
+          "transactionIdHash": "26a7d9d0ba48f4d204ed380cfa72a7d803fe2af1b797adb80fb327fb9b822a79"
+        },
+        "clientB": {
+          "backendPidHash": "e615115dabb3d1978183534c7e621ded83ee857d994bae360477eba79f276e2d",
+          "operationOutcome": "ACTUAL_PARTITION_BINDING_MUTATION_EXECUTED",
+          "transactionIdHash": "3996281cf109f9f80d8876b91519812c40c8bb07187bbef48a9a0869ac5367d4"
+        },
+        "raceName": "stale-partition-vs-calculation",
+        "overlapObserved": true,
+        "transactionAOutcome": "COMMITTED",
+        "transactionBOutcome": "ROLLED_BACK_TEST_ONLY"
+      },
+      {
+        "result": "PASS",
+        "clientA": {
+          "backendPidHash": "cf09a95c6c0d51e69f64bb8c8dbd3587f8a6fdf1df4de0264c33f3cd020e86f4",
+          "operationOutcome": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+          "transactionIdHash": "5d64cfe6ae5e8ef588235d34516f94abcb272f4ecf1829d827f5e56b2ae2bcd4"
+        },
+        "clientB": {
+          "backendPidHash": "63eaa610f31ebfee202e7e8fa455372961a3e7471bfce8efd2f24d0094022d2e",
+          "operationOutcome": "ACTUAL_CERTIFICATION_MUTATION_EXECUTED",
+          "transactionIdHash": "f05cef85b868aab734db9dd97b03d1d24e55c532cebf2bff83a4be80d6b8739b"
+        },
+        "raceName": "candidate-certification-vs-finalization",
+        "overlapObserved": true,
+        "transactionAOutcome": "COMMITTED",
+        "transactionBOutcome": "ROLLED_BACK_TEST_ONLY"
+      }
+    ],
+    "candidateVersion": "NG-CANDIDATE-2026.8",
+    "actualSourceRaces": [
+      {
+        "result": "PASS",
+        "clientA": {
+          "backendPidHash": "8ba5aa4391e15d8aacc70f5111c20d872e19f4ea69d9d2dac7b47ca707a011c4",
+          "transactionIdHash": "e17d3af514bcf785b8c05355b49fb16cac8acbd8b19838e06bc549a7ed5207a5",
+          "transactionStartedAt": "2026-08-26T23:33:01.743Z"
+        },
+        "clientB": {
+          "backendPidHash": "1af3e32cae8a1209cc5940f6cc9dd977311e3ccacd994563c451bf6d99d59f79",
+          "transactionIdHash": "39e4733d146c6b60d98b18f29fd8496e8290bd5dfe5aab760c24d5a5ba7daa4c",
+          "transactionStartedAt": "2026-08-26T23:33:01.566Z"
+        },
+        "raceName": "ytd-mutation-vs-freeze",
+        "mutationKind": "ytd",
+        "sourceExcluded": true,
+        "overlapObserved": true,
+        "persistedLineage": {
+          "lineageValid": true,
+          "sourceHashes": {
+            "ytd": "76a82f1a25ff3cce75a38a055f2c7e413aebed11ff52ff35f47613b5dd9e3fc0",
+            "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+            "salary": "d0b17d78d8b070c926cefb2a53bae09e9be26eb1b933e77e85745b9981d3e544",
+            "annualization": "b2045447f2fffca5422dc5e0735e8a76f804a307137cca6ac0ae302c976b76bd",
+            "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+          },
+          "lineageErrors": [],
+          "snapshotIdHash": "d4b0b5272aecc1a9038fd171cf87f9b308349f417ed5985210a6fc664b9d0cb9"
+        },
+        "overlapObservedAt": "2026-08-26T23:33:02.021Z",
+        "mutationExecutedAt": "2026-08-26T23:33:01.568Z",
+        "transactionAOutcome": "COMMITTED",
+        "transactionBOutcome": "COMMITTED",
+        "freezeBodyExecutedAt": "2026-08-26T23:33:01.846Z",
+        "persistedSnapshotIdHash": "d4b0b5272aecc1a9038fd171cf87f9b308349f417ed5985210a6fc664b9d0cb9",
+        "persistedSourceLineageHash": "a20fde9cbd7866f30c56f4fbef06e3dccf50216538ca3eaa4bbcdf9bbd6f6afd"
+      },
+      {
+        "result": "PASS",
+        "clientA": {
+          "backendPidHash": "8872f5209cc10cc0134021db658b53dbbf7080e809143d8f26c205077aceb4d9",
+          "transactionIdHash": "25563ba128c2803d8b69ff2b14c13d2131274536297c0009c856d4b046683974",
+          "transactionStartedAt": "2026-08-26T23:33:03.053Z"
+        },
+        "clientB": {
+          "backendPidHash": "37649a7ce549f72201b5f9e2ee59e5b1474391205a6376c6e41a74c860d48609",
+          "transactionIdHash": "09f158cbbc3abebf5ab3dbf51f47812718ba4a5fffc20b8d77fa62fee71b8fe8",
+          "transactionStartedAt": "2026-08-26T23:33:02.936Z"
+        },
+        "raceName": "relief-mutation-vs-freeze",
+        "mutationKind": "relief",
+        "sourceExcluded": true,
+        "overlapObserved": true,
+        "persistedLineage": {
+          "lineageValid": true,
+          "sourceHashes": {
+            "ytd": "3a82b7ab7f16fcfedd58adc5f5bed84b4d61efbaa9d5072e0337ace3e1a52ff5",
+            "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+            "salary": "ac38a25a0dac5882fccdc261dd111d0a423c5b32cbce30e948691ef5c4b1acfb",
+            "annualization": "a25fb089a42b075cde9dd1fd91067d71c7e584fe84a12455b93dca64bd80329a",
+            "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+          },
+          "lineageErrors": [],
+          "snapshotIdHash": "2c830cbb11cf81909f5b4502315e91b6a4ab620d323c39da748806af6daaaffe"
+        },
+        "overlapObservedAt": "2026-08-26T23:33:03.267Z",
+        "mutationExecutedAt": "2026-08-26T23:33:02.938Z",
+        "transactionAOutcome": "COMMITTED",
+        "transactionBOutcome": "COMMITTED",
+        "freezeBodyExecutedAt": "2026-08-26T23:33:03.142Z",
+        "persistedSnapshotIdHash": "2c830cbb11cf81909f5b4502315e91b6a4ab620d323c39da748806af6daaaffe",
+        "persistedSourceLineageHash": "00f1c6a69617b52ec66a51bd2f20efe4f3262601de285164790689f1894c94c5"
+      },
+      {
+        "result": "PASS",
+        "clientA": {
+          "backendPidHash": "66d4f86982ab662814756ee9feb0464d7a58b6011fc42e5de6b66a7e8c87420d",
+          "transactionIdHash": "e301e2f6986d39086ea17080f5ae6869ad7a3ca554e60e24c777fda844878071",
+          "transactionStartedAt": "2026-08-26T23:33:04.162Z"
+        },
+        "clientB": {
+          "backendPidHash": "b84aff2eec808a9bfe736246fa8e86b5d137932e0424aad69f79ab7638863cb8",
+          "transactionIdHash": "7331e2a2c5b758f9d791f41af98fb1d05ccf631cfe69c9af0e3f859eabbf60f6",
+          "transactionStartedAt": "2026-08-26T23:33:04.048Z"
+        },
+        "raceName": "annualization-mutation-vs-freeze",
+        "mutationKind": "annualization",
+        "sourceExcluded": true,
+        "overlapObserved": true,
+        "persistedLineage": {
+          "lineageValid": true,
+          "sourceHashes": {
+            "ytd": "cf280b7a17d462d35ddb48ccdc69a688923739d158f83a08d5fa82209e59cdf1",
+            "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+            "salary": "107a921721a8f1aa5d01ead8b39207b1a5db15114b5bcd7eded207f3f729a6c9",
+            "annualization": "c90face46f55b258bc064822c66247713983a790544ebf3f8e51f650e407d847",
+            "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+          },
+          "lineageErrors": [],
+          "snapshotIdHash": "2e514da70d97e90d38072ae54781ed5fd6524f1891fdb144ed8a9686a703c21e"
+        },
+        "overlapObservedAt": "2026-08-26T23:33:04.444Z",
+        "mutationExecutedAt": "2026-08-26T23:33:04.051Z",
+        "transactionAOutcome": "COMMITTED",
+        "transactionBOutcome": "COMMITTED",
+        "freezeBodyExecutedAt": "2026-08-26T23:33:04.326Z",
+        "persistedSnapshotIdHash": "2e514da70d97e90d38072ae54781ed5fd6524f1891fdb144ed8a9686a703c21e",
+        "persistedSourceLineageHash": "fb50683db9cea91f5b49ea25e4318df2eaad0a78f64b53cb498cd9c4eb96091f"
+      },
+      {
+        "result": "PASS",
+        "clientA": {
+          "backendPidHash": "b8275491beab23a00dc41b47a9be3a3315925844b842377461bfd120fb8c46e8",
+          "transactionIdHash": "588da02769020aac037ca7e8413f6b728e4d040db2118097c4096914ed9b82f7",
+          "transactionStartedAt": "2026-08-26T23:33:05.377Z"
+        },
+        "clientB": {
+          "backendPidHash": "2c0acb97fd3f90eaaec01d0e2a6fea47392a412a690051fb5095d46070f2ba0e",
+          "transactionIdHash": "b6ddab906b85931ea381e517047640bb99aaecef7c8160a3304b7ce21de09bc2",
+          "transactionStartedAt": "2026-08-26T23:33:05.266Z"
+        },
+        "raceName": "prior-employer-mutation-vs-freeze",
+        "mutationKind": "prior-employer",
+        "sourceExcluded": true,
+        "overlapObserved": true,
+        "persistedLineage": {
+          "lineageValid": true,
+          "sourceHashes": {
+            "ytd": "445babebffef6dc8be7fdd57870c3518e094862ab9499b0e819c71411bf277be",
+            "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+            "salary": "592ea11e6f05884401f64bdfd3db5f5d9d84ac0248dc7603017988b9cbeeef26",
+            "annualization": "4ba907231ccb67e7c354b41c8ad848f329d3e7d3e7ee925cc13e94900d3d4f75",
+            "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+          },
+          "lineageErrors": [],
+          "snapshotIdHash": "aee46a8f25d4f8ce33ffdfe766cc58eceb0d53b116c0a5bb004a98d60a7d4f94"
+        },
+        "overlapObservedAt": "2026-08-26T23:33:05.585Z",
+        "mutationExecutedAt": "2026-08-26T23:33:05.268Z",
+        "transactionAOutcome": "COMMITTED",
+        "transactionBOutcome": "COMMITTED",
+        "freezeBodyExecutedAt": "2026-08-26T23:33:05.522Z",
+        "persistedSnapshotIdHash": "aee46a8f25d4f8ce33ffdfe766cc58eceb0d53b116c0a5bb004a98d60a7d4f94",
+        "persistedSourceLineageHash": "d20310a7dbf4df3ad73f4a3f22804b2d9c941bc743b3ea4a64aceff536db089d"
+      },
+      {
+        "result": "PASS",
+        "clientA": {
+          "backendPidHash": "0b9f3c5f2280c13d3909655d8219d714d3e3ff57c40d678bb6e99042fe3faafc",
+          "transactionIdHash": "bd1243d81331d169885c7a8244e19ff6cbdce721808132fa71a75c3e6b1925c6",
+          "transactionStartedAt": "2026-08-26T23:33:06.484Z"
+        },
+        "clientB": {
+          "backendPidHash": "a8b46acf3ed7cdade56b6f354e2d0a42eef3cbc34ad079d95e0798d73b09a524",
+          "transactionIdHash": "cd62fe226974f7ec3ca4d6e7c10a5beb27392c9d6db4681d209e54b443275995",
+          "transactionStartedAt": "2026-08-26T23:33:06.351Z"
+        },
+        "raceName": "salary-mutation-vs-freeze",
+        "mutationKind": "salary",
+        "sourceExcluded": true,
+        "overlapObserved": true,
+        "persistedLineage": {
+          "lineageValid": true,
+          "sourceHashes": {
+            "ytd": "95ae1afd621c16835bf4601f7bc00e8eb978954172fbdd96adee35ceb57b444d",
+            "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+            "salary": "042a1bbb31b33238da48c89431ea11f64ca4ae61480af6052b09a382df3fcd60",
+            "annualization": "07f218f8068824301037d6653db05dcd2d774ff0e289c7fdf8eb487001e518bd",
+            "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+          },
+          "lineageErrors": [],
+          "snapshotIdHash": "ab8374f8a6339daa5fce231c379f6c314eb4ef786600eb931badbd4f16e120bc"
+        },
+        "overlapObservedAt": "2026-08-26T23:33:06.687Z",
+        "mutationExecutedAt": "2026-08-26T23:33:06.421Z",
+        "transactionAOutcome": "COMMITTED",
+        "transactionBOutcome": "COMMITTED",
+        "freezeBodyExecutedAt": "2026-08-26T23:33:06.544Z",
+        "persistedSnapshotIdHash": "ab8374f8a6339daa5fce231c379f6c314eb4ef786600eb931badbd4f16e120bc",
+        "persistedSourceLineageHash": "c6311405f3a9b619a50e2c69d78043a2be099ca323c45d1b16a6cecede27563a"
+      }
+    ],
+    "requiredRaceCount": 8,
+    "blockedEntrypoints": {
+      "publishUnit9Payslip": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+      "generateUnit9Payslips": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+      "createUnit9PaymentBatch": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+      "createUnit9RemittanceBatch": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+      "createCorrectedUnit9Payslip": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+      "transitionUnit9PaymentBatch": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+      "generateUnit9FinancialOutputs": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+      "acknowledgeUnit9RemittanceSimulation": "PAYROLL_CANDIDATE_NOT_CERTIFIED",
+      "createUnit9RemittanceAmendmentSimulation": "PAYROLL_CANDIDATE_NOT_CERTIFIED"
+    },
+    "databaseEnvironment": "staging",
+    "deterministicReplay": true,
+    "officialOutputAfter": {
+      "journalLines": 0,
+      "journalBatches": 0,
+      "paymentBatches": 1,
+      "paymentSettled": 0,
+      "paymentApproved": 0,
+      "paymentExported": 0,
+      "payslipVersions": 2,
+      "remittanceLines": 2,
+      "paymentSubmitted": 0,
+      "publishedPayslips": 1,
+      "remittanceBatches": 2,
+      "paymentAcknowledged": 0,
+      "paymentInstructions": 0,
+      "statutoryAmendments": 0,
+      "statutoryLiabilities": 3
+    },
+    "staleBindingRejected": true,
+    "immutableFrozenBinding": true,
+    "officialOutputBaseline": {
+      "journalLines": 0,
+      "journalBatches": 0,
+      "paymentBatches": 1,
+      "paymentSettled": 0,
+      "paymentApproved": 0,
+      "paymentExported": 0,
+      "payslipVersions": 2,
+      "remittanceLines": 2,
+      "paymentSubmitted": 0,
+      "publishedPayslips": 1,
+      "remittanceBatches": 2,
+      "paymentAcknowledged": 0,
+      "paymentInstructions": 0,
+      "statutoryAmendments": 0,
+      "statutoryLiabilities": 3
+    },
+    "persistedResultLineage": [
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "12f21db8f12236805a0be6ef28343be0a190c4d3fba6fbb990ae63be6132ee7d",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "798b33c2c92969ec6a4e1f9825d0f7ab505916d64e03a344ba1b236a3022f445",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "b3d36605d2c5cb04a98bb053f5b5780ca894f2bfdcbcbc136a5bc08b8476c687"
+      }
+    ],
+    "duplicateBindingRowCount": 1,
+    "persistedSnapshotLineage": [
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "e7290fc3db1ec9729033913570c95aad0b1a98cc9a7a6a65c56acec53801f9b0",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "d0b17d78d8b070c926cefb2a53bae09e9be26eb1b933e77e85745b9981d3e544",
+          "annualization": "b2045447f2fffca5422dc5e0735e8a76f804a307137cca6ac0ae302c976b76bd",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "faaa703fe8d949179746afb38cde1b24ee8b5c25016335b3e065775e6666fea2"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "76a82f1a25ff3cce75a38a055f2c7e413aebed11ff52ff35f47613b5dd9e3fc0",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "d0b17d78d8b070c926cefb2a53bae09e9be26eb1b933e77e85745b9981d3e544",
+          "annualization": "b2045447f2fffca5422dc5e0735e8a76f804a307137cca6ac0ae302c976b76bd",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "d4b0b5272aecc1a9038fd171cf87f9b308349f417ed5985210a6fc664b9d0cb9"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "3b89069ddb9d352f590e4fc0c72c9d3bbd2277dcdd7e4eaf2591a6f1c1fc3c25",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "ac38a25a0dac5882fccdc261dd111d0a423c5b32cbce30e948691ef5c4b1acfb",
+          "annualization": "a25fb089a42b075cde9dd1fd91067d71c7e584fe84a12455b93dca64bd80329a",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "7c4d93514631787209ecfe915f98c90c5308f502790da32bff4cb0827dba7459"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "3a82b7ab7f16fcfedd58adc5f5bed84b4d61efbaa9d5072e0337ace3e1a52ff5",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "ac38a25a0dac5882fccdc261dd111d0a423c5b32cbce30e948691ef5c4b1acfb",
+          "annualization": "a25fb089a42b075cde9dd1fd91067d71c7e584fe84a12455b93dca64bd80329a",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "2c830cbb11cf81909f5b4502315e91b6a4ab620d323c39da748806af6daaaffe"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "210484246ab15aff60e35ca48ff396b475eb7cc50d135db68634178737a87362",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "107a921721a8f1aa5d01ead8b39207b1a5db15114b5bcd7eded207f3f729a6c9",
+          "annualization": "c90face46f55b258bc064822c66247713983a790544ebf3f8e51f650e407d847",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "c99a9262e5303d00269a28a5ae4431a6b468608d3191d87e0515270478cbe979"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "cf280b7a17d462d35ddb48ccdc69a688923739d158f83a08d5fa82209e59cdf1",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "107a921721a8f1aa5d01ead8b39207b1a5db15114b5bcd7eded207f3f729a6c9",
+          "annualization": "c90face46f55b258bc064822c66247713983a790544ebf3f8e51f650e407d847",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "2e514da70d97e90d38072ae54781ed5fd6524f1891fdb144ed8a9686a703c21e"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "7703e780607d9a1d5292f1f78836b7040d508254c329d45d3b80ea6269533c5b",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "592ea11e6f05884401f64bdfd3db5f5d9d84ac0248dc7603017988b9cbeeef26",
+          "annualization": "4ba907231ccb67e7c354b41c8ad848f329d3e7d3e7ee925cc13e94900d3d4f75",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "97907ac373c3762be32405c5ddb0202133b97bd08d240cec097c9b6715f6abe7"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "445babebffef6dc8be7fdd57870c3518e094862ab9499b0e819c71411bf277be",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "592ea11e6f05884401f64bdfd3db5f5d9d84ac0248dc7603017988b9cbeeef26",
+          "annualization": "4ba907231ccb67e7c354b41c8ad848f329d3e7d3e7ee925cc13e94900d3d4f75",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "aee46a8f25d4f8ce33ffdfe766cc58eceb0d53b116c0a5bb004a98d60a7d4f94"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "17ed4b88bb7771ccc3cbf13b3eaa6987574d448d5637b941d170a83876f28f79",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "042a1bbb31b33238da48c89431ea11f64ca4ae61480af6052b09a382df3fcd60",
+          "annualization": "07f218f8068824301037d6653db05dcd2d774ff0e289c7fdf8eb487001e518bd",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "959a904ec013d5b8f967f65fe7c801acb9a553caccf2ec1ff49bf64d295a6787"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "95ae1afd621c16835bf4601f7bc00e8eb978954172fbdd96adee35ceb57b444d",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "042a1bbb31b33238da48c89431ea11f64ca4ae61480af6052b09a382df3fcd60",
+          "annualization": "07f218f8068824301037d6653db05dcd2d774ff0e289c7fdf8eb487001e518bd",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "ab8374f8a6339daa5fce231c379f6c314eb4ef786600eb931badbd4f16e120bc"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "12f21db8f12236805a0be6ef28343be0a190c4d3fba6fbb990ae63be6132ee7d",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "798b33c2c92969ec6a4e1f9825d0f7ab505916d64e03a344ba1b236a3022f445",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "64806dae591e28c5af70330f2766488df6833b683671c23f26b41eed175628d2"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "4c1efffb66a7f7441057f2045192fab248358f94e2a233cde821976152d45e50",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "798b33c2c92969ec6a4e1f9825d0f7ab505916d64e03a344ba1b236a3022f445",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "bb09abcfa74209b9f6816812651833b192cd232d533171c4a36e8c48a61c56f2"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "cd44278f31e6f8750cb3baf5b36559c7703c7ed2f44c0d822ec96fad4fb89da7",
+          "relief": "bd8dab6a4a50c41f0bd1a730ffd8250cf715bb9c4a16e0347def340af5942871",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "798b33c2c92969ec6a4e1f9825d0f7ab505916d64e03a344ba1b236a3022f445",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "5f6110525f27bd7394ec43f3fd5d1ed4e128be4510ebe92f992f8d1521f6be21"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "3f2f62c6c3ed5cec08ef4ee900d5f84b16bfb9c0f4a9f72d55927461758e3639",
+          "relief": "bd8dab6a4a50c41f0bd1a730ffd8250cf715bb9c4a16e0347def340af5942871",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "eabf676e4d6d85747a7c0f9e724a7ecd0efc868f706daa8a7f5351b0e5f8cca2",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "69a8f5578b7052048208f004f1d58e572684a3e37bb8ea24d8fc34046a4a70b2"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "4749cb83f352bc6e80c3c4711f3f663242f0cb2c84bf1dac49c2fc0aa59279c3",
+          "relief": "bd8dab6a4a50c41f0bd1a730ffd8250cf715bb9c4a16e0347def340af5942871",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "eabf676e4d6d85747a7c0f9e724a7ecd0efc868f706daa8a7f5351b0e5f8cca2",
+          "priorEmployer": "0da675e9a7ccbb8f136b198c2171842657c620a3d5b7e3f8048eea0576f0c3e6"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "88c228e1f3320586b9030d7600e13c30df9633d30c17ef41ad4a5633d5886371"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "12f21db8f12236805a0be6ef28343be0a190c4d3fba6fbb990ae63be6132ee7d",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "798b33c2c92969ec6a4e1f9825d0f7ab505916d64e03a344ba1b236a3022f445",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "60f8140985c52797de874d86303725e0b5aebd42c72b10b1aa83b7f889824085"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "12f21db8f12236805a0be6ef28343be0a190c4d3fba6fbb990ae63be6132ee7d",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "798b33c2c92969ec6a4e1f9825d0f7ab505916d64e03a344ba1b236a3022f445",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "c4b407326ef517a926705547fae658b3f25979948cdaeb92042c40736c11a716"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "12f21db8f12236805a0be6ef28343be0a190c4d3fba6fbb990ae63be6132ee7d",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "798b33c2c92969ec6a4e1f9825d0f7ab505916d64e03a344ba1b236a3022f445",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "393d4b44fec2a4a120fe852ec2156ea739feee25cf91098b7602cc5ff49556cb"
+      },
+      {
+        "lineageValid": true,
+        "sourceHashes": {
+          "ytd": "12f21db8f12236805a0be6ef28343be0a190c4d3fba6fbb990ae63be6132ee7d",
+          "relief": "8378754c14d2bfcf9e77ad64c3a28bbad8398f2859695b3a32a05cf2f4a813cd",
+          "salary": "faf318b1a53b34d4eb72118729011db5620716251879ba89e589fb86a59c897c",
+          "annualization": "798b33c2c92969ec6a4e1f9825d0f7ab505916d64e03a344ba1b236a3022f445",
+          "priorEmployer": "fcdb82d26181ec52119238e60be67c9bc45de78216897adf8e59ee3f456b650f"
+        },
+        "lineageErrors": [],
+        "snapshotIdHash": "b3d36605d2c5cb04a98bb053f5b5780ca894f2bfdcbcbc136a5bc08b8476c687"
+      }
+    ],
+    "mixedVersionSnapshotCount": 0,
+    "adjacentProbeOnlyRaceCount": 0,
+    "finalizationMutationCounts": {
+      "finalizedRunCount": 0,
+      "finalizedResultCount": 0,
+      "periodResultYtdEntryCount": 0,
+      "finalizationAuditEventCount": 0
+    },
+    "officialOutputMutationCounts": {
+      "journalLines": 0,
+      "journalBatches": 0,
+      "paymentBatches": 0,
+      "paymentSettled": 0,
+      "paymentApproved": 0,
+      "paymentExported": 0,
+      "payslipVersions": 0,
+      "remittanceLines": 0,
+      "paymentSubmitted": 0,
+      "publishedPayslips": 0,
+      "remittanceBatches": 0,
+      "paymentAcknowledged": 0,
+      "paymentInstructions": 0,
+      "statutoryAmendments": 0,
+      "statutoryLiabilities": 0
+    },
+    "authoritativeStaleResultCount": 0,
+    "neutralizingPaymentTransitions": {
+      "tested": false,
+      "prohibitedOutputCountImpact": 0
+    },
+    "actualOperationOverlapRaceCount": 8,
+    "blockedFinalizationMutationCount": 0,
+    "actualOperationOverlapProvenCount": 8,
+    "blockedOfficialOutputMutationCount": 0,
+    "mixedVersionAuthoritativeResultCount": 0,
+    "markerHash": "58d2c2fdb080dccf450848fa58912924ec870854f849b353d008042284dfb7bf",
+    "sourceSnapshotIdHash": "4be50db8c010167961161f0de374cdf75d98f5efa6d75ed1c87dd070f71d12f5"
+  }
+}
+
+

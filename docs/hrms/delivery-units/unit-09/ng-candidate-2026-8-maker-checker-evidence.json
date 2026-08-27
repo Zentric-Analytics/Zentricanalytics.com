@@ -1,0 +1,38 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.8",
+  "candidateStatus": "NOT_CERTIFIED",
+  "runtimeSha": "4d233f3f70425c7b0a58e89331bc8780ba31f0cb",
+  "capturedAt": "2026-08-26T23:55:00.000Z",
+  "result": "PASS",
+  "financialRelease": false,
+  "checks": [
+    {
+      "case": "payroll creator self-approval",
+      "expectedStatus": 422,
+      "actualStatus": 422,
+      "responseBodySha256": "4b95258af9dde112072d35899643387f915445973e238356408241aac8abe892",
+      "sensitivePayloadPresent": false,
+      "databaseStateChanged": false,
+      "result": "PASS"
+    },
+    {
+      "case": "adjustment creator self-approval",
+      "expectedStatus": 422,
+      "actualStatus": 422,
+      "responseBodySha256": "af3c6ca1f4b47d926e541df67066873c6f606249f29a425dc63c583a5fcd9b36",
+      "sensitivePayloadPresent": false,
+      "databaseStateChanged": false,
+      "result": "PASS"
+    },
+    {
+      "case": "payment maker self-approval",
+      "expectedStatus": 422,
+      "actualStatus": 422,
+      "responseBodySha256": "31c92d9ca9a13ce5ec184967adad3cbfabe1f13152fbe2ed4fcc20f783eb13da",
+      "sensitivePayloadPresent": false,
+      "databaseStateChanged": false,
+      "result": "PASS"
+    }
+  ]
+}
+

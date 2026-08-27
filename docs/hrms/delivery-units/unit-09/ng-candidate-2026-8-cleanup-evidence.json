@@ -1,0 +1,27 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.8",
+  "environment": "staging",
+  "result": "PASS",
+  "counts": {
+    "temporarySessions": 0,
+    "temporaryUsers": 0,
+    "temporaryTenants": 0,
+    "temporaryEvidenceFixtures": 0,
+    "temporaryPayrollFixtures": 0,
+    "workerCreatedSyntheticRows": 0
+  },
+  "triggerRestoration": [
+    {
+      "name": "HrPayrollRetentionPolicyVersion_immutable",
+      "state": "ENABLED"
+    },
+    {
+      "name": "HrAuditEvent_immutable",
+      "state": "ENABLED"
+    }
+  ],
+  "procedure": "Exact synthetic test records were deleted in staging-only cleanup transactions; named immutable triggers were re-enabled immediately after the scoped cleanup.",
+  "secretsPreserved": false,
+  "statement": "No cookies, session tokens, passwords, database URLs, or credentials were preserved."
+}
+

@@ -1,0 +1,262 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.8",
+  "candidateStatus": "NOT_CERTIFIED",
+  "reviewState": "READY_FOR_INDEPENDENT_STAGE_1_CLOSURE_REVIEW",
+  "runtimeImplementationSha": "4d233f3f70425c7b0a58e89331bc8780ba31f0cb",
+  "runtimeTreeSha": "6598170c7f45ecd0b215a3a93305a131a5a4c46d",
+  "reviewedPayrollImplementationTree": "f48aa7b29b78371fea67bdd7e4cb8724eb5e5ecc",
+  "implementationMergeSha": "6bebae20172ed4289cbe180a8c9500f94996b005",
+  "statusFeatureSha": "880e1ef7173d47a7eb25b19f4c8e2f357155f61a",
+  "evidenceSealSha": "GIT_COMMIT_CONTAINING_THIS_MANIFEST",
+  "deploymentId": "dep-da7ncu49v7es73f1ub00",
+  "serviceId": "srv-d8s6ovvavr4c73fctksg",
+  "repository": "Zentric-Analytics/Zentricanalytics.com",
+  "branch": "dev",
+  "providerReportedSha": "4d233f3f70425c7b0a58e89331bc8780ba31f0cb",
+  "runtimeReportedSha": "4d233f3f70425c7b0a58e89331bc8780ba31f0cb",
+  "fileHashAlgorithm": "SHA-256",
+  "packagePayloadFileCount": 53,
+  "packageHashFile": "ng-candidate-2026-8-stage1-package.sha256",
+  "archive": "Zentric_NG-CANDIDATE-2026.8_Immutable_Review_Package.zip",
+  "archiveChecksum": "Zentric_NG-CANDIDATE-2026.8_Immutable_Review_Package.zip.sha256",
+  "predecessor": {
+    "candidateVersion": "NG-CANDIDATE-2026.7",
+    "runtimeImplementationSha": "d9556924247461e9c8fcb4db0343d8b2bc8b28b1",
+    "evidenceSealSha": "f8d1a2d4a9a673947719a1a5ada0384e2dd0f715",
+    "evidenceMergeSha": "bc12034783131d1283bc2e5ba80791da3f035d9a",
+    "immutableZipSha256": "e07a60de7a382fcb4cd04eeeb71c59af5f0ece37bcf4a6969e426a4a561233b9",
+    "preservation": "PASS"
+  },
+  "payloads": [
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-7-annualization-rule.md",
+      "sha256": "186959faf90af74ae5834f008bb64423c1f6968fd3a1eaa720b4617d50e79a03"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-7-authoritative-source-binding.md",
+      "sha256": "5ce39cfa943aea4ce3a1c836b30fbf04fdffa1077d5cc6545c6340d6579ae018"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-7-owner-decision.md",
+      "sha256": "1a1a1d086aca2a265113d2d778b02a6f0a4e476b3abcd9fa3a1d29252a9068f9"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-7-preservation.md",
+      "sha256": "57bc595b025114a8dca59253d11e580f065c1bcb27f255ebdfea217989e97416"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-7-source-register.md",
+      "sha256": "fa86910f656ed35256190ee0355b6fd99f90a9a8eadb2ebf2df239eb80da48e3"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-7-stage1-manifest.json",
+      "sha256": "809e2f5cb27a95913a52b6c995ad33b18a7ef2e93d675b862c699eafd24b47e9"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-authenticated-isolation.json",
+      "sha256": "fcc8fa732d5025e49e841286c6a82be49c207b9d7e0986af44353ae701a6e0f2"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-authenticated-isolation.md",
+      "sha256": "561912e43653fb76880aecacdca96ee707f2a3cdc264a3606e2e2fe2e9f14f7b"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-candidate-certification-boundary.md",
+      "sha256": "22752a7f2ff898e0ad202691b264cb79c2ad8c4052e11ee8dd23a1b741e1f008"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-cleanup-evidence.json",
+      "sha256": "86c1e4657404424969dd8dc8a214f2e15f6e5a85d0632931aee046dcd0f84857"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-concurrency-design.md",
+      "sha256": "24ebd6ef598732e1e00ad0141f466a72408b0fc3cf635213b032f32d0af47d9e"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-concurrency-evidence.json",
+      "sha256": "138c48fbb6f0d1f0c33dc15c03a8cb0b37496db0faf15c5d97f0135a504a3955"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-deployment-correlation.json",
+      "sha256": "1c8bafc29aa6b74d413d2580f3a3db27a77cc5931d1c3269455235edf2dd15cf"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-final-gates.json",
+      "sha256": "82025992cea32c48cf1510ee28aa412225005f415992a9ddd8c7a00a2d9acf11"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-maker-checker-evidence.json",
+      "sha256": "d9eba0425d1c2892030c490b1c7881aa52b6a22f4a2197b146c02964b34669b2"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-owner-decision.md",
+      "sha256": "358d92a060e6b21f598018de233513e8d9b5fe36ebf975f92aa423d8c112a929"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-preservation.md",
+      "sha256": "9c2ed970bf30415fa942cfdbb162b9b1002fe6da9a9c360f5632fe4b8b657152"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-runtime-integration.md",
+      "sha256": "1134d7b915776c0d51c2b4911216c1a192e329636f2d38a02cc45f479d3e7203"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-stage1-package.md",
+      "sha256": "2af0a503d7721644f40daad02027ed9b0b9945f4de5a5e3e06e9c80e60ae928b"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-stage1-remediation-matrix.md",
+      "sha256": "88747163aca41e3bc1052e4c6b37e3f3adeb44f60c22ac606147ae36d42df452"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-8-staging-validation.md",
+      "sha256": "1935256635902f266e904138f3e7a4207110f3914eb61e114d69ade547f3e209"
+    },
+    {
+      "path": "prisma/migrations/20260825160000_hrms_unit9_ng_2026_7_annualization/migration.sql",
+      "sha256": "cf4c02b10ee0962ad6bee030403cd2eac2df0b3c4ac66c28ee185e5ee623b2ae"
+    },
+    {
+      "path": "prisma/schema.prisma",
+      "sha256": "f35461fc53db5d89cc0e405fa8851bc3df6d9b0bd9854aee273a15d8d83a2740"
+    },
+    {
+      "path": "scripts/hr-bootstrap-lib.d.mts",
+      "sha256": "5a53faadb001f3819bf275a028407203b7869f8c42b2ed0d2f92ef909e39c71a"
+    },
+    {
+      "path": "scripts/hr-bootstrap-lib.mjs",
+      "sha256": "fd6a38a6d724f07717e186e392e8e0f6516f590ed5dbb1423358422008fa2de0"
+    },
+    {
+      "path": "scripts/hr-reconcile-role-permissions.mjs",
+      "sha256": "8141a6d56e0524b862dcc8d360e02f8f100aa51c364c3e1734666a587b1012e4"
+    },
+    {
+      "path": "scripts/hr-role-permission-reconcile-staging.mjs",
+      "sha256": "d654c21a64b720c55111f1ce73668308666763bffe2d8c295bb7c1ca080936d2"
+    },
+    {
+      "path": "scripts/hr-unit9-ng-2026-7-concurrency.ts",
+      "sha256": "1e851e5293d15542507cb9d7375117160827e5bd442ab09b5a75f03744ae873d"
+    },
+    {
+      "path": "scripts/hr-unit9-ng-2026-8-concurrency.ts",
+      "sha256": "8d866f86da338010c9f47b5696e14105f5390a60aa7b98dd10fbe6a3e6764c96"
+    },
+    {
+      "path": "src/app/hr/admin/unit-9-status/2026-8/page.tsx",
+      "sha256": "cf1e817de0c7bbf3b6ceabf4d7beea9a041063fdb1ae8c72d566be39134106a6"
+    },
+    {
+      "path": "src/lib/hr/audit/index.ts",
+      "sha256": "a3f1b619f75d0001c14676f96964b4aef363dd79dfcb7f971f5e0c984c42a605"
+    },
+    {
+      "path": "src/lib/hr/notifications/outbox.ts",
+      "sha256": "ff63fdebe10e3b953f699bf537a3a3f221ee44a73c281e091a168f9fb103460e"
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-6.ts",
+      "sha256": "aa32d1f5fc48b965028b8fbb701bcdb321109e59a12a55a2bde6f25f991e56b5"
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-7.ts",
+      "sha256": "ea95fdfd2b903ebaafcdec230b83ebacdb6cf0ccbf3f45921d9faad3317a2f16"
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-8.ts",
+      "sha256": "dfcabc5f9923e7e624738be90a5d8b6e0ec1e2951c60bb469ea764ad141d5824"
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-candidate-certification.ts",
+      "sha256": "162f8b7141a56a429b10947a8c64228c590b3612d82830858a36eacab688a80b"
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-domain.ts",
+      "sha256": "245bb275552d10af30916d50c450120782d8f8101df3f6f7654668b70ddc0106"
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine.ts",
+      "sha256": "f4020babfba80cdb18b066861909ddc9afd4cfbf03e9544cb5abe44364922d13"
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine-2026-6.ts",
+      "sha256": "c932c175899c9bcdeb3d648316ac013b88bbf818015c8aad44cb85c57c20e121"
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine-2026-7.ts",
+      "sha256": "a9aba974a0ea4f2963c3ac1a5bedebe0a362593b6ebb285b6a186b7d4472c085"
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine-2026-8.ts",
+      "sha256": "672758ed651465c5b61af68949599bbe5a3bb3858ac9d40aae297af310e8ade8"
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-financial-service.ts",
+      "sha256": "fe7524594508b1579cf1d360810cd9b7d672c1b856e32054ab651ac38a467dde"
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-limited-launch.ts",
+      "sha256": "2968ec0f07fb1f15bd00857b1748c9a0882c8f68b4da654af0e062d945348302"
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-service.ts",
+      "sha256": "c2898c311782e45c53aad8f18bb23dc20f197edf9375da6b30474f99295356f8"
+    },
+    {
+      "path": "tests/fixtures/ng-candidate-2026-7-expected-values.json",
+      "sha256": "eb29e99f8a7ea11ba78979c07bdc0891c4d2b28b0451cb754a2800cf8ec26438"
+    },
+    {
+      "path": "tests/hrms-role-permission-reconciliation.test.ts",
+      "sha256": "57ad8c3353c0516ca7b213fa9da8db7a66e5d56bb48070052ec7f572c785941c"
+    },
+    {
+      "path": "tests/hrms-unit9-evidence-isolation.test.ts",
+      "sha256": "3b0b216efee64c34c88900d2e2db21dbe937342604a7dc2fdb60cdadf0fd7b97"
+    },
+    {
+      "path": "tests/hrms-unit9-ng-2026-7.test.ts",
+      "sha256": "afa174453da3d0b642f12ae94d18610bb6e1921442356acf546518fe6b98bb74"
+    },
+    {
+      "path": "tests/hrms-unit9-ng-2026-7-concurrency.test.ts",
+      "sha256": "8742c91a6ae7e24d5224983f22d18c1fd15d1ee26ef7a13c80405691f69162c6"
+    },
+    {
+      "path": "tests/hrms-unit9-ng-2026-7-package.test.ts",
+      "sha256": "aaa74e64ab3b6ee7f48d3b0ea92dfbed734cc0a7cbdd589a606e83d5fef17a48"
+    },
+    {
+      "path": "tests/hrms-unit9-ng-2026-7-preservation.test.ts",
+      "sha256": "2fc2bb0559abf04dcd3fd8abe6d228a7b28889eb7e7816af103dc19d4c9635e5"
+    },
+    {
+      "path": "tests/hrms-unit9-ng-2026-8.test.ts",
+      "sha256": "74885c9d2126daa61610c6d736e19399517ff61f5a2bed585d8b46597449a5a5"
+    },
+    {
+      "path": "tests/hrms-unit9-ng-2026-8-preservation.test.ts",
+      "sha256": "ade6b76c629690aa9c3b7b918c116d736a4f8aa0b44e78801807f82bc033eb73"
+    }
+  ],
+  "hashCoverage": {
+    "payloadFiles": "ALL_LISTED_IN_PACKAGE_HASH_FILE",
+    "manifest": "HASHED_BY_ARCHIVE_CHECKSUM",
+    "hashIndex": "HASHED_BY_ARCHIVE_CHECKSUM",
+    "selfReferenceNote": "The manifest and hash index cannot embed their own stable digest; the deterministic ZIP checksum covers both exact files."
+  },
+  "certificationBoundary": {
+    "independentStage1ReviewPerformed": false,
+    "professionalNigeriaCertification": false,
+    "officialFinalization": false,
+    "payslipPublication": false,
+    "productionPayrollActivation": false,
+    "realPaymentOrSettlement": false,
+    "statutoryFilingOrRemittance": false,
+    "stage2Started": false,
+    "unit10Started": false
+  }
+}
+
