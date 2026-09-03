@@ -1,0 +1,14 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.9",
+  "environment": "staging",
+  "result": "PASS",
+  "temporarySessionsCreated": 0,
+  "temporaryUsersCreated": 0,
+  "temporaryTenantsCreated": 0,
+  "temporaryOwnerRoleChanges": 0,
+  "temporarySecretsCreated": 0,
+  "databaseHarnessCleanup": "completed by scoped finally cleanup in the preserved concurrency harness",
+  "persistentEvidence": "one immutable non-secret HrAuditEvent containing race and zero-mutation results",
+  "secretsPreserved": false,
+  "productionTouched": false
+}

@@ -1,0 +1,23 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.9",
+  "candidateStatus": "NOT_CERTIFIED",
+  "baselineCommit": "cd303f9b9f0b6f32631b390de32280d1917ef102",
+  "baselineTree": "9e2a76a2c2828f44ac5fed833378cf3ac90880bd",
+  "featureCommit": "a39ae4715a7895eb5e97b9e6f7d48a3154d64ed8",
+  "mergeCommit": "8932d51a90769276d73a3b5415378fa834032240",
+  "runtimeCommit": "8932d51a90769276d73a3b5415378fa834032240",
+  "runtimeTree": "7a3cfa71a9ae62ac2c4e7c55d061da8692c5a12f",
+  "deploymentId": "dep-dacrg8n40ujc739vjlu0",
+  "serviceId": "srv-d8s6ovvavr4c73fctksg",
+  "environment": "staging",
+  "databaseIdentity": "zentric_analytics_staging",
+  "providerReportedCommit": "8932d51a90769276d73a3b5415378fa834032240",
+  "migrationAppliedCount": 63,
+  "migrationPendingCount": 0,
+  "migrationFailedCount": 0,
+  "health": { "httpStatus": 200, "body": { "status": "ok" }, "cacheControl": "no-store" },
+  "readiness": { "httpStatus": 200, "body": { "status": "ready", "database": "ok" }, "cacheControl": "no-store" },
+  "deployedAt": "2026-09-03T18:10:42Z",
+  "liveAt": "2026-09-03T18:14:03Z",
+  "result": "PASS"
+}
