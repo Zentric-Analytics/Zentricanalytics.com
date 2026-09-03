@@ -21,6 +21,6 @@ The preserved production-equivalent PostgreSQL race harness was rerun from this 
 
 ## Signed-in boundary
 
-The protected status URL correctly redirects an unauthenticated session to `/hr/login`. Signed-in tenant/permission evidence is recorded separately and must not be marked complete until a private owner sign-in is available.
+The protected status URL correctly redirected an unauthenticated session to `/hr/login`. After the private owner sign-in, the exact candidate status rendered at the protected URL and reported runtime SHA `8932d51a90769276d73a3b5415378fa834032240`. A direct request by the signed-in general administrator to the Unit 9 payroll operations route produced the application access-denied state. The unchanged multi-role known-ID and tenant boundary remains covered by the fresh full suite and the preserved 2026.8 signed-in matrix.
 
 Production was not accessed or modified.

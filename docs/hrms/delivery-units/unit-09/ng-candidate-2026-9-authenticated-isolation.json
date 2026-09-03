@@ -1,0 +1,33 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.9",
+  "candidateStatus": "NOT_CERTIFIED",
+  "runtimeCommit": "8932d51a90769276d73a3b5415378fa834032240",
+  "deploymentId": "dep-dacrg8n40ujc739vjlu0",
+  "environment": "staging",
+  "capturedAt": "2026-09-03T18:19:00Z",
+  "signedIn": true,
+  "actorClass": "GENERAL_ADMIN",
+  "assertions": [
+    {
+      "requestClass": "PROTECTED_CANDIDATE_STATUS",
+      "path": "/hr/admin/unit-9-status/2026-9",
+      "result": "PASS",
+      "evidence": "Signed-in page rendered the exact runtime SHA, NOT CERTIFIED status, 13-finding traceability, 17 fixture families, and all-nine-path fail-closed boundary."
+    },
+    {
+      "requestClass": "UNRELATED_ADMIN_DIRECT_PAYROLL_ROUTE",
+      "path": "/hr/admin/payroll/unit9",
+      "result": "PASS",
+      "evidence": "The general administrator session received the application access-denied state without redirecting to login."
+    },
+    {
+      "requestClass": "MULTI_ROLE_TENANT_AND_KNOWN_ID_PRESERVATION",
+      "result": "PASS",
+      "evidence": "The unchanged shared authorization boundary is covered by the fresh 1,154-test merged-tree suite and the preserved 2026.8 signed-in matrix: own-tenant payroll role allowed; cross-tenant known IDs 404; unrelated general admin and employee 403; no sensitive payload; no-store."
+    }
+  ],
+  "temporaryRolesChanged": 0,
+  "temporaryUsersCreated": 0,
+  "sensitiveValuesPreserved": false,
+  "result": "PASS"
+}
