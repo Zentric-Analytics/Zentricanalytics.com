@@ -1,0 +1,71 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.9",
+  "candidateStatus": "NOT_CERTIFIED",
+  "professionalReviewStatus": "READY_FOR_QUALIFIED_PROFESSIONAL_STAGE_1_REVIEW",
+  "baselineCommit": "cd303f9b9f0b6f32631b390de32280d1917ef102",
+  "baselineTree": "9e2a76a2c2828f44ac5fed833378cf3ac90880bd",
+  "featureCommit": "a39ae4715a7895eb5e97b9e6f7d48a3154d64ed8",
+  "mergeCommit": "8932d51a90769276d73a3b5415378fa834032240",
+  "runtimeCommit": "8932d51a90769276d73a3b5415378fa834032240",
+  "runtimeTree": "7a3cfa71a9ae62ac2c4e7c55d061da8692c5a12f",
+  "evidenceCommit": "ca5f700fc74eed95b98b4f6adc93deae21d28595",
+  "evidenceTree": "f39f7e50ffc1efaac4c31c541876e04bfa5ab52a",
+  "localValidation": {
+    "focused2026_9": { "filesPassed": 4, "testsPassed": 39, "testsFailed": 0 },
+    "fullSuite": { "filesPassed": 99, "testsPassed": 1154, "testsFailed": 0 },
+    "predecessorPreservation": "PASS",
+    "typescript": "PASS",
+    "eslintZeroWarnings": "PASS",
+    "prismaValidate": "PASS",
+    "productionBuild": "PASS",
+    "staticPagesGenerated": 125,
+    "gitDiffCheck": "PASS"
+  },
+  "deterministicEvidence": {
+    "dependencyFileCount": 19,
+    "dependencyInventorySha256": "dc67f018f6817d814693aeabd8bbdc47a95e3335953842cc0c2cafc878aacda7",
+    "fixtureFamilyCount": 17,
+    "fixtureEvidenceSha256": "f9246331e05a5b915ed4a72e616032c965c5096497c0f37fb3702898b565977d",
+    "regeneration": "PASS",
+    "sealed2026_8ArchiveSha256": "1b6a00096032958adc20b6d36e3c96d79ccdf362c3b4fab8365e6c3ebf9f2f03",
+    "sealed2026_8Preservation": "PASS"
+  },
+  "staging": {
+    "deploymentId": "dep-dacrg8n40ujc739vjlu0",
+    "serviceId": "srv-d8s6ovvavr4c73fctksg",
+    "databaseIdentity": "zentric_analytics_staging",
+    "migrationAppliedCount": 63,
+    "migrationPendingCount": 0,
+    "migrationFailedCount": 0,
+    "health": "PASS",
+    "readiness": "PASS",
+    "signedInAuthorization": "PASS",
+    "postgresqlConcurrency": "PASS",
+    "requiredRaceCount": 8,
+    "prohibitedOutputMutationCount": 0,
+    "cleanup": "PASS"
+  },
+  "security": {
+    "candidateCertificationGuard": "PASS",
+    "downstreamNotCertifiedBoundaryCount": 9,
+    "tenantIsolationAndKnownIdIdor": "PASS",
+    "roleRestriction": "PASS",
+    "makerChecker": "PASS",
+    "staleSnapshotRejection": "PASS",
+    "immutableBinding": "PASS",
+    "deterministicReplay": "PASS",
+    "secretScan": "PASS",
+    "secretsFound": 0
+  },
+  "boundaries": {
+    "productionPayrollActivated": false,
+    "officialPayrollFinalized": false,
+    "officialPayslipsPublished": false,
+    "realPaymentsInitiated": false,
+    "accountingPosted": false,
+    "statutoryFilingOrRemittanceInitiated": false,
+    "stage2Started": false,
+    "unit10Started": false,
+    "productionTouched": false
+  }
+}
