@@ -1,0 +1,26 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.9",
+  "candidateStatus": "NOT_CERTIFIED",
+  "currency": "NGN",
+  "precision": 2,
+  "evidenceClassification": "ENGINEERING_ONLY_UNLESS_PROFESSIONALLY_APPROVED",
+  "families": [
+    { "id": "F01_ZERO_INCOME", "inputs": { "salary": "0.00", "other": "0.00" }, "grossEmploymentIncome": "0.00", "eligibleDeductions": "0.00", "annualLiability": "0.00", "currentDeduction": "0.00", "expected": "COMPLIANCE_HOLD_MINIMUM_WAGE_AUTHORITY_REQUIRED", "authority": "engineering-only" },
+    { "id": "F02_MINIMUM_WAGE_BOUNDARY", "cases": [{ "monthlySalary": "69999.99" }, { "monthlySalary": "70000.00" }, { "monthlySalary": "70000.01" }], "expected": "COMPLIANCE_HOLD_MINIMUM_WAGE_AUTHORITY_REQUIRED", "authority": "engineering-only" },
+    { "id": "F03_BELOW_ABOVE_MINIMUM_WAGE", "cases": [{ "monthlySalary": "50000.00" }, { "monthlySalary": "100000.00" }], "expected": "COMPLIANCE_HOLD_MINIMUM_WAGE_AUTHORITY_REQUIRED", "authority": "engineering-only" },
+    { "id": "F04_TAX_BAND_BOUNDARIES", "cases": ["799999.99", "800000.00", "800000.01", "2999999.99", "3000000.00", "3000000.01", "11999999.99", "12000000.00", "12000000.01", "24999999.99", "25000000.00", "25000000.01", "49999999.99", "50000000.00", "50000000.01"], "expected": "COMPLIANCE_HOLD_RULE_PROFESSIONAL_APPROVAL_REQUIRED", "authority": "source-backed-independent" },
+    { "id": "F05_JOINER_LEAVER", "cases": [{ "span": "JOINER", "monthlySalary": "100000.00" }, { "span": "LEAVER", "monthlySalary": "100000.00" }], "expected": "COMPLIANCE_HOLD_PARTIAL_YEAR_TREATMENT_REQUIRED", "authority": "engineering-only" },
+    { "id": "F06_BONUS_CURRENT_PRIOR_YTD", "inputs": { "annualSalary": "1200000.00", "currentBonus": "100000.00", "priorBonusYtd": "50000.00" }, "expected": "COMPLIANCE_HOLD_BONUS_ALLOCATION_METHOD_REQUIRED", "authority": "engineering-only" },
+    { "id": "F07_OTHER_EMPLOYMENT_INCOME", "cases": ["ALLOWANCE", "OVERTIME", "COMMISSION", "BENEFIT_IN_KIND_EMPLOYER_ASSET", "BENEFIT_IN_KIND_HIRED_ASSET"], "expected": "COMPLIANCE_HOLD_EARNING_RULE_NOT_APPROVED", "authority": "engineering-only" },
+    { "id": "F08_PRIOR_EMPLOYER", "cases": [{ "state": "VERIFIED", "income": "500000.00", "paye": "50000.00" }, { "state": "UNKNOWN", "income": null, "paye": null }], "expected": ["PROFESSIONAL_REVIEW_REQUIRED", "COMPLIANCE_HOLD_PRIOR_EMPLOYER_UNKNOWN"], "authority": "engineering-only" },
+    { "id": "F09_RELIEFS", "cases": ["PENSION", "NHF", "NHIS", "MORTGAGE_INTEREST", "LIFE_ANNUITY", "RENT", "COMBINED"], "expected": "COMPLIANCE_HOLD_UNTIL_EVIDENCE_AND_RULE_APPROVED", "authority": "engineering-only" },
+    { "id": "F10_PENSION_POPULATION", "cases": ["COVERED", "EXEMPT", "VOLUNTARY", "UNRESOLVED_COMPLIANCE_HOLD"], "expected": "COMPLIANCE_HOLD_UNTIL_POPULATION_AND_RULE_APPROVED", "authority": "engineering-only" },
+    { "id": "F11_LEAVE_SALARY_CHANGE", "cases": ["PAID_LEAVE", "UNPAID_LEAVE", "MID_PERIOD_SALARY_CHANGE"], "expected": "COMPLIANCE_HOLD_PRORATION_POLICY_NOT_APPROVED", "authority": "owner-policy-derived" },
+    { "id": "F12_RETRO", "cases": [{ "kind": "UNDERPAYMENT", "amount": "10000.00" }, { "kind": "OVERPAYMENT", "amount": "10000.00" }], "expected": "COMPLIANCE_HOLD_RETRO_TREATMENT_REQUIRED", "authority": "engineering-only" },
+    { "id": "F13_NEGATIVE_CUMULATIVE", "inputs": { "cumulativeTarget": "50000.00", "validPriorPaye": "60000.00" }, "refundCandidate": "10000.00", "expected": "COMPLIANCE_HOLD_REFUND_PROCEDURE_REQUIRED", "authority": "engineering-only" },
+    { "id": "F14_RTA_ROUTING", "cases": ["LAGOS", "OYO", "FCT"], "expected": "COMPLIANCE_HOLD_UNTIL_JURISDICTION_RULE_APPROVED", "authority": "engineering-only" },
+    { "id": "F15_ROUNDING_DRIFT", "cases": ["0.005", "0.015", "799999.995", "800000.005"], "expected": "COMPLIANCE_HOLD_ROUNDING_POLICY_NOT_APPROVED", "authority": "owner-policy-derived" },
+    { "id": "F16_CORRECTED_OUTPUTS", "cases": ["CORRECTED_PAYSLIP", "CORRECTED_LIABILITY", "AMENDED_RETURN"], "expected": "NOT_CERTIFIED_DOWNSTREAM_REJECTION", "authority": "engineering-only" },
+    { "id": "F17_FAIL_CLOSED", "cases": ["UNSUPPORTED_EARNING", "STALE_EVIDENCE", "DUPLICATE_EVIDENCE", "SUPERSEDED_EVIDENCE"], "expected": "COMPLIANCE_HOLD_NO_OFFICIAL_MUTATION", "authority": "engineering-only" }
+  ]
+}

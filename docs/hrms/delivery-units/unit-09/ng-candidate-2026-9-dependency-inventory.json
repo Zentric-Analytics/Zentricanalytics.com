@@ -1,0 +1,174 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.9",
+  "candidateStatus": "NOT_CERTIFIED",
+  "algorithm": "SHA-256",
+  "entryPoints": [
+    "src/lib/hr/payroll/nigeria-2026-9.ts",
+    "src/lib/hr/payroll/unit9-candidate-certification.ts",
+    "src/lib/hr/payroll/unit9-engine-2026-9.ts",
+    "src/lib/hr/payroll/unit9-financial-service.ts",
+    "src/lib/hr/payroll/unit9-service.ts"
+  ],
+  "files": [
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-2.ts",
+      "sha256": "2bb4273852b4c5cb5685b57fb3852e95886ee3e91b6a18ba523afa8c3b8b8da5",
+      "imports": [
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-3.ts",
+      "sha256": "d2f82e2983dab31dc721d21a96baebc9669804fe5ad200259d24f4707f2ee46b",
+      "imports": [
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-4.ts",
+      "sha256": "b3682380a416bbb1fe88bdb192bdf518f8e77a155a35383c1823fd1cbacfa25e",
+      "imports": [
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-5.ts",
+      "sha256": "752ee33ae95bfebdef1f7aa6f51398086b7370c64e1305bada4fddb8455c9fc4",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-4.ts",
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-6.ts",
+      "sha256": "aa32d1f5fc48b965028b8fbb701bcdb321109e59a12a55a2bde6f25f991e56b5",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-4.ts",
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-7.ts",
+      "sha256": "ea95fdfd2b903ebaafcdec230b83ebacdb6cf0ccbf3f45921d9faad3317a2f16",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-4.ts",
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-8.ts",
+      "sha256": "dfcabc5f9923e7e624738be90a5d8b6e0ec1e2951c60bb469ea764ad141d5824",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-7.ts",
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/nigeria-2026-9.ts",
+      "sha256": "0ca9ec60f9bf1137110b027b6e214920cc9f8267d01f7d8df7114839ce2cd703",
+      "imports": [
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-candidate-certification.ts",
+      "sha256": "162f8b7141a56a429b10947a8c64228c590b3612d82830858a36eacab688a80b",
+      "imports": []
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-domain.ts",
+      "sha256": "245bb275552d10af30916d50c450120782d8f8101df3f6f7654668b70ddc0106",
+      "imports": []
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine-2026-5.ts",
+      "sha256": "23dac52fe495b972ebbfda64b243e058c36f9f1f771c711cd0f134b3e81bfb4a",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-5.ts",
+        "src/lib/hr/payroll/unit9-domain.ts",
+        "src/lib/hr/payroll/unit9-engine.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine-2026-6.ts",
+      "sha256": "c932c175899c9bcdeb3d648316ac013b88bbf818015c8aad44cb85c57c20e121",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-6.ts",
+        "src/lib/hr/payroll/unit9-domain.ts",
+        "src/lib/hr/payroll/unit9-engine.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine-2026-7.ts",
+      "sha256": "a9aba974a0ea4f2963c3ac1a5bedebe0a362593b6ebb285b6a186b7d4472c085",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-7.ts",
+        "src/lib/hr/payroll/unit9-domain.ts",
+        "src/lib/hr/payroll/unit9-engine.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine-2026-8.ts",
+      "sha256": "672758ed651465c5b61af68949599bbe5a3bb3858ac9d40aae297af310e8ade8",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-7.ts",
+        "src/lib/hr/payroll/nigeria-2026-8.ts",
+        "src/lib/hr/payroll/unit9-domain.ts",
+        "src/lib/hr/payroll/unit9-engine.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine-2026-9.ts",
+      "sha256": "c335c196a1775cca21d766f629d505860fbfe8a0e5dfb64e9885a3e331c32ec3",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-7.ts",
+        "src/lib/hr/payroll/nigeria-2026-8.ts",
+        "src/lib/hr/payroll/nigeria-2026-9.ts",
+        "src/lib/hr/payroll/unit9-domain.ts",
+        "src/lib/hr/payroll/unit9-engine-2026-8.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-engine.ts",
+      "sha256": "f4020babfba80cdb18b066861909ddc9afd4cfbf03e9544cb5abe44364922d13",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-2.ts",
+        "src/lib/hr/payroll/nigeria-2026-3.ts",
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-financial-service.ts",
+      "sha256": "fe7524594508b1579cf1d360810cd9b7d672c1b856e32054ab651ac38a467dde",
+      "imports": [
+        "src/lib/hr/payroll/unit9-candidate-certification.ts",
+        "src/lib/hr/payroll/unit9-domain.ts",
+        "src/lib/hr/payroll/unit9-engine.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-limited-launch.ts",
+      "sha256": "2968ec0f07fb1f15bd00857b1748c9a0882c8f68b4da654af0e062d945348302",
+      "imports": [
+        "src/lib/hr/payroll/unit9-domain.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hr/payroll/unit9-service.ts",
+      "sha256": "c2898c311782e45c53aad8f18bb23dc20f197edf9375da6b30474f99295356f8",
+      "imports": [
+        "src/lib/hr/payroll/nigeria-2026-7.ts",
+        "src/lib/hr/payroll/nigeria-2026-8.ts",
+        "src/lib/hr/payroll/unit9-candidate-certification.ts",
+        "src/lib/hr/payroll/unit9-domain.ts",
+        "src/lib/hr/payroll/unit9-engine-2026-5.ts",
+        "src/lib/hr/payroll/unit9-engine-2026-6.ts",
+        "src/lib/hr/payroll/unit9-engine-2026-7.ts",
+        "src/lib/hr/payroll/unit9-engine-2026-8.ts",
+        "src/lib/hr/payroll/unit9-engine.ts",
+        "src/lib/hr/payroll/unit9-limited-launch.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "dc67f018f6817d814693aeabd8bbdc47a95e3335953842cc0c2cafc878aacda7"
+}

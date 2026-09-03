@@ -1,0 +1,127 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.9",
+  "candidateStatus": "NOT_CERTIFIED",
+  "generatedBy": "DETERMINISTIC_CANONICAL_JSON_SHA256",
+  "fixtures": [
+    {
+      "familyId": "F01_ZERO_INCOME",
+      "manifestHash": "74266a9aff5ddd5e82b5ec4270ffa030e0f4c703101da5ab5d13a9f179da0693",
+      "outputHash": "1ec73c889a5cabaddbfa82b831b66bb6bea815c335240270d5980c8f32a796a0",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F02_MINIMUM_WAGE_BOUNDARY",
+      "manifestHash": "a7bb6f32b181ce016b49d33126104ee813661ca1b9a755f42b1557709541a295",
+      "outputHash": "476218b1114ebd3dcbdc2a05f3544dc3c23ec5959cc59ae8442a6df1802a36f2",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F03_BELOW_ABOVE_MINIMUM_WAGE",
+      "manifestHash": "e9af6071017696a0ed6c5b56afd5e17fc430f8543e84bb4584c849d8dc308ebc",
+      "outputHash": "bc7e6f08488a5d72087bebe11339042892386d094a1db4e4adbdcc89d138e8df",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F04_TAX_BAND_BOUNDARIES",
+      "manifestHash": "56e9f82f007c2e6457e3b1c61436877f9dabc2e50532305c263cf704e554f611",
+      "outputHash": "1ec1eac8c1e0775d821fb636ec7019dfdef93c358cf4ab9d19ce5bbb1d3f722f",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "source-backed-independent"
+    },
+    {
+      "familyId": "F05_JOINER_LEAVER",
+      "manifestHash": "bb122397592faab11370e24f80ee167503c1fa44ca9af83076b143b1619749f8",
+      "outputHash": "cc01f1da96b1e6193aae50d433fac2be64cbf071140329171b1db65fe02425e0",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F06_BONUS_CURRENT_PRIOR_YTD",
+      "manifestHash": "65e6d0f0a110d8b59b595528f3ac7c8f0f324e2ac67a6d007eda4102d3f0dd6c",
+      "outputHash": "7de624ae678afa718491ce2d72ee9796bd932e260878220b5c6bdfb07351e136",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F07_OTHER_EMPLOYMENT_INCOME",
+      "manifestHash": "0a9b12be1d944fc01f8867e5cc36df6b8d9a62405f0006dbfb3b8d02e2a1952d",
+      "outputHash": "92a5181cd0de4b86f34746ba1fe851bd90358cfde92c8f947b29e67dca31f3eb",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F08_PRIOR_EMPLOYER",
+      "manifestHash": "9e9be2de41722641f2bc3c103c62fcacce01a93a3564e688566ea80a39fcc0c4",
+      "outputHash": "d31218a5bf4f7b54500cb589d3af9ea4485d687b532a7d6e35d77b2d5502d4ef",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F09_RELIEFS",
+      "manifestHash": "aa2e0a67920495074e962d82db853b41212227e15ff4a0d4cabfac6a7b4b47ca",
+      "outputHash": "dc8e37a376268886c6da36ce333bfae9c3492ccff233f1e2d7a732777d4c1086",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F10_PENSION_POPULATION",
+      "manifestHash": "87ce69346a6964af3e6c9d6beb764d4eafcee61cfd31a9ec2d1fbd6eb9db74d8",
+      "outputHash": "1f051601b79b061a703b52909cc28e9e3fea3425f2bb317f509ab469cf423c0d",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F11_LEAVE_SALARY_CHANGE",
+      "manifestHash": "2ab104157a81e854ccb87f63c6fd3f668b144aeedc77988d378167d3a4861fb5",
+      "outputHash": "5bd6929cfa56c77362084374d38971be1ae65d88a9d7a17e0967abc4f47eb61c",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "owner-policy-derived"
+    },
+    {
+      "familyId": "F12_RETRO",
+      "manifestHash": "817c9f3bbc20efe92a153f12819d562340130c1b1b8913e873072e77f5c3e28c",
+      "outputHash": "fd6a99ba19f074ca100a37ff8b7bfe38f4e7363066578ecf56f2c68d0ccbbc03",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F13_NEGATIVE_CUMULATIVE",
+      "manifestHash": "5f7673159fbf5cf78a315fbcd54c28359283097e46aab685a8cbe5b8b07d61a4",
+      "outputHash": "a9d6173b0d97d7bad4ce52336e4ce9951629e8570960cd3b35396e3ecffe69ab",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F14_RTA_ROUTING",
+      "manifestHash": "dc42b8c6d7dc5f5595dd177a9d8ec8634c342f3eaab42c717cd877cd9cd6d5a5",
+      "outputHash": "0749c711d20e87f72dfc4daaeab0b58bb356f9f92d9476e079878b0d4090ac5b",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F15_ROUNDING_DRIFT",
+      "manifestHash": "232b742e6911d2695edffe55a74912fe44a0e8903c47e2913f65f26f88b4bdf5",
+      "outputHash": "e49c86cf4484ab697399a8653b0a4172b89c2de8dc09ee11e025ccd8cd97087c",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "owner-policy-derived"
+    },
+    {
+      "familyId": "F16_CORRECTED_OUTPUTS",
+      "manifestHash": "a9890fec2c0c5934762ef93340292ce011e7c81a3bf397f56b37f90e85f005cf",
+      "outputHash": "4cf0760592a392fef9b2d17267f8c9edeecb936163c0ff6a1022228e444844a6",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    },
+    {
+      "familyId": "F17_FAIL_CLOSED",
+      "manifestHash": "4b05260a484d67f7d892797b1a69a051fb52622f523b13435ec03297d1457bb2",
+      "outputHash": "1e3bd56ecce469693a5746ef0aa379ce41ccb77cd03d964af6efc13464e54c91",
+      "expectedDownstreamAuthorization": "REJECT_NOT_CERTIFIED",
+      "evidenceClassification": "engineering-only"
+    }
+  ],
+  "evidenceHash": "f9246331e05a5b915ed4a72e616032c965c5096497c0f37fb3702898b565977d"
+}
