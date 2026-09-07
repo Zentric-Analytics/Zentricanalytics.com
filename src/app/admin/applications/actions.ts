@@ -5,6 +5,7 @@ import { getAdminSession } from '@/lib/admin-auth';
 import { requireAuthenticatedUser } from '@/lib/hr/permissions/authorize';
 import { assertRecruitmentStageAccess } from '@/lib/hr/recruitment/stage-access';
 import { createApprovedAgreementHandover } from '@/lib/hr/recruitment/offers';
+import { reconcileRecruitmentEmployment } from '@/lib/hr/recruitment/employment-handover';
 import { enqueueHrEmail } from '@/lib/hr/notifications/outbox';
 import { stageDecisionIsRepeat } from '@/lib/workflow';
 import { approveStage1, approveStage2, approveStage3, recordAdminStage1Action, recordAdminStage2Action, recordAdminStage3Action, StageActionError } from '@/lib/workflow';
@@ -593,6 +594,7 @@ export async function adminStage8Action(formData: FormData) {
             },
           });
           if (!existingEmployee) await tx.hrAuditEvent.create({ data: { organizationId: hrOrganization.id, actorRole: 'LEGACY_RECRUITMENT_ADMIN', entityType: 'HrEmployee', entityId: employee.id, action: 'hr.employee.created_from_recruitment', newValues: { recruitmentApplicationId: app.id, employeeNumber: generatedEmployeeNumber, status: 'DRAFT' }, reason: 'Final recruitment approval', correlationId: `recruitment:${app.id}` } });
+          if (app.vacancyId) await reconcileRecruitmentEmployment(tx, { organizationId: hrOrganization.id, applicationId: app.id, actorUserId: adminSession.id });
         }
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin finalized Stage 8', metadata: { checklistConfirmed: true, checklistItemCount: stage8ChecklistKeys.length, finalHrNotesPresent: Boolean(finalHrNotes), candidateFacingNotePresent: Boolean(candidateFacingNote) } } });
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Final HR checklist confirmed', metadata: { checklistVersion: 1, confirmedItemCount: stage8ChecklistKeys.length } } });
@@ -608,7 +610,7 @@ export async function adminStage8Action(formData: FormData) {
         await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Rejected', currentStageOrder: 8 } });
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin rejected Stage 8', metadata: { notesPresent: Boolean(finalHrNotes), candidateFacingNotePresent: Boolean(candidateFacingNote) } } });
       }
-    });
+    }, { isolationLevel: 'Serializable' });
     const template = action === 'finalize' ? ['hiring-workflow-completed', hiringWorkflowCompletedEmail] as const : action === 'correction' ? ['stage-8-correction-requested', stage8FinalReviewCorrectionEmail] as const : ['stage-8-rejected', stage8RejectedEmail] as const;
     const email = await safeSendEmail({ applicationId, template: template[0], ...template[1]({ applicationId: app.applicationId, candidateName: app.applicant.fullName }) });
     destination = redirectPath(applicationId, `?success=${action === 'finalize' ? 'stage8_finalized' : action === 'correction' ? 'stage8_correction' : 'stage8_rejected'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);

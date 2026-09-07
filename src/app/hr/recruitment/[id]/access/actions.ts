@@ -8,6 +8,18 @@ import { appendHrAudit } from "@/lib/hr/audit";
 import { renderMailboxWelcome } from "@/lib/hr/recruitment/mailbox-welcome";
 import { sendAndRecordEmail } from "@/lib/email";
 import { createLinkedEmployeeInvitation } from "@/lib/hr/recruitment/employee-access";
+import { reconcileRecruitmentEmployment } from "@/lib/hr/recruitment/employment-handover";
+
+export async function reconcileEmploymentAction(formData: FormData) {
+  const auth = await requireAuthenticatedUser();
+  const applicationId = z.string().cuid().parse(formData.get("applicationId"));
+  await prisma.$transaction(tx => reconcileRecruitmentEmployment(tx, {
+    organizationId: auth.user.organizationId, actorUserId: auth.user.id, applicationId,
+  }), { isolationLevel: "Serializable" });
+  revalidatePath(`/hr/recruitment/${applicationId}/access`);
+  revalidatePath("/hr/employee/profile");
+  revalidatePath("/hr/admin/employees", "layout");
+}
 
 export async function sendLinkedInvitationAction(formData: FormData) {
   const auth = await requireAuthenticatedUser();

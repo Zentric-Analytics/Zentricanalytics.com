@@ -7,6 +7,7 @@ import { enqueueHrEmail } from "../notifications/outbox";
 import { reconcilePositionOccupancy } from "../organization/position-commands";
 import { evaluateActivationReadiness } from "./states";
 import { evaluateHandoverEligibility } from "./handover";
+import { reconcileRecruitmentEmployment } from "./employment-handover";
 
 type Client = Prisma.TransactionClient;
 
@@ -39,6 +40,13 @@ export async function convertApprovedHandoverToPreHire(
   });
   const offerVersion = handover.offerAcceptance.offer.acceptedVersion;
   if (!offerVersion?.positionId) throw new Error("The accepted offer must identify an approved position.");
+  const linkedEmployee = await tx.hrEmployee.findUnique({ where: { recruitmentApplicationId: application.id } });
+  if (linkedEmployee) {
+    if (linkedEmployee.organizationId !== input.organizationId || linkedEmployee.employmentStatus !== "DRAFT") {
+      throw new Error("The existing employee is not an eligible recruitment draft.");
+    }
+    await reconcileRecruitmentEmployment(tx, { ...input, applicationId: application.id });
+  }
   const [position, template] = await Promise.all([
     tx.hrPosition.findFirstOrThrow({
       where: {
@@ -46,7 +54,7 @@ export async function convertApprovedHandoverToPreHire(
         organizationId: input.organizationId,
         departmentId: offerVersion.departmentId,
         status: "ACTIVE",
-        lifecycleStatus: { in: ["OPEN", "PARTIALLY_FILLED"] },
+        lifecycleStatus: { in: linkedEmployee ? ["OPEN", "PARTIALLY_FILLED", "FILLED"] : ["OPEN", "PARTIALLY_FILLED"] },
       },
     }),
     tx.hrLifecycleTemplate.findFirst({
@@ -58,13 +66,13 @@ export async function convertApprovedHandoverToPreHire(
   if (!template) throw new Error("No active onboarding template matches this organization.");
   const startDate = offerVersion.startDate;
   const year = startDate.getUTCFullYear();
-  const sequence = await tx.hrEmployeeNumberSequence.upsert({
+  const sequence = linkedEmployee ? null : await tx.hrEmployeeNumberSequence.upsert({
     where: { organizationId_year: { organizationId: input.organizationId, year } },
     update: { lastValue: { increment: 1 } },
     create: { organizationId: input.organizationId, year, lastValue: 1 },
   });
-  const employeeNumber = `EMP-${year}-${String(sequence.lastValue).padStart(6, "0")}`;
-  const employee = await tx.hrEmployee.create({
+  const employeeNumber = linkedEmployee?.employeeNumber ?? `EMP-${year}-${String(sequence!.lastValue).padStart(6, "0")}`;
+  const employee = linkedEmployee ? await tx.hrEmployee.update({ where: { id: linkedEmployee.id }, data: { employmentStatus: "PRE_HIRE" } }) : await tx.hrEmployee.create({
     data: {
       organizationId: input.organizationId,
       recruitmentApplicationId: application.id,
@@ -84,13 +92,14 @@ export async function convertApprovedHandoverToPreHire(
     data: {
       organizationId: input.organizationId,
       employeeId: employee.id,
+      previousStatus: linkedEmployee ? "DRAFT" : undefined,
       newStatus: "PRE_HIRE",
       effectiveAt: new Date(),
       reason: "Approved recruitment handover converted to pre-hire",
       changedById: input.actorUserId,
     },
   });
-  await tx.hrEmployeeAssignment.create({
+  if (!linkedEmployee) await tx.hrEmployeeAssignment.create({
     data: {
       organizationId: input.organizationId,
       employeeId: employee.id,
