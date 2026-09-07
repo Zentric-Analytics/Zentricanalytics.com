@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { HR_PERMISSION_KEYS, HR_ROLE_KEYS, permissionKeysByRole, reconcileHrRolePermissions } from "../scripts/hr-bootstrap-lib.mjs";
+import { HR_PERMISSIONS } from "../src/lib/hr/permissions/catalog";
+
+const recruitmentPermissions = HR_PERMISSIONS.filter((key) =>
+  /^(hiring_team|vacancy|application|interview|assessment|offer|handover|onboarding|recruitment)\./.test(key)
+  || ["document.verify", "document.reject", "document.request_replacement", "employee.prehire.create", "employee.activate"].includes(key));
 
 type Role = { id: string; organizationId: string; key: string; name: string };
 type Permission = { id: string; organizationId: string; key: string };
@@ -82,6 +87,19 @@ function makeReconciliationDatabase(organizationIds = ["org-1"]) {
 }
 
 describe("set-based canonical HR role-permission reconciliation", () => {
+  it.each(["ADMIN", "HR_ADMIN"])("retains runtime recruitment grants for %s across repeated releases", async (roleKey) => {
+    const db = makeReconciliationDatabase();
+    // Reproduce an existing runtime grant that the old deployment catalog deleted.
+    db.seedPair(db.seedRole("org-1", roleKey), db.seedPermission("org-1", "vacancy.view"));
+    await reconcileHrRolePermissions(db.prisma);
+    await reconcileHrRolePermissions(db.prisma);
+    expect(recruitmentPermissions.length).toBeGreaterThan(40);
+    expect(recruitmentPermissions.filter((key) => !HR_PERMISSION_KEYS.includes(key))).toEqual([]);
+    expect(db.permissionKeys("org-1", roleKey)).toEqual(expect.arrayContaining(recruitmentPermissions));
+    for (const other of ["EMPLOYEE", "AUDITOR", "PAYROLL_ADMIN", "COMPENSATION_ADMIN"]) {
+      expect(db.permissionKeys("org-1", other).filter((key) => recruitmentPermissions.includes(key as typeof recruitmentPermissions[number]))).toEqual([]);
+    }
+  });
   it("does not change an already canonical organization and is idempotent", async () => {
     const db = makeReconciliationDatabase(); db.seedCanonical("org-1");
     const before = JSON.stringify({ roles: db.state.roles, permissions: db.state.permissions, pairs: db.state.pairs });
