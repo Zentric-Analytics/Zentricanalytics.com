@@ -75,7 +75,7 @@ export async function reconcileRecruitmentEmployment(tx: Prisma.TransactionClien
   const updated = await tx.hrEmployee.update({ where: { id: employee.id }, data: {
     hireDate: terms.startDate, startDate: terms.startDate, workMode: terms.workMode as "ONSITE" | "HYBRID" | "REMOTE",
   } });
-  await appendHrAudit(tx, { ...input, entityType: "HrEmployee", entityId: employee.id,
+  await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, entityType: "HrEmployee", entityId: employee.id,
     action: "hr.recruitment.employment_reconciled", newValues: { applicationId: application.id, offerVersionId: terms.id },
     reason: "Accepted employment terms linked without changing account or activation state",
   });

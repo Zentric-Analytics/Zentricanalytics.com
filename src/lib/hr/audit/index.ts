@@ -20,5 +20,15 @@ export async function appendHrAudit(client: AuditClient, input: {
   action: string; previousValues?: Record<string, unknown>; newValues?: Record<string, unknown>; reason?: string;
   ipHash?: string; userAgent?: string; requestId?: string; correlationId?: string;
 }) {
-  return client.hrAuditEvent.create({ data: { ...input, previousValues: safeAuditValues(input.previousValues) as Prisma.InputJsonValue | undefined, newValues: safeAuditValues(input.newValues) as Prisma.InputJsonValue | undefined, correlationId: input.correlationId ?? crypto.randomUUID() } });
+  // Callers can carry extra command-context fields at runtime despite TypeScript's
+  // structural typing. Persist only audit columns, never spread that context.
+  return client.hrAuditEvent.create({ data: {
+    organizationId: input.organizationId, actorUserId: input.actorUserId,
+    actorRole: input.actorRole, entityType: input.entityType, entityId: input.entityId,
+    action: input.action, reason: input.reason, ipHash: input.ipHash,
+    userAgent: input.userAgent, requestId: input.requestId,
+    previousValues: safeAuditValues(input.previousValues) as Prisma.InputJsonValue | undefined,
+    newValues: safeAuditValues(input.newValues) as Prisma.InputJsonValue | undefined,
+    correlationId: input.correlationId ?? crypto.randomUUID(),
+  } });
 }

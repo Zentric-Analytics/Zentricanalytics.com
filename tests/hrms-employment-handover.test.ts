@@ -30,6 +30,8 @@ describe("accepted employment reconciliation", () => {
     expect(f.tx.hrEmployee.update).toHaveBeenCalledWith({ where: { id: "employee" }, data: { hireDate: startDate, startDate, workMode: "REMOTE" } });
     expect(f.tx.hrEmployeeAssignment.create).toHaveBeenCalledWith({ data: expect.objectContaining({ employeeId: "employee", positionId: "position", departmentId: "department", effectiveFrom: startDate }) });
     expect(m.audit).toHaveBeenCalledOnce();
+    expect(m.audit.mock.calls[0][1]).not.toHaveProperty("applicationId");
+    expect(m.audit.mock.calls[0][1].newValues).toEqual({ applicationId: "app", offerVersionId: "terms" });
   });
   it("scopes reads and requires completed final approval", async () => {
     const f = fixture(); await f.run();
