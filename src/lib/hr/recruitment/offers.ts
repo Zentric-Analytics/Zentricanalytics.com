@@ -4,6 +4,7 @@ import { z } from "zod";
 import { appendHrAudit } from "../audit";
 import { enqueueHrEmail } from "../notifications/outbox";
 import { initializeHandoverRequirements } from "./handover";
+import { assertVacancyCreatorOrDelegate } from "./delegation";
 
 type Client = Prisma.TransactionClient;
 
@@ -98,14 +99,18 @@ export async function approveOffer(
   });
   if (!offer.activeVersionId) throw new Error("Offer has no active version.");
   if (input.expectedVersion !== undefined && offer.version !== input.expectedVersion) throw new Error("Offer changed concurrently. Reload and try again.");
-  if (offer.createdById === input.actorUserId) throw new Error("Offer creators cannot approve their own offer.");
+  const application = await tx.jobApplication.findFirstOrThrow({ where: { id: offer.applicationId, organizationId: input.organizationId } });
+  if (!application.vacancyId) throw new Error("Offer must belong to a vacancy before approval.");
+  await assertVacancyCreatorOrDelegate(tx, { ...input, vacancyId: application.vacancyId });
   if (!["DRAFT", "PENDING_APPROVAL"].includes(offer.status)) throw new Error("Offer is not awaiting approval.");
+  const changed = await tx.hrRecruitmentOffer.updateMany({ where: { id: offer.id, organizationId: input.organizationId, version: offer.version, activeVersionId: offer.activeVersionId, status: offer.status }, data: { status: "APPROVED", updatedById: input.actorUserId, version: { increment: 1 } } });
+  if (changed.count !== 1) throw new Error("Offer changed concurrently. Reload and try again.");
   await tx.hrRecruitmentOfferApproval.upsert({
     where: { offerVersionId_step: { offerVersionId: offer.activeVersionId, step: 1 } },
     update: {},
     create: { offerId: offer.id, offerVersionId: offer.activeVersionId, step: 1, decision: "APPROVED", approverId: input.actorUserId, comments: input.comments },
   });
-  const approved = await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "APPROVED", updatedById: input.actorUserId, version: { increment: 1 } } });
+  const approved = { ...offer, status: "APPROVED" as const, version: offer.version + 1, updatedById: input.actorUserId };
   await appendHrAudit(tx, {
     organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole,
     entityType: "HrRecruitmentOffer", entityId: offer.id, action: "hr.recruitment.offer.approved",
@@ -202,20 +207,28 @@ export async function acceptOffer(
   if (acceptance.applicantId !== input.applicantId || acceptance.offerVersionId !== input.offerVersionId) {
     throw new Error("This offer was already accepted by a different candidate or version.");
   }
-  const vacancy = application.vacancyId ? await tx.hrVacancy.findUnique({ where: { id: application.vacancyId } }) : null;
-  if (!vacancy) throw new Error("The application is not linked to a valid vacancy.");
-  const handover = await tx.hrRecruitmentHandover.upsert({
-    where: { offerAcceptanceId: acceptance.id },
-    update: {},
-    create: {
-      organizationId: input.organizationId,
-      applicationId: application.id,
-      offerAcceptanceId: acceptance.id,
-      assignedHrTeamId: vacancy.responsibleHrTeamId,
-      ownerUserId: application.applicationOwnerId,
-    },
-  });
-  await initializeHandoverRequirements(tx, input.organizationId, handover.id);
+  // Preserve the applicant's existing stage journey using the approved exact version,
+  // never a second independently authored offer.
+  const stages = await tx.hiringStage.findMany({ where: { applicationId: application.id } });
+  if (stages.length) {
+    if (![1, 2, 3].every((order) => stages.some((stage) => stage.stageOrder === order && ["Approved", "Completed"].includes(stage.status)))) {
+      throw new Error("Complete the initial application, identity and screening stages before accepting the offer.");
+    }
+    const version = offer.activeVersion;
+    const source = `Governed offer version: ${version.id}`;
+    const prior = await tx.offer.findUnique({ where: { applicationId: application.id } });
+    if (prior && (prior.specialConditions !== source || prior.status !== "Accepted")) throw new Error("A conflicting legacy offer exists. Reconcile it before accepting this offer.");
+    if (!prior) await tx.offer.create({ data: {
+      applicationId: application.id, roleOffered: version.positionTitle,
+      salary: `${version.salary.toString()} ${version.currency}`, startDate: version.startDate,
+      workMode: version.workMode, probationPeriod: version.probationPeriod,
+      offerExpiryDate: version.expiresAt, specialConditions: source,
+      status: "Accepted", candidateDecisionAt: now,
+    } });
+    await tx.hiringStage.updateMany({ where: { applicationId: application.id, stageOrder: 4, status: { notIn: ["Approved", "Completed"] } }, data: { status: "Approved", approvedAt: now } });
+    await tx.hiringStage.updateMany({ where: { applicationId: application.id, stageOrder: 5, status: "Locked" }, data: { status: "Available", unlockedAt: now } });
+    await tx.jobApplication.updateMany({ where: { id: application.id, organizationId: input.organizationId, currentStageOrder: { lt: 5 } }, data: { currentStageOrder: 5 } });
+  }
   if (offer.status !== "ACCEPTED") {
     await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "ACCEPTED", acceptedVersionId: input.offerVersionId, version: { increment: 1 } } });
     await tx.jobApplication.update({ where: { id: application.id }, data: { recruitmentStatus: "OFFER_ACCEPTED", version: { increment: 1 } } });
@@ -226,7 +239,7 @@ export async function acceptOffer(
     entityId: offer.id,
     action: "hr.recruitment.offer.accepted",
     previousValues: { status: "ISSUED" },
-    newValues: { status: "ACCEPTED", handoverId: handover.id },
+    newValues: { status: "ACCEPTED" },
     reason: "Applicant accepted the active offer version",
   });
   await enqueueHrEmail(tx, {
@@ -237,19 +250,45 @@ export async function acceptOffer(
     payload: { offerId: offer.id, recipientName: application.applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(application.applicant.email)}` },
     idempotencyKey: `offer-accepted:${offer.id}:${input.offerVersionId}`,
   });
-  const hrRecipients = await tx.hrHiringTeamMember.findMany({
-    where: { hiringTeamId: handover.assignedHrTeamId, status: "ACTIVE", user: { status: "ACTIVE" } },
-    include: { user: true },
-  });
-  for (const member of hrRecipients) {
-    await enqueueHrEmail(tx, {
-      organizationId: input.organizationId,
-      recipient: member.user.email,
-      template: "hr-handover-created",
-      subject: "New accepted offer requires HR review",
-      payload: { handoverId: handover.id, href: `/hr/admin/handovers/${handover.id}` },
-      idempotencyKey: `handover-created:${handover.id}:${member.userId}`,
-    });
-  }
-  return { ...acceptance, handover };
+  return { ...acceptance, handover: null };
+}
+
+/** Internal creator decision only. Hiring team communicates rejection separately. */
+export async function rejectOfferApproval(tx: Client, input: { organizationId: string; offerId: string; actorUserId: string; actorRole?: string; expectedVersion: number; reason: string }) {
+  const reason = input.reason.trim();
+  if (!reason) throw new Error("An internal rejection reason is required.");
+  const offer = await tx.hrRecruitmentOffer.findFirstOrThrow({ where: { id: input.offerId, organizationId: input.organizationId } });
+  if (offer.status !== "PENDING_APPROVAL" || !offer.activeVersionId || offer.version !== input.expectedVersion) throw new Error("Offer is not awaiting approval or changed concurrently.");
+  const application = await tx.jobApplication.findFirstOrThrow({ where: { id: offer.applicationId, organizationId: input.organizationId, deletedAt: null } });
+  if (!application.vacancyId) throw new Error("Offer must belong to a vacancy.");
+  const vacancy = await assertVacancyCreatorOrDelegate(tx, { ...input, vacancyId: application.vacancyId });
+  const result = await tx.hrRecruitmentOffer.updateMany({ where: { id: offer.id, organizationId: input.organizationId, version: input.expectedVersion, activeVersionId: offer.activeVersionId, status: "PENDING_APPROVAL" }, data: { status: "REJECTED", version: { increment: 1 }, updatedById: input.actorUserId } });
+  if (result.count !== 1) throw new Error("Offer changed concurrently. Reload and try again.");
+  await tx.hrRecruitmentOfferApproval.create({ data: { offerId: offer.id, offerVersionId: offer.activeVersionId, step: 1, decision: "REJECTED", approverId: input.actorUserId, comments: reason } });
+  const now = new Date();
+  const members = await tx.hrHiringTeamMember.findMany({ where: { hiringTeamId: vacancy.hiringTeamId, status: "ACTIVE", effectiveFrom: { lte: now }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }], user: { organizationId: input.organizationId, status: "ACTIVE" } }, include: { user: true } });
+  for (const member of members) await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: member.user.email, template: "hr-offer-approval-rejected", subject: "Candidate recommendation declined: hiring team action required", payload: { offerId: offer.id, applicationId: application.id, href: `/hr/recruitment/${application.id}` }, idempotencyKey: `offer-approval-rejected:${offer.id}:${offer.activeVersionId}:${member.userId}` });
+  await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole, entityType: "HrRecruitmentOffer", entityId: offer.id, action: "hr.recruitment.offer.approval_rejected", previousValues: { status: offer.status }, newValues: { status: "REJECTED", offerVersionId: offer.activeVersionId }, reason });
+}
+
+/** Call after the signed agreement is approved, inside that approval transaction. */
+export async function createApprovedAgreementHandover(tx: Client, input: { organizationId: string; applicationId: string; actorUserId: string; actorRole?: string }) {
+  const application = await tx.jobApplication.findFirstOrThrow({ where: { id: input.applicationId, organizationId: input.organizationId } });
+  const stage = await tx.hiringStage.findFirst({ where: { applicationId: application.id, stageOrder: 5, status: "Approved" } });
+  const agreement = await tx.employmentAgreement.findUnique({ where: { applicationId: application.id } });
+  if (!stage || agreement?.status !== "Approved" || !agreement.candidateSubmittedAt) throw new Error("A signed and approved employment agreement is required before HR handover.");
+  const offer = await tx.hrRecruitmentOffer.findFirstOrThrow({ where: { applicationId: application.id, organizationId: input.organizationId, status: "ACCEPTED" } });
+  const acceptance = await tx.hrRecruitmentOfferAcceptance.findUniqueOrThrow({ where: { offerId: offer.id } });
+  if (acceptance.applicantId !== application.applicantId || acceptance.offerVersionId !== offer.acceptedVersionId) throw new Error("Accepted offer version does not match the candidate.");
+  const vacancy = application.vacancyId ? await tx.hrVacancy.findFirst({ where: { id: application.vacancyId, organizationId: input.organizationId } }) : null;
+  if (!vacancy?.responsibleHrUserId) throw new Error("Assign a named responsible HR person before handover.");
+  const hr = await tx.hrUser.findFirstOrThrow({ where: { id: vacancy.responsibleHrUserId, organizationId: input.organizationId, status: "ACTIVE" } });
+  const handover = await tx.hrRecruitmentHandover.upsert({ where: { offerAcceptanceId: acceptance.id }, update: {}, create: {
+    organizationId: input.organizationId, applicationId: application.id, offerAcceptanceId: acceptance.id,
+    assignedHrTeamId: vacancy.responsibleHrTeamId, ownerUserId: hr.id,
+  } });
+  await initializeHandoverRequirements(tx, input.organizationId, handover.id);
+  await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: hr.email, template: "hr-handover-created", subject: "Approved employment agreement requires onboarding", payload: { handoverId: handover.id, href: `/hr/admin/handovers/${handover.id}` }, idempotencyKey: `handover-created:${handover.id}:${hr.id}` });
+  await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole, entityType: "HrRecruitmentHandover", entityId: handover.id, action: "hr.recruitment.handover.agreement_approved", reason: "Signed employment agreement approved before onboarding handover", newValues: { applicationId: application.id, ownerUserId: hr.id } });
+  return handover;
 }

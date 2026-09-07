@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAdminSession } from "@/lib/admin-auth";
+import { requireRecruitmentRead, canReadRecruitmentSensitive } from "@/lib/hr/recruitment/stage-access";
 import { prisma } from "@/lib/prisma";
 import {
   privateUploadDiagnostic,
@@ -69,7 +69,7 @@ export async function GET(
 
   let adminSession;
   try {
-    adminSession = await requireAdminSession();
+    adminSession = await requireRecruitmentRead(applicationId);
     diagnostic.adminAuthenticated = true;
   } catch (error) {
     return safeResponse(
@@ -82,9 +82,13 @@ export async function GET(
 
   const document = await prisma.uploadedDocument.findFirst({
     where: { id: documentId, applicationId },
+    include: { applicantDocuments: { include: { submission: { include: { stage: true } } } } },
   });
   diagnostic.uploadedDocumentFound = Boolean(document);
   if (!document) return safeResponse("Document not found", 404, diagnostic);
+  if (document.applicantDocuments.some((link) => link.submission.stage.stageOrder >= 6) && !(await canReadRecruitmentSensitive(applicationId))) {
+    return safeResponse('Sensitive onboarding documents require assigned HR or sensitive-document permission.', 403, diagnostic);
+  }
 
   diagnostic.provider = document.provider;
   diagnostic.storageKeyPresent = Boolean(document.storageKey);

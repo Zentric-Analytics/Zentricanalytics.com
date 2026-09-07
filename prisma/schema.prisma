@@ -958,6 +958,10 @@ model HrUser {
   recruitmentFallbackQueuesCreated HrRecruitmentFallbackQueue[]    @relation("RecruitmentFallbackQueueCreator")
   recruitmentFallbackAssignments   HrRecruitmentFallbackQueue[]    @relation("RecruitmentFallbackOwner")
   vacanciesCreated                 HrVacancy[]                     @relation("VacancyCreator")
+  vacanciesResponsibleFor          HrVacancy[]                     @relation("VacancyResponsiblePerson")
+  vacancyDelegationsReceived       HrVacancyDelegation[]           @relation("VacancyDelegate")
+  vacancyDelegationsCreated        HrVacancyDelegation[]           @relation("VacancyDelegator")
+  vacancyDelegationsEnded          HrVacancyDelegation[]           @relation("VacancyDelegationEnder")
   vacanciesUpdated                 HrVacancy[]                     @relation("VacancyUpdater")
   vacanciesOwned                   HrVacancy[]                     @relation("VacancyOwner")
   vacanciesManaged                 HrVacancy[]                     @relation("VacancyHiringManager")
@@ -3934,6 +3938,8 @@ model HrVacancy {
   vacancyOwnerId          String
   hiringManagerId         String?
   responsibleHrTeamId     String
+  responsibleHrUserId     String?
+  delegationVersion       Int @default(0)
   legalEntityId           String?
   locationId              String?
   gradeId                 String?
@@ -3976,11 +3982,30 @@ model HrVacancy {
   updatedBy               HrUser              @relation("VacancyUpdater", fields: [updatedById], references: [id], onDelete: Restrict)
   approvals               HrVacancyApproval[]
   history                 HrVacancyHistory[]
+  responsibleHrUser       HrUser? @relation("VacancyResponsiblePerson", fields: [responsibleHrUserId], references: [id], onDelete: Restrict)
+  delegations             HrVacancyDelegation[]
 
   @@index([organizationId, status, updatedAt])
   @@index([hiringTeamId, status])
   @@index([departmentId, status])
   @@index([status, careersVisible, publishedAt, applicationDeadline])
+}
+
+model HrVacancyDelegation {
+  id             String @id @default(cuid())
+  vacancyId      String
+  delegateUserId String
+  createdById    String
+  reason         String
+  createdAt      DateTime @default(now())
+  endedAt        DateTime?
+  endedById      String?
+  vacancy        HrVacancy @relation(fields: [vacancyId], references: [id], onDelete: Restrict)
+  delegateUser   HrUser @relation("VacancyDelegate", fields: [delegateUserId], references: [id], onDelete: Restrict)
+  createdBy      HrUser @relation("VacancyDelegator", fields: [createdById], references: [id], onDelete: Restrict)
+  endedBy        HrUser? @relation("VacancyDelegationEnder", fields: [endedById], references: [id], onDelete: Restrict)
+  @@index([vacancyId, endedAt])
+  @@index([delegateUserId, endedAt])
 }
 
 model HrVacancyNumberSequence {

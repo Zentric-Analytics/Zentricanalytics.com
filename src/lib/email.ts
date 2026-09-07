@@ -10,6 +10,8 @@ export type EmailEvent = {
   template: string;
   body?: string;
   html?: string;
+  replyTo?: string;
+  sensitiveBody?: boolean;
 };
 
 type EmailSendResult = {
@@ -59,7 +61,7 @@ async function sendResendEmail(event: EmailEvent): Promise<EmailSendResult> {
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: sender.from,
-        reply_to: sender.replyTo,
+        reply_to: event.replyTo ?? sender.replyTo,
         to: [event.to],
         subject: event.subject,
         text: event.body ?? '',
@@ -69,15 +71,17 @@ async function sendResendEmail(event: EmailEvent): Promise<EmailSendResult> {
     const payload = await response.json().catch(() => ({})) as { id?: string; message?: string; name?: string; error?: string };
     if (!response.ok) {
       const providerMessage = payload.message || payload.error || payload.name || `Resend request failed with status ${response.status}`;
-      return { provider: 'resend', status: 'failed', failureReason: safeFailureReason(providerMessage) };
+      return { provider: 'resend', status: 'failed', failureReason: event.sensitiveBody ? 'Provider rejected sensitive message; check delivery configuration.' : safeFailureReason(providerMessage) };
     }
     return { provider: 'resend', status: 'sent', providerMessageId: payload.id };
   } catch (error) {
-    return { provider: 'resend', status: 'failed', failureReason: safeFailureReason(error) };
+    return { provider: 'resend', status: 'failed', failureReason: event.sensitiveBody ? 'Sensitive message delivery failed.' : safeFailureReason(error) };
   }
 }
 
 export async function sendHiringEmail(event: EmailEvent): Promise<EmailSendResult> {
+  if (event.replyTo && !/^[^\s@<>\r\n]+@[^\s@<>\r\n]+\.[^\s@<>\r\n]+$/.test(event.replyTo)) throw new Error('Invalid reply-to address.');
+  if (event.sensitiveBody && selectedProvider() !== 'resend') return { provider: 'console', status: 'failed', failureReason: 'Sensitive mailbox messages require a real email provider.' };
   return selectedProvider() === 'resend' ? sendResendEmail(event) : sendConsoleEmail(event);
 }
 

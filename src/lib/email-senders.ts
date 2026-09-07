@@ -20,7 +20,7 @@ const recruitmentTemplates = [
   "stage-2-unlocked", "stage-2-rejected", "stage-2-correction-requested", "stage-2-submitted-admin",
   "stage-3-unlocked", "stage-3-rejected", "stage-3-correction-requested", "stage-3-instructions-available", "stage-3-submitted-admin",
   "stage-4-unlocked", "stage-5-submitted-admin", "stage-6-submitted-admin", "stage-7-submitted-admin",
-  "hr-application-confirmation", "hr-new-application", "hr-interview-invitation", "hr-interview-reminder",
+  "hr-recruitment-stage-submitted", "hr-application-confirmation", "hr-application-rejected", "hr-new-application", "hr-interview-invitation", "hr-interview-reminder",
   "hr-interview-rescheduled", "hr-interview-cancelled", "hr-assessment-assigned",
   "hr-vacancy-draft", "hr-vacancy-pending_approval", "hr-vacancy-returned_for_correction",
   "hr-vacancy-approved", "hr-vacancy-scheduled", "hr-vacancy-open", "hr-vacancy-paused",
@@ -28,12 +28,14 @@ const recruitmentTemplates = [
 ] as const;
 
 const offerTemplates = [
-  "offer-ready", "offer-accepted", "stage-5-agreement-released", "hr-offer-issued",
+  "offer-ready", "offer-accepted", "stage-5-agreement-released", "hr-offer-issued", "hr-offer-approval-rejected",
   "hr-offer-reminder", "hr-offer-accepted", "hr-offer-declined", "stage-5-correction-requested",
   "stage-5-rejected",
 ] as const;
 
 const hrTemplates = [
+  "hr-mailbox-welcome",
+  "hr-recruitment-onboarding-prepared",
   "stage-6-unlocked", "stage-6-correction-requested", "stage-6-rejected", "stage-7-unlocked",
   "stage-7-correction-requested", "stage-7-rejected", "stage-8-unlocked",
   "stage-8-correction-requested", "stage-8-rejected", "hiring-workflow-completed",

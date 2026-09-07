@@ -31,6 +31,7 @@ const groups: Array<{ label?: string; items: Item[] }> = [
     { label: "Hiring Teams", href: "/hr/admin/hiring-teams", icon: Users },
     { label: "Vacancies", href: "/hr/admin/vacancies", icon: BriefcaseBusiness },
     { label: "Recruitment", href: "/hr/admin/recruitment", icon: UserRoundPlus },
+    { label: "Recruitment stages", href: "/hr/recruitment", icon: ClipboardCheck },
   ]},
   { label: "OPERATIONS", items: [
     { label: "Compensation", href: "/hr/admin/compensation", icon: Banknote },

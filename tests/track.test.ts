@@ -143,7 +143,7 @@ vi.mock("@/lib/access-code-config", async () => {
     expect(storage).toContain("ALLOWED_ID_DOCUMENT_MIME_TYPES");
     expect(storage).toContain("privateUploadRoot");
     expect(storage).not.toContain("public/");
-    expect(uploadRoute).toContain("requireAdminSession");
+    expect(uploadRoute).toContain("requireRecruitmentRead(applicationId)");
     expect(uploadRoute).toContain("readPrivateUpload");
     expect(uploadRoute).not.toContain("storageKey: document.storageKey");
   });
@@ -238,7 +238,7 @@ vi.mock("@/lib/security", async () => {
     expect(storage).toContain("ALLOWED_ID_DOCUMENT_MIME_TYPES");
     expect(storage).toContain("privateUploadRoot");
     expect(storage).not.toContain("public/");
-    expect(uploadRoute).toContain("requireAdminSession");
+    expect(uploadRoute).toContain("requireRecruitmentRead(applicationId)");
     expect(uploadRoute).toContain("readPrivateUpload");
     expect(uploadRoute).not.toContain("storageKey: document.storageKey");
   });
@@ -463,7 +463,7 @@ describe("track access-code flow", () => {
     expect(storage).toContain("ALLOWED_ID_DOCUMENT_MIME_TYPES");
     expect(storage).toContain("privateUploadRoot");
     expect(storage).not.toContain("public/");
-    expect(uploadRoute).toContain("requireAdminSession");
+    expect(uploadRoute).toContain("requireRecruitmentRead(applicationId)");
     expect(uploadRoute).toContain("readPrivateUpload");
     expect(uploadRoute).not.toContain("storageKey: document.storageKey");
   });
@@ -491,7 +491,7 @@ describe("admin and track UI source checks", () => {
     expect(list).toContain("<AdminLogoutButton />");
     expect(detail).toContain("<AdminLogoutButton />");
     expect(diagnostics).toContain("<AdminLogoutButton />");
-    expect(logoutButton).toContain("<form action={adminLogoutAction}>");
+    expect(logoutButton).toContain("<form action={hrLogoutAction}>");
     expect(logoutButton).toContain('type="submit"');
   });
 
@@ -562,7 +562,8 @@ describe("admin and track UI source checks", () => {
       "src/app/admin/tracking-diagnostics/page.tsx",
       "utf8",
     );
-    expect(diagnostics).toContain("getAdminSession");
+    expect(diagnostics).toContain("recruitmentOversight()");
+    expect(diagnostics).toContain("application: scope");
     expect(diagnostics).toContain("redirect('/admin/login')");
     expect(diagnostics).toContain("template: 'access-code'");
     expect(diagnostics).not.toContain("codeHash");
@@ -589,7 +590,8 @@ describe("admin and track UI source checks", () => {
     expect(schema).toContain("deleteReason");
     expect(list).toContain("deletedAt: null");
     expect(list).toContain("Deleted applications");
-    expect(deleted).toContain("where: { deletedAt: { not: null } }");
+    expect(deleted).toContain("where: { AND: [scope], deletedAt: { not: null } }");
+    expect(deleted).toContain("recruitmentOversight()");
     expect(detail).toContain("Move to deleted records");
     expect(detail).toContain("Permanently delete");
     expect(actions).toContain("getAdminSession");
@@ -761,7 +763,7 @@ describe("admin and track UI source checks", () => {
     expect(storage).toContain("ALLOWED_ID_DOCUMENT_MIME_TYPES");
     expect(storage).toContain("privateUploadRoot");
     expect(storage).not.toContain("public/");
-    expect(uploadRoute).toContain("requireAdminSession");
+    expect(uploadRoute).toContain("requireRecruitmentRead(applicationId)");
     expect(uploadRoute).toContain("readPrivateUpload");
     expect(uploadRoute).not.toContain("storageKey: document.storageKey");
   });

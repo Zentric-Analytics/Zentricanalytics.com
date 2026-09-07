@@ -28,6 +28,9 @@ type NotificationTemplate = {
 };
 
 const notificationTemplates: Record<string, NotificationTemplate> = {
+  "hr-recruitment-stage-submitted": { title: "Applicant stage ready for review", body: "A candidate has submitted a recruitment stage. Review the submission in your assigned recruitment workspace.", ctaLabel: "Review Submission", defaultHref: "/hr/recruitment" },
+  "hr-application-rejected": { title: "Application update", body: "Thank you for your interest. Your application will not proceed further for this vacancy. You can review your application status through the applicant portal.", ctaLabel: "View Application", defaultHref: "/track" },
+  "hr-offer-approval-rejected": { title: "Candidate approval declined", body: "The vacancy approver declined this candidate and offer recommendation. The hiring team must review the internal decision and communicate the applicant's final outcome. This notice is for the hiring team only.", ctaLabel: "Review Internal Decision", defaultHref: "/hr/recruitment" },
   "hr-application-confirmation": { title: "We received your application", body: "Your application has been received and is now in our review queue.", ctaLabel: "Track Application", defaultHref: "/track" },
   "hr-new-application": { title: "New application received", body: "A new candidate application is ready for secure review.", ctaLabel: "Review Application", defaultHref: "/hr/admin/recruitment" },
   "hr-interview-invitation": { title: "Interview invitation", body: "An interview has been scheduled. Review the secure workspace for the confirmed time and details.", ctaLabel: "Review Interview", defaultHref: "/hr/admin/recruitment" },
@@ -44,6 +47,7 @@ const notificationTemplates: Record<string, NotificationTemplate> = {
   "hr-document-scan-attention": { title: "Document needs attention", body: "A document upload needs secure review before it can be made available.", ctaLabel: "Review Document", defaultHref: "/hr/employee/documents" },
   "hr-document-scan-result": { title: "Employee document scan completed", body: "A document malware scan completed and is ready for authorized HR review.", ctaLabel: "Review Document", defaultHref: "/hr/admin/documents" },
   "hr-document-expiring": { title: "Document expiration reminder", body: "An HR document is approaching its expiration date. Review it securely and update it if required.", ctaLabel: "Review Document", defaultHref: "/hr/employee/documents" },
+  "hr-recruitment-onboarding-prepared": { title: "HR is preparing your onboarding", body: "Your recruitment handover has been prepared. Review your application stages and follow the assigned HR person's instructions. This message does not provide HRMS login access.", ctaLabel: "View Application", defaultHref: "/track" },
   "hr-lifecycle-started": { title: "Onboarding started", body: "Your onboarding checklist is ready. Complete each assigned task in the secure HR workspace.", ctaLabel: "Start Onboarding", defaultHref: "/hr/employee/tasks" },
   "hr-lifecycle-task-due": { title: "Onboarding reminder", body: "An assigned onboarding task is due. Review and complete it in the secure HR workspace.", ctaLabel: "Review Task", defaultHref: "/hr/employee/tasks" },
   "hr-employee-activated": { title: "Employee account activated", body: "Your employee record is active and your HR self-service workspace is ready.", ctaLabel: "Open HR Workspace", defaultHref: "/hr/employee" },

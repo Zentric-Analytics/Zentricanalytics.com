@@ -3,8 +3,15 @@ import type { Prisma } from "@prisma/client";
 import { appendHrAudit } from "../audit";
 import { enqueueHrEmail } from "../notifications/outbox";
 import { assertHandoverTransition, evaluatePreHireEligibility, type HandoverStatus } from "./states";
+import { assertRecruitmentStageAccess } from "./stage-access";
 
 type Client = Prisma.TransactionClient;
+
+export async function assertNamedHrHandoverAccess(tx: Client, input: { organizationId: string; handoverId: string; actorUserId: string }) {
+  const handover = await tx.hrRecruitmentHandover.findFirstOrThrow({ where: { id: input.handoverId, organizationId: input.organizationId } });
+  await assertRecruitmentStageAccess(tx, { organizationId: input.organizationId, applicationId: handover.applicationId, actorUserId: input.actorUserId, stage: 6 });
+  return handover;
+}
 
 export async function initializeHandoverRequirements(tx: Client, organizationId: string, handoverId: string) {
   let definitions = await tx.hrRecruitmentRequirementDefinition.findMany({
@@ -52,6 +59,7 @@ export async function reviewRecruitmentDocument(
   const handover = await tx.hrRecruitmentHandover.findFirstOrThrow({
     where: { id: input.handoverId, organizationId: input.organizationId },
   });
+  await assertRecruitmentStageAccess(tx, { organizationId: input.organizationId, applicationId: handover.applicationId, actorUserId: input.actorUserId, stage: input.reviewScope === "HR" ? 6 : 3 });
   await tx.uploadedDocument.findFirstOrThrow({
     where: { id: input.uploadedDocumentId, applicationId: handover.applicationId },
   });
@@ -162,9 +170,7 @@ export async function transitionHandover(
     reason: string;
   },
 ) {
-  const handover = await tx.hrRecruitmentHandover.findFirstOrThrow({
-    where: { id: input.handoverId, organizationId: input.organizationId },
-  });
+  const handover = await assertNamedHrHandoverAccess(tx, input);
   assertHandoverTransition(handover.status as HandoverStatus, input.to);
   if (input.to === "APPROVED") {
     const requirements = await tx.hrRecruitmentRequirement.findMany({ where: { handoverId: handover.id } });
@@ -213,6 +219,7 @@ export async function updateRecruitmentRequirement(
   const requirement = await tx.hrRecruitmentRequirement.findFirstOrThrow({
     where: { id: input.requirementId, handover: { organizationId: input.organizationId } },
   });
+  await assertNamedHrHandoverAccess(tx, { ...input, handoverId: requirement.handoverId });
   if (input.to === "WAIVED" && !input.reason.trim()) throw new Error("A waiver requires a reason.");
   const result = await tx.hrRecruitmentRequirement.updateMany({
     where: { id: requirement.id, version: input.expectedVersion },
@@ -249,21 +256,29 @@ export async function reassignHandoverOwner(
     reason: string;
   },
 ) {
+  const handover = await tx.hrRecruitmentHandover.findFirstOrThrow({ where: { id: input.handoverId, organizationId: input.organizationId } });
+  const application = await tx.jobApplication.findFirstOrThrow({ where: { id: handover.applicationId, organizationId: input.organizationId, deletedAt: null } });
+  if (!application.vacancyId) throw new Error("Assign a vacancy before reassigning HR.");
+  const vacancy = await tx.hrVacancy.findFirstOrThrow({ where: { id: application.vacancyId, organizationId: input.organizationId } });
+  const actor = await tx.hrUser.findFirstOrThrow({ where: { id: input.actorUserId, organizationId: input.organizationId, status: "ACTIVE" }, include: { roles: { where: { revokedAt: null }, include: { role: true } } } });
+  if (vacancy.createdById !== actor.id && !(actor.isPrimaryAdmin && actor.roles.some(({ role }) => role.key === "ADMIN"))) throw new Error("Only the vacancy creator or primary administrator may reassign responsible HR.");
   await tx.hrUser.findFirstOrThrow({
-    where: { id: input.ownerUserId, organizationId: input.organizationId, status: "ACTIVE" },
+    where: { id: input.ownerUserId, organizationId: input.organizationId, status: "ACTIVE", roles: { some: { revokedAt: null, role: { key: { in: ["ADMIN", "HR_ADMIN"] } } } } },
   });
   const result = await tx.hrRecruitmentHandover.updateMany({
     where: { id: input.handoverId, organizationId: input.organizationId, version: input.expectedVersion },
     data: { ownerUserId: input.ownerUserId, version: { increment: 1 } },
   });
   if (result.count !== 1) throw new Error("Handover changed concurrently. Reload and try again.");
+  await tx.hrVacancy.update({ where: { id: vacancy.id }, data: { responsibleHrUserId: input.ownerUserId } });
   await appendHrAudit(tx, {
     organizationId: input.organizationId,
     actorUserId: input.actorUserId,
     entityType: "HrRecruitmentHandover",
     entityId: input.handoverId,
     action: "hr.recruitment.handover.reassigned",
-    newValues: { ownerUserId: input.ownerUserId },
+    previousValues: { ownerUserId: handover.ownerUserId, responsibleHrUserId: vacancy.responsibleHrUserId },
+    newValues: { ownerUserId: input.ownerUserId, vacancyId: vacancy.id, responsibleHrUserId: input.ownerUserId },
     reason: input.reason,
     correlationId: crypto.randomUUID(),
   });

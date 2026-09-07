@@ -2,12 +2,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { AdminLogoutButton } from '@/components/AdminLogoutButton';
-import { getAdminSession } from '@/lib/admin-auth';
+import { recruitmentOversight } from '@/lib/hr/recruitment/stage-access';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { maskEmail, maskGeneric } from '@/lib/security';
 
 export default async function TrackingDiagnosticsPage() {
-  const adminSession = await getAdminSession();
+  const { auth, where: scope } = await recruitmentOversight();
+  const adminSession = auth.user;
   console.info('adminSessionPresentOnPageLoad', { page: '/admin/tracking-diagnostics', present: Boolean(adminSession) });
   if (!adminSession) redirect('/admin/login');
 
@@ -17,24 +18,24 @@ export default async function TrackingDiagnosticsPage() {
 
   const [emails, rateLimitEvents, stageEmails, stageAuditLogs] = await Promise.all([
     prisma.emailNotification.findMany({
-      where: { template: 'access-code' },
+      where: { application: scope, template: 'access-code' },
       orderBy: { createdAt: 'desc' },
       take: 25,
       select: { id: true, applicationId: true, toEmail: true, template: true, subject: true, status: true, providerMessageId: true, failureReason: true, createdAt: true },
     }),
-    prisma.rateLimitEvent.findMany({
+    auth.user.isPrimaryAdmin && auth.roles.includes('ADMIN') ? prisma.rateLimitEvent.findMany({
       where: { scope: { in: ['access-code-request', 'access-code-verify'] } },
       orderBy: { createdAt: 'desc' },
       take: 25,
-    }),
+    }) : Promise.resolve([]),
     prisma.emailNotification.findMany({
-      where: { template: { in: ['stage-2-unlocked', 'application-rejected', 'correction-requested'] } },
+      where: { application: scope, template: { in: ['stage-2-unlocked', 'application-rejected', 'correction-requested'] } },
       orderBy: { createdAt: 'desc' },
       take: 25,
       select: { id: true, applicationId: true, toEmail: true, template: true, status: true, providerMessageId: true, failureReason: true, createdAt: true },
     }),
     prisma.auditLog.findMany({
-      where: { action: { in: ['Admin approved Stage 1', 'Admin rejected Stage 1', 'Admin requested correction', 'Admin approval skipped; Stage 1 already approved'] } },
+      where: { application: scope, action: { in: ['Admin approved Stage 1', 'Admin rejected Stage 1', 'Admin requested correction', 'Admin approval skipped; Stage 1 already approved'] } },
       orderBy: { createdAt: 'desc' },
       take: 25,
       select: { id: true, applicationId: true, actorType: true, action: true, createdAt: true },

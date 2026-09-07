@@ -5,7 +5,7 @@ import { hrEmailContent } from "../src/lib/hr/notifications/worker";
 
 const baseUrl = "https://staging.zentricanalytics.com";
 const namedTemplates = [
-  "hr-application-confirmation", "hr-new-application", "hr-interview-invitation", "hr-interview-reminder",
+  "hr-recruitment-stage-submitted", "hr-application-confirmation", "hr-application-rejected", "hr-offer-approval-rejected", "hr-new-application", "hr-interview-invitation", "hr-interview-reminder",
   "hr-interview-rescheduled", "hr-interview-cancelled", "hr-assessment-assigned", "hr-offer-issued",
   "hr-offer-reminder", "hr-offer-accepted", "hr-offer-declined", "hr-handover-created",
   "hr-document-requested", "hr-document-available", "hr-document-rejected", "hr-document-scan-attention",
@@ -56,11 +56,14 @@ describe("HR outbound email template registry", () => {
     expect(() => hrEmailContent("hr-employee-activated", {}, "http://staging.example.test")).toThrow("HTTPS");
   });
 
-  it("auto-provisions recruitment employee accounts and uses an explicit 403 boundary", () => {
+  it("separates linked account invitations from employee activation and uses an explicit 403 boundary", () => {
     const activation = readFileSync("src/lib/hr/recruitment/prehire.ts", "utf8");
-    expect(activation).toContain('key: "EMPLOYEE"');
-    expect(activation).toContain('template: "hr-account-invitation"');
-    expect(activation).toContain('action: "hr.recruitment.employee_account.provisioned"');
+    const linkedAccess = readFileSync("src/lib/hr/recruitment/employee-access.ts", "utf8");
+    expect(linkedAccess).toContain('key: "EMPLOYEE"');
+    expect(linkedAccess).toContain('stage.stageOrder === 8');
+    expect(linkedAccess).toContain('createHrInvitation(');
+    expect(linkedAccess).toContain('recipient: provisioned.email');
+    expect(activation).not.toContain('template: "hr-account-invitation"');
     expect(activation).toContain("userActivatedAt: userActivated ? now : null");
     expect(activation).toContain('userActivated ? "/hr/employee" : "/hr/login"');
     expect(activation).not.toContain('userActivated ? "/hr/employee" : "/hr/invitation"');

@@ -25,6 +25,7 @@ function requirePrimaryAdmin(auth: { roles: string[]; user: { isPrimaryAdmin: bo
 const createSchema = z.object({ email: z.string().email().max(180), role: z.enum(HR_ASSIGNABLE_ROLES) });
 export async function createHrUserAction(formData: FormData) {
   const auth = await requirePermission("user.create");
+  requirePrimaryAdmin(auth);
   const input = createSchema.parse(Object.fromEntries(formData));
   if (!canAssignRole(auth.roles, input.role)) throw new Error("Forbidden role assignment.");
   const email = normalizeHrEmail(input.email);
@@ -44,6 +45,7 @@ export async function suspendHrUserAction(formData: FormData) {
   const userId = z.string().min(1).parse(formData.get("userId"));
   if (userId === auth.user.id) throw new Error("You cannot suspend your current account.");
   const target = await prisma.hrUser.findFirstOrThrow({ where: { id: userId, organizationId: auth.user.organizationId }, include: { roles: { where: { revokedAt: null }, include: { role: true } } } });
+  if (target.isPrimaryAdmin) throw new Error("The primary administrator cannot be suspended.");
   const targetIsAdmin = target.roles.some(({ role }) => role.key === "ADMIN");
   if (targetIsAdmin && !auth.roles.includes("ADMIN")) throw new Error("Only an ADMIN can suspend another ADMIN.");
   await prisma.$transaction(async (tx) => {
@@ -73,6 +75,7 @@ const roleChangeSchema = z.object({ userId: z.string().cuid(), role: z.enum(HR_A
 export async function assignHrRoleAction(formData: FormData) {
   const auth = await requirePermission("user.role.assign");
   const input = roleChangeSchema.parse(Object.fromEntries(formData));
+  if (input.role === "ADMIN") requirePrimaryAdmin(auth);
   if (!canAssignRole(auth.roles, input.role)) throw new Error("Forbidden role assignment.");
   const [target, role] = await Promise.all([
     prisma.hrUser.findFirstOrThrow({ where: { id: input.userId, organizationId: auth.user.organizationId } }),
@@ -89,6 +92,7 @@ export async function assignHrRoleAction(formData: FormData) {
 export async function revokeHrRoleAction(formData: FormData) {
   const auth = await requirePermission("user.role.revoke");
   const input = roleChangeSchema.parse(Object.fromEntries(formData));
+  if (input.role === "ADMIN") requirePrimaryAdmin(auth);
   if (!canAssignRole(auth.roles, input.role)) throw new Error("Forbidden role revocation.");
   const role = await prisma.hrRole.findUniqueOrThrow({ where: { organizationId_key: { organizationId: auth.user.organizationId, key: input.role } } });
   await prisma.$transaction(async (tx) => {
@@ -106,6 +110,7 @@ export async function revokeHrRoleAction(formData: FormData) {
 
 export async function resendHrInvitationAction(formData: FormData) {
   const auth = await requirePermission("user.invite");
+  requirePrimaryAdmin(auth);
   const userId = z.string().cuid().parse(formData.get("userId"));
   const target = await prisma.hrUser.findFirstOrThrow({ where: { id: userId, organizationId: auth.user.organizationId, status: "INVITED" } });
   await createHrInvitation({ organizationId: auth.user.organizationId, userId: target.id, createdById: auth.user.id, recipient: target.email });

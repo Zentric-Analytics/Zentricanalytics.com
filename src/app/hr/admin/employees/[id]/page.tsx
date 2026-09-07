@@ -45,6 +45,16 @@ export default async function EmployeeProfilePage({ params, searchParams }: { pa
   const mayReadBank = auth.permissions.has("payroll.read_bank_details");
   const mayReadTax = auth.permissions.has("payroll.read_salary");
   const mayReadSensitive = auth.permissions.has("document.read_sensitive");
+  const mayReadAudit = auth.permissions.has("audit.read");
+  const auditHistory = mayReadAudit ? await prisma.hrAuditEvent.findMany({
+    where: { organizationId: auth.user.organizationId, OR: [
+      { entityType: "HrEmployee", entityId: employee.id },
+      ...(employee.userId ? [{ entityType: "HrUser", entityId: employee.userId }] : []),
+      ...(employee.recruitmentApplicationId ? [{ entityType: "JobApplication", entityId: employee.recruitmentApplicationId }] : []),
+    ] },
+    select: { id: true, createdAt: true, action: true, actor: { select: { email: true } } },
+    orderBy: { createdAt: "desc" }, take: 50,
+  }) : [];
   const query = await searchParams;
   const currentAssignment = employee.employmentAssignments.find(({ status, effectiveTo }) => status === "ACTIVE" && (!effectiveTo || effectiveTo > new Date()));
 
@@ -55,6 +65,12 @@ export default async function EmployeeProfilePage({ params, searchParams }: { pa
     <nav aria-label="Employee profile sections" className="mt-5 flex flex-wrap gap-2 text-sm">{["Overview","Personal","Employment","Assignments","Compensation","Payroll","Leave","Documents","Assets","Onboarding","User access","Audit history"].map(label => <a className="rounded-full border bg-white px-3 py-2" href={`#${label.toLowerCase().replaceAll(" ", "-")}`} key={label}>{label}</a>)}</nav>
     <section id="overview" className="mt-5 rounded-2xl bg-slate-900 p-5 text-white"><div className="grid gap-4 md:grid-cols-4"><div><p className="text-xs uppercase text-slate-300">Status</p><p className="font-bold">{employee.employmentStatus}</p></div><div><p className="text-xs uppercase text-slate-300">Department / position</p><p>{currentAssignment?.department.name ?? "Unassigned"} · {currentAssignment?.position.title ?? "Unassigned"}</p></div><div><p className="text-xs uppercase text-slate-300">User access</p><p>{employee.user ? `${employee.user.status} · MFA ${employee.user.mfaEnabled ? "enabled" : "not enabled"}` : "No account"}</p></div><div><p className="text-xs uppercase text-slate-300">Outstanding</p><p>{employee.assetAssignments.length} assets · {employee.lifecycleInstances.filter(({ status }) => status === "ACTIVE").length} lifecycle · {employee.documents.length} documents</p></div></div><div className="mt-5 flex flex-wrap gap-2">{auth.permissions.has("assignment.create") && <a className="btn bg-white text-slate-900" href={`/hr/admin/assignments?employeeId=${employee.id}`}>Assign or transfer</a>}{auth.permissions.has("payroll.read_salary") && <a className="btn bg-white text-slate-900" href={`/hr/admin/payroll/setup?employeeId=${employee.id}`}>Change salary</a>}{auth.permissions.has("user.update") && <a className="btn bg-white text-slate-900" href={`/hr/admin/users?employeeId=${employee.id}`}>Manage access</a>}{auth.permissions.has("workflow.create") && <a className="btn bg-white text-slate-900" href={`/hr/admin/lifecycle?employeeId=${employee.id}`}>Start lifecycle</a>}{auth.permissions.has("document.upload") && <a className="btn bg-white text-slate-900" href={`/hr/admin/documents?employeeId=${employee.id}`}>Upload document</a>}{auth.permissions.has("asset.assign") && <a className="btn bg-white text-slate-900" href={`/hr/admin/assets?employeeId=${employee.id}`}>Assign asset</a>}</div></section>
 
+    {mayReadAudit && <section id="audit-history" className="mt-5 rounded-2xl bg-white p-5">
+      <h2 className="text-lg font-bold">Linked employee and account history</h2>
+      <p>Latest 50 recorded actions across this employee, their account and original application. Passwords and message bodies are not shown.</p>
+      <ol>{auditHistory.map(event => <li key={event.id}>{event.createdAt.toLocaleString()} · {event.action} · {event.actor?.email ?? "System"}</li>)}</ol>
+      {!auditHistory.length && <p>No matching audit events recorded.</p>}
+    </section>}
     <div className="mt-6 grid gap-5 lg:grid-cols-2">
       <section className="rounded-2xl bg-white p-5">
         <h2 className="text-lg font-bold">Personal and employment information</h2>
@@ -71,7 +87,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: { pa
           <Row label="Probation ends">{employee.probationEndDate?.toLocaleDateString()}</Row>
           <Row label="Confirmation date">{employee.confirmationDate?.toLocaleDateString()}</Row>
           <Row label="Status">{employee.employmentStatus}</Row>
-          <Row label="Recruitment link">{employee.recruitmentApplicationId ? "Linked to approved candidate history" : "Direct employee record"}</Row>
+          <Row label="Recruitment link">{employee.recruitmentApplicationId ? <a className="underline" href={`/hr/recruitment/${employee.recruitmentApplicationId}`}>Open complete application and stage history</a> : "Direct employee record"}</Row>
         </dl>
         <details className="mt-5">
           <summary className="cursor-pointer font-semibold text-teal-700">Edit profile</summary>

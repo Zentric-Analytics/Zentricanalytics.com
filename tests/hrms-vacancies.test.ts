@@ -8,6 +8,7 @@ const valid = {
   departmentId: "cm1234567890123456789012",
   hiringTeamId: "cm1234567890123456789013",
   responsibleHrTeamId: "cm1234567890123456789014",
+  responsibleHrUserId: "cm1234567890123456789016",
   vacancyOwnerId: "cm1234567890123456789015",
   employmentType: "FULL_TIME",
   workMode: "HYBRID",
@@ -61,7 +62,7 @@ describe("public vacancy projection", () => {
     expect(form).toContain("useActionState");
     expect(form).toContain('role={state.status === "error" ? "alert" : "status"}');
     expect(actions).toContain("transitionVacancyWithStateAction");
-    expect(domain).toContain("Vacancy creators cannot approve their own vacancy.");
+    expect(domain).toContain("canApproveReviewedVacancy");
   });
 
   it("uses an explicit safe select and does not expose internal routing or approval records", () => {

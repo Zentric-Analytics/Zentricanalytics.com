@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AdminLogoutButton } from '@/components/AdminLogoutButton';
 import { StatusBadge } from '@/components/StatusBadge';
-import { getAdminSession } from '@/lib/admin-auth';
+import { recruitmentOversight } from '@/lib/hr/recruitment/stage-access';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { permanentlyDeleteApplicationAction, restoreApplicationAction } from '../actions';
 
@@ -21,13 +21,15 @@ function banner(params: SearchParams) {
 function formatDate(value?: Date | null) { return value ? new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(value) : 'Missing'; }
 
 export default async function DeletedApplications({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const [params, adminSession] = await Promise.all([searchParams, getAdminSession()]);
+  const params = await searchParams;
+  const { auth, where: scope } = await recruitmentOversight();
+  const adminSession = auth.user;
   console.info('adminSessionPresentOnPageLoad', { page: '/admin/applications/deleted', present: Boolean(adminSession) });
   if (!adminSession) redirect('/admin/login');
   if (!isDatabaseConfigured()) return <main>DATABASE_URL is required for admin records.</main>;
 
   const applications = await prisma.jobApplication.findMany({
-    where: { deletedAt: { not: null } },
+    where: { AND: [scope], deletedAt: { not: null } },
     include: { applicant: true, stages: { orderBy: { stageOrder: 'asc' } } },
     orderBy: { deletedAt: 'desc' },
     take: 100,

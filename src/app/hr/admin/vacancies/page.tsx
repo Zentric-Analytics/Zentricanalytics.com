@@ -1,7 +1,7 @@
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { prisma } from "@/lib/prisma";
 import { recruitmentTransitionMaps } from "@/lib/hr/recruitment/states";
-import { createVacancyAction } from "./actions";
+import { createVacancyAction, vacancyDelegationAction, assignResponsibleHrAction } from "./actions";
 import { VacancyTransitionForm } from "./VacancyTransitionForm";
 import { Ban, BriefcaseBusiness, Clock3, Send } from "lucide-react";
 
@@ -10,12 +10,12 @@ export default async function VacanciesPage() {
   const [vacancies, departments, hiringTeams, users] = await Promise.all([
     prisma.hrVacancy.findMany({
       where: { organizationId: auth.user.organizationId },
-      include: { department: true, hiringTeam: true, responsibleHrTeam: true, vacancyOwner: true },
+      include: { department: true, hiringTeam: { include: { members: { where: { status: "ACTIVE", user: { status: "ACTIVE" } }, include: { user: true } } } }, responsibleHrTeam: true, responsibleHrUser: true, vacancyOwner: true, delegations: { where: { endedAt: null }, include: { delegateUser: true } } },
       orderBy: { updatedAt: "desc" },
     }),
     prisma.hrDepartment.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, orderBy: { name: "asc" } }),
     prisma.hrHiringTeam.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, orderBy: { name: "asc" } }),
-    prisma.hrUser.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, orderBy: { email: "asc" } }),
+    prisma.hrUser.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, include: { roles: { where: { revokedAt: null }, include: { role: true } } }, orderBy: { email: "asc" } }),
   ]);
   const published = vacancies.filter(vacancy => ["OPEN", "SCHEDULED"].includes(vacancy.status)).length;
   const drafts = vacancies.filter(vacancy => vacancy.status === "DRAFT").length;
@@ -32,8 +32,8 @@ export default async function VacanciesPage() {
       <input className="input" name="title" placeholder="Job title" required />
       <select className="input" name="departmentId" required><option value="">Department</option>{departments.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select>
       <select className="input" name="hiringTeamId" required><option value="">Hiring Team</option>{hiringTeams.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select>
-      <select className="input" name="responsibleHrTeamId" required><option value="">Responsible HR team</option>{hiringTeams.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select>
-      <select className="input" name="vacancyOwnerId" required><option value="">Vacancy owner</option>{users.map((item) => <option value={item.id} key={item.id}>{item.email}</option>)}</select>
+      <select className="input" name="responsibleHrUserId" required><option value="">Responsible HR person</option>{users.filter(item => item.roles.some(({ role }) => ["ADMIN", "HR_ADMIN"].includes(role.key))).map((item) => <option value={item.id} key={item.id}>{item.email}</option>)}</select>
+      <input type="hidden" name="vacancyOwnerId" value={auth.user.id} />
       <select className="input" name="hiringManagerId"><option value="">Hiring manager (optional)</option>{users.map((item) => <option value={item.id} key={item.id}>{item.email}</option>)}</select>
       <select className="input" name="employmentType" required>{["FULL_TIME","PART_TIME","CONTRACT","INTERN","TEMPORARY"].map((item) => <option value={item} key={item}>{item.replaceAll("_", " ")}</option>)}</select>
       <select className="input" name="workMode" required>{["ONSITE","HYBRID","REMOTE"].map((item) => <option key={item}>{item}</option>)}</select>
@@ -57,6 +57,18 @@ export default async function VacanciesPage() {
           <p className="font-bold">{vacancy.status} · v{vacancy.version}</p>
         </div>
         <p className="mt-3 text-sm text-slate-700">{vacancy.description}</p>
+        <p>Responsible HR: {vacancy.responsibleHrUser?.email ?? "Not assigned — legacy record requires assignment"}</p>
+        {(vacancy.createdById === auth.user.id || auth.user.isPrimaryAdmin) && <form action={assignResponsibleHrAction} className="flex gap-2"><input type="hidden" name="vacancyId" value={vacancy.id} /><select className="input" name="responsibleHrUserId" required defaultValue={vacancy.responsibleHrUserId ?? ""}><option value="">Assign responsible HR person</option>{users.filter(item => item.roles.some(({ role }) => ["ADMIN", "HR_ADMIN"].includes(role.key))).map(item => <option key={item.id} value={item.id}>{item.email}</option>)}</select><button className="btn">Save HR owner</button></form>}
+        {vacancy.createdById === auth.user.id && <details className="mt-3"><summary>Approval delegation</summary>
+          <p>Selected delegates may approve individually for this vacancy only.</p>
+          <form action={vacancyDelegationAction} className="grid gap-2">
+            <input type="hidden" name="vacancyId" value={vacancy.id} />
+            <label>Reason for absence<textarea name="reason" required maxLength={2000} className="input" /></label>
+            {vacancy.hiringTeam.members.map(member => <label key={member.id}><input type="checkbox" name="delegateUserIds" value={member.userId} defaultChecked={vacancy.delegations.some(d => d.delegateUserId === member.userId)} /> {member.user.email}</label>)}
+            <button className="btn">Save selected delegates</button>
+          </form>
+          {vacancy.delegations.length > 0 && <form action={vacancyDelegationAction}><input type="hidden" name="vacancyId" value={vacancy.id} /><input type="hidden" name="operation" value="end" /><button className="btn">End delegation</button></form>}
+        </details>}
         <div className="mt-4 flex flex-wrap gap-3">
           {recruitmentTransitionMaps.vacancy[vacancy.status].map((next) => {
             const permission = next === "PENDING_APPROVAL" ? "vacancy.submit" : ["APPROVED","RETURNED_FOR_CORRECTION"].includes(next) ? "vacancy.approve" : ["OPEN","SCHEDULED"].includes(next) ? "vacancy.publish" : next === "PAUSED" ? "vacancy.pause" : next === "FILLED" ? "vacancy.fill" : next === "CANCELLED" ? "vacancy.cancel" : "vacancy.close";

@@ -1006,11 +1006,12 @@ describe("Stage 1 download and admin safety source checks", () => {
       "utf8",
     );
     const storage = readFileSync("src/lib/storage.ts", "utf8");
-    expect(stageRoute).toContain("requireAdminSession");
+    expect(stageRoute).toContain("requireRecruitmentRead(applicationId)");
     expect(stageRoute).toContain("application/pdf");
     expect(stageRoute).toContain("attachment; filename=");
     expect(stageRoute).toContain("Admin downloaded Stage 1 PDF");
-    expect(uploadRoute).toContain("requireAdminSession");
+    expect(uploadRoute).toContain("requireRecruitmentRead(applicationId)");
+    expect(uploadRoute).toContain("canReadRecruitmentSensitive(applicationId)");
     expect(uploadRoute).toContain(
       "where: { id: documentId, applicationId }",
     );

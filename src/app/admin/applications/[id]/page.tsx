@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { prisma } from "@/lib/prisma";
-import { getAdminSession } from "@/lib/admin-auth";
+import { requireRecruitmentRead, canReadRecruitmentSensitive, canManageRecruitmentStage } from "@/lib/hr/recruitment/stage-access";
 import {
   privateUploadConfigurationStatus,
   privateUploadDiagnostic,
@@ -230,7 +230,7 @@ function InfoGrid({ rows }: { rows: Array<[string, unknown]> }) {
   );
 }
 
-function StageActionForm({
+async function StageActionForm({
   action,
   applicationId,
   stage,
@@ -239,6 +239,7 @@ function StageActionForm({
   applicationId: string;
   stage: string;
 }) {
+  if (!(await canManageRecruitmentStage(applicationId, Number(stage.replace('Stage ', ''))))) return <p className="mt-3 text-sm">Read-only stage history.</p>;
   return (
     <form action={action} className="mt-4 flex flex-wrap gap-2">
       <input type="hidden" name="applicationDbId" value={applicationId} />
@@ -265,7 +266,8 @@ function StageActionForm({
 }
 
 
-function Stage8FinalApprovalForm({ applicationId }: { applicationId: string }) {
+async function Stage8FinalApprovalForm({ applicationId }: { applicationId: string }) {
+  if (!(await canManageRecruitmentStage(applicationId, 8))) return <p className="mt-3 text-sm">Read-only final approval history.</p>;
   const checklist: Array<[string, string[]]> = [
     ["Application review complete", ["Stage 1 application reviewed", "Candidate identity and contact information reviewed", "Role applied/offered is consistent"]],
     ["Screening and offer complete", ["Stage 3 screening/assessment completed or approved", "Stage 4 offer accepted", "Stage 5 employment agreement approved"]],
@@ -356,8 +358,8 @@ export default async function AdminApplicationDetail({
   params,
   searchParams,
 }: PageProps) {
-  const [resolvedParams, resolvedSearchParams, adminSession] =
-    await Promise.all([params, searchParams, getAdminSession()]);
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const adminSession = await requireRecruitmentRead(resolvedParams.id);
   console.info("adminSessionPresentOnPageLoad", {
     page: "/admin/applications/[id]",
     present: Boolean(adminSession),
@@ -393,6 +395,12 @@ export default async function AdminApplicationDetail({
 
   if (!application) {
     notFound();
+  }
+  const sensitiveVisible = await canReadRecruitmentSensitive(application.id);
+  if (!sensitiveVisible) {
+    for (const stage of application.stages) {
+      if (stage.stageOrder >= 6) { stage.submissions = []; stage.approvals = []; }
+    }
   }
 
   const stageOne = application.stages.find(
@@ -482,7 +490,11 @@ export default async function AdminApplicationDetail({
   const stageSevenSignature = stageSevenSubmission?.signature;
   const stageEightSubmission = stageEight?.submissions[0];
   const stageEightPayload = (stageEightSubmission?.payload ?? {}) as Record<string, unknown>;
-  const canEditOffer = !offer || ["Draft", "Released"].includes(offer.status);
+  const [canManageScreening, canManageOffer, canManageAgreement, governedOffer] = await Promise.all([
+    canManageRecruitmentStage(application.id, 3), canManageRecruitmentStage(application.id, 4), canManageRecruitmentStage(application.id, 5),
+    prisma.hrRecruitmentOffer.findFirst({ where: { applicationId: application.id }, select: { id: true } }),
+  ]);
+  const canEditOffer = canManageOffer && !governedOffer && (!offer || ["Draft", "Released"].includes(offer.status));
   const stageSixDocumentsWithAvailability = await Promise.all(
     stageSixDocuments.map(async (document: ApplicantDocument) => {
       const diagnostic = document.uploadedDocument
@@ -980,7 +992,7 @@ export default async function AdminApplicationDetail({
               <p className="mt-3 text-sm font-semibold text-red-700">
                 Restore this application before taking Stage 3 actions.
               </p>
-            ) : ["Approved", "Rejected"].includes(stageThree.status) ? (
+            ) : !canManageScreening ? <p className="mt-3 text-sm">Read-only screening history.</p> : ["Approved", "Rejected"].includes(stageThree.status) ? (
               <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
                 Stage 3 is {stageThree.status.toLowerCase()}; setup editing is
                 closed for this stage.
@@ -1434,7 +1446,7 @@ export default async function AdminApplicationDetail({
           <section className="card mt-6 p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><h2 className="font-bold">Stage 5 Agreement / onboarding · Employment Agreement + Role Schedule</h2><StatusBadge status={stageFive?.status ?? agreement?.status ?? "Locked"} /></div>
             {!offer || offer.status !== "Accepted" ? <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Stage 5 release requires an accepted Stage 4 offer.</p> : null}
-            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 5 actions.</p> : !["Approved","Rejected"].includes(stageFive?.status ?? "") ? (
+            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 5 actions.</p> : canManageAgreement && !["Approved","Rejected"].includes(stageFive?.status ?? "") ? (
               <form action={adminStage5AgreementAction} className="mt-5 space-y-4 rounded-2xl border border-slate-200 p-4">
                 <input type="hidden" name="applicationDbId" value={application.id} />
                 <div className="grid gap-4 md:grid-cols-2">
@@ -1522,7 +1534,7 @@ export default async function AdminApplicationDetail({
           </section>
         ) : null}
 
-        <section className="card mt-6 border border-red-200 bg-red-50 p-5">
+        <section hidden className="card mt-6 border border-red-200 bg-red-50 p-5">
           <h2 className="font-bold text-red-800">Danger zone</h2>
           {application.deletedAt ? (
             <div className="mt-4 space-y-4">

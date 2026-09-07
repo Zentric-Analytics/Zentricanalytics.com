@@ -2,12 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
 import { createAssessment, updateAssessment } from "@/lib/hr/recruitment/assessments";
 import { changeInterview, saveInterviewFeedback, scheduleInterview, submitInterviewFeedback } from "@/lib/hr/recruitment/interviews";
-import { approveOffer, createOffer, issueOffer, submitOfferForApproval } from "@/lib/hr/recruitment/offers";
+import { approveOffer, createOffer, issueOffer, submitOfferForApproval, rejectOfferApproval } from "@/lib/hr/recruitment/offers";
 import { transitionApplication } from "@/lib/hr/recruitment/applications";
+import { assertRecruitmentStageAccess } from "@/lib/hr/recruitment/stage-access";
 import { prisma } from "@/lib/prisma";
+import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 
 export type RecruitmentActionState = { status: "idle" | "success" | "error"; message?: string };
 const success = (message: string): RecruitmentActionState => ({ status: "success", message });
@@ -16,16 +18,6 @@ const failure = (error: unknown): RecruitmentActionState => ({
   message: error instanceof Error && error.message ? error.message : "The action could not be completed.",
 });
 
-const transitionPermission = {
-  UNDER_REVIEW: "application.review",
-  INFORMATION_REQUESTED: "application.request_information",
-  SHORTLISTED: "application.shortlist",
-  ON_HOLD: "application.hold",
-  REJECTED: "application.reject",
-  INTERVIEW_PENDING: "interview.schedule",
-  FINAL_REVIEW: "application.review",
-  WITHDRAWN: "application.review",
-} as const;
 
 export async function transitionApplicationAction(formData: FormData) {
   const input = z.object({
@@ -34,13 +26,22 @@ export async function transitionApplicationAction(formData: FormData) {
     to: z.enum(["UNDER_REVIEW","INFORMATION_REQUESTED","SHORTLISTED","ON_HOLD","REJECTED","INTERVIEW_PENDING","FINAL_REVIEW","WITHDRAWN"]),
     reason: z.string().trim().min(3).max(1000),
   }).parse(Object.fromEntries(formData));
-  const auth = await requirePermission(transitionPermission[input.to]);
-  await prisma.$transaction((tx) => transitionApplication(tx, {
+  const auth = await requireAuthenticatedUser();
+  await prisma.$transaction(async (tx) => {
+      await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
+      const result = await transitionApplication(tx, {
     ...input,
     organizationId: auth.user.organizationId,
     actorUserId: auth.user.id,
     actorRole: auth.roles[0],
-  }));
+  });
+      if (input.to === "REJECTED") {
+        const application = await tx.jobApplication.findFirstOrThrow({ where: { id: input.applicationId, organizationId: auth.user.organizationId }, include: { applicant: true } });
+        await tx.jobApplication.update({ where: { id: application.id }, data: { status: "Rejected" } });
+        await enqueueHrEmail(tx, { organizationId: auth.user.organizationId, recipient: application.applicant.email, template: "hr-application-rejected", subject: "Your application update", payload: { applicationId: application.id, recipientName: application.applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(application.applicant.email)}` }, idempotencyKey: `application-rejected:${application.id}:${input.expectedVersion}` });
+      }
+      return result;
+  });
   revalidatePath(`/hr/admin/applications/${input.applicationId}`);
   revalidatePath("/hr/admin/recruitment");
 }
@@ -68,14 +69,16 @@ export async function scheduleInterviewAction(formData: FormData) {
     meetingUrl: z.string().trim().optional(),
     participantUserIds: z.array(z.string().cuid()).min(1),
   }).parse({ ...Object.fromEntries(formData), participantUserIds: formData.getAll("participantUserIds") });
-  const auth = await requirePermission("interview.schedule");
-  await prisma.$transaction((tx) => scheduleInterview(tx, {
+  const auth = await requireAuthenticatedUser();
+  await prisma.$transaction(async (tx) => {
+      await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
+      return scheduleInterview(tx, {
     ...input,
     meetingUrl: input.meetingUrl || undefined,
     organizationId: auth.user.organizationId,
     actorUserId: auth.user.id,
     actorRole: auth.roles[0],
-  }));
+  }); });
   revalidatePath(`/hr/admin/applications/${input.applicationId}`);
 }
 
@@ -106,16 +109,18 @@ export async function manageInterviewWithStateAction(
       endsAt: z.string().optional(),
       timeZone: z.string().optional(),
     }).parse(Object.fromEntries(formData));
-    const permission = input.action === "RESCHEDULE" ? "interview.reschedule" : input.action === "CANCEL" ? "interview.cancel" : "interview.schedule";
-    const auth = await requirePermission(permission);
-    await prisma.$transaction((tx) => changeInterview(tx, {
+    const auth = await requireAuthenticatedUser();
+    await prisma.$transaction(async (tx) => {
+      await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
+      await tx.hrInterview.findFirstOrThrow({ where: { id: input.interviewId, applicationId: input.applicationId, organizationId: auth.user.organizationId } });
+      return changeInterview(tx, {
       ...input,
       startsAt: input.startsAt ? new Date(input.startsAt) : undefined,
       endsAt: input.endsAt ? new Date(input.endsAt) : undefined,
       organizationId: auth.user.organizationId,
       actorUserId: auth.user.id,
       actorRole: auth.roles[0],
-    }));
+    }); });
     revalidatePath(`/hr/admin/applications/${input.applicationId}`);
     return success(`Interview ${input.action.toLowerCase()} completed.`);
   } catch (error) {
@@ -136,7 +141,7 @@ export async function feedbackWithStateAction(
       recommendation: z.string().trim().min(2).max(160),
       comments: z.string().trim().max(5000).optional(),
     }).parse(Object.fromEntries(formData));
-    const auth = await requirePermission("interview.feedback.submit");
+    const auth = await requireAuthenticatedUser();
     const payload = {
       organizationId: auth.user.organizationId,
       interviewId: input.interviewId,
@@ -145,9 +150,12 @@ export async function feedbackWithStateAction(
       recommendation: input.recommendation,
       comments: input.comments,
     };
-    await prisma.$transaction((tx) => input.mode === "SUBMIT"
+    await prisma.$transaction(async (tx) => {
+      await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
+      await tx.hrInterview.findFirstOrThrow({ where: { id: input.interviewId, applicationId: input.applicationId, organizationId: auth.user.organizationId } });
+      return input.mode === "SUBMIT"
       ? submitInterviewFeedback(tx, payload)
-      : saveInterviewFeedback(tx, payload));
+      : saveInterviewFeedback(tx, payload); });
     revalidatePath(`/hr/admin/applications/${input.applicationId}`);
     return success(input.mode === "SUBMIT" ? "Feedback submitted and locked." : "Feedback draft saved.");
   } catch (error) {
@@ -167,14 +175,16 @@ export async function createAssessmentWithStateAction(
       evaluatorId: z.string().cuid(),
       dueAt: z.string().optional(),
     }).parse(Object.fromEntries(formData));
-    const auth = await requirePermission("assessment.create");
-    await prisma.$transaction((tx) => createAssessment(tx, {
+    const auth = await requireAuthenticatedUser();
+    await prisma.$transaction(async (tx) => {
+      await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
+      return createAssessment(tx, {
       ...input,
       dueAt: input.dueAt ? new Date(input.dueAt) : undefined,
       organizationId: auth.user.organizationId,
       actorUserId: auth.user.id,
       actorRole: auth.roles[0],
-    }));
+    }); });
     revalidatePath(`/hr/admin/applications/${input.applicationId}`);
     return success("Assessment created and evaluator notified.");
   } catch (error) {
@@ -196,13 +206,16 @@ export async function evaluateAssessmentWithStateAction(
       outcome: z.string().trim().max(160).optional(),
       comments: z.string().trim().max(5000).optional(),
     }).parse(Object.fromEntries(formData));
-    const auth = await requirePermission("assessment.evaluate");
-    await prisma.$transaction((tx) => updateAssessment(tx, {
+    const auth = await requireAuthenticatedUser();
+    await prisma.$transaction(async (tx) => {
+      await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
+      await tx.hrAssessment.findFirstOrThrow({ where: { id: input.assessmentId, applicationId: input.applicationId, organizationId: auth.user.organizationId } });
+      return updateAssessment(tx, {
       ...input,
       organizationId: auth.user.organizationId,
       actorUserId: auth.user.id,
       actorRole: auth.roles[0],
-    }));
+    }); });
     revalidatePath(`/hr/admin/applications/${input.applicationId}`);
     return success("Assessment updated.");
   } catch (error) {
@@ -236,8 +249,10 @@ export async function createOfferWithStateAction(
       expiresAt: z.coerce.date(),
       terms: z.string().trim().min(3),
     }).parse(raw);
-    const auth = await requirePermission("offer.create");
-    await prisma.$transaction((tx) => createOffer(tx, {
+    const auth = await requireAuthenticatedUser();
+    await prisma.$transaction(async (tx) => {
+      await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
+      return createOffer(tx, {
       ...input,
       managerId: input.managerId || undefined,
       gradeId: input.gradeId || undefined,
@@ -247,7 +262,7 @@ export async function createOfferWithStateAction(
       organizationId: auth.user.organizationId,
       actorUserId: auth.user.id,
       actorRole: auth.roles[0],
-    }));
+    }); });
     revalidatePath(`/hr/admin/applications/${input.applicationId}`);
     return success("Immutable offer version created.");
   } catch (error) {
@@ -264,16 +279,19 @@ export async function manageOfferWithStateAction(
       offerId: z.string().cuid(),
       applicationId: z.string().cuid(),
       expectedVersion: z.coerce.number().int().positive(),
-      operation: z.enum(["SUBMIT", "APPROVE", "ISSUE"]),
+      operation: z.enum(["SUBMIT", "APPROVE", "REJECT", "ISSUE"]),
       reason: z.string().trim().min(3).max(1000),
     }).parse(Object.fromEntries(formData));
-    const permission = input.operation === "SUBMIT" ? "offer.submit" : input.operation === "APPROVE" ? "offer.approve" : "offer.issue";
-    const auth = await requirePermission(permission);
+    const auth = await requireAuthenticatedUser();
     await prisma.$transaction(async (tx) => {
+      await tx.hrRecruitmentOffer.findFirstOrThrow({ where: { id: input.offerId, applicationId: input.applicationId, organizationId: auth.user.organizationId } });
+      if (!["APPROVE", "REJECT"].includes(input.operation)) await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
       if (input.operation === "SUBMIT") {
         await submitOfferForApproval(tx, {
           ...input, organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0],
         });
+      } else if (input.operation === "REJECT") {
+        await rejectOfferApproval(tx, { organizationId: auth.user.organizationId, offerId: input.offerId, actorUserId: auth.user.id, actorRole: auth.roles[0], expectedVersion: input.expectedVersion, reason: input.reason });
       } else if (input.operation === "APPROVE") {
         await approveOffer(tx, {
           organizationId: auth.user.organizationId, offerId: input.offerId, actorUserId: auth.user.id,

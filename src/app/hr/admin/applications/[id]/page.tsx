@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { requirePermission } from "@/lib/hr/permissions/authorize";
+import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
+import { requireRecruitmentRead, assertRecruitmentStageAccess } from "@/lib/hr/recruitment/stage-access";
 import { recruitmentTransitionMaps, type RecruitmentApplicationStatus } from "@/lib/hr/recruitment/states";
 import { prisma } from "@/lib/prisma";
 import { WorkflowActionForm } from "./WorkflowActionForm";
@@ -7,8 +8,18 @@ import { WorkflowActionForm } from "./WorkflowActionForm";
 const label = (value: string) => value.replaceAll("_", " ");
 
 export default async function ApplicationReviewPage({ params }: { params: Promise<{ id: string }> }) {
-  const auth = await requirePermission("application.view");
+  const auth = await requireAuthenticatedUser();
   const { id } = await params;
+  await requireRecruitmentRead(id);
+  // UI capabilities are scoped to this application; server actions independently recheck them.
+  const team = await prisma.$transaction(tx => assertRecruitmentStageAccess(tx, { applicationId: id, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 })).then(() => true, () => false);
+  auth.permissions = new Set(auth.permissions);
+  const recruitmentControls = ["application.review", "application.request_information", "application.shortlist", "application.hold", "application.reject", "interview.schedule", "interview.reschedule", "interview.cancel", "assessment.create", "offer.create", "offer.submit", "offer.issue"] as const;
+  for (const permission of recruitmentControls) {
+    if (team) auth.permissions.add(permission); else auth.permissions.delete(permission);
+  }
+  // Visibility is not approval authority; approveOffer checks creator/delegate inside its transaction.
+  auth.permissions.add("offer.approve");
   const organizationId = auth.user.organizationId;
   const [application, users, positions, departments, legalEntities, grades] = await Promise.all([
     prisma.jobApplication.findFirst({
@@ -198,8 +209,11 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {offer.status === "DRAFT" && auth.permissions.has("offer.submit") ? <OfferAction applicationId={application.id} offerId={offer.id} version={offer.version} operation="SUBMIT" labelText="Submit for approval" /> : null}
             {offer.status === "PENDING_APPROVAL" && auth.permissions.has("offer.approve") ? <OfferAction applicationId={application.id} offerId={offer.id} version={offer.version} operation="APPROVE" labelText="Approve exact version" /> : null}
+            {offer.status === "PENDING_APPROVAL" && auth.permissions.has("offer.approve") ? <OfferAction applicationId={application.id} offerId={offer.id} version={offer.version} operation="REJECT" labelText="Decline internally — notify hiring team" /> : null}
             {offer.status === "APPROVED" && auth.permissions.has("offer.issue") ? <OfferAction applicationId={application.id} offerId={offer.id} version={offer.version} operation="ISSUE" labelText="Issue offer" /> : null}
           </div>
+          {offer.status === "REJECTED" ? <p className="mt-3 text-sm">The creator declined this recommendation internally. The hiring team must select Rejected in the application transition control to notify the applicant. No rejection email was sent to the applicant by this offer decision.</p> : null}
+          {offer.approvals.filter(decision => decision.decision === "REJECTED").map(decision => <p className="mt-2 text-sm" key={decision.id}>Internal decision: {decision.comments}</p>)}
         </article> : null}
       </div>
     </section>

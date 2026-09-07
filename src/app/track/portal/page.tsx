@@ -223,14 +223,14 @@ export default async function Portal({
     include: { documentReviews: true },
   });
   const replacementRequests = governedHandover?.documentReviews.filter((review) => review.status === "REPLACEMENT_REQUESTED") ?? [];
-  const governedLifecycleActive = Boolean(governedOffer?.activeVersion && ["ISSUED", "ACCEPTED", "DECLINED"].includes(governedOffer.status));
+  const governedLifecycleActive = Boolean(governedOffer?.activeVersion && ["ISSUED", "DECLINED"].includes(governedOffer.status));
   const governedLifecycleStep = governedOffer?.status === "ISSUED"
     ? "Offer awaiting your decision"
     : governedOffer?.status === "DECLINED"
       ? "Offer declined"
       : governedHandover?.status === "CONVERTED_TO_PRE_HIRE"
         ? "Transferred to employee onboarding"
-        : "Accepted offer transferred to HR";
+        : "Offer accepted — employment agreement is next";
 
   return (
     <PageShell>

@@ -1,8 +1,8 @@
-import { adminLogoutAction } from '@/app/admin/logout/actions';
+import { hrLogoutAction } from '@/app/hr/actions';
 
 export function AdminLogoutButton() {
   return (
-    <form action={adminLogoutAction}>
+    <form action={hrLogoutAction}>
       <button className="btn btn-secondary" type="submit">
         Logout
       </button>

@@ -1,4 +1,5 @@
 "use server";
+import { notifyRecruitmentStageSubmitted } from "@/lib/hr/recruitment/stage-notifications";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
@@ -440,15 +441,7 @@ export async function submitStage2(formData: FormData) {
           metadata: { documentsUploaded: saved.length },
         },
       });
-      await tx.emailNotification.create({
-        data: {
-          applicationId: application.id,
-          toEmail: "admin",
-          template: "stage-2-submitted-admin",
-          subject: `Stage 2 submitted: ${application.applicationId}`,
-          status: "recorded",
-        },
-      });
+      await notifyRecruitmentStageSubmitted(tx, { applicationId: application.id, stage: 2, submissionId: submission.id });
     });
   } catch (error) {
     await Promise.all(
@@ -590,15 +583,7 @@ export async function submitStage3(formData: FormData) {
           metadata: { uploadProvided: saved.length > 0 },
         },
       });
-      await tx.emailNotification.create({
-        data: {
-          applicationId: application.id,
-          toEmail: "admin",
-          template: "stage-3-submitted-admin",
-          subject: `Stage 3 submitted: ${application.applicationId}`,
-          status: "recorded",
-        },
-      });
+      await notifyRecruitmentStageSubmitted(tx, { applicationId: application.id, stage: 3, submissionId: submission.id });
     });
     diagnostics.dbWriteSucceeded = true;
     diagnostics.redirectStatus = "success";
@@ -896,7 +881,7 @@ export async function submitStage5(formData: FormData) {
       await tx.employmentAgreement.update({ where: { applicationId: application.id }, data: { status: "Submitted", candidateSubmittedAt: new Date() } });
       await tx.jobApplication.update({ where: { id: application.id }, data: { status: "Agreement Pending", currentStageOrder: 5 } });
       await tx.auditLog.create({ data: { applicationId: application.id, actorType: "applicant", actorRef: "masked-email", action: "Applicant submitted Stage 5 agreement", metadata: { agreementVersion: agreement.version, confirmationsAccepted: true } } });
-      await tx.emailNotification.create({ data: { applicationId: application.id, toEmail: "admin", template: "stage-5-submitted-admin", subject: `Stage 5 submitted: ${application.applicationId}`, status: "recorded" } });
+      await notifyRecruitmentStageSubmitted(tx, { applicationId: application.id, stage: 5, submissionId: submission.id });
     });
   } catch (error) {
     console.info("candidateStage5SubmitDiagnostics", { sessionValid: true, dbWriteSucceeded: false, errorName: error instanceof Error ? error.name : "UnknownError" });
@@ -945,7 +930,7 @@ export async function submitStage6(formData: FormData) {
       await tx.hiringStage.update({ where: { id: stage6.id }, data: { status: "Under Review", submittedAt: new Date() } });
       await tx.jobApplication.update({ where: { id: application.id }, data: { status: "Onboarding Pending", currentStageOrder: 6 } });
       await tx.auditLog.create({ data: { applicationId: application.id, actorType: "applicant", actorRef: "masked-email", action: "Applicant submitted Stage 6 onboarding", metadata: { documentsUploaded: saved.length, declarationsAccepted: true } } });
-      await tx.emailNotification.create({ data: { applicationId: application.id, toEmail: "admin", template: "stage-6-submitted-admin", subject: `Stage 6 submitted: ${application.applicationId}`, status: "recorded" } });
+      await notifyRecruitmentStageSubmitted(tx, { applicationId: application.id, stage: 6, submissionId: submission.id });
     });
   } catch (error) {
     await Promise.all(saved.map((item) => deletePrivateUpload(item.storageKey, item.provider)));
@@ -980,7 +965,7 @@ export async function submitStage7(formData: FormData) {
       await tx.hiringStage.update({ where: { id: stage7.id }, data: { status: "Under Review", submittedAt: new Date() } });
       await tx.jobApplication.update({ where: { id: application.id }, data: { status: "Final Review", currentStageOrder: 7 } });
       await tx.auditLog.create({ data: { applicationId: application.id, actorType: "applicant", actorRef: "masked-email", action: "Applicant submitted Stage 7 acknowledgements", metadata: { acknowledgementVersion: 1, allRequiredAcknowledgements: true, candidateNotePresent: Boolean(parsed.data.candidateNote) } } });
-      await tx.emailNotification.create({ data: { applicationId: application.id, toEmail: "admin", template: "stage-7-submitted-admin", subject: `Stage 7 submitted: ${application.applicationId}`, status: "recorded" } });
+      await notifyRecruitmentStageSubmitted(tx, { applicationId: application.id, stage: 7, submissionId: submission.id });
     });
   } catch (error) {
     console.info("candidateStage7SubmitDiagnostics", { sessionValid: true, dbWriteSucceeded: false, errorName: error instanceof Error ? error.name : "UnknownError" });

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { appendHrAudit } from "../audit";
 import { enqueueHrEmail } from "../notifications/outbox";
 import { assertVacancyTransition, canPublishVacancy } from "./states";
+import { canApproveReviewedVacancy } from "./vacancy-authority";
 
 const listInput = z.string().trim().transform((value) => value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean));
 const optionalDateInput = z.preprocess(
@@ -16,6 +17,7 @@ export const vacancyInput = z.object({
   departmentId: z.string().cuid(),
   hiringTeamId: z.string().cuid(),
   responsibleHrTeamId: z.string().cuid(),
+  responsibleHrUserId: z.string().cuid(),
   vacancyOwnerId: z.string().cuid(),
   hiringManagerId: z.string().cuid().optional().or(z.literal("")).transform((value) => value || undefined),
   employmentType: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT", "INTERN", "TEMPORARY"]),
@@ -54,9 +56,13 @@ export async function createVacancy(
     tx.hrDepartment.findFirstOrThrow({ where: { id: input.departmentId, organizationId: input.organizationId, status: "ACTIVE" } }),
     tx.hrHiringTeam.findFirstOrThrow({ where: { id: input.hiringTeamId, organizationId: input.organizationId, status: "ACTIVE" } }),
     tx.hrHiringTeam.findFirstOrThrow({ where: { id: input.responsibleHrTeamId, organizationId: input.organizationId, status: "ACTIVE" } }),
-    tx.hrUser.findFirstOrThrow({ where: { id: input.vacancyOwnerId, organizationId: input.organizationId, status: "ACTIVE" } }),
+    tx.hrUser.findFirstOrThrow({ where: { id: input.actorUserId, organizationId: input.organizationId, status: "ACTIVE" } }),
   ]);
   if (hiringTeam.departmentId && hiringTeam.departmentId !== department.id) throw new Error("Hiring Team does not support the selected department.");
+  await tx.hrUser.findFirstOrThrow({ where: {
+    id: input.responsibleHrUserId, organizationId: input.organizationId, status: "ACTIVE",
+    roles: { some: { revokedAt: null, role: { key: { in: ["ADMIN", "HR_ADMIN"] } } } },
+  } });
   if (input.hiringManagerId) {
     await tx.hrUser.findFirstOrThrow({ where: { id: input.hiringManagerId, organizationId: input.organizationId, status: "ACTIVE" } });
   }
@@ -71,6 +77,7 @@ export async function createVacancy(
   const vacancy = await tx.hrVacancy.create({ data: {
     organizationId: input.organizationId, vacancyNumber, publicSlug, title: input.title,
     departmentId: department.id, hiringTeamId: hiringTeam.id, responsibleHrTeamId: responsibleHrTeam.id,
+    responsibleHrUserId: input.responsibleHrUserId,
     vacancyOwnerId: owner.id, hiringManagerId: input.hiringManagerId, employmentType: input.employmentType,
     workMode: input.workMode, numberOfOpenings: input.numberOfOpenings, description: input.description,
     responsibilities: input.responsibilities, minimumQualifications: input.minimumQualifications,
@@ -97,19 +104,39 @@ export async function transitionVacancy(
   const vacancy = await tx.hrVacancy.findFirstOrThrow({
     where: { id: input.vacancyId, organizationId: input.organizationId },
     include: {
-      hiringTeam: true, responsibleHrTeam: true, vacancyOwner: true,
+      hiringTeam: true, responsibleHrTeam: true, responsibleHrUser: { include: { roles: { where: { revokedAt: null }, include: { role: true } } } }, vacancyOwner: true,
       approvals: { where: { decision: "APPROVED" } },
     },
   });
   if (vacancy.version !== input.expectedVersion) throw new Error("Vacancy changed since this page loaded. Reload and try again.");
   assertVacancyTransition(vacancy.status, input.to);
-  if (input.to === "APPROVED" && vacancy.createdById === input.actorUserId) throw new Error("Vacancy creators cannot approve their own vacancy.");
+  if (input.to === "APPROVED") {
+    const people = await tx.hrUser.findMany({
+      where: { id: { in: [vacancy.createdById, input.actorUserId] }, organizationId: input.organizationId, status: "ACTIVE" },
+      include: { roles: { where: { revokedAt: null }, include: { role: true } } },
+    });
+    const creator = people.find((person) => person.id === vacancy.createdById);
+    const approver = people.find((person) => person.id === input.actorUserId);
+    if (!creator || !approver || !canApproveReviewedVacancy(
+      { ...creator, roles: creator.roles.map(({ role }) => role.key) },
+      { ...approver, roles: approver.roles.map(({ role }) => role.key) },
+    )) throw new Error("This approver is not eligible for the vacancy creator's approval route.");
+  }
   if (["OPEN", "SCHEDULED"].includes(input.to)) {
+    if (vacancy.createdById !== input.actorUserId) throw new Error("Only the vacancy creator may publish this vacancy.");
+    const now = new Date();
+    const activeMembers = await tx.hrHiringTeamMember.count({ where: {
+      hiringTeamId: vacancy.hiringTeamId, status: "ACTIVE", effectiveFrom: { lte: now },
+      OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }],
+      user: { organizationId: input.organizationId, status: "ACTIVE" },
+    } });
+    if (activeMembers === 0) throw new Error("The hiring team needs at least one active member before publication.");
+    if (!vacancy.responsibleHrUser || vacancy.responsibleHrUser.status !== "ACTIVE" || !vacancy.responsibleHrUser.roles.some(({ role }) => ["ADMIN", "HR_ADMIN"].includes(role.key))) throw new Error("Assign an active responsible HR person before publication.");
     const gate = canPublishVacancy({
       status: vacancy.status, activeHiringTeam: vacancy.hiringTeam.status === "ACTIVE",
       vacancyOwnerId: vacancy.vacancyOwner.status === "ACTIVE" ? vacancy.vacancyOwnerId : null,
       responsibleHrTeamId: vacancy.responsibleHrTeam.status === "ACTIVE" ? vacancy.responsibleHrTeamId : null,
-      requiredApprovalsComplete: vacancy.approvals.some((approval) => approval.vacancyVersion === vacancy.version),
+      requiredApprovalsComplete: vacancy.approvals.some((approval) => approval.vacancyVersion === vacancy.approvedVersion),
     });
     if (!gate.publishable) throw new Error(`Vacancy cannot be published: ${gate.blockers.join(", ")}.`);
   }

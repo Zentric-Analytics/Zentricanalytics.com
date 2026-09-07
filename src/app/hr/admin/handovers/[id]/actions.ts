@@ -8,6 +8,7 @@ import {
   reviewRecruitmentDocument,
   transitionHandover,
   updateRecruitmentRequirement,
+  assertNamedHrHandoverAccess,
 } from "@/lib/hr/recruitment/handover";
 import { convertApprovedHandoverToPreHire } from "@/lib/hr/recruitment/prehire";
 import { prisma } from "@/lib/prisma";
@@ -41,9 +42,11 @@ export async function handoverAction(
         reason: z.string().trim().min(3).max(1000),
       }).parse(Object.fromEntries(formData));
       const auth = await requirePermission(input.to === "WAIVED" ? "onboarding.override" : "handover.review");
-      await prisma.$transaction((tx) => updateRecruitmentRequirement(tx, {
+      await prisma.$transaction(async (tx) => {
+        await tx.hrRecruitmentRequirement.findFirstOrThrow({ where: { id: input.requirementId, handoverId, handover: { organizationId: auth.user.organizationId } } });
+        return updateRecruitmentRequirement(tx, {
         ...input, organizationId: auth.user.organizationId, actorUserId: auth.user.id,
-      }), { isolationLevel: "Serializable" });
+      }); }, { isolationLevel: "Serializable" });
     } else if (operation === "DOCUMENT") {
       const input = z.object({
         uploadedDocumentId: z.string().cuid(),
@@ -68,13 +71,15 @@ export async function handoverAction(
       }), { isolationLevel: "Serializable" });
     } else {
       const auth = await requirePermission("employee.prehire.create");
-      await prisma.$transaction((tx) => convertApprovedHandoverToPreHire(tx, {
+      await prisma.$transaction(async (tx) => {
+        await assertNamedHrHandoverAccess(tx, { handoverId, organizationId: auth.user.organizationId, actorUserId: auth.user.id });
+        return convertApprovedHandoverToPreHire(tx, {
         handoverId,
         organizationId: auth.user.organizationId,
         actorUserId: auth.user.id,
         actorRole: auth.roles[0],
         idempotencyKey: `prehire-conversion:${handoverId}`,
-      }), { isolationLevel: "Serializable" });
+      }); }, { isolationLevel: "Serializable" });
     }
     revalidatePath(`/hr/admin/handovers/${handoverId}`);
     revalidatePath("/hr/admin/recruitment");

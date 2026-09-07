@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { appendHrAudit } from "../audit";
+import { createStageRows } from "@/lib/workflow";
 import { enqueueHrEmail } from "../notifications/outbox";
 import { assertApplicationTransition, isVacancyAcceptingApplications, type RecruitmentApplicationStatus } from "./states";
 
@@ -54,13 +55,15 @@ export async function submitApplication(
 ) {
   const input = applicationSubmissionInput.parse(rawInput);
   const existing = await tx.jobApplication.findUnique({ where: { submissionKey: input.idempotencyKey } });
-  if (existing) return existing;
+  if (existing) {
+    if (existing.organizationId !== input.organizationId || existing.vacancyId !== input.vacancyId) throw new Error("Submission key belongs to another application scope.");
+    return existing;
+  }
 
   const vacancy = await tx.hrVacancy.findFirstOrThrow({
     where: { id: input.vacancyId, organizationId: input.organizationId },
     include: {
       hiringTeam: { include: { members: { where: { status: "ACTIVE" }, include: { user: true } } } },
-      responsibleHrTeam: { include: { members: { where: { status: "ACTIVE" }, include: { user: true } } } },
     },
   });
   if (!isVacancyAcceptingApplications({
@@ -117,8 +120,9 @@ export async function submitApplication(
   }
 
   const applicationReference = await nextPublicNumber(tx, input.organizationId, "APPLICATION", "APL", now);
-  const owner = vacancy.hiringTeam.members.find((member) => member.user.status === "ACTIVE")?.user
-    ?? vacancy.responsibleHrTeam.members.find((member) => member.user.status === "ACTIVE")?.user;
+  const activeMembers = vacancy.hiringTeam.members.filter((member) => member.user.status === "ACTIVE" && member.effectiveFrom <= now && (!member.effectiveTo || member.effectiveTo > now));
+  const owner = activeMembers[0]?.user;
+  if (!owner) throw new Error("The vacancy needs an active hiring team member before accepting applications.");
   const application = await tx.jobApplication.create({
     data: {
       organizationId: input.organizationId,
@@ -140,6 +144,7 @@ export async function submitApplication(
       applicationOwnerId: owner?.id,
     },
   });
+  await createStageRows(application.id, tx);
   if (Object.keys(input.answers).length) {
     await tx.hrApplicationAnswer.createMany({
       data: Object.entries(input.answers).map(([questionKey, answer]) => ({
@@ -189,8 +194,7 @@ export async function submitApplication(
   });
 
   const recipients = [...new Map(
-    [...vacancy.hiringTeam.members, ...vacancy.responsibleHrTeam.members]
-      .filter((member) => member.user.status === "ACTIVE")
+    activeMembers
       .map((member) => [member.user.email, member.user]),
   ).values()];
   for (const recipient of recipients) {
@@ -199,7 +203,7 @@ export async function submitApplication(
       recipient: recipient.email,
       template: "hr-new-application",
       subject: `New application: ${applicationReference}`,
-      payload: { applicationReference, vacancyNumber: vacancy.vacancyNumber, href: `/hr/admin/applications/${application.id}` },
+      payload: { applicationReference, vacancyNumber: vacancy.vacancyNumber, href: `/hr/recruitment/${application.id}` },
       idempotencyKey: `new-application:${application.id}:${recipient.id}`,
     });
   }

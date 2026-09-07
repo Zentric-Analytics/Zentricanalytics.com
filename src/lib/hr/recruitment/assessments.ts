@@ -63,7 +63,7 @@ export async function createAssessment(
     recipient: evaluator.email,
     template: "hr-assessment-assigned",
     subject: `Assessment assigned: ${input.assessmentType}`,
-    payload: { assessmentId: assessment.id, href: `/hr/admin/applications/${application.id}` },
+    payload: { assessmentId: assessment.id, href: `/hr/recruitment/${application.id}` },
     idempotencyKey: `assessment-assigned:${assessment.id}:${evaluator.id}`,
   });
   await enqueueHrEmail(tx, {
@@ -105,6 +105,7 @@ export async function updateAssessment(
   const assessment = await tx.hrAssessment.findFirstOrThrow({
     where: { id: input.assessmentId, organizationId: input.organizationId },
   });
+  if (assessment.evaluatorId !== input.actorUserId) throw new Error("Only the assigned evaluator may update this assessment.");
   const allowed: Record<string, string[]> = {
     PENDING: ["IN_PROGRESS", "COMPLETED", "CANCELLED"],
     IN_PROGRESS: ["COMPLETED", "CANCELLED"],

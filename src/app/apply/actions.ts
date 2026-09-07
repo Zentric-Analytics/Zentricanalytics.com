@@ -97,8 +97,9 @@ export async function submitStage1Application(_previousState: Stage1FormState, f
           await tx.hrApplicationStageHistory.create({ data: { organizationId: hrOrganization.id, applicationId: application.id, newState: "PENDING_REVIEW", actorType: "APPLICANT", reason: "Application submitted", source: "PUBLIC_PORTAL", correlationId: submissionKey } });
           await tx.hrApplicationReviewTask.create({ data: { organizationId: hrOrganization.id, applicationId: application.id, hiringTeamId: vacancy.hiringTeamId, ownerUserId: owner?.id, idempotencyKey: `application-review:${application.id}` } });
           await appendHrAudit(tx, { organizationId: hrOrganization.id, entityType: "JobApplication", entityId: application.id, action: "hr.recruitment.application.submitted", newValues: { applicationReference, vacancyNumber: vacancy.vacancyNumber, status: "PENDING_REVIEW" }, reason: "Applicant submitted an application", correlationId: submissionKey });
-          const recipients = [...new Map([...vacancy.hiringTeam.members, ...vacancy.responsibleHrTeam.members].filter((member) => member.user.status === "ACTIVE").map((member) => [member.user.email, member.user])).values()];
-          for (const recipient of recipients) await enqueueHrEmail(tx, { organizationId: hrOrganization.id, recipient: recipient.email, template: "hr-new-application", subject: `New application: ${applicationReference}`, payload: { applicationReference, vacancyNumber: vacancy.vacancyNumber, href: `/hr/admin/applications/${application.id}` }, idempotencyKey: `new-application:${application.id}:${recipient.id}` });
+          const now = new Date();
+          const recipients = [...new Map(vacancy.hiringTeam.members.filter((member) => member.user.status === "ACTIVE" && member.effectiveFrom <= now && (!member.effectiveTo || member.effectiveTo > now)).map((member) => [member.user.email, member.user])).values()];
+          for (const recipient of recipients) await enqueueHrEmail(tx, { organizationId: hrOrganization.id, recipient: recipient.email, template: "hr-new-application", subject: `New application: ${applicationReference}`, payload: { applicationReference, vacancyNumber: vacancy.vacancyNumber, href: `/hr/recruitment/${application.id}` }, idempotencyKey: `new-application:${application.id}:${recipient.id}` });
         }
         return application;
       });

@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server';
 
-import { requireAdminSession } from '@/lib/admin-auth';
+import { requireRecruitmentRead } from '@/lib/hr/recruitment/stage-access';
 import { sanitizeDownloadFilenamePart } from '@/lib/hiring';
 import { renderSubmittedDocumentPdf } from '@/lib/pdf';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ applicationId: string }> }) {
+  const { applicationId } = await params;
   let adminSession;
   try {
-    adminSession = await requireAdminSession();
+    adminSession = await requireRecruitmentRead(applicationId);
   } catch {
     return new NextResponse('Unauthorized', { status: 401, headers: { 'Cache-Control': 'no-store' } });
   }
 
-  const { applicationId } = await params;
   const app = await prisma.jobApplication.findUnique({
     where: { id: applicationId },
     include: {

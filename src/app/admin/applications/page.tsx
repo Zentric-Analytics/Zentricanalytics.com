@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { AdminLogoutButton } from '@/components/AdminLogoutButton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { prisma, isDatabaseConfigured } from '@/lib/prisma';
-import { getAdminSession } from '@/lib/admin-auth';
+import { recruitmentOversight } from '@/lib/hr/recruitment/stage-access';
 
 import { adminStage1Action } from './actions';
 
@@ -56,7 +56,8 @@ function uploadedCount(application: AdminApplicationListItem) {
 
 export default async function AdminApplications({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
-  const adminSession = await getAdminSession();
+  const { auth, where: scope } = await recruitmentOversight();
+  const adminSession = auth.user;
   console.info('adminSessionPresentOnPageLoad', { page: '/admin/applications', present: Boolean(adminSession) });
   if (!adminSession) redirect('/admin/login');
   if (!isDatabaseConfigured()) return <main>DATABASE_URL is required for admin records.</main>;
@@ -67,6 +68,7 @@ export default async function AdminApplications({ searchParams }: { searchParams
 
   const applications = await prisma.jobApplication.findMany({
     where: {
+      AND: [scope],
       deletedAt: null,
       ...(stageFilter ? { currentStageOrder: stageFilter } : {}),
       ...(statusFilter ? { status: statusFilter } : {}),
