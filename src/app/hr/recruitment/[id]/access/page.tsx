@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
 import { sendMailboxWelcomeAction, sendLinkedInvitationAction, reconcileEmploymentAction } from "./actions";
+import { ReviewedFlowForm } from "./ReviewedFlowForm";
 
 export default async function EmployeeAccessPage({ params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuthenticatedUser();
@@ -22,6 +23,7 @@ export default async function EmployeeAccessPage({ params }: { params: Promise<{
       <p>Employment status: {app.hrEmployee.employmentStatus}. Account setup does not activate employment.</p>
       <p>For a previously completed application with missing employment details, reconcile the accepted offer into the same employee record. Conflicting assignments are blocked for HR review; activation and onboarding checks are not bypassed.</p>
       <form action={reconcileEmploymentAction}><input type="hidden" name="applicationId" value={id} /><button className="btn btn-primary">Reconcile accepted employment details</button></form>
+      <ReviewedFlowForm applicationId={id} />
     </section>}
     <form action={sendMailboxWelcomeAction} className="grid gap-3">
       <input type="hidden" name="applicationId" value={id} />

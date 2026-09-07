@@ -10,7 +10,7 @@ import {
   updateRecruitmentRequirement,
   assertNamedHrHandoverAccess,
 } from "@/lib/hr/recruitment/handover";
-import { convertApprovedHandoverToPreHire } from "@/lib/hr/recruitment/prehire";
+import { completeReviewedRecruitment } from "@/lib/hr/recruitment/reviewed-completion";
 import { prisma } from "@/lib/prisma";
 
 export type HandoverActionState = { status: "idle" | "success" | "error"; message?: string };
@@ -72,13 +72,11 @@ export async function handoverAction(
     } else {
       const auth = await requirePermission("employee.prehire.create");
       await prisma.$transaction(async (tx) => {
-        await assertNamedHrHandoverAccess(tx, { handoverId, organizationId: auth.user.organizationId, actorUserId: auth.user.id });
-        return convertApprovedHandoverToPreHire(tx, {
-        handoverId,
+        const handover = await assertNamedHrHandoverAccess(tx, { handoverId, organizationId: auth.user.organizationId, actorUserId: auth.user.id });
+        return completeReviewedRecruitment(tx, {
+        applicationId: handover.applicationId,
         organizationId: auth.user.organizationId,
         actorUserId: auth.user.id,
-        actorRole: auth.roles[0],
-        idempotencyKey: `prehire-conversion:${handoverId}`,
       }); }, { isolationLevel: "Serializable" });
     }
     revalidatePath(`/hr/admin/handovers/${handoverId}`);

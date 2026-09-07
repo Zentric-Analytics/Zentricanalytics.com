@@ -207,10 +207,11 @@ export async function activateReadyEmployee(
       user: { include: { roles: { where: { revokedAt: null }, include: { role: true } } } },
     },
   });
-  const onboarding = employee.lifecycleInstances[0];
-  const requiredTasksComplete = Boolean(onboarding) && onboarding.tasks.filter((task) => task.required).every((task) => task.status === "COMPLETED");
+  const conversion = await tx.hrPreHireConversion.findUnique({ where: { employeeId: employee.id } });
+  const onboarding = employee.lifecycleInstances.find(instance => instance.id === conversion?.lifecycleInstanceId);
+  const requiredTasksComplete = Boolean(onboarding?.tasks.filter((task) => task.required).every((task) => task.status === "COMPLETED"));
   const readiness = evaluateActivationReadiness({
-    finalHrApprovalComplete: Boolean(await tx.hrPreHireConversion.findUnique({ where: { employeeId: employee.id } })) && Boolean(employee.recruitmentApplicationId && await tx.hiringStage.findFirst({ where: { applicationId: employee.recruitmentApplicationId, stageOrder: 8, status: "Approved" } })),
+    finalHrApprovalComplete: Boolean(conversion && conversion.organizationId === input.organizationId && conversion.applicationId === employee.recruitmentApplicationId) && Boolean(employee.recruitmentApplicationId && await tx.hiringStage.findFirst({ where: { applicationId: employee.recruitmentApplicationId, stageOrder: 8, status: "Approved" } })),
     blockingRequirementsComplete: requiredTasksComplete,
     startDate: employee.startDate ?? new Date(8640000000000000),
     now,

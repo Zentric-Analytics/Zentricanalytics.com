@@ -9,6 +9,27 @@ import { renderMailboxWelcome } from "@/lib/hr/recruitment/mailbox-welcome";
 import { sendAndRecordEmail } from "@/lib/email";
 import { createLinkedEmployeeInvitation } from "@/lib/hr/recruitment/employee-access";
 import { reconcileRecruitmentEmployment } from "@/lib/hr/recruitment/employment-handover";
+import { completeReviewedRecruitment } from "@/lib/hr/recruitment/reviewed-completion";
+import { reconcileApprovedStageEvidence } from "@/lib/hr/recruitment/stage-evidence";
+
+export async function reconcileReviewedFlowAction(_previous: { message: string }, formData: FormData) {
+  const auth = await requireAuthenticatedUser();
+  const applicationId = z.string().cuid().parse(formData.get("applicationId"));
+  try {
+    const evidenceOnly = formData.get("operation") === "EVIDENCE";
+    await prisma.$transaction(async tx => { await (evidenceOnly ? reconcileApprovedStageEvidence(tx, {
+      organizationId: auth.user.organizationId, actorUserId: auth.user.id, applicationId,
+    }) : completeReviewedRecruitment(tx, {
+      organizationId: auth.user.organizationId, actorUserId: auth.user.id, applicationId,
+    })); }, { isolationLevel: "Serializable", timeout: 15000 });
+    revalidatePath(`/hr/recruitment/${applicationId}/access`);
+    revalidatePath("/hr/admin/recruitment");
+    revalidatePath("/hr/admin/handovers", "layout");
+    return { message: evidenceOnly ? "Matching approved evidence connected. Unsupported checks remain pending." : "Reviewed onboarding connected. No new invitation or activation was performed." };
+  } catch {
+    return { message: "Reconciliation blocked. Check unresolved handover requirements, exact document reviews, reviewer ownership or existing lifecycle conflicts. No partial completion was saved." };
+  }
+}
 
 export async function reconcileEmploymentAction(formData: FormData) {
   const auth = await requireAuthenticatedUser();

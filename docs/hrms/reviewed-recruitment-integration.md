@@ -22,6 +22,8 @@ DOCUMENTED_POLICY: After final HR approval, authorized HR sends company-mailbox 
 
 ## Release limits
 
+VERIFIED_IMPLEMENTATION (2026-09-07, local regression evidence): final Stage 8 approval now calls `reviewed-completion.ts` in its serializable transaction. Matching signed identity/payroll submissions and explicit final checklist decisions can populate pending requirements using reference-only provenance through `stage-evidence.ts`. Right-to-work is not inferred from a candidate declaration; unresolved requirements, exact HR document reviews, conflicting identities/lifecycles, and cancelled handovers block completion. The completed eight-stage journey becomes the linked completed HR lifecycle rather than starting duplicate tasks or another applicant email. Existing completed applications have named-HR repair actions. Activation remains separate and evaluates the conversion-linked lifecycle. Live validation of this correction remains pending.
+
 ENVIRONMENT_PENDING: No shared database was migrated and no deployment is established by these code changes. Existing vacancies need a valid named HR person before publication or handover. Unmapped historical records require deliberate organization/vacancy assignment; the migration does not guess ownership or delete records.
 
 UNRESOLVED: Live mail delivery, private-document access, historical-data completeness, database concurrency, and the full authenticated browser journey require environment validation. Manual mailbox confirmation does not independently verify Microsoft password change or MFA. Older generated matrices describe pre-review behavior until regenerated and reconciled; use the source pointers above for this change set.

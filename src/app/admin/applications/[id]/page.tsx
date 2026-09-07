@@ -268,6 +268,7 @@ async function StageActionForm({
 
 async function Stage8FinalApprovalForm({ applicationId }: { applicationId: string }) {
   if (!(await canManageRecruitmentStage(applicationId, 8))) return <p className="mt-3 text-sm">Read-only final approval history.</p>;
+  const handover = await prisma.hrRecruitmentHandover.findFirst({ where: { applicationId }, select: { id: true } });
   const checklist: Array<[string, string[]]> = [
     ["Application review complete", ["Stage 1 application reviewed", "Candidate identity and contact information reviewed", "Role applied/offered is consistent"]],
     ["Screening and offer complete", ["Stage 3 screening/assessment completed or approved", "Stage 4 offer accepted", "Stage 5 employment agreement approved"]],
@@ -280,6 +281,7 @@ async function Stage8FinalApprovalForm({ applicationId }: { applicationId: strin
   let index = 0;
   return <form action={adminStage8Action} className="mt-4 space-y-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
     <input type="hidden" name="applicationDbId" value={applicationId} />
+    {handover && <p className="text-sm">Final approval also completes the linked HR onboarding record. Matching identity and payroll reviews carry forward; unresolved right-to-work, additional requirements and exact HR document reviews must be completed before finalizing. <a className="underline" href={`/hr/admin/handovers/${handover.id}`}>Review the linked HR requirements</a></p>}
     <p className="text-sm font-semibold text-blue-950">Finalizing marks the hiring workflow complete. The server will still block final approval unless Stages 1–7 are approved/completed and the offer is accepted.</p>
     <div className="grid gap-4 lg:grid-cols-2">{checklist.map(([group, items]) => <section className="rounded-2xl border border-blue-100 bg-white p-4" key={group}><h4 className="font-bold text-slate-950">{group}</h4><div className="mt-3 space-y-2">{items.map((label) => { const name = names[index++]; return <label className="flex gap-2 text-sm font-semibold text-slate-700" key={name}><input name={name} type="checkbox" /> {label}</label>; })}</div></section>)}</div>
     <label className="block text-sm font-semibold">Optional final HR notes (admin-only)<textarea className="input mt-1 min-h-24" name="finalHrNotes" maxLength={1500} /></label>

@@ -113,12 +113,13 @@ describe("Unit 3 connected recruitment workspaces", () => {
       "reviewRecruitmentDocument",
       "updateRecruitmentRequirement",
       "reassignHandoverOwner",
-      "convertApprovedHandoverToPreHire",
+      "completeReviewedRecruitment",
     ]) expect(actions).toContain(operation);
     expect(page).toContain("Pre-hire eligibility:");
     expect(page).toContain("Pre-hire conversion: COMPLETED");
     expect(page).toContain("This handover has been converted to its linked employee and onboarding records.");
-    expect(page).toContain("Approve and create PRE_HIRE");
+    expect(page).toContain("Connect completed recruitment onboarding");
+    expect(actions).not.toContain("convertApprovedHandoverToPreHire");
     expect(page).toContain("entityId: { in: governedEntityIds }");
     expect(page).not.toContain('entityType: { in: ["HrRecruitmentRequirement", "HrRecruitmentDocumentReview"] }');
   });
