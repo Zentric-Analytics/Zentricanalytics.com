@@ -4,6 +4,18 @@ import { assertPositionTransition, positionOccupancyStatus } from "./validation"
 
 type CommandContext = { organizationId: string; actorUserId: string; actorRole?: string };
 
+/** Explicit repair; never overrides approval, closure, freeze or archive decisions. */
+export async function repairPositionOccupancy(tx: Prisma.TransactionClient, context: CommandContext, input: { positionId: string; expectedVersion: number; reason: string }) {
+  const position = await tx.hrPosition.findFirstOrThrow({ where: { id: input.positionId, organizationId: context.organizationId } });
+  if (position.version !== input.expectedVersion) throw new Error("Position changed. Reload before reconciling capacity.");
+  if (position.status !== "ACTIVE" || !position.approvedAt || !["OPEN", "PARTIALLY_FILLED", "FILLED"].includes(position.lifecycleStatus)) {
+    throw new Error("Only active, approved occupancy-managed positions may be reconciled.");
+  }
+  const next = await reconcilePositionOccupancy(tx, context, position.id);
+  await appendHrAudit(tx, { ...context, entityType: "HrPosition", entityId: position.id, action: "hr.position.occupancy_reconciled", previousValues: { lifecycleStatus: position.lifecycleStatus }, newValues: { lifecycleStatus: next }, reason: input.reason });
+  return next;
+}
+
 export async function submitPosition(tx: Prisma.TransactionClient, context: CommandContext, input: { positionId: string; reason: string }) {
   const position = await tx.hrPosition.findFirstOrThrow({ where: { id: input.positionId, organizationId: context.organizationId } });
   assertPositionTransition(position.lifecycleStatus, "PENDING_APPROVAL");

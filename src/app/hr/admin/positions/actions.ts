@@ -6,7 +6,15 @@ import { appendHrAudit } from "@/lib/hr/audit";
 import { positionInput } from "@/lib/hr/core/invariants";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { positionDecisionErrorMessage } from "@/lib/hr/organization/position-action-errors";
-import { changePositionState, decidePosition, submitPosition } from "@/lib/hr/organization/position-commands";
+import { changePositionState, decidePosition, submitPosition, repairPositionOccupancy } from "@/lib/hr/organization/position-commands";
+
+export async function reconcilePositionAction(formData: FormData) {
+  const auth = await requirePermission("organization.position.manage_state");
+  const input = z.object({ id: z.string().cuid(), expectedVersion: z.coerce.number().int().positive(), reason: z.string().trim().min(3).max(500) }).parse(Object.fromEntries(formData));
+  await prisma.$transaction(tx => repairPositionOccupancy(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0] }, { positionId: input.id, expectedVersion: input.expectedVersion, reason: input.reason }), { isolationLevel: "Serializable" });
+  revalidatePath("/hr/admin/positions");
+  revalidatePath("/hr/recruitment", "layout");
+}
 
 export type PositionDecisionState = {
   status: "idle" | "error" | "success";

@@ -5,6 +5,7 @@ import {
   createPositionAction,
   openPositionAction,
   submitPositionAction,
+  reconcilePositionAction,
 } from "./actions";
 import { PositionDecisionForm } from "./PositionDecisionForm";
 import { PositionReviewModal } from "./PositionReviewModal";
@@ -224,7 +225,15 @@ export default async function PositionsPage() {
                         label="Open position"
                       />
                     )}
-                    {!["DRAFT", "PENDING_APPROVAL", "APPROVED"].includes(
+                    {p.status === "ACTIVE" && p.approvedAt && ["OPEN", "PARTIALLY_FILLED", "FILLED"].includes(p.lifecycleStatus) && (
+                      <form action={reconcilePositionAction} className="hr-inline-action">
+                        <input type="hidden" name="id" value={p.id} />
+                        <input type="hidden" name="expectedVersion" value={p.version} />
+                        <input className="input" name="reason" placeholder="Reconcile capacity reason" required minLength={3} maxLength={500} />
+                        <button className="btn btn-primary">Reconcile capacity</button>
+                      </form>
+                    )}
+                    {!["DRAFT", "PENDING_APPROVAL", "APPROVED", "OPEN", "PARTIALLY_FILLED", "FILLED"].includes(
                       p.lifecycleStatus,
                     ) && (
                       <p className="hr-history-note">
