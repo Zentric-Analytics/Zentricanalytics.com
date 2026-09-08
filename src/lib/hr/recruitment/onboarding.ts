@@ -85,6 +85,7 @@ export async function changePreHireState(
     startDate?: Date;
   },
 ) {
+  if (!input.reason.trim()) throw new Error("A reason is required for a pre-hire state change.");
   const employee = await tx.hrEmployee.findFirstOrThrow({
     where: { id: input.employeeId, organizationId: input.organizationId, employmentStatus: { in: ["PRE_HIRE", "READY_FOR_START", "ON_HOLD"] } },
   });
@@ -92,6 +93,19 @@ export async function changePreHireState(
     where: { id: employee.id },
     data: { employmentStatus: input.to, startDate: input.startDate ?? employee.startDate },
   });
+  // Use the caller's transaction so state, status history and audit commit together.
+  // A date-only edit or repeated state request is not a status transition.
+  if (employee.employmentStatus !== input.to) {
+    await tx.hrEmployeeStatusHistory.create({ data: {
+      organizationId: input.organizationId,
+      employeeId: employee.id,
+      previousStatus: employee.employmentStatus,
+      newStatus: input.to,
+      effectiveAt: new Date(),
+      reason: input.reason,
+      changedById: input.actorUserId,
+    } });
+  }
   if (input.startDate) {
     await tx.hrEmployeeAssignment.updateMany({
       where: { employeeId: employee.id, organizationId: input.organizationId, status: "ACTIVE" },

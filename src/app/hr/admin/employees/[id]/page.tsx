@@ -52,7 +52,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: { pa
       ...(employee.userId ? [{ entityType: "HrUser", entityId: employee.userId }] : []),
       ...(employee.recruitmentApplicationId ? [{ entityType: "JobApplication", entityId: employee.recruitmentApplicationId }] : []),
     ] },
-    select: { id: true, createdAt: true, action: true, actor: { select: { email: true } } },
+    select: { id: true, createdAt: true, action: true, reason: true, actor: { select: { email: true } } },
     orderBy: { createdAt: "desc" }, take: 50,
   }) : [];
   const query = await searchParams;
@@ -68,7 +68,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: { pa
     {mayReadAudit && <section id="audit-history" className="mt-5 rounded-2xl bg-white p-5">
       <h2 className="text-lg font-bold">Linked employee and account history</h2>
       <p>Latest 50 recorded actions across this employee, their account and original application. Passwords and message bodies are not shown.</p>
-      <ol>{auditHistory.map(event => <li key={event.id}>{event.createdAt.toLocaleString()} · {event.action} · {event.actor?.email ?? "System"}</li>)}</ol>
+      <ol>{auditHistory.map(event => <li key={event.id}>{event.createdAt.toLocaleString()} · {event.action} · {event.actor?.email ?? "System"}{event.action.startsWith("hr.recruitment.prehire.") && event.reason ? <p>Reason: {event.reason}</p> : null}</li>)}</ol>
       {!auditHistory.length && <p>No matching audit events recorded.</p>}
     </section>}
     <div className="mt-6 grid gap-5 lg:grid-cols-2">

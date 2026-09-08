@@ -56,6 +56,8 @@ export async function onboardingAction(_state: OnboardingActionState, formData: 
       }), { isolationLevel: "Serializable" });
     }
     revalidatePath(`/hr/admin/onboarding/${employeeId}`);
+    revalidatePath(`/hr/admin/employees/${employeeId}`);
+    revalidatePath("/hr/admin/employees");
     revalidatePath("/hr/admin/recruitment");
     return { status: "success", message: "Onboarding and readiness state updated." };
   } catch (error) {
