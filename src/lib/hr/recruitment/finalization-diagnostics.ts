@@ -1,7 +1,7 @@
 /** Only allowlisted classifications leave the server error object. Never log
  * messages, stacks, Prisma metadata, form values, or applicant identifiers. */
 export function finalizationFailure(error: unknown) {
-  const value = error && typeof error === 'object' ? error as { code?: unknown; message?: unknown } : {};
+  const value = error && typeof error === 'object' ? error as { code?: unknown; message?: unknown; name?: unknown } : {};
   const databaseCode = typeof value.code === 'string' && /^P\d{4}$/.test(value.code) ? value.code : undefined;
   const message = typeof value.message === 'string' ? value.message : '';
   const reasons: Record<string, string> = {
@@ -19,6 +19,8 @@ export function finalizationFailure(error: unknown) {
   };
   const reason = Object.prototype.hasOwnProperty.call(reasons, message) ? reasons[message]
     : message.startsWith('Final HR approval requires review of:') ? 'REQUIREMENTS_PENDING'
-    : databaseCode ? 'DATABASE_ERROR' : 'UNCLASSIFIED';
+    : databaseCode ? 'DATABASE_ERROR'
+    : value.name === 'PrismaClientValidationError' ? 'DATABASE_VALIDATION'
+    : value.name === 'TypeError' ? 'TYPE_ERROR' : 'UNCLASSIFIED';
   return { reason, ...(databaseCode ? { databaseCode } : {}) };
 }

@@ -597,7 +597,7 @@ export async function adminStage8Action(formData: FormData) {
           failurePhase = 'employment_handover';
           if (app.vacancyId) await reconcileRecruitmentEmployment(tx, { organizationId: hrOrganization.id, applicationId: app.id, actorUserId: adminSession.id });
           failurePhase = 'reviewed_completion';
-          if (app.vacancyId) await completeReviewedRecruitment(tx, { organizationId: hrOrganization.id, applicationId: app.id, actorUserId: adminSession.id });
+          if (app.vacancyId) await completeReviewedRecruitment(tx, { organizationId: hrOrganization.id, applicationId: app.id, actorUserId: adminSession.id }, step => { failurePhase = step; });
         }
         failurePhase = 'final_audit';
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin finalized Stage 8', metadata: { checklistConfirmed: true, checklistItemCount: stage8ChecklistKeys.length, finalHrNotesPresent: Boolean(finalHrNotes), candidateFacingNotePresent: Boolean(candidateFacingNote) } } });
