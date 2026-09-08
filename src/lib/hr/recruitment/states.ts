@@ -132,6 +132,14 @@ export function evaluatePreHireEligibility(input: {
   return { eligible: blockers.length === 0, blockers };
 }
 
+export function hasCompletedAccountSecurity(user: {
+  passwordHash: string | null;
+  mfaEnabled: boolean;
+  status: string;
+} | null | undefined): boolean {
+  return Boolean(user?.passwordHash && user.mfaEnabled && user.status === "ACTIVE");
+}
+
 export function evaluateActivationReadiness(input: {
   finalHrApprovalComplete: boolean;
   blockingRequirementsComplete: boolean;

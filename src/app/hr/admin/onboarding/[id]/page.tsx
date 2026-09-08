@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
-import { evaluateActivationReadiness } from "@/lib/hr/recruitment/states";
+import { evaluateActivationReadiness, hasCompletedAccountSecurity } from "@/lib/hr/recruitment/states";
 import { prisma } from "@/lib/prisma";
 import { OnboardingActionForm } from "./OnboardingActionForm";
 
@@ -29,7 +29,7 @@ export default async function OnboardingPage({ params }: { params: Promise<{ id:
     blockingRequirementsComplete: requiredComplete,
     startDate: employee.startDate ?? new Date(8640000000000000),
     now: new Date(),
-    securitySetupComplete: !employee.user || employee.user.mfaEnabled,
+    securitySetupComplete: hasCompletedAccountSecurity(employee.user),
     activeAssignmentExists: employee.employmentAssignments.length > 0,
     cancelledOrOnHold: ["CANCELLED", "ON_HOLD"].includes(employee.employmentStatus),
   });

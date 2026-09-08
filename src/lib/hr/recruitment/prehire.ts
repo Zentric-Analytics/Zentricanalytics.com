@@ -5,7 +5,7 @@ import { normalizeHrEmail } from "../auth/crypto";
 import { dueDate } from "../lifecycle/definitions";
 import { enqueueHrEmail } from "../notifications/outbox";
 import { reconcilePositionOccupancy } from "../organization/position-commands";
-import { evaluateActivationReadiness } from "./states";
+import { evaluateActivationReadiness, hasCompletedAccountSecurity } from "./states";
 import { evaluateHandoverEligibility } from "./handover";
 import { reconcileRecruitmentEmployment } from "./employment-handover";
 
@@ -215,7 +215,7 @@ export async function activateReadyEmployee(
     blockingRequirementsComplete: requiredTasksComplete,
     startDate: employee.startDate ?? new Date(8640000000000000),
     now,
-    securitySetupComplete: Boolean(employee.user?.passwordHash && employee.user.mfaEnabled && employee.user.status === "ACTIVE"),
+    securitySetupComplete: hasCompletedAccountSecurity(employee.user),
     activeAssignmentExists: employee.employmentAssignments.length > 0,
     cancelledOrOnHold: ["CANCELLED", "ON_HOLD"].includes(employee.employmentStatus),
   });
