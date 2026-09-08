@@ -1536,7 +1536,7 @@ export default async function AdminApplicationDetail({
           </section>
         ) : null}
 
-        <section hidden className="card mt-6 border border-red-200 bg-red-50 p-5">
+        <section hidden={!adminSession.isPrimaryAdmin} className="card mt-6 border border-red-200 bg-red-50 p-5">
           <h2 className="font-bold text-red-800">Danger zone</h2>
           {application.deletedAt ? (
             <div className="mt-4 space-y-4">
@@ -1576,8 +1576,8 @@ export default async function AdminApplicationDetail({
                   placeholder={application.applicationId}
                   required
                 />
-                <button className="btn btn-secondary">
-                  Permanently delete
+                <button className="btn btn-secondary" disabled title="Permanent deletion remains disabled to preserve linked records.">
+                  Permanently delete (unavailable)
                 </button>
               </form>
             </div>

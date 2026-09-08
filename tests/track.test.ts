@@ -601,8 +601,10 @@ describe("admin and track UI source checks", () => {
     expect(actions).toContain("confirmation !== 'DELETE'");
     expect(actions).toContain("app.applicationId !== typedPublicId");
     expect(actions).toContain("deletePrivateUpload");
-    expect(actions).toContain("Admin soft deleted application");
-    expect(actions).toContain("Admin restored application");
+    const retention = readFileSync('src/lib/hr/recruitment/record-retention.ts', 'utf8');
+    expect(actions).toContain('setApplicationDeleted');
+    expect(retention).toContain("Admin soft deleted application");
+    expect(retention).toContain("Admin restored application");
   });
 
   it("admin application list exposes direct profile navigation separately from stage actions", () => {

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { getAdminSession } from '@/lib/admin-auth';
 import { requireAuthenticatedUser } from '@/lib/hr/permissions/authorize';
 import { assertRecruitmentStageAccess } from '@/lib/hr/recruitment/stage-access';
+import { setApplicationDeleted } from '@/lib/hr/recruitment/record-retention';
 import { createApprovedAgreementHandover } from '@/lib/hr/recruitment/offers';
 import { reconcileRecruitmentEmployment } from '@/lib/hr/recruitment/employment-handover';
 import { completeReviewedRecruitment } from '@/lib/hr/recruitment/reviewed-completion';
@@ -120,38 +121,31 @@ export async function softDeleteApplicationAction(formData: FormData) {
   const confirmation = String(formData.get('confirmDelete') ?? '');
   const reason = safeReason(formData.get('deleteReason'));
   let destination = deleteRedirect('error=delete_failed', applicationId);
-  const adminSession = await legacyRecordsReadOnly();
+  const auth = await requireAuthenticatedUser();
+  const adminSession = auth.user;
   if (!adminSession) redirect('/admin/login');
   if (!applicationId || confirmation !== 'DELETE') redirect(deleteRedirect('error=invalid_confirmation', applicationId));
   try {
-    const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, select: { id: true, deletedAt: true } });
-    if (!app) destination = deleteRedirect('error=action_failed', null);
-    else {
-      await prisma.$transaction(async (tx) => {
-        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin soft delete requested', metadata: { reasonPresent: Boolean(reason) } } });
-        await tx.jobApplication.update({ where: { id: applicationId }, data: { deletedAt: new Date(), deletedByAdminEmail: adminSession.email, deleteReason: reason || null, restoredAt: null, restoredByAdminEmail: null } });
-        await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin soft deleted application', metadata: { reasonPresent: Boolean(reason) } } });
-      });
-      destination = '/admin/applications?success=soft_deleted';
-    }
+    await prisma.$transaction(tx => setApplicationDeleted(tx, { applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, deleted: true, reason }), { isolationLevel: 'Serializable' });
+    destination = '/hr/recruitment/archive?success=soft_deleted';
   } catch { destination = deleteRedirect('error=delete_failed', applicationId); }
   revalidatePath('/admin/applications'); revalidatePath('/admin/applications/deleted'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`);
+  revalidatePath('/hr/recruitment'); revalidatePath('/hr/recruitment/archive');
   redirect(destination);
 }
 
 export async function restoreApplicationAction(formData: FormData) {
   const applicationId = String(formData.get('applicationDbId') ?? '');
   let destination = '/admin/applications/deleted?error=action_failed';
-  const adminSession = await legacyRecordsReadOnly();
+  const auth = await requireAuthenticatedUser();
+  const adminSession = auth.user;
   if (!adminSession) redirect('/admin/login');
   try {
-    const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, select: { id: true, deletedAt: true } });
-    if (app?.deletedAt) {
-      await prisma.jobApplication.update({ where: { id: applicationId }, data: { deletedAt: null, deletedByAdminEmail: null, deleteReason: null, restoredAt: new Date(), restoredByAdminEmail: adminSession.email, auditLogs: { create: { actorType: 'admin', actorRef: adminSession.email, action: 'Admin restored application' } } } });
-      destination = `/admin/applications/${applicationId}?success=restored`;
-    }
+    await prisma.$transaction(tx => setApplicationDeleted(tx, { applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, deleted: false, reason: '' }), { isolationLevel: 'Serializable' });
+    destination = `/hr/recruitment/${applicationId}?success=restored`;
   } catch { destination = '/admin/applications/deleted?error=action_failed'; }
   revalidatePath('/admin/applications'); revalidatePath('/admin/applications/deleted'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`);
+  revalidatePath('/hr/recruitment'); revalidatePath('/hr/recruitment/archive');
   redirect(destination);
 }
 

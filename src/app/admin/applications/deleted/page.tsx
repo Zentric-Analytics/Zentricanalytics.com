@@ -10,6 +10,7 @@ type SearchParams = Record<string, string | undefined>;
 
 function banner(params: SearchParams) {
   const messages: string[] = [];
+  if (params.success === 'soft_deleted') messages.push('Application moved to deleted records. It can be restored; a fresh application can use the same email.');
   if (params.success === 'permanent_deleted') messages.push('Application permanently deleted.');
   if (params.success === 'restored') messages.push('Application restored.');
   if (params.error === 'invalid_confirmation') messages.push('Confirmation did not match. No records were deleted.');
@@ -57,11 +58,11 @@ export default async function DeletedApplications({ searchParams }: { searchPara
               <div className="flex flex-col gap-3 lg:items-end"><StatusBadge status={currentStage?.status ?? application.status} /><Link className="btn btn-primary" href={`/admin/applications/${application.id}`}>View full profile</Link></div>
             </div>
             <div className="mt-5 grid gap-3 border-t border-slate-100 pt-4 lg:grid-cols-[auto_1fr]">
-              <form action={restoreApplicationAction}><input type="hidden" name="applicationDbId" value={application.id} /><button className="btn btn-secondary">Restore application</button></form>
+              {adminSession.isPrimaryAdmin ? <form action={restoreApplicationAction}><input type="hidden" name="applicationDbId" value={application.id} /><button className="btn btn-secondary">Restore application</button></form> : null}
               <form action={permanentlyDeleteApplicationAction} className="flex flex-wrap items-end gap-2 rounded-2xl border border-red-200 bg-red-50 p-4">
                 <input type="hidden" name="applicationDbId" value={application.id} />
                 <label className="text-sm font-semibold text-red-800">Permanent delete confirmation<span className="block text-xs font-normal text-red-700">Type {application.applicationId} to permanently delete this application.</span><input className="input mt-1 max-w-xs" name="confirmationApplicationId" placeholder={application.applicationId} required /></label>
-                <button className="btn btn-secondary">Permanently delete</button>
+                <button className="btn btn-secondary" disabled title="Permanent deletion remains disabled to preserve linked records.">Permanently delete (unavailable)</button>
               </form>
             </div>
           </article>;
