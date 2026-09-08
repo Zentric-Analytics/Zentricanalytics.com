@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { stages, generateApplicationId } from './hiring';
+import { syncApprovedRecruitmentStage } from './hr/recruitment/stage-status';
 
 export class StageActionError extends Error {
   constructor(public code: 'missing_application' | 'missing_stage' | 'action_failed', message: string) { super(message); this.name = 'StageActionError'; }
@@ -44,13 +45,14 @@ export async function approveStage1(applicationId: string, adminEmail: string, n
     if (!stage1 || !stage2) throw new StageActionError('missing_stage', 'Required stage row is missing.');
     const alreadyApproved = stageDecisionIsRepeat(app, stage1, true);
     if (alreadyApproved) return { alreadyApproved, stage1Found: true, stage2Found: true, previousStage1Status: stage1.status };
+    await syncApprovedRecruitmentStage(tx, app, 1, adminEmail);
     if (!alreadyApproved) await tx.hiringStage.update({ where: { id: stage1.id }, data: { status: 'Approved', approvedAt: new Date() } });
     if (stage2.status === 'Locked') await tx.hiringStage.update({ where: { id: stage2.id }, data: { status: 'Available', unlockedAt: stage2.unlockedAt ?? new Date() } });
     await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Candidate Information Required', currentStageOrder: 2 } });
     if (!alreadyApproved) await tx.stageApproval.create({ data: { stageId: stage1.id, action: 'Approved', adminEmail, notes } });
     await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminEmail, action: alreadyApproved ? 'Admin approval skipped; Stage 1 already approved' : 'Admin approved Stage 1', metadata: { alreadyApproved } } });
     return { alreadyApproved, stage1Found: true, stage2Found: true, previousStage1Status: stage1.status };
-  });
+  }, { isolationLevel: 'Serializable' });
 }
 
 export async function recordAdminStage1Action(applicationId: string, action: 'Rejected' | 'Correction Requested', adminEmail: string, notes?: string, authorize?: (tx: Prisma.TransactionClient) => Promise<unknown>) {
@@ -82,13 +84,14 @@ export async function approveStage2(applicationId: string, adminEmail: string, n
     if (!stage2 || !stage3) throw new StageActionError('missing_stage', 'Required stage row is missing.');
     const alreadyApproved = stageDecisionIsRepeat(app, stage2, true);
     if (alreadyApproved) return { alreadyApproved, stage2Found: true, stage3Found: true, previousStage2Status: stage2.status };
+    await syncApprovedRecruitmentStage(tx, app, 2, adminEmail);
     if (!alreadyApproved) await tx.hiringStage.update({ where: { id: stage2.id }, data: { status: 'Approved', approvedAt: new Date() } });
     if (stage3.status === 'Locked') await tx.hiringStage.update({ where: { id: stage3.id }, data: { status: 'Available', unlockedAt: stage3.unlockedAt ?? new Date() } });
     await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Screening', currentStageOrder: 3 } });
     if (!alreadyApproved) await tx.stageApproval.create({ data: { stageId: stage2.id, action: 'Approved', adminEmail, notes } });
     await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminEmail, action: alreadyApproved ? 'Admin approval skipped; Stage 2 already approved' : 'Admin approved Stage 2', metadata: { alreadyApproved } } });
     return { alreadyApproved, stage2Found: true, stage3Found: true, previousStage2Status: stage2.status };
-  });
+  }, { isolationLevel: 'Serializable' });
 }
 
 export async function recordAdminStage2Action(applicationId: string, action: 'Rejected' | 'Correction Requested', adminEmail: string, notes?: string, authorize?: (tx: Prisma.TransactionClient) => Promise<unknown>) {
@@ -120,13 +123,14 @@ export async function approveStage3(applicationId: string, adminEmail: string, n
     if (!stage3 || !stage4) throw new StageActionError('missing_stage', 'Required stage row is missing.');
     const alreadyApproved = stageDecisionIsRepeat(app, stage3, true);
     if (alreadyApproved) return { alreadyApproved, stage3Found: true, stage4Found: true, previousStage3Status: stage3.status };
+    await syncApprovedRecruitmentStage(tx, app, 3, adminEmail);
     if (!alreadyApproved) await tx.hiringStage.update({ where: { id: stage3.id }, data: { status: 'Approved', approvedAt: new Date() } });
     if (stage4.status === 'Locked') await tx.hiringStage.update({ where: { id: stage4.id }, data: { status: 'Available', unlockedAt: stage4.unlockedAt ?? new Date() } });
     await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Offer Pending', currentStageOrder: 4 } });
     if (!alreadyApproved) await tx.stageApproval.create({ data: { stageId: stage3.id, action: 'Approved', adminEmail, notes } });
     await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminEmail, action: alreadyApproved ? 'Admin approval skipped; Stage 3 already approved' : 'Admin approved Stage 3', metadata: { alreadyApproved } } });
     return { alreadyApproved, stage3Found: true, stage4Found: true, previousStage3Status: stage3.status };
-  });
+  }, { isolationLevel: 'Serializable' });
 }
 
 export async function recordAdminStage3Action(applicationId: string, action: 'Rejected' | 'Correction Requested', adminEmail: string, notes?: string, authorize?: (tx: Prisma.TransactionClient) => Promise<unknown>) {

@@ -83,7 +83,7 @@ describe("Unit 3 connected recruitment workspaces", () => {
     expect(interviews).toContain("Submitted interview feedback is locked.");
     expect(interviews).toContain("interviewerId: input.interviewerId");
     expect(interviews).toContain('recruitmentStatus: { in: ["INTERVIEW_SCHEDULED", "INTERVIEW_PENDING"] }');
-    expect(page).toContain('application.recruitmentStatus === "INTERVIEW_PENDING"');
+    expect(page).toContain("!offer && ['SHORTLISTED', 'INTERVIEW_PENDING', 'FINAL_REVIEW'].includes(application.recruitmentStatus)");
   });
 
   it("binds offer approval, issuance, and acceptance to exact immutable versions", () => {

@@ -26,6 +26,13 @@ export async function scheduleInterview(
   const application = await tx.jobApplication.findFirstOrThrow({
     where: { id: input.applicationId, organizationId: input.organizationId },
   });
+  if (application.deletedAt || !['SHORTLISTED', 'INTERVIEW_PENDING', 'FINAL_REVIEW'].includes(application.recruitmentStatus ?? '')) {
+    throw new Error('Interview scheduling requires an eligible application before the offer stage.');
+  }
+  if (await tx.hrRecruitmentOffer.findUnique({ where: { applicationId: application.id } }) ||
+      await tx.offer.findUnique({ where: { applicationId: application.id } })) {
+    throw new Error('An offer already exists. Review it before scheduling another interview.');
+  }
   const applicant = await tx.applicant.findUniqueOrThrow({ where: { id: application.applicantId } });
   const participants = await tx.hrUser.findMany({
     where: { id: { in: [...new Set(input.participantUserIds)] }, organizationId: input.organizationId, status: "ACTIVE" },
@@ -45,11 +52,12 @@ export async function scheduleInterview(
       participants: { create: participants.map((user) => ({ userId: user.id, role: "INTERVIEWER" })) },
     },
   });
-  if (application.recruitmentStatus === "INTERVIEW_PENDING") {
-    await tx.jobApplication.update({
-      where: { id: application.id },
+  {
+    const changed = await tx.jobApplication.updateMany({
+      where: { id: application.id, organizationId: input.organizationId, version: application.version, recruitmentStatus: application.recruitmentStatus },
       data: { recruitmentStatus: "INTERVIEW_SCHEDULED", version: { increment: 1 } },
     });
+    if (changed.count !== 1) throw new Error('Application changed concurrently. Reload and try again.');
   }
   for (const user of participants) {
     await enqueueHrEmail(tx, {

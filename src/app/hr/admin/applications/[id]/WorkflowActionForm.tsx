@@ -11,11 +11,13 @@ import {
   manageOfferWithStateAction,
   scheduleInterviewWithStateAction,
   transitionApplicationWithStateAction,
+  reconcileStagesWithStateAction,
   type RecruitmentActionState,
 } from "./actions";
 
 const initialState: RecruitmentActionState = { status: "idle" };
 const actions = {
+  reconcileStages: reconcileStagesWithStateAction,
   transition: transitionApplicationWithStateAction,
   scheduleInterview: scheduleInterviewWithStateAction,
   manageInterview: manageInterviewWithStateAction,

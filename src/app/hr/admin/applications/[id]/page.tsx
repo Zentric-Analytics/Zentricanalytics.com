@@ -91,6 +91,12 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
 
       <aside className="rounded-2xl border bg-white p-5">
         <h2 className="text-xl font-bold">Review actions</h2>
+        {team && application.currentStageOrder > 1 && application.currentStageOrder <= 4 && ['PENDING_REVIEW', 'UNDER_REVIEW', 'INFORMATION_REQUESTED', 'SHORTLISTED'].includes(application.recruitmentStatus) ?
+          <WorkflowActionForm actionName="reconcileStages" submitLabel="Synchronize approved stages">
+            <input type="hidden" name="applicationId" value={application.id} />
+            <input type="hidden" name="expectedVersion" value={application.version} />
+            <p>Connect recorded stage approvals to recruitment progress. This does not approve interviews, assessments, or offers.</p>
+          </WorkflowActionForm> : null}
         <div className="mt-4 space-y-4">
           {recruitmentTransitionMaps.application[current].map((to) => {
             const permission = transitionPermissionForView[to as keyof typeof transitionPermissionForView];
@@ -106,7 +112,7 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
       </aside>
     </div>
 
-    {auth.permissions.has("interview.schedule") && application.recruitmentStatus === "INTERVIEW_PENDING" ? <section className="rounded-2xl border bg-white p-5">
+    {auth.permissions.has("interview.schedule") && !offer && ['SHORTLISTED', 'INTERVIEW_PENDING', 'FINAL_REVIEW'].includes(application.recruitmentStatus) ? <section className="rounded-2xl border bg-white p-5">
       <h2 className="text-xl font-bold">Schedule interview</h2>
       <WorkflowActionForm actionName="scheduleInterview" submitLabel="Schedule and notify panel" className="mt-4 grid gap-3 md:grid-cols-2">
         <input type="hidden" name="applicationId" value={application.id} />

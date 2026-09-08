@@ -10,6 +10,7 @@ import { transitionApplication } from "@/lib/hr/recruitment/applications";
 import { assertRecruitmentStageAccess } from "@/lib/hr/recruitment/stage-access";
 import { prisma } from "@/lib/prisma";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
+import { reconcileRecruitmentStageStatus } from "@/lib/hr/recruitment/stage-status";
 
 export type RecruitmentActionState = { status: "idle" | "success" | "error"; message?: string };
 const success = (message: string): RecruitmentActionState => ({ status: "success", message });
@@ -46,6 +47,21 @@ export async function transitionApplicationAction(formData: FormData) {
   revalidatePath("/hr/admin/recruitment");
 }
 
+export async function reconcileStagesWithStateAction(_state: RecruitmentActionState, formData: FormData): Promise<RecruitmentActionState> {
+  try {
+    const input = z.object({ applicationId: z.string().cuid(), expectedVersion: z.coerce.number().int().positive() }).parse(Object.fromEntries(formData));
+    const auth = await requireAuthenticatedUser();
+    await prisma.$transaction(async tx => {
+      await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
+      await reconcileRecruitmentStageStatus(tx, { ...input, organizationId: auth.user.organizationId, actorEmail: auth.user.email });
+    }, { isolationLevel: 'Serializable' });
+    revalidatePath(`/hr/recruitment/${input.applicationId}`);
+    revalidatePath(`/hr/recruitment/${input.applicationId}/tools`);
+    revalidatePath(`/hr/admin/applications/${input.applicationId}`);
+    return success('Recruitment progress synchronized from recorded stage approvals.');
+  } catch (error) { return failure(error); }
+}
+
 export async function transitionApplicationWithStateAction(
   _state: RecruitmentActionState,
   formData: FormData,
@@ -78,7 +94,7 @@ export async function scheduleInterviewAction(formData: FormData) {
     organizationId: auth.user.organizationId,
     actorUserId: auth.user.id,
     actorRole: auth.roles[0],
-  }); });
+  }); }, { isolationLevel: 'Serializable' });
   revalidatePath(`/hr/admin/applications/${input.applicationId}`);
 }
 
