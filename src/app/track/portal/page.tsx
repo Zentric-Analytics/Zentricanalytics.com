@@ -17,6 +17,8 @@ import { submitGovernedDocumentReplacement, submitOfferDecision, submitStage2, s
 import { prisma } from "@/lib/prisma";
 import { sha256 } from "@/lib/security";
 import { countryPhoneOptions } from "@/lib/phone";
+import { loadCandidateInterviews } from "@/lib/hr/recruitment/candidate-interviews";
+import { CandidateInterviews } from "./CandidateInterviews";
 
 type PortalApplication = Prisma.JobApplicationGetPayload<{
   include: {
@@ -198,6 +200,9 @@ export default async function Portal({
   const selectedStageIsReview = isReviewStageStatus(selectedStageStatus);
   const selectedStageIsComplete = isCompletedStageStatus(selectedStageStatus);
   const selectedStageIsRejected = isRejectedStageStatus(selectedStageStatus);
+  const candidateInterviews = selectedStage?.order === 3 && !selectedStageIsLocked
+    ? await loadCandidateInterviews(prisma, application)
+    : [];
   const offer = application.offer;
   const agreement = application.employmentAgreement;
   const roleSchedule = parseStage5RoleSchedule(agreement?.roleSchedule);
@@ -847,6 +852,9 @@ export default async function Portal({
                 </p>
               )
             ) : selectedStage?.order === 3 ? (
+              <>
+              <CandidateInterviews interviews={candidateInterviews} />
+              {
               selectedStageIsLocked ? (
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
                   Stage 3 unlocks after Stage 2 approval.
@@ -965,7 +973,9 @@ export default async function Portal({
                 </form>
               ) : selectedStageIsActionable ? (
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
-                  Screening details will be shared by the admin.
+                  {candidateInterviews.length
+                    ? "Your interview details are shown above. Any additional screening instructions will appear here when released."
+                    : "Screening details will be shared by the admin."}
                 </p>
               ) : selectedStageIsReview ? (
                 <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
@@ -984,6 +994,8 @@ export default async function Portal({
                   Stage 3 is locked.
                 </p>
               )
+              }
+              </>
             ) : selectedStage?.order === 4 ? (
               selectedStageIsLocked ? (
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
