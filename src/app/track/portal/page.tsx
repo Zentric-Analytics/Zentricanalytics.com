@@ -19,6 +19,8 @@ import { sha256 } from "@/lib/security";
 import { countryPhoneOptions } from "@/lib/phone";
 import { loadCandidateInterviews } from "@/lib/hr/recruitment/candidate-interviews";
 import { CandidateInterviews } from "./CandidateInterviews";
+import { candidateAssessmentSelect, assessmentResponse } from "@/lib/hr/recruitment/candidate-assessments";
+import { AssessmentResponseForm } from "./AssessmentResponseForm";
 
 type PortalApplication = Prisma.JobApplicationGetPayload<{
   include: {
@@ -203,6 +205,9 @@ export default async function Portal({
   const candidateInterviews = selectedStage?.order === 3 && !selectedStageIsLocked
     ? await loadCandidateInterviews(prisma, application)
     : [];
+  const candidateAssessments = selectedStage?.order === 3 && !selectedStageIsLocked && application.organizationId
+    ? await prisma.hrAssessment.findMany({ where: { applicationId: application.id, organizationId: application.organizationId },
+      select: candidateAssessmentSelect, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] }) : [];
   const offer = application.offer;
   const agreement = application.employmentAgreement;
   const roleSchedule = parseStage5RoleSchedule(agreement?.roleSchedule);
@@ -854,6 +859,24 @@ export default async function Portal({
             ) : selectedStage?.order === 3 ? (
               <>
               <CandidateInterviews interviews={candidateInterviews} />
+              {candidateAssessments.length > 0 && <section aria-label="Your assessments" className="mt-6 space-y-4">
+                <h3 className="text-lg font-bold">Your assessments</h3>
+                {candidateAssessments.map(assessment => {
+                  const response = portalStages[2]?.stage?.submissions.map(item => assessmentResponse(item.payload, assessment.id)).find(Boolean);
+                  const open = ['PENDING', 'IN_PROGRESS'].includes(assessment.status) && application.currentStageOrder === 3 &&
+                    !selectedStageIsComplete && !selectedStageIsRejected;
+                  const overdue = Boolean(assessment.dueAt && assessment.dueAt.getTime() < Date.now());
+                  return <article className="rounded-2xl border p-4 text-sm space-y-3" key={assessment.id}>
+                    <h4 className="font-bold">{assessment.assessmentType}</h4>
+                    <p>Status: {assessment.status.replaceAll('_', ' ')}</p>
+                    <p className="whitespace-pre-wrap">{assessment.instructions}</p>
+                    <p>Deadline: {assessment.dueAt ? `${assessment.dueAt.toUTCString()}` : 'No deadline set'}</p>
+                    {response ? <><p>Your response has been submitted for review.</p><p className="whitespace-pre-wrap">{response}</p></>
+                      : open && !overdue ? <AssessmentResponseForm session={session ?? ''} assessmentId={assessment.id} version={assessment.version} />
+                      : overdue && open ? <p>The deadline has passed. Contact the hiring team.</p> : <p>This assessment is closed for responses.</p>}
+                  </article>;
+                })}
+              </section>}
               {
               selectedStageIsLocked ? (
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">

@@ -4,6 +4,7 @@ import { requireRecruitmentRead, assertRecruitmentStageAccess } from "@/lib/hr/r
 import { recruitmentTransitionMaps, type RecruitmentApplicationStatus } from "@/lib/hr/recruitment/states";
 import { prisma } from "@/lib/prisma";
 import { WorkflowActionForm } from "./WorkflowActionForm";
+import { assessmentResponse } from "@/lib/hr/recruitment/candidate-assessments";
 
 const label = (value: string) => value.replaceAll("_", " ");
 
@@ -26,6 +27,7 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
       where: { id, organizationId },
       include: {
         applicant: true,
+        stages: { where: { stageOrder: 3 }, include: { submissions: { orderBy: { version: 'desc' } } } },
         documents: { select: { id: true, kind: true, fileName: true, mimeType: true, sizeBytes: true, createdAt: true } },
       },
     }),
@@ -176,6 +178,11 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
         </WorkflowActionForm> : null}
         {assessments.map((assessment) => <article className="mt-3 rounded-2xl border bg-white p-4" key={assessment.id}>
           <strong>{assessment.assessmentType}</strong><p className="text-sm text-slate-600">{assessment.status} · v{assessment.version} · due {assessment.dueAt?.toLocaleString() ?? "not set"}</p>
+          <p className="whitespace-pre-wrap">{assessment.instructions}</p>
+          {(team || assessment.evaluatorId === auth.user.id) && application.stages.flatMap(stage => stage.submissions).map(submission => {
+            const response = assessmentResponse(submission.payload, assessment.id);
+            return response ? <section key={submission.id} className="my-3 rounded border p-3"><h3 className="font-semibold">Candidate response</h3><p className="whitespace-pre-wrap">{response}</p><p>Submitted: {submission.submittedAt?.toUTCString()}</p></section> : null;
+          })}
           {auth.permissions.has("assessment.evaluate") && !["COMPLETED", "CANCELLED"].includes(assessment.status) ? <WorkflowActionForm actionName="evaluateAssessment" submitLabel="Update assessment">
             <input type="hidden" name="assessmentId" value={assessment.id} /><input type="hidden" name="applicationId" value={application.id} /><input type="hidden" name="expectedVersion" value={assessment.version} />
             <select className="input w-full" name="to"><option>IN_PROGRESS</option><option>COMPLETED</option><option>CANCELLED</option></select>
