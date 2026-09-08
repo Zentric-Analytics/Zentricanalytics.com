@@ -227,7 +227,18 @@ export async function acceptOffer(
     } });
     await tx.hiringStage.updateMany({ where: { applicationId: application.id, stageOrder: 4, status: { notIn: ["Approved", "Completed"] } }, data: { status: "Approved", approvedAt: now } });
     await tx.hiringStage.updateMany({ where: { applicationId: application.id, stageOrder: 5, status: "Locked" }, data: { status: "Available", unlockedAt: now } });
-    await tx.jobApplication.updateMany({ where: { id: application.id, organizationId: input.organizationId, currentStageOrder: { lt: 5 } }, data: { currentStageOrder: 5 } });
+    // Keep the legacy summary in sync with the accepted exact offer. Include
+    // stage five so a replay can correct previously accepted, stale summaries,
+    // but never regress later stages or overwrite terminal/review decisions.
+    await tx.jobApplication.updateMany({
+      where: {
+        id: application.id,
+        organizationId: input.organizationId,
+        currentStageOrder: { lte: 5 },
+        status: { in: ["Offer Pending", "Offer Sent", "Agreement Pending"] },
+      },
+      data: { status: "Agreement Pending", currentStageOrder: 5 },
+    });
   }
   if (offer.status !== "ACCEPTED") {
     await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "ACCEPTED", acceptedVersionId: input.offerVersionId, version: { increment: 1 } } });

@@ -11,7 +11,7 @@ function fixture() {
   const application = { id: "application", applicantId: "candidate", vacancyId: "vacancy", applicationId: "public", applicant: { email: "candidate@example.test", fullName: "Test" } };
   const mocks = {
     hrRecruitmentOffer: { findFirstOrThrow: vi.fn().mockResolvedValue(offer), updateMany: vi.fn().mockResolvedValue({ count: 1 }), update: vi.fn() },
-    jobApplication: { findFirstOrThrow: vi.fn().mockResolvedValue(application), update: vi.fn() },
+    jobApplication: { findFirstOrThrow: vi.fn().mockResolvedValue(application), update: vi.fn(), updateMany: vi.fn() },
     hrRecruitmentOfferApproval: { upsert: vi.fn(), create: vi.fn() },
     hrHiringTeamMember: { findMany: vi.fn().mockResolvedValue([{ userId: "member", user: { email: "member@company.test" } }]) },
     hrRecruitmentOfferAcceptance: { upsert: vi.fn().mockResolvedValue({ id: "accepted", applicantId: "candidate", offerVersionId: "v1" }), findUniqueOrThrow: vi.fn().mockResolvedValue({ id: "accepted", applicantId: "candidate", offerVersionId: "v1" }) },
@@ -78,6 +78,23 @@ describe("reviewed offer approval and agreement handover", () => {
     mocks.hrRecruitmentOfferAcceptance.findUniqueOrThrow.mockResolvedValueOnce({ id: "accepted", applicantId: "candidate", offerVersionId: "other" });
     await expect(createApprovedAgreementHandover(tx, { organizationId: "org", applicationId: "application", actorUserId: "creator" })).rejects.toThrow("version does not match");
     expect(mocks.hrRecruitmentHandover.upsert).not.toHaveBeenCalled();
+  });
+  it.each(["ISSUED", "ACCEPTED"])("synchronizes the summary on %s acceptance without regressing later stages", async (status) => {
+    const { tx, mocks } = fixture();
+    const offer = await mocks.hrRecruitmentOffer.findFirstOrThrow();
+    offer.status = status;
+    Object.assign(offer.activeVersion, { id: "v1" });
+    mocks.hiringStage.findMany.mockResolvedValueOnce([1, 2, 3, 4].map((stageOrder) => ({ stageOrder, status: "Approved" })));
+    const legacy = { findUnique: vi.fn().mockResolvedValue({ specialConditions: "Governed offer version: v1", status: "Accepted" }), create: vi.fn() };
+    Object.assign(tx, { offer: legacy });
+    await acceptOffer(tx, { organizationId: "org", offerId: "offer", applicantId: "candidate", offerVersionId: "v1", method: "PORTAL" });
+    expect(mocks.jobApplication.updateMany).toHaveBeenCalledWith({
+      where: { id: "application", organizationId: "org", currentStageOrder: { lte: 5 }, status: { in: ["Offer Pending", "Offer Sent", "Agreement Pending"] } },
+      data: { status: "Agreement Pending", currentStageOrder: 5 },
+    });
+    expect(legacy.create).not.toHaveBeenCalled();
+    expect(mocks.hrRecruitmentHandover.upsert).not.toHaveBeenCalled();
+    if (status === "ACCEPTED") expect(mocks.jobApplication.update).not.toHaveBeenCalled();
   });
   it("requires completed signed agreement before handover", async () => {
     const { tx, mocks } = fixture();
