@@ -29,6 +29,14 @@ describe("reviewed recruitment completion", () => {
     const f = fixture(); await f.run(); const data = f.tx.hrLifecycleInstance.create.mock.calls[0][0].data;
     expect(data.employeeId).toBe("employee"); expect(data.status).toBe("COMPLETED");
     expect(data.tasks.create).toHaveLength(8); expect(data.tasks.create.every((t: {status: string}) => t.status === "COMPLETED")).toBe(true);
+    // Mirrors HrLifecycleTask_terminal_state_check: completed rows require
+    // a timestamp, actor and notes. Mock-only tests previously missed the actor.
+    for (const task of data.tasks.create) {
+      expect(task.completedAt).toBeInstanceOf(Date);
+      expect(task.completedById).toBe('hr');
+      expect(task.completionNotes.trim().length).toBeGreaterThanOrEqual(3);
+      expect(task.evidenceReference).toMatch(/^recruitment-stage:/);
+    }
     expect(f.tx.hrEmployee.update).toHaveBeenCalledWith({ where: { id: "employee" }, data: { employmentStatus: "PRE_HIRE" } });
     expect(f.tx.hrPreHireConversion.create.mock.calls[0][0].data.employeeId).toBe("employee");
   });

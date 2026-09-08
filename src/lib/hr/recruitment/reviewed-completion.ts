@@ -57,7 +57,8 @@ export async function completeReviewedRecruitment(tx: Prisma.TransactionClient, 
       organizationId: input.organizationId, templateTaskKey: `recruitment-stage-${stage.stageOrder}`,
       title: stage.title, ownerType: "HR" as const, dueAt: repaired.startDate!, required: true,
       status: "COMPLETED" as const, completedAt: stage.approvedAt ?? completedAt,
-      evidenceReference: `recruitment-stage:${stage.id}`, completionNotes: "Source approval history retained on the linked application; this is not a new approval.",
+      completedById: input.actorUserId,
+      evidenceReference: `recruitment-stage:${stage.id}`, completionNotes: "Final HR reviewer recorded completion from the source approval history retained on the linked application; this is not a new stage approval.",
     })) },
   } });
   checkpoint('candidate_link');
