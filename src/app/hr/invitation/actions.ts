@@ -1,20 +1,14 @@
 "use server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import { consumeHrInvitation, HrInvitationAcceptanceError } from "@/lib/hr/auth/invitations";
-import { passwordMeetsPolicy } from "@/lib/hr/auth/crypto";
+import { invitationFormSchema } from "@/lib/hr/auth/invitation-form";
 import { createHrSession } from "@/lib/hr/auth/session";
-
-const schema = z.object({
-  password: z.string().min(12).max(256).refine(passwordMeetsPolicy),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword);
 
 export async function acceptInvitationAction(formData: FormData) {
   const jar = await cookies();
   const token = jar.get("za_hr_invitation")?.value;
-  const parsed = schema.safeParse(Object.fromEntries(formData));
+  const parsed = invitationFormSchema.safeParse(Object.fromEntries(formData));
   if (!token) redirect("/hr/invitation?error=invalid");
   if (!parsed.success) redirect("/hr/invitation?error=password_policy");
   try {
