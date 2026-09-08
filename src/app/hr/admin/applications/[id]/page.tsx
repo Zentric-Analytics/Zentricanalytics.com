@@ -5,6 +5,7 @@ import { recruitmentTransitionMaps, type RecruitmentApplicationStatus } from "@/
 import { prisma } from "@/lib/prisma";
 import { WorkflowActionForm } from "./WorkflowActionForm";
 import { assessmentResponse } from "@/lib/hr/recruitment/candidate-assessments";
+import { formatInterviewTime } from "@/lib/hr/recruitment/interview-time";
 
 const label = (value: string) => value.replaceAll("_", " ");
 
@@ -135,7 +136,7 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
         const assigned = interview.participants.some((item) => item.userId === auth.user.id);
         return <article className="rounded-2xl border bg-white p-4" key={interview.id}>
           <strong>{interview.title}</strong>
-          <p className="text-sm text-slate-600">{interview.startsAt.toLocaleString()} {interview.timeZone} · {interview.status} · v{interview.version}</p>
+          <p className="text-sm text-slate-600">{formatInterviewTime(interview.startsAt, interview.timeZone)} · {interview.status} · v{interview.version}</p>
           <p className="text-sm text-slate-600">{interview.feedback.filter((item) => item.status === "SUBMITTED").length}/{interview.participants.length} final feedback submissions</p>
           {interview.status === "SCHEDULED" ? <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {auth.permissions.has("interview.reschedule") ? <WorkflowActionForm actionName="manageInterview" submitLabel="Reschedule">

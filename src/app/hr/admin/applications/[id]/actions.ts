@@ -11,6 +11,7 @@ import { assertRecruitmentStageAccess } from "@/lib/hr/recruitment/stage-access"
 import { prisma } from "@/lib/prisma";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { reconcileRecruitmentStageStatus } from "@/lib/hr/recruitment/stage-status";
+import { interviewLocalRange } from "@/lib/hr/recruitment/interview-time";
 
 export type RecruitmentActionState = { status: "idle" | "success" | "error"; message?: string };
 const success = (message: string): RecruitmentActionState => ({ status: "success", message });
@@ -78,18 +79,20 @@ export async function scheduleInterviewAction(formData: FormData) {
   const input = z.object({
     applicationId: z.string().cuid(),
     title: z.string().trim().min(2),
-    startsAt: z.coerce.date(),
-    endsAt: z.coerce.date(),
+    startsAt: z.string(),
+    endsAt: z.string(),
     timeZone: z.string().trim().min(1),
     location: z.string().trim().optional(),
     meetingUrl: z.string().trim().optional(),
     participantUserIds: z.array(z.string().cuid()).min(1),
   }).parse({ ...Object.fromEntries(formData), participantUserIds: formData.getAll("participantUserIds") });
+  const times = interviewLocalRange(input.startsAt, input.endsAt, input.timeZone);
   const auth = await requireAuthenticatedUser();
   await prisma.$transaction(async (tx) => {
       await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
       return scheduleInterview(tx, {
     ...input,
+    ...times,
     meetingUrl: input.meetingUrl || undefined,
     organizationId: auth.user.organizationId,
     actorUserId: auth.user.id,
@@ -123,16 +126,18 @@ export async function manageInterviewWithStateAction(
       reason: z.string().trim().min(3).max(1000),
       startsAt: z.string().optional(),
       endsAt: z.string().optional(),
-      timeZone: z.string().optional(),
+      timeZone: z.string().trim().optional(),
     }).parse(Object.fromEntries(formData));
+    const times = input.action === 'RESCHEDULE'
+      ? interviewLocalRange(input.startsAt ?? '', input.endsAt ?? '', input.timeZone ?? '')
+      : { startsAt: undefined, endsAt: undefined };
     const auth = await requireAuthenticatedUser();
     await prisma.$transaction(async (tx) => {
       await assertRecruitmentStageAccess(tx, { applicationId: input.applicationId, organizationId: auth.user.organizationId, actorUserId: auth.user.id, stage: 3 });
       await tx.hrInterview.findFirstOrThrow({ where: { id: input.interviewId, applicationId: input.applicationId, organizationId: auth.user.organizationId } });
       return changeInterview(tx, {
       ...input,
-      startsAt: input.startsAt ? new Date(input.startsAt) : undefined,
-      endsAt: input.endsAt ? new Date(input.endsAt) : undefined,
+      ...times,
       organizationId: auth.user.organizationId,
       actorUserId: auth.user.id,
       actorRole: auth.roles[0],

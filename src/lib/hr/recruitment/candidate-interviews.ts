@@ -30,10 +30,4 @@ export function candidateMeetingUrl(value: string | null) {
   } catch { return null; }
 }
 
-export function candidateInterviewTime(value: Date, timeZone: string) {
-  const options: Intl.DateTimeFormatOptions = {
-    dateStyle: 'full', timeStyle: 'short', timeZone,
-  };
-  try { return `${new Intl.DateTimeFormat('en-US', options).format(value)} (${timeZone})`; }
-  catch { return `${new Intl.DateTimeFormat('en-US', { ...options, timeZone: 'UTC' }).format(value)} (UTC)`; }
-}
+export { formatInterviewTime as candidateInterviewTime } from './interview-time';
