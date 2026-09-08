@@ -8,6 +8,7 @@ import { setApplicationDeleted } from '@/lib/hr/recruitment/record-retention';
 import { createApprovedAgreementHandover } from '@/lib/hr/recruitment/offers';
 import { reconcileRecruitmentEmployment } from '@/lib/hr/recruitment/employment-handover';
 import { completeReviewedRecruitment } from '@/lib/hr/recruitment/reviewed-completion';
+import { finalizationFailure } from '@/lib/hr/recruitment/finalization-diagnostics';
 import { enqueueHrEmail } from '@/lib/hr/notifications/outbox';
 import { stageDecisionIsRepeat } from '@/lib/workflow';
 import { approveStage1, approveStage2, approveStage3, recordAdminStage1Action, recordAdminStage2Action, recordAdminStage3Action, StageActionError } from '@/lib/workflow';
@@ -537,6 +538,7 @@ export async function adminStage7Action(formData: FormData) {
 const approvedOrCompleted = (status?: string | null) => status === 'Approved' || status === 'Completed';
 
 export async function adminStage8Action(formData: FormData) {
+  let failurePhase = 'load';
   const parsed = stage8AdminFinalDecisionSchema.safeParse(Object.fromEntries(formData.entries()));
   const applicationId = String(formData.get('applicationDbId') ?? '');
   let destination = redirectPath(applicationId, '?error=action_failed');
@@ -555,10 +557,12 @@ export async function adminStage8Action(formData: FormData) {
     if (stage8.status === 'Rejected' && action === 'finalize') redirect(redirectPath(applicationId, '?error=stage8_reopen_not_supported'));
     const priorStagesReady = [1, 2, 3, 5, 6, 7].every((order) => approvedOrCompleted(stagesByOrder.get(order)?.status)) && approvedOrCompleted(stagesByOrder.get(4)?.status) && app.offer?.status === 'Accepted';
     if (action === 'finalize' && (!priorStagesReady || !approvedOrCompleted(stage7?.status))) redirect(redirectPath(applicationId, '?error=stage8_prior_stages_incomplete'));
+    failurePhase = 'transaction_authority';
     await prisma.$transaction(async (tx) => {
       await recheckStageActor(tx, applicationId, adminSession);
       if (await repeatedStageDecision(tx, applicationId, 8, action === 'finalize')) redirect(redirectPath(applicationId, '?success=already_approved'));
       if (action === 'finalize') {
+        failurePhase = 'save_final_checklist';
         const version = (await tx.stageSubmission.count({ where: { stageId: stage8.id } })) + 1;
         await tx.stageSubmission.create({ data: { stageId: stage8.id, version, payload: toStage8ChecklistPayload(parsed.data), status: 'Approved', submittedAt: new Date() } });
         await tx.hiringStage.update({ where: { id: stage8.id }, data: { status: 'Approved', approvedAt: new Date(), submittedAt: stage8.submittedAt ?? new Date() } });
@@ -566,6 +570,7 @@ export async function adminStage8Action(formData: FormData) {
         await tx.jobApplication.update({ where: { id: applicationId }, data: { status: 'Hired', currentStageOrder: 8 } });
         const hrOrganization = app.organizationId ? await tx.hrOrganization.findUnique({ where: { id: app.organizationId }, select: { id: true } }) : null;
         if (hrOrganization) {
+          failurePhase = 'create_linked_employee';
           const nameParts = app.applicant.fullName.trim().split(/\s+/);
           const existingEmployee = await tx.hrEmployee.findUnique({ where: { recruitmentApplicationId: app.id } });
           const year = new Date().getUTCFullYear();
@@ -589,9 +594,12 @@ export async function adminStage8Action(formData: FormData) {
             },
           });
           if (!existingEmployee) await tx.hrAuditEvent.create({ data: { organizationId: hrOrganization.id, actorRole: 'LEGACY_RECRUITMENT_ADMIN', entityType: 'HrEmployee', entityId: employee.id, action: 'hr.employee.created_from_recruitment', newValues: { recruitmentApplicationId: app.id, employeeNumber: generatedEmployeeNumber, status: 'DRAFT' }, reason: 'Final recruitment approval', correlationId: `recruitment:${app.id}` } });
+          failurePhase = 'employment_handover';
           if (app.vacancyId) await reconcileRecruitmentEmployment(tx, { organizationId: hrOrganization.id, applicationId: app.id, actorUserId: adminSession.id });
+          failurePhase = 'reviewed_completion';
           if (app.vacancyId) await completeReviewedRecruitment(tx, { organizationId: hrOrganization.id, applicationId: app.id, actorUserId: adminSession.id });
         }
+        failurePhase = 'final_audit';
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Admin finalized Stage 8', metadata: { checklistConfirmed: true, checklistItemCount: stage8ChecklistKeys.length, finalHrNotesPresent: Boolean(finalHrNotes), candidateFacingNotePresent: Boolean(candidateFacingNote) } } });
         await tx.auditLog.create({ data: { applicationId, actorType: 'admin', actorRef: adminSession.email, action: 'Final HR checklist confirmed', metadata: { checklistVersion: 1, confirmedItemCount: stage8ChecklistKeys.length } } });
         await tx.auditLog.create({ data: { applicationId, actorType: 'system', action: 'Hiring workflow completed', metadata: { finalStageOrder: 8, applicationStatus: 'Hired' } } });
@@ -608,9 +616,14 @@ export async function adminStage8Action(formData: FormData) {
       }
     }, { isolationLevel: 'Serializable' });
     const template = action === 'finalize' ? ['hiring-workflow-completed', hiringWorkflowCompletedEmail] as const : action === 'correction' ? ['stage-8-correction-requested', stage8FinalReviewCorrectionEmail] as const : ['stage-8-rejected', stage8RejectedEmail] as const;
+    failurePhase = 'notification';
     const email = await safeSendEmail({ applicationId, template: template[0], ...template[1]({ applicationId: app.applicationId, candidateName: app.applicant.fullName }) });
     destination = redirectPath(applicationId, `?success=${action === 'finalize' ? 'stage8_finalized' : action === 'correction' ? 'stage8_correction' : 'stage8_rejected'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
-  } catch (error) { if ((error as Error).message === 'NEXT_REDIRECT') throw error; destination = redirectPath(applicationId, '?error=action_failed'); }
+  } catch (error) {
+    if ((error as Error).message === 'NEXT_REDIRECT') throw error;
+    console.error('stage8ActionFailure', { phase: failurePhase, ...finalizationFailure(error) });
+    destination = redirectPath(applicationId, '?error=action_failed');
+  }
   revalidatePath('/admin/applications'); revalidatePath(`/admin/applications/${applicationId}`);
   redirect(destination);
 }
