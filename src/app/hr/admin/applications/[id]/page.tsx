@@ -45,7 +45,7 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
   const [vacancy, history, interviews, assessments, answers, offer, audits] = await Promise.all([
     application.vacancyId ? prisma.hrVacancy.findFirst({
       where: { id: application.vacancyId, organizationId },
-      include: { department: true, hiringTeam: true, responsibleHrTeam: true },
+      include: { department: true, hiringTeam: true, responsibleHrUser: { select: { email: true } } },
     }) : null,
     prisma.hrApplicationStageHistory.findMany({ where: { applicationId: application.id }, orderBy: { createdAt: "desc" } }),
     prisma.hrInterview.findMany({ where: { applicationId: application.id }, include: { participants: true, feedback: true }, orderBy: { startsAt: "desc" } }),
@@ -79,7 +79,7 @@ export default async function ApplicationReviewPage({ params }: { params: Promis
           <Info name="Submitted" value={application.createdAt.toLocaleString()} />
           <Info name="Vacancy" value={vacancy ? `${vacancy.vacancyNumber} · ${vacancy.title}` : application.roleAppliedFor} />
           <Info name="Hiring Team" value={vacancy?.hiringTeam.name ?? "Not assigned"} />
-          <Info name="Responsible HR" value={vacancy?.responsibleHrTeam.name ?? "Not assigned"} />
+          <Info name="Responsible HR" value={vacancy?.responsibleHrUser?.email ?? "Not assigned — named HR person required"} />
           <Info name="Skills" value={application.skills || "Not provided"} />
         </dl>
         <h3 className="mt-6 font-bold">Application statement</h3>

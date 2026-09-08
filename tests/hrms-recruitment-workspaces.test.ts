@@ -6,6 +6,15 @@ import { assessmentInput } from "../src/lib/hr/recruitment/assessments";
 const read = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
 describe("Unit 3 connected recruitment workspaces", () => {
+  it("displays the named responsible HR person separately from the hiring team", () => {
+    const page = read("src/app/hr/admin/applications/[id]/page.tsx");
+    expect(page).toContain('responsibleHrUser: { select: { email: true } }');
+    expect(page).toContain('<Info name="Responsible HR" value={vacancy?.responsibleHrUser?.email ?? "Not assigned — named HR person required"} />');
+    expect(page).toContain('<Info name="Hiring Team" value={vacancy?.hiringTeam.name ?? "Not assigned"} />');
+    expect(page).not.toContain("responsibleHrTeam");
+    expect(read("src/app/hr/recruitment/[id]/tools/page.tsx")).toContain('export { default } from "@/app/hr/admin/applications/[id]/page"');
+  });
+
   it("validates assessment creation inputs and evaluator assignment", () => {
     const parsed = assessmentInput.parse({
       organizationId: "cm1234567890123456789012",
