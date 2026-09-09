@@ -25,7 +25,7 @@ export async function transitionApplicationAction(formData: FormData) {
   const input = z.object({
     applicationId: z.string().cuid(),
     expectedVersion: z.coerce.number().int().positive(),
-    to: z.enum(["UNDER_REVIEW","INFORMATION_REQUESTED","SHORTLISTED","ON_HOLD","REJECTED","INTERVIEW_PENDING","FINAL_REVIEW","WITHDRAWN"]),
+    to: z.enum(["UNDER_REVIEW","INFORMATION_REQUESTED","SHORTLISTED","ON_HOLD","REJECTED","INTERVIEW_PENDING","FINAL_REVIEW","WITHDRAWN","OFFER_DRAFT"]),
     reason: z.string().trim().min(3).max(1000),
   }).parse(Object.fromEntries(formData));
   const auth = await requireAuthenticatedUser();
