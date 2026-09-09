@@ -24,7 +24,7 @@ export async function POST(request: Request) {
         employeeId: employee.id,
         source: "SCHEDULED_JOB",
         now,
-      }));
+      }), { isolationLevel: "Serializable" });
       results.push({ employeeId: employee.id, status: "ACTIVATED" });
     } catch (error) {
       results.push({

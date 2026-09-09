@@ -139,7 +139,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: { pa
       </section>
     </div>
 
-    <section className="mt-5 overflow-x-auto rounded-2xl bg-white p-5"><h2 className="text-lg font-bold">Employment status history</h2><table className="mt-4 w-full text-left text-sm"><thead><tr className="border-b"><th className="py-3">Effective</th><th>Previous</th><th>New status</th><th>Changed by</th><th>Reason</th></tr></thead><tbody>{employee.statusHistory.map((item) => <tr className="border-b last:border-0" key={item.id}><td className="py-3">{item.effectiveAt.toLocaleString()}</td><td>{item.previousStatus ?? "Initial"}</td><td>{item.newStatus}</td><td>{item.changedBy.email}</td><td>{item.reason}</td></tr>)}</tbody></table>{!employee.statusHistory.length && <p className="mt-3 text-sm text-slate-500">No status transitions recorded.</p>}</section>
+<section className="mt-5 overflow-x-auto rounded-2xl bg-white p-5"><h2 className="text-lg font-bold">Employment status history</h2><table className="mt-4 w-full text-left text-sm"><thead><tr className="border-b"><th className="py-3">Effective</th><th>Previous</th><th>New status</th><th>Changed by</th><th>Reason</th></tr></thead><tbody>{employee.statusHistory.map((item) => <tr className="border-b last:border-0" key={item.id}><td className="py-3">{item.effectiveAt.toLocaleString()}</td><td>{item.previousStatus ?? "Initial"}</td><td>{item.newStatus}</td><td>{item.changedBy?.email ?? "System"}</td><td>{item.reason}</td></tr>)}</tbody></table>{!employee.statusHistory.length && <p className="mt-3 text-sm text-slate-500">No status transitions recorded.</p>}</section>
 
     <div className="mt-5 grid gap-5 lg:grid-cols-2">
       <section className="rounded-2xl bg-white p-5">

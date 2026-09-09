@@ -198,6 +198,8 @@ export async function activateReadyEmployee(
 ) {
   const existing = await tx.hrRecruitmentActivation.findFirst({ where: { employeeId: input.employeeId, organizationId: input.organizationId } });
   if (existing?.employeeActivatedAt) return existing;
+  if (input.source === "USER" && !input.actorUserId) throw new Error("Manual activation requires an actor.");
+  const actorUserId = input.source === "USER" ? input.actorUserId : undefined;
   const now = input.now ?? new Date();
   const employee = await tx.hrEmployee.findFirstOrThrow({
     where: { id: input.employeeId, organizationId: input.organizationId },
@@ -225,7 +227,20 @@ export async function activateReadyEmployee(
     throw new Error("Employee activation requires the linked company-email HRMS account. Complete the employee-record invitation flow first.");
   }
   if (!provisionedUser.roles.some(({ role }) => role.key === "EMPLOYEE")) throw new Error("The linked account must have an active employee role.");
-  await tx.hrEmployee.update({ where: { id: employee.id }, data: { employmentStatus: "ACTIVE" } });
+  if (!["PRE_HIRE", "READY_FOR_START"].includes(employee.employmentStatus)) throw new Error("Employee is not eligible for pre-hire activation.");
+  // Compare-and-set plus the caller's transaction prevents concurrent activation
+  // from creating duplicate transitions, emails or audit events.
+  const updated = await tx.hrEmployee.updateMany({
+    where: { id: employee.id, organizationId: input.organizationId, employmentStatus: employee.employmentStatus },
+    data: { employmentStatus: "ACTIVE" },
+  });
+  if (updated.count !== 1) throw new Error("Employee state changed; retry activation after rechecking readiness.");
+  const reason = `Activation readiness passed via ${input.source}`;
+  await tx.hrEmployeeStatusHistory.create({ data: {
+    organizationId: input.organizationId, employeeId: employee.id,
+    previousStatus: employee.employmentStatus, newStatus: "ACTIVE", effectiveAt: now,
+    changedById: actorUserId ?? null, source: input.source, reason,
+  } });
   const userActivated = Boolean(provisionedUser.passwordHash && provisionedUser.mfaEnabled);
   await enqueueHrEmail(tx, {
     organizationId: input.organizationId,
@@ -237,26 +252,26 @@ export async function activateReadyEmployee(
   });
   const activation = await tx.hrRecruitmentActivation.upsert({
     where: { employeeId: employee.id },
-    update: { employeeActivatedAt: now, userActivatedAt: userActivated ? now : null, activatedById: input.actorUserId, source: input.source },
+    update: { employeeActivatedAt: now, userActivatedAt: userActivated ? now : null, activatedById: actorUserId, source: input.source },
     create: {
       organizationId: input.organizationId,
       employeeId: employee.id,
       employeeActivatedAt: now,
       userActivatedAt: userActivated ? now : null,
-      activatedById: input.actorUserId,
+      activatedById: actorUserId,
       source: input.source,
       idempotencyKey: `employee-activation:${employee.id}`,
     },
   });
   await appendHrAudit(tx, {
     organizationId: input.organizationId,
-    actorUserId: input.actorUserId,
+    actorUserId,
     entityType: "HrEmployee",
     entityId: employee.id,
     action: "hr.recruitment.employee.activated",
     previousValues: { employmentStatus: employee.employmentStatus },
     newValues: { employmentStatus: "ACTIVE", userProvisioned: true, userActivated },
-    reason: `Activation readiness passed via ${input.source}`,
+    reason,
   });
   return activation;
 }

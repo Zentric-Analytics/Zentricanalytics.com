@@ -1223,11 +1223,12 @@ model HrEmployeeStatusHistory {
   newStatus      HrEmploymentStatus
   effectiveAt    DateTime
   reason         String
-  changedById    String
+  changedById    String?
+  source         String              @default("USER")
   createdAt      DateTime            @default(now())
   organization   HrOrganization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   employee       HrEmployee          @relation(fields: [employeeId], references: [id], onDelete: Restrict)
-  changedBy      HrUser              @relation(fields: [changedById], references: [id], onDelete: Restrict)
+  changedBy      HrUser?             @relation(fields: [changedById], references: [id], onDelete: Restrict)
 
   @@index([employeeId, effectiveAt])
   @@index([organizationId, newStatus, effectiveAt])
