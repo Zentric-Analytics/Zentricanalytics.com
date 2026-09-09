@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { createHrInvitation } from "@/lib/hr/auth/invitations";
@@ -35,6 +36,16 @@ export async function createHrUserAction(formData: FormData) {
     await tx.hrUserRole.create({ data: { userId: created.id, roleId: role.id, assignedById: auth.user.id } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrUser", entityId: created.id, action: "hr.user.created", newValues: { email, role: input.role } });
     return created;
+  }).catch(async (error: unknown) => {
+    // A concurrent or repeated submission can lose the unique-email insert.
+    // Recover only the exact pending identity/role, never alter existing access.
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") throw error;
+    const existing = await prisma.hrUser.findFirst({
+      where: { organizationId: auth.user.organizationId, email, status: "INVITED", passwordHash: null, isPrimaryAdmin: false },
+      include: { roles: { where: { revokedAt: null } } },
+    });
+    if (!existing || existing.roles.length !== 1 || existing.roles[0].roleId !== role.id) throw error;
+    return existing;
   });
   await createHrInvitation({ organizationId: auth.user.organizationId, userId: user.id, createdById: auth.user.id, recipient: email });
   revalidatePath("/hr/admin/users");
