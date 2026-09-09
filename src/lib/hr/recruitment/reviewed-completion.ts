@@ -3,6 +3,7 @@ import { appendHrAudit } from "../audit";
 import { reconcileRecruitmentEmployment } from "./employment-handover";
 import { reconcileApprovedStageEvidence } from "./stage-evidence";
 import { assertRecruitmentStageAccess } from "./stage-access";
+import { transferApprovedOnboardingProfile } from "./personal-handover";
 
 /** Completes the reviewed eight-stage journey, not a second onboarding checklist.
  * Caller must use Serializable; any missing evidence rolls final approval back. */
@@ -17,6 +18,8 @@ export async function completeReviewedRecruitment(tx: Prisma.TransactionClient, 
   const previous = await tx.hrPreHireConversion.findUnique({ where: { employeeId: employee.id } });
   if (previous) {
     if (previous.organizationId !== input.organizationId || previous.applicationId !== input.applicationId) throw new Error("Conflicting employee conversion.");
+    checkpoint('personal_profile_reconciliation');
+    await transferApprovedOnboardingProfile(tx, input);
     return previous;
   }
   checkpoint('stage_evidence');
@@ -41,6 +44,8 @@ export async function completeReviewedRecruitment(tx: Prisma.TransactionClient, 
   if (await tx.hrLifecycleInstance.findFirst({ where: { employeeId: employee.id, organizationId: input.organizationId, type: "ONBOARDING" } })) throw new Error("Existing onboarding requires reconciliation; it will not be duplicated or overwritten.");
   checkpoint('employment_recheck');
   await reconcileRecruitmentEmployment(tx, input);
+  checkpoint('personal_profile_transfer');
+  await transferApprovedOnboardingProfile(tx, input);
   const repaired = await tx.hrEmployee.findUniqueOrThrow({ where: { id: employee.id } });
   if (!repaired.startDate) throw new Error("Accepted start date is required.");
   checkpoint('lifecycle_template');

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Prisma } from "@prisma/client";
-const m = vi.hoisted(() => ({ access: vi.fn(), evidence: vi.fn(), employment: vi.fn(), audit: vi.fn() }));
+const m = vi.hoisted(() => ({ access: vi.fn(), evidence: vi.fn(), employment: vi.fn(), profile: vi.fn(), audit: vi.fn() }));
+vi.mock("@/lib/hr/recruitment/personal-handover", () => ({ transferApprovedOnboardingProfile: m.profile }));
 vi.mock("@/lib/hr/recruitment/stage-access", () => ({ assertRecruitmentStageAccess: m.access }));
 vi.mock("@/lib/hr/recruitment/stage-evidence", () => ({ reconcileApprovedStageEvidence: m.evidence }));
 vi.mock("@/lib/hr/recruitment/employment-handover", () => ({ reconcileRecruitmentEmployment: m.employment }));
@@ -39,6 +40,7 @@ describe("reviewed recruitment completion", () => {
     }
     expect(f.tx.hrEmployee.update).toHaveBeenCalledWith({ where: { id: "employee" }, data: { employmentStatus: "PRE_HIRE" } });
     expect(f.tx.hrPreHireConversion.create.mock.calls[0][0].data.employeeId).toBe("employee");
+    expect(m.profile).toHaveBeenCalledWith(f.tx, { organizationId: "org", applicationId: "app", actorUserId: "hr" });
   });
   it("blocks unsupported verification before creating onboarding", async () => {
     const f = fixture(); f.requirements[0].status = "NOT_STARTED";
@@ -51,6 +53,7 @@ describe("reviewed recruitment completion", () => {
   it("is idempotent for an already connected record", async () => {
     const f = fixture(); f.tx.hrPreHireConversion.findUnique.mockResolvedValue({ id: "existing", organizationId: "org", applicationId: "app" } as never);
     expect(await f.run()).toMatchObject({ id: "existing" }); expect(m.evidence).not.toHaveBeenCalled(); expect(f.tx.hrLifecycleInstance.create).not.toHaveBeenCalled();
+    expect(m.profile).toHaveBeenCalledOnce();
   });
   it("blocks incomplete stages", async () => {
     const f = fixture(); f.app.stages[5].status = "Correction Requested";
