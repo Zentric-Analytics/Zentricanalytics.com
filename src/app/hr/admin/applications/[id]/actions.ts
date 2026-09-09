@@ -326,6 +326,7 @@ export async function manageOfferWithStateAction(
         await issueOffer(tx, {
           organizationId: auth.user.organizationId, offerId: input.offerId, actorUserId: auth.user.id,
           actorRole: auth.roles[0], recipient: application.applicant.email,
+          expectedVersion: input.expectedVersion,
         });
       }
     });

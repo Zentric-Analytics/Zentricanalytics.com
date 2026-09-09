@@ -145,17 +145,24 @@ export async function submitOfferForApproval(
 
 export async function issueOffer(
   tx: Client,
-  input: { organizationId: string; offerId: string; actorUserId: string; actorRole?: string; recipient: string },
+  input: { organizationId: string; offerId: string; actorUserId: string; actorRole?: string; recipient: string; expectedVersion: number },
 ) {
   const offer = await tx.hrRecruitmentOffer.findFirstOrThrow({
     where: { id: input.offerId, organizationId: input.organizationId, status: "APPROVED" },
     include: { activeVersion: true, approvals: true },
   });
+  if (offer.version !== input.expectedVersion) throw new Error("Offer changed. Reload and review the current offer before sending.");
   if (!offer.activeVersion || !offer.approvals.some((approval) => approval.offerVersionId === offer.activeVersionId && approval.decision === "APPROVED")) {
     throw new Error("The active offer version is not approved.");
   }
   const activeVersionId = offer.activeVersion.id;
   if (offer.activeVersion.expiresAt <= new Date()) throw new Error("The offer has expired.");
+  // Claim the exact reviewed version before creating any delivery or outbox entry.
+  const changed = await tx.hrRecruitmentOffer.updateMany({
+    where: { id: offer.id, organizationId: input.organizationId, status: "APPROVED", version: input.expectedVersion, activeVersionId },
+    data: { status: "ISSUED", updatedById: input.actorUserId, version: { increment: 1 } },
+  });
+  if (changed.count !== 1) throw new Error("Offer changed. Reload and review the current offer before sending.");
   const application = await tx.jobApplication.findFirstOrThrow({
     where: { id: offer.applicationId, organizationId: input.organizationId },
     select: { applicationId: true, applicant: { select: { fullName: true } } },
@@ -174,7 +181,7 @@ export async function issueOffer(
     payload: { offerId: offer.id, href: reviewHref, recipientName: application.applicant.fullName },
     idempotencyKey: `offer-issued:${offer.id}:${activeVersionId}`,
   });
-  const issued = await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "ISSUED", updatedById: input.actorUserId, version: { increment: 1 } } });
+  const issued = { ...offer, status: "ISSUED", updatedById: input.actorUserId, version: offer.version + 1 };
   await tx.jobApplication.updateMany({
     where: { id: offer.applicationId, organizationId: input.organizationId },
     data: { recruitmentStatus: "OFFER_ISSUED", version: { increment: 1 } },
