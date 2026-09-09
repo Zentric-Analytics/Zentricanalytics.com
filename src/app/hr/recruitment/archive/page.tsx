@@ -1,1 +1,1 @@
-export { default } from '@/app/admin/applications/deleted/page';
+export { default } from '@/app/admin/applications/deleted/RecruitmentArchive';

@@ -111,7 +111,7 @@ vi.mock("@/lib/access-code-config", async () => {
 
   it("admin can review Stage 2 and perform protected Stage 2 actions that unlock Stage 3", () => {
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const actions = readFileSync(
@@ -206,7 +206,7 @@ vi.mock("@/lib/security", async () => {
 
   it("admin can review Stage 2 and perform protected Stage 2 actions that unlock Stage 3", () => {
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const actions = readFileSync(
@@ -431,7 +431,7 @@ describe("track access-code flow", () => {
 
   it("admin can review Stage 2 and perform protected Stage 2 actions that unlock Stage 3", () => {
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const actions = readFileSync(
@@ -471,13 +471,13 @@ describe("track access-code flow", () => {
 
 describe("admin and track UI source checks", () => {
   it("admin dashboard pages use POST-safe logout controls without adminSecret query strings", () => {
-    const list = readFileSync("src/app/admin/applications/page.tsx", "utf8");
+    const list = readFileSync("src/app/admin/applications/RecruitmentList.tsx", "utf8");
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const diagnostics = readFileSync(
-      "src/app/admin/tracking-diagnostics/page.tsx",
+      "src/app/admin/tracking-diagnostics/RecruitmentDiagnostics.tsx",
       "utf8",
     );
     const logoutButton = readFileSync(
@@ -559,7 +559,7 @@ describe("admin and track UI source checks", () => {
 
   it("admin tracking diagnostics are protected and omit OTP fields", () => {
     const diagnostics = readFileSync(
-      "src/app/admin/tracking-diagnostics/page.tsx",
+      "src/app/admin/tracking-diagnostics/RecruitmentDiagnostics.tsx",
       "utf8",
     );
     expect(diagnostics).toContain("recruitmentOversight()");
@@ -572,13 +572,13 @@ describe("admin and track UI source checks", () => {
 
   it("admin soft delete, restore, and permanent delete controls are protected and explicit", () => {
     const schema = readFileSync("prisma/schema.prisma", "utf8");
-    const list = readFileSync("src/app/admin/applications/page.tsx", "utf8");
+    const list = readFileSync("src/app/admin/applications/RecruitmentList.tsx", "utf8");
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const deleted = readFileSync(
-      "src/app/admin/applications/deleted/page.tsx",
+      "src/app/admin/applications/deleted/RecruitmentArchive.tsx",
       "utf8",
     );
     const actions = readFileSync(
@@ -608,13 +608,13 @@ describe("admin and track UI source checks", () => {
   });
 
   it("admin application list exposes direct profile navigation separately from stage actions", () => {
-    const list = readFileSync("src/app/admin/applications/page.tsx", "utf8");
+    const list = readFileSync("src/app/admin/applications/RecruitmentList.tsx", "utf8");
     const deleted = readFileSync(
-      "src/app/admin/applications/deleted/page.tsx",
+      "src/app/admin/applications/deleted/RecruitmentArchive.tsx",
       "utf8",
     );
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const files = [list, deleted, detail];
@@ -624,9 +624,9 @@ describe("admin and track UI source checks", () => {
     expect(list).toContain("href={`/admin/applications/${application.id}`}");
     expect(list).toContain("{application.applicationId}");
     expect(list).toContain("{application.applicant.fullName}");
-    expect(list).toContain("Approve Stage 1");
-    expect(list).toContain("Request correction");
-    expect(list).toContain("Reject");
+    expect(list).toContain("Open stage review");
+    expect(list).not.toContain("Approve Stage 1");
+    expect(list).not.toContain("adminStage1Action");
     expect(deleted).toContain("View full profile");
     expect(deleted).toContain("href={`/admin/applications/${application.id}`}");
     expect(detail).toContain("← Back to applications");
@@ -733,7 +733,7 @@ describe("admin and track UI source checks", () => {
 
   it("admin can review Stage 2 and perform protected Stage 2 actions that unlock Stage 3", () => {
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const actions = readFileSync(

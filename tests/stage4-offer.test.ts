@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
 const trackActions = readFileSync("src/app/track/actions.ts", "utf8");
 const adminPage = readFileSync(
-  "src/app/admin/applications/[id]/page.tsx",
+  "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
   "utf8",
 );
 const adminActions = readFileSync(

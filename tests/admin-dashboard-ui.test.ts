@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const listPage = readFileSync('src/app/admin/applications/page.tsx', 'utf8');
-const detailPage = readFileSync('src/app/admin/applications/[id]/page.tsx', 'utf8');
-const deletedPage = readFileSync('src/app/admin/applications/deleted/page.tsx', 'utf8');
+const listPage = readFileSync('src/app/admin/applications/RecruitmentList.tsx', 'utf8');
+const detailPage = readFileSync('src/app/admin/applications/[id]/RecruitmentDetail.tsx', 'utf8');
+const deletedPage = readFileSync('src/app/admin/applications/deleted/RecruitmentArchive.tsx', 'utf8');
 const documentActions = readFileSync('src/app/admin/applications/[id]/AdminDocumentActions.tsx', 'utf8');
 const candidatePortal = readFileSync('src/app/track/portal/page.tsx', 'utf8');
 

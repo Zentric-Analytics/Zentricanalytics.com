@@ -1,4 +1,4 @@
-import StagePage from '@/app/admin/applications/[id]/page';
+import StagePage from '@/app/admin/applications/[id]/RecruitmentDetail';
 import { requireRecruitmentRead } from '@/lib/hr/recruitment/stage-access';
 
 export default async function LinkedRecruitmentPage(props: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>> }) {

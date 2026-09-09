@@ -1040,7 +1040,7 @@ describe("Stage 1 download and admin safety source checks", () => {
   });
   it("admin uploaded document UI renders official PDF plus View and Download controls", () => {
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const actions = readFileSync(
@@ -1071,7 +1071,7 @@ describe("Stage 1 download and admin safety source checks", () => {
   });
   it("document buttons stay outside stage action forms", () => {
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     expect(detail.indexOf("Official documents")).toBeLessThan(

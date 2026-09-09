@@ -7,7 +7,7 @@ describe("Stage 5 employment agreement workflow source checks", () => {
   const hiring = readFileSync("src/lib/hiring.ts", "utf8");
   const adminActions = readFileSync("src/app/admin/applications/actions.ts", "utf8");
   const trackActions = readFileSync("src/app/track/actions.ts", "utf8");
-  const adminPage = readFileSync("src/app/admin/applications/[id]/page.tsx", "utf8");
+  const adminPage = readFileSync("src/app/admin/applications/[id]/RecruitmentDetail.tsx", "utf8");
   const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
   const emails = readFileSync("src/lib/email-templates.ts", "utf8");
 

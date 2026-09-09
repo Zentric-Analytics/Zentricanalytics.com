@@ -8,7 +8,7 @@ import {
 const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
 const actions = readFileSync("src/app/track/actions.ts", "utf8");
 const adminDetail = readFileSync(
-  "src/app/admin/applications/[id]/page.tsx",
+  "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
   "utf8",
 );
 

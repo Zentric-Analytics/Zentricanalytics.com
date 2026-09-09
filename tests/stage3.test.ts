@@ -53,7 +53,7 @@ describe("Stage 3 screening/interview/assessment source checks", () => {
 
   it("admin can release, review, correct, reject, and approve Stage 3 to unlock Stage 4", () => {
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const actions = readFileSync(
@@ -82,7 +82,7 @@ describe("Stage 3 screening/interview/assessment source checks", () => {
   it("keeps Stage 3 uploads private/admin-only and avoids conflict markers", () => {
     const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
     const detail = readFileSync(
-      "src/app/admin/applications/[id]/page.tsx",
+      "src/app/admin/applications/[id]/RecruitmentDetail.tsx",
       "utf8",
     );
     const actions = readFileSync("src/app/track/actions.ts", "utf8");
