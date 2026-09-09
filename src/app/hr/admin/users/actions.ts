@@ -112,8 +112,9 @@ export async function resendHrInvitationAction(formData: FormData) {
   const auth = await requirePermission("user.invite");
   requirePrimaryAdmin(auth);
   const userId = z.string().cuid().parse(formData.get("userId"));
+  const replaceInvitationId = z.string().cuid().parse(formData.get("invitationId"));
   const target = await prisma.hrUser.findFirstOrThrow({ where: { id: userId, organizationId: auth.user.organizationId, status: "INVITED" } });
-  await createHrInvitation({ organizationId: auth.user.organizationId, userId: target.id, createdById: auth.user.id, recipient: target.email });
+  await createHrInvitation({ organizationId: auth.user.organizationId, userId: target.id, createdById: auth.user.id, recipient: target.email, replaceInvitationId });
   revalidatePath("/hr/admin/users");
 }
 

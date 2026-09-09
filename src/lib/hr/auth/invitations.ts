@@ -13,17 +13,30 @@ export class HrInvitationAcceptanceError extends Error {
   }
 }
 
-export async function createHrInvitation(input: { organizationId: string; userId: string; createdById: string; recipient: string }) {
-  const rawToken = createOpaqueToken();
+export async function createHrInvitation(input: { organizationId: string; userId: string; createdById: string; recipient: string; replaceInvitationId?: string }) {
   const invitation = await prisma.$transaction(async (tx) => {
+    // Serialize sends for this account, including when no invitation exists yet.
+    // Parameterized row locking avoids changing user data just to acquire a lock.
+    await tx.$queryRaw`SELECT "id" FROM "HrUser" WHERE "id" = ${input.userId} AND "organizationId" = ${input.organizationId} FOR UPDATE`;
     const target = await tx.hrUser.findFirstOrThrow({ where: { id: input.userId, organizationId: input.organizationId }, include: { employee: true } });
+    if (target.status !== "INVITED" || target.passwordHash) throw new Error("This account is not eligible for an invitation.");
+    if (target.email.toLowerCase() !== input.recipient.trim().toLowerCase()) throw new Error("Invitation recipient does not match the account.");
+    const latest = await tx.hrAccountInvitation.findFirst({ where: { organizationId: input.organizationId, userId: input.userId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }] });
+    if (input.replaceInvitationId) {
+      // A second click from the same resend form cannot replace its replacement.
+      if (!latest || latest.id !== input.replaceInvitationId || latest.usedAt || latest.status !== "ACTIVE") throw new Error("Invitation changed. Reload before requesting another resend.");
+    } else if (latest) {
+      if (latest.status !== "ACTIVE" || latest.usedAt || latest.expiresAt <= new Date()) throw new Error("The previous invitation is no longer usable. Request an explicit resend.");
+      return { created: latest, outboxId: undefined, reused: true };
+    }
+    const rawToken = createOpaqueToken();
     const recipientName = target.employee ? `${target.employee.preferredName ?? target.employee.legalFirstName} ${target.employee.lastName}` : undefined;
     await tx.hrAccountInvitation.updateMany({ where: { userId: input.userId, status: "ACTIVE" }, data: { status: "REVOKED" } });
     const created = await tx.hrAccountInvitation.create({ data: { organizationId: input.organizationId, userId: input.userId, createdById: input.createdById, tokenHash: hashOpaqueToken(rawToken), expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) } });
     const outbox = await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: input.recipient, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: created.id, credentialEnvelope: sealHrCredential(rawToken), recipientName }, idempotencyKey: `hr-invitation:${created.id}` });
     await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.createdById, entityType: "HrUser", entityId: input.userId, action: "hr.user.invited" });
-    return { created, outboxId: outbox?.id };
-  });
+    return { created, outboxId: outbox?.id, reused: false };
+  }, { isolationLevel: "ReadCommitted" });
   if (invitation.outboxId) {
     try {
       await processHrOutboxItem(invitation.outboxId);
@@ -31,7 +44,7 @@ export async function createHrInvitation(input: { organizationId: string; userId
       // The durable cron worker remains the fallback for infrastructure errors.
     }
   }
-  return { invitation: invitation.created, rawToken };
+  return { invitation: invitation.created, reused: invitation.reused };
 }
 
 export async function consumeHrInvitation(rawToken: string, password: string) {
