@@ -6,6 +6,7 @@ import type { Prisma } from "@prisma/client";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { prisma } from "@/lib/prisma";
+import { offerHistoryDisplay } from "@/lib/hr/recruitment/offer-history-display";
 import { requireRecruitmentRead, canReadRecruitmentSensitive, canManageRecruitmentStage } from "@/lib/hr/recruitment/stage-access";
 import {
   privateUploadConfigurationStatus,
@@ -495,8 +496,17 @@ export default async function AdminApplicationDetail({
   const stageEightPayload = (stageEightSubmission?.payload ?? {}) as Record<string, unknown>;
   const [canManageScreening, canManageOffer, canManageAgreement, governedOffer] = await Promise.all([
     canManageRecruitmentStage(application.id, 3), canManageRecruitmentStage(application.id, 4), canManageRecruitmentStage(application.id, 5),
-    prisma.hrRecruitmentOffer.findFirst({ where: { applicationId: application.id }, select: { id: true } }),
+    prisma.hrRecruitmentOffer.findFirst({ where: { applicationId: application.id, organizationId: adminSession.organizationId }, select: {
+      id: true, activeVersionId: true, acceptedVersionId: true,
+      approvals: { select: { offerVersionId: true, decision: true, decidedAt: true } },
+      deliveries: { select: { offerVersionId: true, createdAt: true } },
+      acceptance: { select: { offerVersionId: true, acceptedAt: true } },
+    } }),
   ]);
+  const offerHistory = offerHistoryDisplay(governedOffer, {
+    approvedAt: application.stages.find(stage => stage.stageOrder === 4)?.approvals.find(approval => approval.action === 'Approved')?.createdAt,
+    releasedAt: offer?.releasedAt, candidateDecisionAt: offer?.candidateDecisionAt,
+  });
   const canEditOffer = canManageOffer && !governedOffer && (!offer || ["Draft", "Released"].includes(offer.status));
   const stageSixDocumentsWithAvailability = await Promise.all(
     stageSixDocuments.map(async (document: ApplicantDocument) => {
@@ -651,10 +661,10 @@ export default async function AdminApplicationDetail({
                   {stage?.status ?? "Locked"}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">
-                  Submitted: {formatDateTime(submission?.submittedAt)}
+                  {order === 4 ? 'Candidate decision' : 'Submitted'}: {formatDateTime(order === 4 ? offerHistory.candidateDecisionAt : submission?.submittedAt)}
                 </p>
                 <p className="text-xs text-slate-500">
-                  Approved: {formatDateTime(approval?.createdAt)}
+                  Approved: {formatDateTime(order === 4 ? offerHistory.approvedAt : approval?.createdAt)}
                 </p>
                 {application.currentStageOrder === order ? (
                   <span className="mt-3 inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">
@@ -1296,7 +1306,7 @@ export default async function AdminApplicationDetail({
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <p>
-                <strong>Released:</strong> {formatDateTime(offer?.releasedAt)}
+                <strong>{offerHistory.issueLabel}:</strong> {formatDateTime(offerHistory.issuedAt)}
               </p>
               <p>
                 <strong>Candidate decision:</strong>{" "}
