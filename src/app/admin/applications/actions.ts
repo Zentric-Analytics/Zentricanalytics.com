@@ -32,6 +32,11 @@ async function repeatedStageDecision(tx: Parameters<typeof assertRecruitmentStag
   const stage = await tx.hiringStage.findFirstOrThrow({ where: { applicationId, stageOrder } });
   return stageDecisionIsRepeat(app, stage, approving);
 }
+async function lockStageDecision(tx: Parameters<typeof assertRecruitmentStageAccess>[0], applicationId: string, organizationId: string) {
+  // Serialize decisions for this application before re-reading authority and
+  // stage state. The lock is held until the entire decision commits or rolls back.
+  await tx.$queryRaw`SELECT "id" FROM "JobApplication" WHERE "id" = ${applicationId} AND "organizationId" = ${organizationId} FOR UPDATE`;
+}
 async function legacyRecordsReadOnly(): Promise<NonNullable<Awaited<ReturnType<typeof getAdminSession>>>> {
   throw new Error('Legacy record deletion and restoration are disabled during HRMS migration. Records are preserved.');
 }
@@ -396,6 +401,7 @@ export async function adminStage5Action(formData: FormData) {
     const signature = submission?.signature;
     if (action === 'approve' && (!submission || !signature?.confirmed)) redirect(redirectPath(applicationId, '?error=stage5_missing_submission'));
     await prisma.$transaction(async (tx) => {
+      await lockStageDecision(tx, applicationId, adminSession.organizationId);
       await recheckStageActor(tx, applicationId, adminSession);
       if (await repeatedStageDecision(tx, applicationId, 5, action === 'approve')) redirect(redirectPath(applicationId, '?success=already_approved'));
       if (action === 'approve') {
@@ -456,6 +462,7 @@ export async function adminStage6Action(formData: FormData) {
     const signature = submission?.signature;
     if (action === 'approve' && (!submission || !signature?.confirmed)) redirect(redirectPath(applicationId, '?error=stage6_missing_submission'));
     await prisma.$transaction(async (tx) => {
+      await lockStageDecision(tx, applicationId, adminSession.organizationId);
       await recheckStageActor(tx, applicationId, adminSession);
       if (await repeatedStageDecision(tx, applicationId, 6, action === 'approve')) redirect(redirectPath(applicationId, '?success=already_approved'));
       if (action === 'approve') {
@@ -505,6 +512,7 @@ export async function adminStage7Action(formData: FormData) {
     const signature = submission?.signature;
     if (action === 'approve' && (!submission || !signature?.confirmed)) redirect(redirectPath(applicationId, '?error=stage7_missing_submission'));
     await prisma.$transaction(async (tx) => {
+      await lockStageDecision(tx, applicationId, adminSession.organizationId);
       await recheckStageActor(tx, applicationId, adminSession);
       if (await repeatedStageDecision(tx, applicationId, 7, action === 'approve')) redirect(redirectPath(applicationId, '?success=already_approved'));
       if (action === 'approve') {
