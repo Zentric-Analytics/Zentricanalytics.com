@@ -7,6 +7,7 @@ import { AdminLogoutButton } from '@/components/AdminLogoutButton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { prisma, isDatabaseConfigured } from '@/lib/prisma';
 import { recruitmentOversight } from '@/lib/hr/recruitment/stage-access';
+import { oversightStageOptions as stageOptions, oversightStatusOptions as statusOptions, summarizeRecruitment } from '@/lib/hr/recruitment/oversight-summary';
 
 
 type AdminApplicationListItem = Prisma.JobApplicationGetPayload<{
@@ -19,8 +20,6 @@ type AdminApplicationListItem = Prisma.JobApplicationGetPayload<{
 
 type SearchParams = Record<string, string | undefined>;
 
-const statusOptions = ['Submitted', 'Under Review', 'Correction Requested', 'Approved', 'Rejected', 'Interview Scheduled', 'Assessment Required', 'Offer Pending', 'Agreement Pending'];
-const stageOptions = [1, 2, 3, 4, 5];
 
 function actionBanner(params: SearchParams) {
   const messages: string[] = [];
@@ -63,7 +62,7 @@ export default async function AdminApplications({ searchParams }: { searchParams
   if (!isDatabaseConfigured()) return <main>DATABASE_URL is required for admin records.</main>;
 
   const query = params.q?.trim();
-  const stageFilter = params.stage && stageOptions.includes(Number(params.stage)) ? Number(params.stage) : undefined;
+  const stageFilter = params.stage && stageOptions.some((stage) => stage === Number(params.stage)) ? Number(params.stage) : undefined;
   const statusFilter = params.status && statusOptions.includes(params.status) ? params.status : undefined;
 
   const applications = await prisma.jobApplication.findMany({
@@ -84,9 +83,7 @@ export default async function AdminApplications({ searchParams }: { searchParams
     take: 50,
   });
 
-  const underReview = applications.filter((app) => ['Submitted', 'Under Review'].includes(app.status) || currentStage(app)?.status === 'Under Review').length;
-  const actionNeeded = applications.filter((app) => ['Correction Requested', 'Rejected'].includes(app.status) || app.stages.some((stage) => ['Correction Requested', 'Rejected'].includes(stage.status))).length;
-  const offersPending = applications.filter((app) => app.offer && ['Released', 'Accepted'].includes(app.offer.status)).length;
+  const { underReview, actionNeeded, offersPending, hired } = summarizeRecruitment(applications);
 
   return (
     <main className="admin-workspace min-h-screen bg-slate-50">
@@ -104,11 +101,13 @@ export default async function AdminApplications({ searchParams }: { searchParams
 
         {actionBanner(params).map((message) => <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900" key={message}>{message}</p>)}
 
-        <section className="mt-6 grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-sm text-slate-500">Total active applications</p><p className="mt-2 text-3xl font-bold text-slate-950">{applications.length}</p></div>
+        <p className="mt-6 text-sm text-slate-600">Counts cover the displayed results, up to 50 applications matching your filters and access.</p>
+        <section className="mt-4 grid gap-4 md:grid-cols-5">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-sm text-slate-500">Applications shown</p><p className="mt-2 text-3xl font-bold text-slate-950">{applications.length}</p></div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-sm text-slate-500">Under review</p><p className="mt-2 text-3xl font-bold text-slate-950">{underReview}</p></div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-sm text-slate-500">Action needed</p><p className="mt-2 text-3xl font-bold text-slate-950">{actionNeeded}</p></div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-sm text-slate-500">Offers sent / agreement pending</p><p className="mt-2 text-3xl font-bold text-slate-950">{offersPending}</p></div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-sm text-slate-500">Hired</p><p className="mt-2 text-3xl font-bold text-slate-950">{hired}</p></div>
         </section>
 
         <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">

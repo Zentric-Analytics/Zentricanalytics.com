@@ -25,6 +25,12 @@ describe('production admin hiring dashboard source checks', () => {
     expect(listPage).toContain('href={`/admin/applications/${application.id}`}');
     expect(listPage).toContain('currentStageOrder: stageFilter');
     expect(listPage).toContain('status: statusFilter');
+    expect(listPage).toContain('summarizeRecruitment(applications)');
+    expect(listPage).toContain('oversightStageOptions as stageOptions');
+    expect(listPage).toContain('oversightStatusOptions as statusOptions');
+    expect(listPage).toContain('Applications shown');
+    expect(listPage).toContain('up to 50 applications');
+    expect(listPage).toContain('{hired}');
     expect(listPage).not.toContain('<option>All stages</option>');
     expect(listPage).not.toContain('deleted=all');
   });
