@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { assertVacancyCreatorOrDelegate } from './delegation';
 import { prisma } from '@/lib/prisma';
 import { requireAuthenticatedUser } from '@/lib/hr/permissions/authorize';
+import { StageAuthorityError } from './stage-authority-error';
 export async function recruitmentOversight() {
   const auth = await requireAuthenticatedUser();
   if (!auth.roles.some((role) => role === 'ADMIN' || role === 'HR_ADMIN')) throw new Error('Recruitment oversight requires an admin role.');
@@ -59,9 +60,9 @@ export async function assertRecruitmentStageAccess(tx: Prisma.TransactionClient,
   await tx.hrUser.findFirstOrThrow({ where: { id: input.actorUserId, organizationId: input.organizationId, status: 'ACTIVE' } });
   const vacancy = await tx.hrVacancy.findFirstOrThrow({ where: { id: application.vacancyId, organizationId: input.organizationId } });
   if (input.stage >= 6) {
-    if (vacancy.responsibleHrUserId !== input.actorUserId) throw new Error('Only the assigned HR person may review this stage.');
+    if (vacancy.responsibleHrUserId !== input.actorUserId) throw new StageAuthorityError('Only the assigned HR person may review this stage.');
     const currentHrRole = await tx.hrUserRole.findFirst({ where: { userId: input.actorUserId, revokedAt: null, role: { key: { in: ['ADMIN', 'HR_ADMIN'] } } } });
-    if (!currentHrRole) throw new Error('The assigned HR person must retain an active HR Admin or Admin role.');
+    if (!currentHrRole) throw new StageAuthorityError('The assigned HR person must retain an active HR Admin or Admin role.');
   } else if (input.stage === 4) {
     await assertVacancyCreatorOrDelegate(tx, { ...input, vacancyId: vacancy.id });
   } else {

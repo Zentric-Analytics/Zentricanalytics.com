@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { getAdminSession } from '@/lib/admin-auth';
 import { requireAuthenticatedUser } from '@/lib/hr/permissions/authorize';
 import { assertRecruitmentStageAccess } from '@/lib/hr/recruitment/stage-access';
+import { StageAuthorityError } from '@/lib/hr/recruitment/stage-authority-error';
 import { setApplicationDeleted } from '@/lib/hr/recruitment/record-retention';
 import { createApprovedAgreementHandover } from '@/lib/hr/recruitment/offers';
 import { reconcileRecruitmentEmployment } from '@/lib/hr/recruitment/employment-handover';
@@ -21,11 +22,22 @@ import { applicationRejectedEmail, correctionRequestedEmail, offerReadyEmail, st
 function logAdminDiagnostics(diagnostics: Record<string, unknown>) { console.info('adminStageActionDiagnostics', diagnostics); }
 async function stageActor(applicationId: string, stage: number) {
   const auth = await requireAuthenticatedUser();
-  await prisma.$transaction((tx) => assertRecruitmentStageAccess(tx, { applicationId, stage, organizationId: auth.user.organizationId, actorUserId: auth.user.id }));
+  try {
+    await prisma.$transaction((tx) => assertRecruitmentStageAccess(tx, { applicationId, stage, organizationId: auth.user.organizationId, actorUserId: auth.user.id }));
+  } catch (error) {
+    if (error instanceof StageAuthorityError) redirect(redirectPath(applicationId, '?error=stage_authority_changed'));
+    throw error;
+  }
   return { ...auth.user, recruitmentStage: stage };
 }
 async function recheckStageActor(tx: Parameters<typeof assertRecruitmentStageAccess>[0], applicationId: string, actor: Awaited<ReturnType<typeof stageActor>>) {
-  return assertRecruitmentStageAccess(tx, { applicationId, stage: actor.recruitmentStage, organizationId: actor.organizationId, actorUserId: actor.id });
+  try {
+    return await assertRecruitmentStageAccess(tx, { applicationId, stage: actor.recruitmentStage, organizationId: actor.organizationId, actorUserId: actor.id });
+  } catch (error) {
+    // A redirect thrown inside the transaction rolls it back before any email.
+    if (error instanceof StageAuthorityError) redirect(redirectPath(applicationId, '?error=stage_authority_changed'));
+    throw error;
+  }
 }
 async function repeatedStageDecision(tx: Parameters<typeof assertRecruitmentStageAccess>[0], applicationId: string, stageOrder: number, approving: boolean) {
   const app = await tx.jobApplication.findUniqueOrThrow({ where: { id: applicationId } });

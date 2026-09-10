@@ -340,6 +340,8 @@ function actionBanner(params: Record<string, string | undefined>) {
     messages.push(
       "The admin action could not be completed. Please refresh and try again.",
     );
+  if (params.error === "stage_authority_changed")
+    messages.push("You no longer have authority to review this stage. The assigned HR person or your HR role may have changed. No decision was saved. Refresh this page to see current access.");
   if (params.error === "missing_stage")
     messages.push(
       "Required hiring stage data is missing. Please contact an administrator.",
