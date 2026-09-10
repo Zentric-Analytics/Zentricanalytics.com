@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { transitionVacancy } from "../src/lib/hr/recruitment/vacancies";
 import { appendHrAudit } from "../src/lib/hr/audit";
 import { enqueueHrEmail } from "../src/lib/hr/notifications/outbox";
+import { lockPublicationEligibility } from "../src/lib/hr/recruitment/publication-lock";
+vi.mock("../src/lib/hr/recruitment/publication-lock", () => ({ lockPublicationEligibility: vi.fn() }));
 
 vi.mock("../src/lib/hr/audit", () => ({ appendHrAudit: vi.fn() }));
 vi.mock("../src/lib/hr/notifications/outbox", () => ({ enqueueHrEmail: vi.fn() }));
@@ -117,6 +119,8 @@ describe("vacancy publication service blocking gates", () => {
       data: expect.objectContaining({ careersVisible: true, status: "OPEN" }),
     }));
     expect(enqueueHrEmail).toHaveBeenCalledTimes(1);
+    expect(lockPublicationEligibility).toHaveBeenCalledWith(f.tx, "org", "vacancy");
+    expect(vi.mocked(lockPublicationEligibility).mock.invocationCallOrder[0]).toBeLessThan(f.tx.hrVacancy.findFirstOrThrow.mock.invocationCallOrder[0]);
   });
   it("reopens a paused vacancy with unchanged valid approval and active ownership", async () => {
     const f = fixture(); f.vacancy.status = "PAUSED";

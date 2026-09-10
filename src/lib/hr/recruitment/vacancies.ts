@@ -5,6 +5,7 @@ import { appendHrAudit } from "../audit";
 import { enqueueHrEmail } from "../notifications/outbox";
 import { assertVacancyTransition, canPublishVacancy } from "./states";
 import { canApproveReviewedVacancy } from "./vacancy-authority";
+import { lockPublicationEligibility } from "./publication-lock";
 
 const listInput = z.string().trim().transform((value) => value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean));
 const optionalDateInput = z.preprocess(
@@ -101,6 +102,9 @@ export async function transitionVacancy(
   tx: VacancyClient,
   input: { vacancyId: string; organizationId: string; actorUserId: string; actorRole?: string; expectedVersion: number; to: HrVacancyStatus; reason: string; scheduledPublishAt?: Date; source?: "SCHEDULED_JOB"; now?: Date },
 ) {
+  if (input.to === "OPEN" || input.to === "SCHEDULED") {
+    await lockPublicationEligibility(tx, input.organizationId, input.vacancyId);
+  }
   const vacancy = await tx.hrVacancy.findFirstOrThrow({
     where: { id: input.vacancyId, organizationId: input.organizationId },
     include: {
