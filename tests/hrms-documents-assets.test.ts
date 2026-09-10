@@ -6,6 +6,18 @@ import { detectDocumentContentType, documentMustBeRestricted, safeDocumentFileNa
 import { permissionsForRole } from "../src/lib/hr/permissions/catalog";
 
 describe("HRMS documents and assets", () => {
+  it.each([
+    "src/app/hr/admin/documents/page.tsx",
+    "src/app/hr/employee/documents/page.tsx",
+    "src/app/hr/employee/leave/page.tsx",
+  ])("uses native download anchors without router prefetch in %s", (pagePath) => {
+    const page = fs.readFileSync(path.join(process.cwd(), pagePath), "utf8");
+    // Binary downloads must not use Next Link: prefetching records a false download.
+    expect(page).toMatch(/<a\b[^>]*href=\{`\/api\/hr\/documents\/versions\/\$\{/);
+    expect(page).not.toMatch(/<Link\b[^>]*href=\{`\/api\/hr\/documents\/versions\//);
+    expect(page).not.toContain('from "next/link"');
+  });
+
   it("detects genuine PDF, JPEG, and PNG signatures", () => {
     expect(detectDocumentContentType(new Uint8Array(Buffer.from("%PDF-1.7")))).toBe("application/pdf");
     expect(detectDocumentContentType(new Uint8Array([0xff, 0xd8, 0xff, 0xe0]))).toBe("image/jpeg");
