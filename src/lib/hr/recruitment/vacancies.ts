@@ -118,11 +118,6 @@ export async function transitionVacancy(
     if (input.to !== "OPEN" || vacancy.status !== "SCHEDULED" || !vacancy.scheduledPublishAt || vacancy.scheduledPublishAt > now) {
       throw new Error("Vacancy is not due for scheduled publication.");
     }
-    const publisher = await tx.hrUser.findFirst({ where: {
-      id: vacancy.createdById, organizationId: input.organizationId, status: "ACTIVE",
-      roles: { some: { revokedAt: null, role: { permissions: { some: { permission: { key: "vacancy.publish" } } } } } },
-    } });
-    if (!publisher) throw new Error("The scheduling owner no longer has publication permission.");
   }
   if (input.to === "APPROVED") {
     const people = await tx.hrUser.findMany({
@@ -138,6 +133,13 @@ export async function transitionVacancy(
   }
   if (["OPEN", "SCHEDULED"].includes(input.to)) {
     if (vacancy.createdById !== input.actorUserId) throw new Error("Only the vacancy creator may publish this vacancy.");
+    // Recheck inside the write transaction; the action's earlier authorization
+    // may predate a role revocation. Apply equally to manual and worker paths.
+    const publisher = await tx.hrUser.findFirst({ where: {
+      id: input.actorUserId, organizationId: input.organizationId, status: "ACTIVE",
+      roles: { some: { revokedAt: null, role: { permissions: { some: { permission: { key: "vacancy.publish" } } } } } },
+    } });
+    if (!publisher) throw new Error("The vacancy creator no longer has publication permission.");
     if (vacancy.applicationDeadline && vacancy.applicationDeadline <= (input.to === "SCHEDULED" ? input.scheduledPublishAt! : now)) {
       throw new Error("Publication must occur before the application deadline.");
     }
