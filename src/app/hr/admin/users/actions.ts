@@ -109,8 +109,13 @@ export async function revokeHrRoleAction(formData: FormData) {
   await prisma.$transaction(async (tx) => {
     const assignment = await tx.hrUserRole.findFirstOrThrow({ where: { userId: input.userId, roleId: role.id, revokedAt: null, user: { organizationId: auth.user.organizationId } } });
     if (input.role === "ADMIN") {
-      const activeAdmins = await tx.hrUserRole.count({ where: { roleId: role.id, revokedAt: null, user: { status: "ACTIVE" } } });
-      if (activeAdmins <= 1) throw new Error("The final active ADMIN role cannot be revoked.");
+      // Count who remains, not the target: an invited/suspended administrator
+      // does not contribute to the active-admin count in the first place.
+      const remainingActiveAdmins = await tx.hrUserRole.count({ where: {
+        roleId: role.id, revokedAt: null, userId: { not: input.userId },
+        user: { organizationId: auth.user.organizationId, status: "ACTIVE" },
+      } });
+      if (remainingActiveAdmins < 1) throw new Error("The final active ADMIN role cannot be revoked.");
     }
     await tx.hrUserRole.update({ where: { id: assignment.id }, data: { revokedAt: new Date() } });
     await appendHrAudit(tx, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrUserRole", entityId: assignment.id, action: "hr.user.role.revoked", previousValues: { userId: input.userId, role: input.role, revokedAt: null }, newValues: { revoked: true } });
