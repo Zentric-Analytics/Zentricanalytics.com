@@ -7,6 +7,7 @@ import { createVacancy, transitionVacancy, vacancyInput } from "@/lib/hr/recruit
 import { prisma } from "@/lib/prisma";
 import { delegateVacancyApprovals, endVacancyDelegation } from "@/lib/hr/recruitment/delegation";
 import { requireAuthenticatedUser } from "@/lib/hr/permissions/authorize";
+import { interviewLocalTime } from "@/lib/hr/recruitment/interview-time";
 
 export async function vacancyDelegationAction(formData: FormData) {
   const auth = await requireAuthenticatedUser();
@@ -70,9 +71,17 @@ const transitionPermission = {
 export async function transitionVacancyAction(formData: FormData) {
   const input = transitionInput.parse(Object.fromEntries(formData));
   const auth = await requirePermission(transitionPermission[input.to]);
+  let scheduledPublishAt: Date | undefined;
+  if (input.to === "SCHEDULED") {
+    try {
+      scheduledPublishAt = interviewLocalTime(String(formData.get("scheduledPublishAt") ?? ""), String(formData.get("publicationTimeZone") ?? ""));
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message.replaceAll("interview", "publication") : "Enter a valid publication date and time zone.");
+    }
+  }
   await prisma.$transaction((tx) => transitionVacancy(tx, {
-    ...input, organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0],
-  }));
+    ...input, scheduledPublishAt, organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0],
+  }), { isolationLevel: "Serializable" });
   revalidatePath("/hr/admin/vacancies");
   revalidatePath("/careers");
 }

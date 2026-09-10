@@ -16,16 +16,19 @@ function fixture() {
     vacancyOwner: { status: "ACTIVE", email: "owner@example.invalid" },
     responsibleHrUser: { status: "ACTIVE", roles: [{ role: { key: "HR_ADMIN" } }] },
     approvals: [{ vacancyVersion: 3 }],
+    scheduledPublishAt: new Date("2099-01-01T12:00:00Z"), applicationDeadline: null as Date | null,
   };
   const tx = {
     hrVacancy: { findFirstOrThrow: vi.fn().mockResolvedValue(vacancy), updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
     hrHiringTeamMember: { count: vi.fn().mockResolvedValue(1) },
     hrVacancyHistory: { create: vi.fn() },
     hrVacancyApproval: { create: vi.fn() },
+    hrUser: { findFirst: vi.fn().mockResolvedValue({ id: "creator" }) },
   };
-  const run = () => transitionVacancy(tx as unknown as Prisma.TransactionClient, {
+  const run = (options: Partial<Parameters<typeof transitionVacancy>[1]> = {}) => transitionVacancy(tx as unknown as Prisma.TransactionClient, {
     vacancyId: "vacancy", organizationId: "org", actorUserId: "creator",
     expectedVersion: 3, to: "OPEN", reason: "Synthetic publication gate test",
+    ...options,
   });
   const expectNoWrites = () => {
     expect(tx.hrVacancy.updateMany).not.toHaveBeenCalled();
@@ -103,5 +106,46 @@ describe("vacancy publication service blocking gates", () => {
   it("does not reopen paused vacancy from an outdated page", async () => {
     const f = fixture(); f.vacancy.status = "PAUSED"; f.vacancy.version = 4;
     await expect(f.run()).rejects.toThrow("changed since this page loaded"); f.expectNoWrites();
+  });
+  it("requires a future time before scheduling", async () => {
+    const f = fixture();
+    for (const scheduledPublishAt of [undefined, new Date("invalid"), new Date("2000-01-01")]) {
+      await expect(f.run({ to: "SCHEDULED", scheduledPublishAt })).rejects.toThrow("future publication");
+    }
+    f.expectNoWrites();
+  });
+  it("stores a future schedule without making the vacancy visible", async () => {
+    const f = fixture();
+    await f.run({ to: "SCHEDULED", scheduledPublishAt: f.vacancy.scheduledPublishAt });
+    expect(f.tx.hrVacancy.updateMany).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({
+      status: "SCHEDULED", careersVisible: false, scheduledPublishAt: f.vacancy.scheduledPublishAt,
+    }) }));
+  });
+  it("rejects publication after the application deadline", async () => {
+    const f = fixture(); f.vacancy.applicationDeadline = new Date("2000-01-01");
+    await expect(f.run()).rejects.toThrow("application deadline"); f.expectNoWrites();
+  });
+  it("does not publish a schedule early", async () => {
+    const f = fixture(); f.vacancy.status = "SCHEDULED";
+    await expect(f.run({ source: "SCHEDULED_JOB", now: new Date("2099-01-01T11:59:59Z") })).rejects.toThrow("not due");
+    f.expectNoWrites();
+  });
+  it("publishes a due schedule with System history and audit attribution", async () => {
+    const f = fixture(); f.vacancy.status = "SCHEDULED";
+    await f.run({ source: "SCHEDULED_JOB", now: f.vacancy.scheduledPublishAt });
+    expect(f.tx.hrVacancyHistory.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ actorId: null, source: "SCHEDULED_JOB" }) }));
+    expect(appendHrAudit).toHaveBeenCalledWith(f.tx, expect.objectContaining({ actorUserId: undefined, actorRole: "SYSTEM" }));
+    expect(enqueueHrEmail).toHaveBeenCalledTimes(1);
+  });
+  it.each(["permission", "approval", "team", "HR", "concurrent"])("rechecks %s before automatic publication", async kind => {
+    const f = fixture(); f.vacancy.status = "SCHEDULED";
+    if (kind === "permission") f.tx.hrUser.findFirst.mockResolvedValue(null);
+    if (kind === "approval") f.vacancy.approvals = [];
+    if (kind === "team") f.vacancy.hiringTeam.status = "INACTIVE";
+    if (kind === "HR") f.vacancy.responsibleHrUser.status = "INACTIVE";
+    if (kind === "concurrent") f.tx.hrVacancy.updateMany.mockResolvedValue({ count: 0 });
+    await expect(f.run({ source: "SCHEDULED_JOB", now: f.vacancy.scheduledPublishAt })).rejects.toThrow();
+    expect(f.tx.hrVacancyHistory.create).not.toHaveBeenCalled();
+    expect(appendHrAudit).not.toHaveBeenCalled(); expect(enqueueHrEmail).not.toHaveBeenCalled();
   });
 });

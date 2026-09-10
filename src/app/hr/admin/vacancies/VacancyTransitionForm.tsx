@@ -28,6 +28,13 @@ export function VacancyTransitionForm({
       <input type="hidden" name="vacancyId" value={vacancyId} />
       <input type="hidden" name="expectedVersion" value={expectedVersion} />
       <input type="hidden" name="to" value={to} />
+      {to === "SCHEDULED" && <>
+        <label>Publication date and time<input className="input" type="datetime-local" name="scheduledPublishAt" required /></label>
+        <label>Time zone<select className="input" name="publicationTimeZone" required defaultValue="UTC">
+          {["UTC", "Africa/Lagos", "America/Los_Angeles", "America/New_York", "Europe/London"].map(zone => <option key={zone} value={zone}>{zone}</option>)}
+        </select></label>
+        <p className="basis-full text-sm">Publishes on the first worker check at or after this time, only if all safeguards still pass.</p>
+      </>}
       <input className="input" name="reason" placeholder={`Reason for ${to.toLowerCase()}`} required minLength={3} />
       <button className="btn btn-secondary" disabled={pending}>
         {pending ? `${label}…` : label}

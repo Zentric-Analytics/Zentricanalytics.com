@@ -99,7 +99,7 @@ export async function createVacancy(
 
 export async function transitionVacancy(
   tx: VacancyClient,
-  input: { vacancyId: string; organizationId: string; actorUserId: string; actorRole?: string; expectedVersion: number; to: HrVacancyStatus; reason: string },
+  input: { vacancyId: string; organizationId: string; actorUserId: string; actorRole?: string; expectedVersion: number; to: HrVacancyStatus; reason: string; scheduledPublishAt?: Date; source?: "SCHEDULED_JOB"; now?: Date },
 ) {
   const vacancy = await tx.hrVacancy.findFirstOrThrow({
     where: { id: input.vacancyId, organizationId: input.organizationId },
@@ -110,6 +110,20 @@ export async function transitionVacancy(
   });
   if (vacancy.version !== input.expectedVersion) throw new Error("Vacancy changed since this page loaded. Reload and try again.");
   assertVacancyTransition(vacancy.status, input.to);
+  const now = input.now ?? new Date();
+  if (input.to === "SCHEDULED" && (!input.scheduledPublishAt || !Number.isFinite(input.scheduledPublishAt.getTime()) || input.scheduledPublishAt <= now)) {
+    throw new Error("Choose a future publication date and time.");
+  }
+  if (input.source === "SCHEDULED_JOB") {
+    if (input.to !== "OPEN" || vacancy.status !== "SCHEDULED" || !vacancy.scheduledPublishAt || vacancy.scheduledPublishAt > now) {
+      throw new Error("Vacancy is not due for scheduled publication.");
+    }
+    const publisher = await tx.hrUser.findFirst({ where: {
+      id: vacancy.createdById, organizationId: input.organizationId, status: "ACTIVE",
+      roles: { some: { revokedAt: null, role: { permissions: { some: { permission: { key: "vacancy.publish" } } } } } },
+    } });
+    if (!publisher) throw new Error("The scheduling owner no longer has publication permission.");
+  }
   if (input.to === "APPROVED") {
     const people = await tx.hrUser.findMany({
       where: { id: { in: [vacancy.createdById, input.actorUserId] }, organizationId: input.organizationId, status: "ACTIVE" },
@@ -124,7 +138,9 @@ export async function transitionVacancy(
   }
   if (["OPEN", "SCHEDULED"].includes(input.to)) {
     if (vacancy.createdById !== input.actorUserId) throw new Error("Only the vacancy creator may publish this vacancy.");
-    const now = new Date();
+    if (vacancy.applicationDeadline && vacancy.applicationDeadline <= (input.to === "SCHEDULED" ? input.scheduledPublishAt! : now)) {
+      throw new Error("Publication must occur before the application deadline.");
+    }
     const activeMembers = await tx.hrHiringTeamMember.count({ where: {
       hiringTeamId: vacancy.hiringTeamId, status: "ACTIVE", effectiveFrom: { lte: now },
       OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }],
@@ -147,7 +163,8 @@ export async function transitionVacancy(
   const result = await tx.hrVacancy.updateMany({
     where: { id: vacancy.id, organizationId: input.organizationId, version: input.expectedVersion },
     data: {
-      status: input.to, version: { increment: 1 }, updatedById: input.actorUserId,
+      status: input.to, version: { increment: 1 }, updatedById: input.source ? undefined : input.actorUserId,
+      scheduledPublishAt: input.to === "SCHEDULED" ? input.scheduledPublishAt : undefined,
       approvedVersion: input.to === "APPROVED" ? vacancy.version + 1 : vacancy.approvedVersion,
       careersVisible: input.to === "OPEN",
       publishedAt: input.to === "OPEN" ? new Date() : vacancy.publishedAt,
@@ -155,11 +172,12 @@ export async function transitionVacancy(
     },
   });
   if (result.count !== 1) throw new Error("Vacancy changed concurrently. Reload and try again.");
-  await tx.hrVacancyHistory.create({ data: { vacancyId: vacancy.id, previousState: vacancy.status, newState: input.to, actorId: input.actorUserId, reason: input.reason, source: "USER", correlationId } });
+  await tx.hrVacancyHistory.create({ data: { vacancyId: vacancy.id, previousState: vacancy.status, newState: input.to, actorId: input.source ? null : input.actorUserId, reason: input.reason, source: input.source ?? "USER", correlationId,
+    metadata: input.to === "SCHEDULED" ? { scheduledPublishAt: input.scheduledPublishAt!.toISOString() } : undefined } });
   await appendHrAudit(tx, {
-    organizationId: input.organizationId, actorUserId: input.actorUserId, actorRole: input.actorRole,
+    organizationId: input.organizationId, actorUserId: input.source ? undefined : input.actorUserId, actorRole: input.source ? "SYSTEM" : input.actorRole,
     entityType: "HrVacancy", entityId: vacancy.id, action: `hr.recruitment.vacancy.${input.to.toLowerCase()}`,
-    previousValues: { status: vacancy.status, version: vacancy.version }, newValues: { status: input.to, version: vacancy.version + 1 },
+    previousValues: { status: vacancy.status, version: vacancy.version }, newValues: { status: input.to, version: vacancy.version + 1, scheduledPublishAt: input.scheduledPublishAt?.toISOString(), source: input.source ?? "USER" },
     reason: input.reason, correlationId,
   });
   await enqueueHrEmail(tx, {

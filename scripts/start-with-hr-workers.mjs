@@ -32,6 +32,7 @@ async function tick() {
   try {
     await invoke("/api/internal/hr/outbox", process.env.EMAIL_WORKER_SECRET);
     await invoke("/api/internal/hr/recruitment-activation", process.env.ORGANIZATION_WORKER_SECRET);
+    await invoke("/api/internal/hr/vacancy-publication", process.env.ORGANIZATION_WORKER_SECRET);
     await invoke("/api/internal/hr/workforce-events", process.env.ORGANIZATION_WORKER_SECRET);
     await invoke("/api/internal/hr/leave", process.env.ORGANIZATION_WORKER_SECRET);
     await invoke("/api/internal/hr/time", process.env.ORGANIZATION_WORKER_SECRET);

@@ -17,7 +17,7 @@ export default async function VacanciesPage() {
     prisma.hrHiringTeam.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, orderBy: { name: "asc" } }),
     prisma.hrUser.findMany({ where: { organizationId: auth.user.organizationId, status: "ACTIVE" }, include: { roles: { where: { revokedAt: null }, include: { role: true } } }, orderBy: { email: "asc" } }),
   ]);
-  const published = vacancies.filter(vacancy => ["OPEN", "SCHEDULED"].includes(vacancy.status)).length;
+  const published = vacancies.filter(vacancy => vacancy.status === "OPEN" && vacancy.careersVisible).length;
   const drafts = vacancies.filter(vacancy => vacancy.status === "DRAFT").length;
   const closed = vacancies.filter(vacancy => ["CLOSED", "FILLED", "CANCELLED"].includes(vacancy.status)).length;
 
@@ -58,6 +58,7 @@ export default async function VacanciesPage() {
         </div>
         <p className="mt-3 text-sm text-slate-700">{vacancy.description}</p>
         <p>Responsible HR: {vacancy.responsibleHrUser?.email ?? "Not assigned — legacy record requires assignment"}</p>
+        {vacancy.status === "SCHEDULED" && <p>Scheduled publication: {vacancy.scheduledPublishAt?.toISOString().replace("T", " ").replace(".000Z", " UTC") ?? "Missing — automatic publication is blocked"}. Remains hidden until all publication checks pass.</p>}
         {(vacancy.createdById === auth.user.id || auth.user.isPrimaryAdmin) && <form action={assignResponsibleHrAction} className="flex gap-2"><input type="hidden" name="vacancyId" value={vacancy.id} /><select className="input" name="responsibleHrUserId" required defaultValue={vacancy.responsibleHrUserId ?? ""}><option value="">Assign responsible HR person</option>{users.filter(item => item.roles.some(({ role }) => ["ADMIN", "HR_ADMIN"].includes(role.key))).map(item => <option key={item.id} value={item.id}>{item.email}</option>)}</select><button className="btn">Save HR owner</button></form>}
         {vacancy.createdById === auth.user.id && <details className="mt-3"><summary>Approval delegation</summary>
           <p>Selected delegates may approve individually for this vacancy only.</p>
