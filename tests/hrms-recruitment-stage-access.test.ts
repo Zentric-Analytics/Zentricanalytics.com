@@ -7,6 +7,7 @@ import { assertVacancyCreatorOrDelegate } from '@/lib/hr/recruitment/delegation'
 
 function fixture(member = false, hr = 'hr') {
   return {
+    $queryRaw: vi.fn().mockResolvedValue([{ id: 'vacancy' }]),
     jobApplication: { findFirstOrThrow: vi.fn().mockResolvedValue({ id: 'app', vacancyId: 'vacancy' }) },
     hrUser: { findFirstOrThrow: vi.fn().mockResolvedValue({ id: 'actor' }) },
     hrUserRole: { findFirst: vi.fn().mockResolvedValue({ role: { key: 'HR_ADMIN' } }) },
@@ -46,5 +47,15 @@ describe('preserved recruitment stage authority', () => {
   it.each([6, 7, 8])('denies revoked HR role even when still assigned at stage %s', async (stage) => {
     const tx = fixture(false, 'actor'); tx.hrUserRole.findFirst.mockResolvedValue(null);
     await expect(assertRecruitmentStageAccess(tx as never, { ...input, stage })).rejects.toThrow('retain an active');
+  });
+  it.each([6, 7, 8])('rechecks the current named HR after reassignment at stage %s', async stage => {
+    const tx = fixture(true, 'actor');
+    await expect(assertRecruitmentStageAccess(tx as never, { ...input, stage })).resolves.toBeTruthy();
+    tx.hrVacancy.findFirstOrThrow.mockResolvedValue({ id: 'vacancy', hiringTeamId: 'team', responsibleHrUserId: 'replacement' });
+    await expect(assertRecruitmentStageAccess(tx as never, { ...input, stage })).rejects.toThrow('assigned HR');
+    await expect(assertRecruitmentStageAccess(tx as never, { ...input, stage, actorUserId: 'replacement' })).resolves.toBeTruthy();
+    expect(tx.hrUserRole.findFirst).toHaveBeenLastCalledWith({ where: {
+      userId: 'replacement', revokedAt: null, role: { key: { in: ['ADMIN', 'HR_ADMIN'] } },
+    } });
   });
 });

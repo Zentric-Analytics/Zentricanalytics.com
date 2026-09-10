@@ -4,6 +4,7 @@ import { appendHrAudit } from "../audit";
 import { enqueueHrEmail } from "../notifications/outbox";
 import { assertHandoverTransition, evaluatePreHireEligibility, type HandoverStatus } from "./states";
 import { assertRecruitmentStageAccess } from "./stage-access";
+import { lockHrAuthority } from "./hr-authority-lock";
 
 type Client = Prisma.TransactionClient;
 
@@ -259,6 +260,7 @@ export async function reassignHandoverOwner(
   const handover = await tx.hrRecruitmentHandover.findFirstOrThrow({ where: { id: input.handoverId, organizationId: input.organizationId } });
   const application = await tx.jobApplication.findFirstOrThrow({ where: { id: handover.applicationId, organizationId: input.organizationId, deletedAt: null } });
   if (!application.vacancyId) throw new Error("Assign a vacancy before reassigning HR.");
+  await lockHrAuthority(tx, input.organizationId, application.vacancyId, true);
   const vacancy = await tx.hrVacancy.findFirstOrThrow({ where: { id: application.vacancyId, organizationId: input.organizationId } });
   const actor = await tx.hrUser.findFirstOrThrow({ where: { id: input.actorUserId, organizationId: input.organizationId, status: "ACTIVE" }, include: { roles: { where: { revokedAt: null }, include: { role: true } } } });
   if (vacancy.createdById !== actor.id && !(actor.isPrimaryAdmin && actor.roles.some(({ role }) => role.key === "ADMIN"))) throw new Error("Only the vacancy creator or primary administrator may reassign responsible HR.");

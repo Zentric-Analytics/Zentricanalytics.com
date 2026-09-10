@@ -4,6 +4,7 @@ import { assertNamedHrHandoverAccess, reassignHandoverOwner, updateRecruitmentRe
 
 function fixture() {
   const mocks = {
+    $queryRaw: vi.fn().mockResolvedValue([{ id: 'vacancy' }]),
     hrUserRole: { findFirst: vi.fn().mockResolvedValue({ role: { key: "HR_ADMIN" } }) },
     hrRecruitmentHandover: { findFirstOrThrow: vi.fn().mockResolvedValue({ id: "handover", applicationId: "app", ownerUserId: "stale" }), updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
     jobApplication: { findFirstOrThrow: vi.fn().mockResolvedValue({ id: "app", vacancyId: "vacancy" }) },
