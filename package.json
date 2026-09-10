@@ -2,7 +2,7 @@
   "private": true,
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=20 <25"
+    "node": "^20.19.0 || ^22.12.0 || ^24.0.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -48,8 +48,8 @@
     "@prisma/client": "6.10.1",
     "bcryptjs": "3.0.2",
     "lucide-react": "1.24.0",
-    "nanoid": "5.1.5",
-    "next": "15.5.22",
+    "nanoid": "5.1.16",
+    "next": "15.5.24",
     "pdf-lib": "1.17.1",
     "qrcode": "1.5.4",
     "react": "19.0.0",
@@ -63,16 +63,22 @@
     "@types/react-dom": "19.0.4",
     "autoprefixer": "10.4.21",
     "eslint": "9.29.0",
-    "eslint-config-next": "15.5.22",
-    "postcss": "8.5.6",
+    "eslint-config-next": "15.5.24",
+    "postcss": "8.5.23",
     "prisma": "6.10.1",
     "tailwindcss": "3.4.17",
     "typescript": "5.8.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.11",
+    "vite": "6.4.3"
   },
   "resolutions": {
-    "postcss": "8.5.18",
-    "sharp": "0.35.0"
+    "postcss": "8.5.23",
+    "postcss/nanoid": "3.3.18",
+    "eslint/minimatch/brace-expansion": "1.1.18",
+    "**/@eslint/config-array/minimatch/brace-expansion": "1.1.18",
+    "**/@typescript-eslint/typescript-estree/minimatch/brace-expansion": "5.0.9",
+    "js-yaml": "4.3.2",
+    "sharp": "0.35.4"
   },
   "packageManager": "yarn@1.22.22"
 }
