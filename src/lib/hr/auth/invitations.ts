@@ -5,6 +5,7 @@ import { processHrOutboxItem } from "@/lib/hr/notifications/worker";
 import { createOpaqueToken, hashHrPassword, hashOpaqueToken, passwordMeetsPolicy, sealHrCredential } from "./crypto";
 import { generateTotpSecret } from "./totp";
 import { tokenCanBeConsumed } from "./tokens";
+import { HrInvitationChangedError } from "./invitation-errors";
 
 export class HrInvitationAcceptanceError extends Error {
   constructor(public readonly code: "INVALID_TOKEN" | "PASSWORD_POLICY") {
@@ -24,7 +25,7 @@ export async function createHrInvitation(input: { organizationId: string; userId
     const latest = await tx.hrAccountInvitation.findFirst({ where: { organizationId: input.organizationId, userId: input.userId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }] });
     if (input.replaceInvitationId) {
       // A second click from the same resend form cannot replace its replacement.
-      if (!latest || latest.id !== input.replaceInvitationId || latest.usedAt || latest.status !== "ACTIVE") throw new Error("Invitation changed. Reload before requesting another resend.");
+      if (!latest || latest.id !== input.replaceInvitationId || latest.usedAt || latest.status !== "ACTIVE") throw new HrInvitationChangedError();
     } else if (latest) {
       if (latest.status !== "ACTIVE" || latest.usedAt || latest.expiresAt <= new Date()) throw new Error("The previous invitation is no longer usable. Request an explicit resend.");
       return { created: latest, outboxId: undefined, reused: true };

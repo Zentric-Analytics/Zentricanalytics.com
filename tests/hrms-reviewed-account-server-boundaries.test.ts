@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { HrRoleKey } from "@prisma/client";
+import { HrInvitationChangedError } from "../src/lib/hr/auth/invitation-errors";
+import { resendHrInvitationWithStateAction } from "../src/app/hr/admin/users/actions";
 import { permissionsForRole } from "../src/lib/hr/permissions/catalog";
 
 const mocks = vi.hoisted(() => ({ session: vi.fn(), transaction: vi.fn(), target: vi.fn(), role: vi.fn(), invite: vi.fn(), audit: vi.fn(), revokeSessions: vi.fn() }));
@@ -31,6 +33,37 @@ function signIn(role: HrRoleKey, primary = false) {
 
 describe("review two: real permission guard with isolated database doubles", () => {
   beforeEach(() => { vi.resetAllMocks(); });
+
+  it("shows safe stale-resend feedback without retrying the sender", async () => {
+    signIn("ADMIN", true);
+    mocks.target.mockResolvedValue({ id: input().get("userId"), email: "synthetic@example.test" });
+    mocks.invite.mockRejectedValue(new HrInvitationChangedError());
+    const result = await resendHrInvitationWithStateAction({ status: "idle" }, input());
+    expect(result.status).toBe("error");
+    expect(result.message).toContain("Reload this page");
+    expect(result.message).toContain("No new email was sent");
+    expect(mocks.invite).toHaveBeenCalledOnce();
+  });
+
+  it("does not swallow sign-in redirects in resend feedback", async () => {
+    mocks.session.mockResolvedValue(null);
+    await expect(resendHrInvitationWithStateAction({ status: "idle" }, input())).rejects.toThrow("Redirect: /hr/login");
+    expect(mocks.invite).not.toHaveBeenCalled();
+  });
+
+  it("does not present unexpected resend failures as a safe stale request", async () => {
+    signIn("ADMIN", true);
+    mocks.target.mockResolvedValue({ id: input().get("userId"), email: "synthetic@example.test" });
+    mocks.invite.mockRejectedValue(new Error("unexpected provider failure"));
+    await expect(resendHrInvitationWithStateAction({ status: "idle" }, input())).rejects.toThrow("unexpected provider failure");
+  });
+
+  it("reports queued rather than delivered after successful resend", async () => {
+    signIn("ADMIN", true);
+    mocks.target.mockResolvedValue({ id: input().get("userId"), email: "synthetic@example.test" });
+    mocks.invite.mockResolvedValue({});
+    expect(await resendHrInvitationWithStateAction({ status: "idle" }, input())).toEqual({ status: "success", message: "Replacement invitation queued." });
+  });
 
   for (const role of ["HR_ADMIN", "EMPLOYEE"] as const) {
     it.each([assignHrRoleAction, revokeHrRoleAction, createHrUserAction, resendHrInvitationAction])(

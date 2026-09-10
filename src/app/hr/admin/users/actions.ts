@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { createHrInvitation } from "@/lib/hr/auth/invitations";
+import { HrInvitationChangedError } from "@/lib/hr/auth/invitation-errors";
 import { normalizeHrEmail } from "@/lib/hr/auth/crypto";
 import { canAssignRole, HR_ASSIGNABLE_ROLES } from "@/lib/hr/permissions/catalog";
 import { requirePermission } from "@/lib/hr/permissions/authorize";
@@ -132,6 +133,22 @@ export async function resendHrInvitationAction(formData: FormData) {
   const target = await prisma.hrUser.findFirstOrThrow({ where: { id: userId, organizationId: auth.user.organizationId, status: "INVITED" } });
   await createHrInvitation({ organizationId: auth.user.organizationId, userId: target.id, createdById: auth.user.id, recipient: target.email, replaceInvitationId });
   revalidatePath("/hr/admin/users");
+}
+
+export async function resendHrInvitationWithStateAction(
+  _previous: { status: "idle" | "success" | "error"; message?: string },
+  formData: FormData,
+): Promise<{ status: "idle" | "success" | "error"; message?: string }> {
+  try {
+    await resendHrInvitationAction(formData);
+    return { status: "success", message: "Replacement invitation queued." };
+  } catch (error) {
+    if (error instanceof HrInvitationChangedError) {
+      return { status: "error", message: "Invitation changed. Reload this page before requesting another resend. No new email was sent." };
+    }
+    // Preserve authentication redirects and unexpected failures; never expose raw errors.
+    throw error;
+  }
 }
 
 export async function cancelHrInvitationAction(formData: FormData) {

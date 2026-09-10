@@ -1,4 +1,6 @@
 import React, { type ReactElement, type ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { ResendInvitationForm } from "../src/app/hr/admin/users/ResendInvitationForm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ authorize: vi.fn(), users: vi.fn() }));
@@ -10,7 +12,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
 vi.mock("../src/app/hr/admin/users/actions", () => ({
   assignHrRoleAction: vi.fn(), cancelHrInvitationAction: vi.fn(), createHrUserAction: vi.fn(),
   deleteHrInvitationAction: vi.fn(), linkHrUserEmployeeAction: vi.fn(), reactivateHrUserAction: vi.fn(),
-  resendHrInvitationAction: vi.fn(), revokeHrRoleAction: vi.fn(), suspendHrUserAction: vi.fn(),
+  resendHrInvitationAction: vi.fn(), resendHrInvitationWithStateAction: vi.fn(), revokeHrRoleAction: vi.fn(), suspendHrUserAction: vi.fn(),
 }));
 vi.mock("../src/app/hr/admin/users/UsersTable", () => ({ UsersTable: () => null }));
 vi.mock("../src/app/hr/admin/users/UserDeletionForm", () => ({ UserDeletionForm: () => null }));
@@ -21,6 +23,7 @@ function content(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(content).join(" ");
   const element = node as ReactElement<{ children?: ReactNode; controls?: Record<string, ReactNode> }>;
+  if (element.type === ResendInvitationForm) return renderToStaticMarkup(element);
   return content(element.props?.children) + " " + Object.values(element.props?.controls ?? {}).map(content).join(" ");
 }
 
