@@ -1,0 +1,107 @@
+import type { Prisma } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { transitionVacancy } from "../src/lib/hr/recruitment/vacancies";
+import { appendHrAudit } from "../src/lib/hr/audit";
+import { enqueueHrEmail } from "../src/lib/hr/notifications/outbox";
+
+vi.mock("../src/lib/hr/audit", () => ({ appendHrAudit: vi.fn() }));
+vi.mock("../src/lib/hr/notifications/outbox", () => ({ enqueueHrEmail: vi.fn() }));
+
+function fixture() {
+  const vacancy = {
+    id: "vacancy", organizationId: "org", status: "APPROVED", version: 3,
+    approvedVersion: 3, createdById: "creator", hiringTeamId: "team",
+    vacancyOwnerId: "creator", responsibleHrTeamId: "hr-team",
+    hiringTeam: { status: "ACTIVE" }, responsibleHrTeam: { status: "ACTIVE" },
+    vacancyOwner: { status: "ACTIVE", email: "owner@example.invalid" },
+    responsibleHrUser: { status: "ACTIVE", roles: [{ role: { key: "HR_ADMIN" } }] },
+    approvals: [{ vacancyVersion: 3 }],
+  };
+  const tx = {
+    hrVacancy: { findFirstOrThrow: vi.fn().mockResolvedValue(vacancy), updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+    hrHiringTeamMember: { count: vi.fn().mockResolvedValue(1) },
+    hrVacancyHistory: { create: vi.fn() },
+    hrVacancyApproval: { create: vi.fn() },
+  };
+  const run = () => transitionVacancy(tx as unknown as Prisma.TransactionClient, {
+    vacancyId: "vacancy", organizationId: "org", actorUserId: "creator",
+    expectedVersion: 3, to: "OPEN", reason: "Synthetic publication gate test",
+  });
+  const expectNoWrites = () => {
+    expect(tx.hrVacancy.updateMany).not.toHaveBeenCalled();
+    expect(tx.hrVacancyHistory.create).not.toHaveBeenCalled();
+    expect(tx.hrVacancyApproval.create).not.toHaveBeenCalled();
+    expect(appendHrAudit).not.toHaveBeenCalled();
+    expect(enqueueHrEmail).not.toHaveBeenCalled();
+  };
+  return { vacancy, tx, run, expectNoWrites };
+}
+
+describe("vacancy publication service blocking gates", () => {
+  beforeEach(() => vi.clearAllMocks());
+  it("rejects an unapproved draft without writes or email", async () => {
+    const f = fixture(); f.vacancy.status = "DRAFT";
+    await expect(f.run()).rejects.toThrow("cannot transition"); f.expectNoWrites();
+  });
+  it("rejects missing approval evidence", async () => {
+    const f = fixture(); f.vacancy.approvals = [];
+    await expect(f.run()).rejects.toThrow("required_approvals_missing"); f.expectNoWrites();
+  });
+  it("rejects approval for a different version", async () => {
+    const f = fixture(); f.vacancy.approvals = [{ vacancyVersion: 2 }];
+    await expect(f.run()).rejects.toThrow("required_approvals_missing"); f.expectNoWrites();
+  });
+  it("rejects an inactive hiring team", async () => {
+    const f = fixture(); f.vacancy.hiringTeam.status = "INACTIVE";
+    await expect(f.run()).rejects.toThrow("active_hiring_team_missing"); f.expectNoWrites();
+  });
+  it("rejects a team without active members", async () => {
+    const f = fixture(); f.tx.hrHiringTeamMember.count.mockResolvedValue(0);
+    await expect(f.run()).rejects.toThrow("at least one active member"); f.expectNoWrites();
+  });
+  it("rejects inactive responsible HR", async () => {
+    const f = fixture(); f.vacancy.responsibleHrUser.status = "INACTIVE";
+    await expect(f.run()).rejects.toThrow("active responsible HR person"); f.expectNoWrites();
+  });
+  it("rejects responsible HR without the required role", async () => {
+    const f = fixture(); f.vacancy.responsibleHrUser.roles = [];
+    await expect(f.run()).rejects.toThrow("active responsible HR person"); f.expectNoWrites();
+  });
+  it("rejects an outdated page", async () => {
+    const f = fixture(); f.vacancy.version = 4;
+    await expect(f.run()).rejects.toThrow("changed since this page loaded"); f.expectNoWrites();
+  });
+  it("publishes an eligible vacancy through a version-conditional write", async () => {
+    const f = fixture(); await expect(f.run()).resolves.toMatchObject({ status: "OPEN", version: 4 });
+    expect(f.tx.hrVacancy.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "vacancy", organizationId: "org", version: 3 },
+      data: expect.objectContaining({ careersVisible: true, status: "OPEN" }),
+    }));
+    expect(enqueueHrEmail).toHaveBeenCalledTimes(1);
+  });
+  it("reopens a paused vacancy with unchanged valid approval and active ownership", async () => {
+    const f = fixture(); f.vacancy.status = "PAUSED";
+    await expect(f.run()).resolves.toMatchObject({ status: "OPEN" });
+  });
+  it.each(["missing", "different-version"])("does not reopen paused vacancy with %s approval", async (kind) => {
+    const f = fixture(); f.vacancy.status = "PAUSED";
+    f.vacancy.approvals = kind === "missing" ? [] : [{ vacancyVersion: 2 }];
+    await expect(f.run()).rejects.toThrow("required_approvals_missing"); f.expectNoWrites();
+  });
+  it("does not reopen paused vacancy with an inactive team", async () => {
+    const f = fixture(); f.vacancy.status = "PAUSED"; f.vacancy.hiringTeam.status = "INACTIVE";
+    await expect(f.run()).rejects.toThrow("active_hiring_team_missing"); f.expectNoWrites();
+  });
+  it("does not reopen paused vacancy without active team members", async () => {
+    const f = fixture(); f.vacancy.status = "PAUSED"; f.tx.hrHiringTeamMember.count.mockResolvedValue(0);
+    await expect(f.run()).rejects.toThrow("at least one active member"); f.expectNoWrites();
+  });
+  it("does not reopen paused vacancy with inactive responsible HR", async () => {
+    const f = fixture(); f.vacancy.status = "PAUSED"; f.vacancy.responsibleHrUser.status = "INACTIVE";
+    await expect(f.run()).rejects.toThrow("active responsible HR person"); f.expectNoWrites();
+  });
+  it("does not reopen paused vacancy from an outdated page", async () => {
+    const f = fixture(); f.vacancy.status = "PAUSED"; f.vacancy.version = 4;
+    await expect(f.run()).rejects.toThrow("changed since this page loaded"); f.expectNoWrites();
+  });
+});

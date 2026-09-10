@@ -167,7 +167,9 @@ export function canPublishVacancy(input: {
   requiredApprovalsComplete: boolean;
 }) {
   const blockers: string[] = [];
-  if (input.status !== "APPROVED" && input.status !== "SCHEDULED") blockers.push("vacancy_not_approved");
+  // A pause suspends visibility without discarding the existing approval.
+  // Callers must still provide current approval evidence and active ownership.
+  if (!["APPROVED", "SCHEDULED", "PAUSED"].includes(input.status)) blockers.push("vacancy_not_approved");
   if (!input.activeHiringTeam) blockers.push("active_hiring_team_missing");
   if (!input.vacancyOwnerId) blockers.push("vacancy_owner_missing");
   if (!input.responsibleHrTeamId) blockers.push("responsible_hr_team_missing");
