@@ -236,15 +236,18 @@ async function StageActionForm({
   action,
   applicationId,
   stage,
+  expectedSubmissionId,
 }: {
   action: (formData: FormData) => void | Promise<void>;
   applicationId: string;
   stage: string;
+  expectedSubmissionId: string;
 }) {
   if (!(await canManageRecruitmentStage(applicationId, Number(stage.replace('Stage ', ''))))) return <p className="mt-3 text-sm">Read-only stage history.</p>;
   return (
     <form action={action} className="mt-4 flex flex-wrap gap-2">
       <input type="hidden" name="applicationDbId" value={applicationId} />
+      <input type="hidden" name="expectedSubmissionId" value={expectedSubmissionId} />
       <input
         className="input max-w-xs"
         name="notes"
@@ -268,7 +271,7 @@ async function StageActionForm({
 }
 
 
-async function Stage8FinalApprovalForm({ applicationId }: { applicationId: string }) {
+async function Stage8FinalApprovalForm({ applicationId, expectedSubmissionId }: { applicationId: string; expectedSubmissionId: string }) {
   if (!(await canManageRecruitmentStage(applicationId, 8))) return <p className="mt-3 text-sm">Read-only final approval history.</p>;
   const handover = await prisma.hrRecruitmentHandover.findFirst({ where: { applicationId }, select: { id: true } });
   const checklist: Array<[string, string[]]> = [
@@ -282,6 +285,7 @@ async function Stage8FinalApprovalForm({ applicationId }: { applicationId: strin
   const names = ["stage1ApplicationReviewed", "candidateIdentityReviewed", "roleConsistencyReviewed", "stage3ScreeningApproved", "stage4OfferAccepted", "stage5AgreementApproved", "stage6OnboardingApproved", "onboardingDocumentsReviewed", "payrollStatutoryHandlingReviewed", "emergencyDetailsReviewed", "stage7AcknowledgementsApproved", "confidentialityAcknowledgementCompleted", "systemAccessAcknowledgementCompleted", "employeeFileReady", "startDateReady", "reportingManagerWorkModeReviewed", "roleScheduleNotesReviewed", "outstandingConditionsResolved", "finalHrReviewComplete", "workflowCanBeMarkedHired"];
   let index = 0;
   return <form action={adminStage8Action} className="mt-4 space-y-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+    <input type="hidden" name="expectedSubmissionId" value={expectedSubmissionId} />
     <input type="hidden" name="applicationDbId" value={applicationId} />
     {handover && <p className="text-sm">Final approval also completes the linked HR onboarding record. Matching identity and payroll reviews carry forward; unresolved right-to-work, additional requirements and exact HR document reviews must be completed before finalizing. <a className="underline" href={`/hr/admin/handovers/${handover.id}`}>Review the linked HR requirements</a></p>}
     <p className="text-sm font-semibold text-blue-950">Finalizing marks the hiring workflow complete. The server will still block final approval unless Stages 1–7 are approved/completed and the offer is accepted.</p>
@@ -344,6 +348,8 @@ function actionBanner(params: Record<string, string | undefined>) {
     );
   if (params.error === "stage_authority_changed")
     messages.push("You no longer have authority to review this stage. Your hiring-team membership, assigned HR person or role may have changed. No decision was saved. Refresh this page to see current access.");
+  if (params.error === "stage_submission_changed")
+    messages.push("The applicant submission changed. No decision was saved. Reload and review the current response before submitting again.");
   if (params.error === "missing_stage")
     messages.push(
       "Required hiring stage data is missing. Please contact an administrator.",
@@ -803,6 +809,7 @@ export default async function AdminApplicationDetail({
               action={adminStage1Action}
               applicationId={application.id}
               stage="Stage 1"
+              expectedSubmissionId={stageOneSubmission?.id ?? ''}
             />
           )}
         </section>
@@ -983,6 +990,7 @@ export default async function AdminApplicationDetail({
               action={adminStage2Action}
               applicationId={application.id}
               stage="Stage 2"
+              expectedSubmissionId={stageTwoSubmission?.id ?? ''}
             />
           )}
         </section>
@@ -1285,6 +1293,7 @@ export default async function AdminApplicationDetail({
                 action={adminStage3Action}
                 applicationId={application.id}
                 stage="Stage 3"
+                expectedSubmissionId={stageThreeSubmission?.id ?? ''}
               />
             )}
           </section>
@@ -1483,7 +1492,7 @@ export default async function AdminApplicationDetail({
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">Candidate submission and signature</h3>{stageFiveSubmission ? <div className="mt-2 text-sm"><p>Submitted: {formatDateTime(stageFiveSubmission.submittedAt)}</p><p>Version: {stageFiveSubmission.version}</p><p>Signature: {stageFiveSignature?.confirmed ? "Confirmed" : "Missing"} · Signed: {formatDateTime(stageFiveSignature?.signedAt)}</p></div> : <p className="mt-2 text-sm text-slate-600">No Stage 5 submission found.</p>}</div>
             </div>
             <h3 className="mt-5 font-semibold">Stage 5 admin actions</h3>
-            <StageActionForm action={adminStage5Action} applicationId={application.id} stage="Stage 5" />
+            <StageActionForm action={adminStage5Action} applicationId={application.id} stage="Stage 5" expectedSubmissionId={stageFiveSubmission?.id ?? ''} />
           </section>
         ) : null}
 
@@ -1520,7 +1529,7 @@ export default async function AdminApplicationDetail({
             </div> : null}
             <div className="mt-5 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Onboarding documents</h3><div className="mt-3 grid gap-3 md:grid-cols-2">{stageSixDocumentsWithAvailability.length ? stageSixDocumentsWithAvailability.map(({ document, privateFileAvailable }) => document.uploadedDocument ? <article className="rounded-xl border border-slate-200 bg-slate-50 p-3" key={document.id}><p className="text-sm font-semibold">{document.uploadedDocument.kind}</p><p className="text-xs text-slate-600">{document.uploadedDocument.fileName} · {document.uploadedDocument.mimeType}</p><AdminDocumentActions url={`/api/admin/applications/${application.id}/uploads/${document.uploadedDocument.id}`} filename={document.uploadedDocument.fileName} previewable={privateFileAvailable && ["application/pdf","image/jpeg","image/png","image/webp"].includes(document.uploadedDocument.mimeType)} available={privateFileAvailable} /></article> : null) : <p className="text-sm text-slate-600">No Stage 6 documents uploaded.</p>}</div></div>
             <h3 className="mt-5 font-semibold">Stage 6 admin actions</h3>
-            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 6 actions.</p> : <StageActionForm action={adminStage6Action} applicationId={application.id} stage="Stage 6" />}
+            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 6 actions.</p> : <StageActionForm action={adminStage6Action} applicationId={application.id} stage="Stage 6" expectedSubmissionId={stageSixSubmission?.id ?? ''} />}
           </section>
         ) : null}
 
@@ -1534,7 +1543,7 @@ export default async function AdminApplicationDetail({
             </div>
             {stageSeven?.approvals?.length ? <div className="mt-4 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Review history</h3><div className="mt-3 space-y-2 text-sm">{stageSeven.approvals.map((approval) => <p key={approval.id}><strong>{approval.action}</strong> by {approval.adminEmail} on {formatDateTime(approval.createdAt)}{approval.notes ? " · Notes recorded" : ""}</p>)}</div></div> : null}
             <h3 className="mt-5 font-semibold">Stage 7 admin actions</h3>
-            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 7 actions.</p> : <StageActionForm action={adminStage7Action} applicationId={application.id} stage="Stage 7" />}
+            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 7 actions.</p> : <StageActionForm action={adminStage7Action} applicationId={application.id} stage="Stage 7" expectedSubmissionId={stageSevenSubmission?.id ?? ''} />}
           </section>
         ) : null}
 
@@ -1547,7 +1556,7 @@ export default async function AdminApplicationDetail({
             </div>
             {stageEight?.approvals?.length ? <div className="mt-4 rounded-2xl border border-slate-200 p-4"><h3 className="font-semibold">Stage 8 decision history</h3><div className="mt-3 space-y-2 text-sm">{stageEight.approvals.map((approval) => <p key={approval.id}><strong>{approval.action}</strong> by {approval.adminEmail} on {formatDateTime(approval.createdAt)}{approval.notes ? " · Private notes recorded" : ""}</p>)}</div></div> : null}
             <h3 className="mt-5 font-semibold">Stage 8 admin final decision</h3>
-            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 8 actions.</p> : <Stage8FinalApprovalForm applicationId={application.id} />}
+            {application.deletedAt ? <p className="mt-3 text-sm font-semibold text-red-700">Restore this application before taking Stage 8 actions.</p> : <Stage8FinalApprovalForm applicationId={application.id} expectedSubmissionId={stageEightSubmission?.id ?? ''} />}
           </section>
         ) : null}
 

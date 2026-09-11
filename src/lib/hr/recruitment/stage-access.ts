@@ -5,6 +5,7 @@ import { requireAuthenticatedUser } from '@/lib/hr/permissions/authorize';
 import { StageAuthorityError } from './stage-authority-error';
 import { lockNamedHrEligibility } from './hr-authority-lock';
 import { lockHiringTeamAuthority } from './team-authority-lock';
+import { assertStageSubmissionSnapshot } from './stage-submission-guard';
 export async function recruitmentOversight() {
   const auth = await requireAuthenticatedUser();
   if (!auth.roles.some((role) => role === 'ADMIN' || role === 'HR_ADMIN')) throw new Error('Recruitment oversight requires an admin role.');
@@ -54,7 +55,7 @@ export async function canManageRecruitmentStage(applicationId: string, stage: nu
 
 /** Scoped authority for the preserved eight-stage recruitment workflow. */
 export async function assertRecruitmentStageAccess(tx: Prisma.TransactionClient, input: {
-  applicationId: string; organizationId: string; actorUserId: string; stage: number;
+  applicationId: string; organizationId: string; actorUserId: string; stage: number; expectedSubmissionId?: string | null;
 }) {
   if (!Number.isInteger(input.stage) || input.stage < 1 || input.stage > 8) throw new Error('Invalid recruitment stage.');
   const application = await tx.jobApplication.findFirstOrThrow({ where: { id: input.applicationId, organizationId: input.organizationId, deletedAt: null } });
@@ -81,5 +82,6 @@ export async function assertRecruitmentStageAccess(tx: Prisma.TransactionClient,
       await assertVacancyCreatorOrDelegate(tx, { ...input, vacancyId: vacancy.id });
     }
   }
+  if (input.expectedSubmissionId !== undefined) await assertStageSubmissionSnapshot(tx, { ...input, expectedSubmissionId: input.expectedSubmissionId });
   return application;
 }

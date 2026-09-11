@@ -4,9 +4,20 @@ const { tx } = vi.hoisted(() => ({ tx: {
   stageApproval: { create: vi.fn() }, auditLog: { create: vi.fn() },
 } }));
 vi.mock('@/lib/prisma', () => ({ prisma: { $transaction: (fn: (client: unknown) => unknown) => fn(tx) } }));
-import { approveStage1, approveStage2, approveStage3, stageDecisionIsRepeat } from '@/lib/workflow';
+import { approveStage1, approveStage2, approveStage3, recordAdminStage1Action, recordAdminStage2Action, recordAdminStage3Action, stageDecisionIsRepeat } from '@/lib/workflow';
 beforeEach(() => { vi.resetAllMocks(); });
 describe('forward-only completed recruitment stages', () => {
+  it.each([recordAdminStage1Action, recordAdminStage2Action, recordAdminStage3Action])('does not rewrite a recorded negative decision', async decide => {
+    for (const status of ['Rejected', 'Correction Requested'] as const) {
+      tx.jobApplication.findUnique.mockResolvedValue({ id: 'app', status, currentStageOrder: 1 });
+      tx.hiringStage.findFirst.mockResolvedValue({ id: 'stage', stageOrder: 3, status });
+      expect((await decide('app', status, 'reviewer@example.test')).alreadySameStatus).toBe(true);
+      expect(tx.jobApplication.update).not.toHaveBeenCalled();
+      expect(tx.hiringStage.update).not.toHaveBeenCalled();
+      expect(tx.stageApproval.create).not.toHaveBeenCalled();
+      expect(tx.auditLog.create).not.toHaveBeenCalled();
+    }
+  });
   it.each([approveStage1, approveStage2, approveStage3])('reapproval cannot unhire or reset later stages', async (approve) => {
     tx.jobApplication.findUnique.mockResolvedValue({ id: 'app', status: 'Hired', currentStageOrder: 8 });
     tx.hiringStage.findFirst.mockImplementation(({ where }) => ({ id: String(where.stageOrder), stageOrder: where.stageOrder, status: 'Approved' }));

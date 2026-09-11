@@ -5,6 +5,7 @@ import { getAdminSession } from '@/lib/admin-auth';
 import { requireAuthenticatedUser } from '@/lib/hr/permissions/authorize';
 import { assertRecruitmentStageAccess } from '@/lib/hr/recruitment/stage-access';
 import { StageAuthorityError } from '@/lib/hr/recruitment/stage-authority-error';
+import { StageSubmissionChangedError } from '@/lib/hr/recruitment/stage-submission-guard';
 import { setApplicationDeleted } from '@/lib/hr/recruitment/record-retention';
 import { createApprovedAgreementHandover } from '@/lib/hr/recruitment/offers';
 import { reconcileRecruitmentEmployment } from '@/lib/hr/recruitment/employment-handover';
@@ -20,21 +21,24 @@ import { parseStage3Metadata, stage3InstructionSchema, offerSchema, parseOfferDa
 import { applicationRejectedEmail, correctionRequestedEmail, offerReadyEmail, stage2CorrectionRequestedEmail, stage2RejectedEmail, stage2UnlockedEmail, stage3CorrectionRequestedEmail, stage3InstructionsAvailableEmail, stage3RejectedEmail, stage3UnlockedEmail, stage4UnlockedEmail, stage5AgreementReleasedEmail, stage5CorrectionRequestedEmail, stage5RejectedEmail, stage6UnlockedEmail, stage6CorrectionRequestedEmail, stage6RejectedEmail, stage7UnlockedEmail, stage7CorrectionRequestedEmail, stage7RejectedEmail, stage8UnlockedEmail, stage8FinalReviewCorrectionEmail, stage8RejectedEmail, hiringWorkflowCompletedEmail } from '../../../lib/email-templates';
 
 function logAdminDiagnostics(diagnostics: Record<string, unknown>) { console.info('adminStageActionDiagnostics', diagnostics); }
-async function stageActor(applicationId: string, stage: number) {
+async function stageActor(applicationId: string, stage: number, expectedSubmissionId?: FormDataEntryValue | null) {
+  const snapshot = expectedSubmissionId === undefined ? undefined : typeof expectedSubmissionId === 'string' ? expectedSubmissionId : null;
   const auth = await requireAuthenticatedUser();
   try {
-    await prisma.$transaction((tx) => assertRecruitmentStageAccess(tx, { applicationId, stage, organizationId: auth.user.organizationId, actorUserId: auth.user.id }));
+    await prisma.$transaction((tx) => assertRecruitmentStageAccess(tx, { applicationId, stage, organizationId: auth.user.organizationId, actorUserId: auth.user.id, expectedSubmissionId: snapshot }));
   } catch (error) {
+    if (error instanceof StageSubmissionChangedError) redirect(redirectPath(applicationId, '?error=stage_submission_changed'));
     if (error instanceof StageAuthorityError) redirect(redirectPath(applicationId, '?error=stage_authority_changed'));
     throw error;
   }
-  return { ...auth.user, recruitmentStage: stage };
+  return { ...auth.user, recruitmentStage: stage, expectedSubmissionId: snapshot };
 }
 async function recheckStageActor(tx: Parameters<typeof assertRecruitmentStageAccess>[0], applicationId: string, actor: Awaited<ReturnType<typeof stageActor>>) {
   try {
-    return await assertRecruitmentStageAccess(tx, { applicationId, stage: actor.recruitmentStage, organizationId: actor.organizationId, actorUserId: actor.id });
+    return await assertRecruitmentStageAccess(tx, { applicationId, stage: actor.recruitmentStage, organizationId: actor.organizationId, actorUserId: actor.id, expectedSubmissionId: actor.expectedSubmissionId });
   } catch (error) {
     // A redirect thrown inside the transaction rolls it back before any email.
+    if (error instanceof StageSubmissionChangedError) redirect(redirectPath(applicationId, '?error=stage_submission_changed'));
     if (error instanceof StageAuthorityError) redirect(redirectPath(applicationId, '?error=stage_authority_changed'));
     throw error;
   }
@@ -82,7 +86,7 @@ export async function adminStage1Action(formData: FormData) {
   let destination = redirectPath(applicationId, '?error=action_failed');
 
   try {
-    const adminSession = await stageActor(applicationId, 1);
+    const adminSession = await stageActor(applicationId, 1, formData.get('expectedSubmissionId'));
     diagnostics.adminAuthenticated = Boolean(adminSession);
     diagnostics.adminActionSessionPresent = Boolean(adminSession);
     if (!adminSession) {
@@ -111,15 +115,16 @@ export async function adminStage1Action(formData: FormData) {
       destination = redirectPath(applicationId, `?success=${result.alreadyApproved ? 'already_approved' : 'approved'}${result.alreadyApproved || email.status === 'sent' ? '' : '&warning=email_failed'}`);
       } else {
       const workflowAction = action === 'reject' ? 'Rejected' : 'Correction Requested';
-      const result = await recordAdminStage1Action(applicationId, workflowAction, adminSession.email, notes, (tx) => recheckStageActor(tx, applicationId, adminSession));
+      const result = await recordAdminStage1Action(applicationId, workflowAction, adminSession.email, notes, async (tx) => { await lockStageDecision(tx, applicationId, adminSession.organizationId); return recheckStageActor(tx, applicationId, adminSession); });
       diagnostics.stage1Found = result.stage1Found; diagnostics.previousStage1Status = result.previousStage1Status; diagnostics.approvalTransactionSucceeded = true;
-      const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'application-rejected' : 'correction-requested', ...(action === 'reject' ? applicationRejectedEmail({ applicationId: app.applicationId }) : correctionRequestedEmail({ applicationId: app.applicationId })) });
+      const email = result.alreadySameStatus ? { attempted: false, status: 'not_required' } : await safeSendEmail({ applicationId, template: action === 'reject' ? 'application-rejected' : 'correction-requested', ...(action === 'reject' ? applicationRejectedEmail({ applicationId: app.applicationId }) : correctionRequestedEmail({ applicationId: app.applicationId })) });
       diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
-      destination = redirectPath(applicationId, `?success=${action === 'reject' ? 'rejected' : 'correction'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+      destination = redirectPath(applicationId, `?success=${result.alreadySameStatus ? 'decision_already_recorded' : action === 'reject' ? 'rejected' : 'correction'}${result.alreadySameStatus || email.status === 'sent' ? '' : '&warning=email_failed'}`);
       }
     }
   } catch (error) {
     diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError';
+    if ((error as Error).message === 'NEXT_REDIRECT') throw error;
     if (error instanceof StageActionError && error.code === 'missing_stage') destination = redirectPath(applicationId, '?error=missing_stage');
     else if (error instanceof StageActionError && error.code === 'missing_application') destination = redirectPath(null, '?error=action_failed');
     else destination = redirectPath(applicationId, '?error=action_failed');
@@ -220,7 +225,7 @@ export async function adminStage2Action(formData: FormData) {
   let destination = redirectPath(applicationId, '?error=action_failed');
   const diagnostics: Record<string, unknown> = { adminStage2ActionRequested: true, adminAuthenticated: false, action, applicationIdPresent: Boolean(applicationId), transactionSucceeded: false, emailAttempted: false, emailStatus: 'not_attempted' };
   try {
-    const adminSession = await stageActor(applicationId, 2);
+    const adminSession = await stageActor(applicationId, 2, formData.get('expectedSubmissionId'));
     diagnostics.adminAuthenticated = Boolean(adminSession);
     if (!adminSession) destination = '/admin/login';
     else if (!['approve', 'reject', 'correction'].includes(action)) destination = redirectPath(applicationId, '?error=invalid_action');
@@ -235,14 +240,14 @@ export async function adminStage2Action(formData: FormData) {
         diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
         destination = redirectPath(applicationId, `?success=${result.alreadyApproved ? 'stage2_already_approved' : 'stage2_approved'}${result.alreadyApproved || email.status === 'sent' ? '' : '&warning=email_failed'}`);
       } else {
-        await recordAdminStage2Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes, (tx) => recheckStageActor(tx, applicationId, adminSession));
+        const result = await recordAdminStage2Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes, async (tx) => { await lockStageDecision(tx, applicationId, adminSession.organizationId); return recheckStageActor(tx, applicationId, adminSession); });
         diagnostics.transactionSucceeded = true;
-        const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-2-rejected' : 'stage-2-correction-requested', ...(action === 'reject' ? stage2RejectedEmail({ applicationId: app.applicationId }) : stage2CorrectionRequestedEmail({ applicationId: app.applicationId })) });
+        const email = result.alreadySameStatus ? { attempted: false, status: 'not_required' } : await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-2-rejected' : 'stage-2-correction-requested', ...(action === 'reject' ? stage2RejectedEmail({ applicationId: app.applicationId }) : stage2CorrectionRequestedEmail({ applicationId: app.applicationId })) });
         diagnostics.emailAttempted = email.attempted; diagnostics.emailStatus = email.status;
-        destination = redirectPath(applicationId, `?success=${action === 'reject' ? 'stage2_rejected' : 'stage2_correction'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+        destination = redirectPath(applicationId, `?success=${result.alreadySameStatus ? 'decision_already_recorded' : action === 'reject' ? 'stage2_rejected' : 'stage2_correction'}${result.alreadySameStatus || email.status === 'sent' ? '' : '&warning=email_failed'}`);
       }
     }
-  } catch (error) { diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; destination = redirectPath(applicationId, '?error=action_failed'); }
+  } catch (error) { if ((error as Error).message === 'NEXT_REDIRECT') throw error; diagnostics.errorName = error instanceof Error ? error.name : 'UnknownError'; destination = redirectPath(applicationId, '?error=action_failed'); }
   finally { revalidatePath('/admin/applications'); if (applicationId) revalidatePath(`/admin/applications/${applicationId}`); logAdminDiagnostics(diagnostics); }
   redirect(destination);
 }
@@ -296,7 +301,7 @@ export async function adminStage3Action(formData: FormData) {
   const action = String(formData.get('action') ?? '');
   const notes = String(formData.get('notes') ?? '').slice(0, 500);
   let destination = redirectPath(applicationId, '?error=action_failed');
-  const adminSession = await stageActor(applicationId, 3);
+  const adminSession = await stageActor(applicationId, 3, formData.get('expectedSubmissionId'));
   if (!adminSession) redirect('/admin/login');
   const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, select: { applicationId: true, deletedAt: true } });
   if (!app) redirect(redirectPath(null, '?error=action_failed'));
@@ -307,9 +312,9 @@ export async function adminStage3Action(formData: FormData) {
       const email = result.alreadyApproved ? { attempted: false, status: 'not_required' } : await safeSendEmail({ applicationId, template: 'stage-4-unlocked', ...stage4UnlockedEmail({ applicationId: app.applicationId }) });
       destination = redirectPath(applicationId, `?success=${result.alreadyApproved ? 'stage3_already_approved' : 'stage3_approved'}${result.alreadyApproved || email.status === 'sent' ? '' : '&warning=email_failed'}`);
     } else if (['correction','reject'].includes(action)) {
-      await recordAdminStage3Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes, (tx) => recheckStageActor(tx, applicationId, adminSession));
-      const email = await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-3-rejected' : 'stage-3-correction-requested', ...(action === 'reject' ? stage3RejectedEmail({ applicationId: app.applicationId }) : stage3CorrectionRequestedEmail({ applicationId: app.applicationId })) });
-      destination = redirectPath(applicationId, `?success=${action === 'reject' ? 'stage3_rejected' : 'stage3_correction'}${email.status === 'sent' ? '' : '&warning=email_failed'}`);
+      const result = await recordAdminStage3Action(applicationId, action === 'reject' ? 'Rejected' : 'Correction Requested', adminSession.email, notes, async (tx) => { await lockStageDecision(tx, applicationId, adminSession.organizationId); return recheckStageActor(tx, applicationId, adminSession); });
+      const email = result.alreadySameStatus ? { attempted: false, status: 'not_required' } : await safeSendEmail({ applicationId, template: action === 'reject' ? 'stage-3-rejected' : 'stage-3-correction-requested', ...(action === 'reject' ? stage3RejectedEmail({ applicationId: app.applicationId }) : stage3CorrectionRequestedEmail({ applicationId: app.applicationId })) });
+      destination = redirectPath(applicationId, `?success=${result.alreadySameStatus ? 'decision_already_recorded' : action === 'reject' ? 'stage3_rejected' : 'stage3_correction'}${result.alreadySameStatus || email.status === 'sent' ? '' : '&warning=email_failed'}`);
     } else destination = redirectPath(applicationId, '?error=invalid_action');
   } catch { destination = redirectPath(applicationId, '?error=action_failed'); }
   revalidatePath('/admin/applications'); revalidatePath(`/admin/applications/${applicationId}`);
@@ -406,7 +411,7 @@ export async function adminStage5Action(formData: FormData) {
   const action = String(formData.get('action') ?? '');
   const notes = String(formData.get('notes') ?? '').slice(0, 500);
   let destination = redirectPath(applicationId, '?error=action_failed');
-  const adminSession = await stageActor(applicationId, 5);
+  const adminSession = await stageActor(applicationId, 5, formData.get('expectedSubmissionId'));
   if (!adminSession) redirect('/admin/login');
   try {
     const app = await prisma.jobApplication.findUnique({ where: { id: applicationId }, include: { applicant: true, stages: { include: { submissions: { include: { signature: true }, orderBy: { createdAt: 'desc' } } } }, employmentAgreement: true } });
@@ -465,7 +470,7 @@ export async function adminStage6Action(formData: FormData) {
   const parsed = stage6AdminDecisionSchema.safeParse(Object.fromEntries(formData.entries()));
   const applicationId = String(formData.get('applicationDbId') ?? '');
   let destination = redirectPath(applicationId, '?error=action_failed');
-  const adminSession = await stageActor(applicationId, 6);
+  const adminSession = await stageActor(applicationId, 6, formData.get('expectedSubmissionId'));
   if (!adminSession) redirect('/admin/login');
   if (!parsed.success) redirect(redirectPath(applicationId, '?error=stage6_validation'));
   const { action, notes } = parsed.data;
@@ -515,7 +520,7 @@ export async function adminStage7Action(formData: FormData) {
   const parsed = stage7AdminDecisionSchema.safeParse(Object.fromEntries(formData.entries()));
   const applicationId = String(formData.get('applicationDbId') ?? '');
   let destination = redirectPath(applicationId, '?error=action_failed');
-  const adminSession = await stageActor(applicationId, 7);
+  const adminSession = await stageActor(applicationId, 7, formData.get('expectedSubmissionId'));
   if (!adminSession) redirect('/admin/login');
   if (!parsed.success) redirect(redirectPath(applicationId, '?error=stage7_validation'));
   const { action, notes } = parsed.data;
@@ -568,7 +573,7 @@ export async function adminStage8Action(formData: FormData) {
   const parsed = stage8AdminFinalDecisionSchema.safeParse(Object.fromEntries(formData.entries()));
   const applicationId = String(formData.get('applicationDbId') ?? '');
   let destination = redirectPath(applicationId, '?error=action_failed');
-  const adminSession = await stageActor(applicationId, 8);
+  const adminSession = await stageActor(applicationId, 8, formData.get('expectedSubmissionId'));
   if (!adminSession) redirect('/admin/login');
   if (!parsed.success) redirect(redirectPath(applicationId, '?error=stage8_validation'));
   const { action, finalHrNotes, candidateFacingNote } = parsed.data;

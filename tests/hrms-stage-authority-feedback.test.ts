@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StageAuthorityError } from '@/lib/hr/recruitment/stage-authority-error';
+import { StageSubmissionChangedError } from '@/lib/hr/recruitment/stage-submission-guard';
 
 const mocks = vi.hoisted(() => ({ guard: vi.fn(), auth: vi.fn(), send: vi.fn(), read: vi.fn(), write: vi.fn(), redirect: vi.fn(), tx: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -11,6 +12,13 @@ vi.mock('@/lib/email', () => ({ sendAndRecordEmail: mocks.send }));
 import { adminStage1Action, adminStage2Action, adminStage3Action, adminStage6Action, adminStage7Action, adminStage8Action } from '@/app/admin/applications/actions';
 
 describe('named HR authority denial feedback', () => {
+  it.each([adminStage1Action, adminStage2Action, adminStage3Action, adminStage6Action, adminStage7Action, adminStage8Action])('preserves a stale-submission redirect without writes or mail', async action => {
+    mocks.guard.mockRejectedValue(new StageSubmissionChangedError());
+    const form = new FormData(); form.set('applicationDbId', 'app'); form.set('expectedSubmissionId', 'old'); form.set('action', 'correction');
+    await expect(action(form)).rejects.toThrow('NEXT_REDIRECT');
+    expect(mocks.redirect).toHaveBeenCalledWith(expect.stringContaining('error=stage_submission_changed'));
+    expect(mocks.write).not.toHaveBeenCalled(); expect(mocks.send).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.auth.mockResolvedValue({ user: { id: 'hr', email: 'hr@example.test', organizationId: 'org' } });

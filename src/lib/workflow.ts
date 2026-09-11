@@ -64,6 +64,7 @@ export async function recordAdminStage1Action(applicationId: string, action: 'Re
     if (!stage1) throw new StageActionError('missing_stage', 'Stage 1 row is missing.');
     stageDecisionIsRepeat(app, stage1, false);
     const alreadySameStatus = stage1.status === action;
+    if (alreadySameStatus) return { alreadySameStatus, stage1Found: true, stage2Found: null, previousStage1Status: stage1.status };
     if (!alreadySameStatus) await tx.hiringStage.update({ where: { id: stage1.id }, data: { status: action } });
     await tx.jobApplication.update({ where: { id: applicationId }, data: { status: action === 'Rejected' ? 'Rejected' : 'Application Submitted' } });
     if (!alreadySameStatus) await tx.stageApproval.create({ data: { stageId: stage1.id, action, adminEmail, notes } });
@@ -103,6 +104,7 @@ export async function recordAdminStage2Action(applicationId: string, action: 'Re
     if (!stage2) throw new StageActionError('missing_stage', 'Stage 2 row is missing.');
     stageDecisionIsRepeat(app, stage2, false);
     const alreadySameStatus = stage2.status === action;
+    if (alreadySameStatus) return { alreadySameStatus, stage2Found: true, previousStage2Status: stage2.status };
     if (!alreadySameStatus) await tx.hiringStage.update({ where: { id: stage2.id }, data: { status: action } });
     await tx.jobApplication.update({ where: { id: applicationId }, data: { status: action === 'Rejected' ? 'Rejected' : 'Candidate Information Required' } });
     if (!alreadySameStatus) await tx.stageApproval.create({ data: { stageId: stage2.id, action, adminEmail, notes } });
@@ -142,6 +144,7 @@ export async function recordAdminStage3Action(applicationId: string, action: 'Re
     if (!stage3) throw new StageActionError('missing_stage', 'Stage 3 row is missing.');
     stageDecisionIsRepeat(app, stage3, false);
     const alreadySameStatus = stage3.status === action;
+    if (alreadySameStatus) return { alreadySameStatus, stage3Found: true, previousStage3Status: stage3.status };
     if (!alreadySameStatus) await tx.hiringStage.update({ where: { id: stage3.id }, data: { status: action } });
     await tx.jobApplication.update({ where: { id: applicationId }, data: { status: action === 'Rejected' ? 'Rejected' : 'Screening', currentStageOrder: 3 } });
     if (!alreadySameStatus) await tx.stageApproval.create({ data: { stageId: stage3.id, action, adminEmail, notes } });
