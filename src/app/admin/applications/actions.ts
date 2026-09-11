@@ -591,7 +591,7 @@ export async function adminStage8Action(formData: FormData) {
     failurePhase = 'transaction_authority';
     await prisma.$transaction(async (tx) => {
       await recheckStageActor(tx, applicationId, adminSession);
-      if (await repeatedStageDecision(tx, applicationId, 8, action === 'finalize')) redirect(redirectPath(applicationId, '?success=already_approved'));
+      if (await repeatedStageDecision(tx, applicationId, 8, action === 'finalize', action === 'finalize' ? undefined : action)) redirect(redirectPath(applicationId, '?success=already_approved'));
       if (action === 'finalize') {
         failurePhase = 'save_final_checklist';
         const version = (await tx.stageSubmission.count({ where: { stageId: stage8.id } })) + 1;
