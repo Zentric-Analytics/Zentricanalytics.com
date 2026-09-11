@@ -5,6 +5,7 @@ import { assertVacancyCreatorOrDelegate, delegateVacancyApprovals, endVacancyDel
 const scope = { organizationId: "org", vacancyId: "vacancy", actorUserId: "creator" };
 function fixture() {
   const mocks = {
+    $queryRaw: vi.fn().mockResolvedValue([{ id: "vacancy" }]),
     hrUser: { findFirstOrThrow: vi.fn().mockResolvedValue({ id: "creator" }) },
     hrVacancy: { findFirstOrThrow: vi.fn().mockResolvedValue({ id: "vacancy", createdById: "creator", hiringTeamId: "team", delegationVersion: 0 }), updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
     hrHiringTeamMember: { findMany: vi.fn().mockResolvedValue([{ userId: "one" }, { userId: "two" }]), findFirst: vi.fn().mockResolvedValue({ userId: "one" }) },
@@ -14,6 +15,35 @@ function fixture() {
   return { mocks, tx: mocks as unknown as Prisma.TransactionClient };
 }
 describe("vacancy-scoped delegation", () => {
+  it("locks membership eligibility before reading a delegate's membership", async () => {
+    const { tx, mocks } = fixture();
+    await assertVacancyCreatorOrDelegate(tx, { ...scope, actorUserId: "one" });
+    const membershipLock = mocks.$queryRaw.mock.calls.findIndex(([parts]) => Array.from(parts as TemplateStringsArray).join("").includes('"HrHiringTeamMember"'));
+    expect(membershipLock).toBeGreaterThanOrEqual(0);
+    expect(mocks.$queryRaw.mock.invocationCallOrder[membershipLock]).toBeLessThan(mocks.hrHiringTeamMember.findFirst.mock.invocationCallOrder[0]);
+  });
+  it("requires an active organization-scoped actor and vacancy", async () => {
+    const { tx, mocks } = fixture();
+    await assertVacancyCreatorOrDelegate(tx, scope);
+    expect(mocks.hrUser.findFirstOrThrow).toHaveBeenCalledWith({ where: { id: "creator", organizationId: "org", status: "ACTIVE" } });
+    expect(mocks.hrVacancy.findFirstOrThrow).toHaveBeenCalledWith({ where: { id: "vacancy", organizationId: "org" } });
+  });
+  it("preserves the creator's independent authority without delegation", async () => {
+    const { tx, mocks } = fixture();
+    mocks.hrVacancyDelegation.findFirst.mockResolvedValue(null);
+    mocks.hrHiringTeamMember.findFirst.mockResolvedValue(null);
+    await expect(assertVacancyCreatorOrDelegate(tx, scope)).resolves.toMatchObject({ createdById: "creator" });
+    expect(mocks.hrVacancy.updateMany).not.toHaveBeenCalled();
+  });
+  it("checks current team, user, and membership dates for delegated approval", async () => {
+    const { tx, mocks } = fixture();
+    await assertVacancyCreatorOrDelegate(tx, { ...scope, actorUserId: "one" });
+    expect(mocks.hrHiringTeamMember.findFirst).toHaveBeenCalledWith({ where: {
+      hiringTeamId: "team", userId: { in: ["one"] }, status: "ACTIVE",
+      effectiveFrom: { lte: expect.any(Date) }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: expect.any(Date) } }],
+      user: { organizationId: "org", status: "ACTIVE" }, hiringTeam: { organizationId: "org", status: "ACTIVE" },
+    } });
+  });
   it("requires a reason and specific delegates", async () => {
     const { tx } = fixture();
     await expect(delegateVacancyApprovals(tx, { ...scope, delegateUserIds: ["one"], reason: " " })).rejects.toThrow("absence reason");

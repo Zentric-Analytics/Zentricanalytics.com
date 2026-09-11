@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { appendHrAudit } from "../audit";
+import { lockHiringTeamAuthority } from "./team-authority-lock";
 
 type Scope = { organizationId: string; vacancyId: string; actorUserId: string; actorRole?: string };
 
@@ -24,6 +25,9 @@ export async function assertVacancyCreatorOrDelegate(tx: Prisma.TransactionClien
   // Hold the same row lock as manual revocation until the caller's approval commits.
   const locked = await tx.hrVacancy.updateMany({ where: { id: vacancy.id, organizationId: input.organizationId, delegationVersion: vacancy.delegationVersion }, data: { delegationVersion: { increment: 1 } } });
   if (locked.count !== 1) throw new Error("Delegation changed concurrently. Reload and try again.");
+  // Explicit delegation revocation uses the vacancy lock above; membership,
+  // team and account changes must also wait until this approval completes.
+  await lockHiringTeamAuthority(tx, input.organizationId, vacancy.id, input.actorUserId);
   const delegation = await tx.hrVacancyDelegation.findFirst({ where: {
     vacancyId: vacancy.id, delegateUserId: input.actorUserId, endedAt: null,
   } });
