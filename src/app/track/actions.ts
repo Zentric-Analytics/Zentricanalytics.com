@@ -637,6 +637,10 @@ export async function submitOfferDecision(formData: FormData) {
     where: { applicationId: application.id },
     include: { activeVersion: true },
   });
+  const displayedOfferVersionId = String(formData.get("offerVersionId") ?? "");
+  if (governedOffer && (!displayedOfferVersionId || displayedOfferVersionId !== governedOffer.activeVersionId)) {
+    redirect(portalUrl(session, { stage: "4", error: "offer_changed" }));
+  }
   if (governedOffer && ["ISSUED", "ACCEPTED"].includes(governedOffer.status) && governedOffer.activeVersion && application.organizationId) {
     if (parsed.data.decision === "accept") {
       const { acceptOffer: acceptGovernedOffer } = await import("@/lib/hr/recruitment/offers");
@@ -645,7 +649,7 @@ export async function submitOfferDecision(formData: FormData) {
         organizationId: application.organizationId!,
         offerId: governedOffer.id,
         applicantId: application.applicantId,
-        offerVersionId: governedOffer.activeVersionId!,
+        offerVersionId: displayedOfferVersionId,
         method: "SECURE_CANDIDATE_PORTAL",
         evidence: { sessionVerified: true, confirmation: true },
       }), { isolationLevel: "Serializable" }));
@@ -653,19 +657,20 @@ export async function submitOfferDecision(formData: FormData) {
     }
     if (governedOffer.status === "ACCEPTED") redirect(portalUrl(session, { stage: "4", error: "offer_not_open" }));
     await prisma.$transaction(async (tx) => {
+      const changed = await tx.hrRecruitmentOffer.updateMany({
+        where: { id: governedOffer.id, organizationId: application.organizationId!, status: "ISSUED", activeVersionId: displayedOfferVersionId, version: governedOffer.version },
+        data: { status: "DECLINED", version: { increment: 1 } },
+      });
+      if (changed.count !== 1) redirect(portalUrl(session, { stage: "4", error: "offer_changed" }));
       await tx.hrRecruitmentOfferDecline.upsert({
         where: { offerId: governedOffer.id },
         update: {},
         create: {
           offerId: governedOffer.id,
-          offerVersionId: governedOffer.activeVersionId!,
+          offerVersionId: displayedOfferVersionId,
           applicantId: application.applicantId,
           reason: parsed.data.candidateDecisionNote || null,
         },
-      });
-      await tx.hrRecruitmentOffer.update({
-        where: { id: governedOffer.id },
-        data: { status: "DECLINED", version: { increment: 1 } },
       });
       await tx.jobApplication.update({
         where: { id: application.id },

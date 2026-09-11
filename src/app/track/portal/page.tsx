@@ -105,9 +105,9 @@ function formatDate(value?: Date | null) {
 export default async function Portal({
   searchParams,
 }: {
-  searchParams: Promise<{ session?: string; stage?: string }>;
+  searchParams: Promise<{ session?: string; stage?: string; error?: string }>;
 }) {
-  const { session, stage: stageParam } = await searchParams;
+  const { session, stage: stageParam, error } = await searchParams;
   const access = session
     ? await prisma.applicationAccessCode.findFirst({
         where: {
@@ -245,6 +245,7 @@ export default async function Portal({
   return (
     <PageShell>
       <Section eyebrow="Candidate portal" title="Track your application">
+        {error === "offer_changed" ? <p role="alert" className="mb-4 font-semibold">The offer has changed. Reload and review the current offer when available before submitting your decision. No decision was saved.</p> : null}
         {governedOffer?.activeVersion && ["ISSUED", "ACCEPTED", "DECLINED"].includes(governedOffer.status) ? <section className="card mb-5 p-5 sm:p-6" aria-labelledby="governed-offer-title">
           <p className="text-xs font-bold uppercase tracking-widest text-accent">Governed employment offer · exact version {governedOffer.activeVersion.version}</p>
           <h2 id="governed-offer-title" className="mt-2 text-2xl font-bold">{governedOffer.activeVersion.positionTitle}</h2>
@@ -257,6 +258,7 @@ export default async function Portal({
           <div className="mt-4 whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm">{String((governedOffer.activeVersion.terms as { text?: string } | null)?.text ?? "Review the employment terms supplied by HR.")}</div>
           {governedOffer.status === "ISSUED" ? <form action={submitOfferDecision} className="mt-4 space-y-3">
             <input type="hidden" name="session" value={session ?? ""} />
+            <input type="hidden" name="offerVersionId" value={governedOffer.activeVersion.id} />
             <textarea className="input" name="candidateDecisionNote" placeholder="Optional decision note" />
             <label className="flex gap-2 text-sm font-semibold"><input name="confirmation" type="checkbox" required /> I confirm this decision applies to exact offer version {governedOffer.activeVersion.version}.</label>
             <div className="flex gap-3"><button className="btn btn-primary" name="decision" value="accept">Accept exact offer</button><button className="btn btn-secondary" name="decision" value="decline">Decline offer</button></div>
