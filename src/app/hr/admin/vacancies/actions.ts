@@ -99,6 +99,16 @@ export async function transitionVacancyWithStateAction(
     await transitionVacancyAction(formData);
     return { status: "success", message: "Vacancy updated." };
   } catch (error) {
+    // A conflicting eligibility change must stay blocked, but database details
+    // are not useful (or appropriate) in browser feedback. Do not retry writes.
+    const databaseError = error as { code?: string; meta?: { code?: string } } | null;
+    if (databaseError && typeof databaseError.code === "string" && /^P\d{4}$/.test(databaseError.code)) {
+      const conflict = databaseError.code === "P2034" ||
+        (databaseError.code === "P2010" && ["40001", "40P01", "55P03"].includes(databaseError.meta?.code ?? ""));
+      return { status: "error", message: conflict
+        ? "The vacancy or its permissions changed while this action was running. Reload the page and try again."
+        : "The vacancy could not be updated. Reload the page and try again." };
+    }
     const message = error instanceof Error && error.message
       ? error.message
       : "You are not authorized to perform this vacancy action.";
