@@ -16,6 +16,9 @@ function fixture() {
     let unlock: (() => void) | undefined;
     const tx = {
       $queryRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => {
+        // This model serializes only vacancy reassignment; eligibility row locks
+        // have independent regression and real-database ordering coverage.
+        if (!strings.join('?').includes('"HrVacancy"')) return [{ id: 'eligibility' }];
         attempted(strings.join('?')); scopes.push(values);
         const previous = tail; const next = signal(); tail = next.promise; unlock = next.resolve;
         await previous; return [{ id: 'vacancy' }];

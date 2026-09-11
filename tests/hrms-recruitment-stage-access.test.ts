@@ -18,6 +18,14 @@ function fixture(member = false, hr = 'hr') {
 }
 const input = { applicationId: 'app', organizationId: 'org', actorUserId: 'actor', stage: 1 };
 describe('preserved recruitment stage authority', () => {
+  it.each([6, 7, 8])('locks HR account and role eligibility before reading stage %s authority', async stage => {
+    const tx = fixture(false, 'actor');
+    await assertRecruitmentStageAccess(tx as never, { ...input, stage });
+    const sql = tx.$queryRaw.mock.calls.map(([parts]) => Array.from(parts as TemplateStringsArray).join('?'));
+    expect(sql.some(query => query.includes('"HrUserRole"') && query.includes('FOR SHARE'))).toBe(true);
+    expect(sql.some(query => query.includes('"HrUser"') && query.includes('FOR SHARE'))).toBe(true);
+    expect(tx.$queryRaw.mock.invocationCallOrder.at(-1)).toBeLessThan(tx.hrUser.findFirstOrThrow.mock.invocationCallOrder[0]);
+  });
   it.each([1, 2, 3, 5])('holds membership eligibility locks before checking stage %s authority', async stage => {
     const tx = fixture(true);
     await assertRecruitmentStageAccess(tx as never, { ...input, stage });
@@ -60,6 +68,14 @@ describe('preserved recruitment stage authority', () => {
   it.each([6, 7, 8])('denies revoked HR role even when still assigned at stage %s', async (stage) => {
     const tx = fixture(false, 'actor'); tx.hrUserRole.findFirst.mockResolvedValue(null);
     await expect(assertRecruitmentStageAccess(tx as never, { ...input, stage })).rejects.toThrow('retain an active');
+  });
+  it.each([6, 7, 8])('requires an active scoped user before named HR approval at stage %s', async stage => {
+    const tx = fixture(false, 'actor');
+    const inactive = new Error('No active scoped user');
+    tx.hrUser.findFirstOrThrow.mockRejectedValue(inactive);
+    await expect(assertRecruitmentStageAccess(tx as never, { ...input, stage })).rejects.toBe(inactive);
+    expect(tx.hrUser.findFirstOrThrow).toHaveBeenCalledWith({ where: { id: 'actor', organizationId: 'org', status: 'ACTIVE' } });
+    expect(tx.hrUserRole.findFirst).not.toHaveBeenCalled();
   });
   it.each([6, 7, 8])('rechecks the current named HR after reassignment at stage %s', async stage => {
     const tx = fixture(true, 'actor');

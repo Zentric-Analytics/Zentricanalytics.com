@@ -1,4 +1,26 @@
 import type { Prisma } from '@prisma/client';
+import { StageAuthorityError } from './stage-authority-error';
+
+/** Keep account status and existing qualifying role grants stable through commit. */
+export async function lockNamedHrEligibility(tx: Prisma.TransactionClient, organizationId: string, vacancyId: string, actorUserId: string) {
+  try {
+    await lockHrAuthority(tx, organizationId, vacancyId);
+    await tx.$queryRaw`SELECT id FROM "HrUser" WHERE id = ${actorUserId}
+      AND "organizationId" = ${organizationId} FOR SHARE`;
+    await tx.$queryRaw`SELECT ur.id FROM "HrUserRole" ur
+      JOIN "HrRole" r ON r.id = ur."roleId"
+      JOIN "HrUser" u ON u.id = ur."userId"
+      WHERE ur."userId" = ${actorUserId} AND u."organizationId" = ${organizationId}
+      AND r."organizationId" = ${organizationId} AND r.key IN ('ADMIN', 'HR_ADMIN')
+      ORDER BY ur.id FOR SHARE OF ur`;
+  } catch (error) {
+    const conflict = error as { code?: string; meta?: { code?: string } } | null;
+    if (conflict?.code === 'P2034' || (conflict?.code === 'P2010' && ['40001', '40P01', '55P03'].includes(conflict.meta?.code ?? ''))) {
+      throw new StageAuthorityError('HR eligibility changed while this decision was running. Reload and try again.');
+    }
+    throw error;
+  }
+}
 
 /** Hold until transaction end. Read authority only after acquiring this lock.
  * Decisions share the vacancy row; reassignment locks it exclusively before

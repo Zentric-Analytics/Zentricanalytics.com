@@ -3,7 +3,7 @@ import { assertVacancyCreatorOrDelegate } from './delegation';
 import { prisma } from '@/lib/prisma';
 import { requireAuthenticatedUser } from '@/lib/hr/permissions/authorize';
 import { StageAuthorityError } from './stage-authority-error';
-import { lockHrAuthority } from './hr-authority-lock';
+import { lockNamedHrEligibility } from './hr-authority-lock';
 import { lockHiringTeamAuthority } from './team-authority-lock';
 export async function recruitmentOversight() {
   const auth = await requireAuthenticatedUser();
@@ -60,8 +60,8 @@ export async function assertRecruitmentStageAccess(tx: Prisma.TransactionClient,
   const application = await tx.jobApplication.findFirstOrThrow({ where: { id: input.applicationId, organizationId: input.organizationId, deletedAt: null } });
   if (!application.vacancyId) throw new Error('Application requires a reviewed vacancy link before migration.');
   if (input.stage <= 3 || input.stage === 5) await lockHiringTeamAuthority(tx, input.organizationId, application.vacancyId, input.actorUserId);
+  if (input.stage >= 6) await lockNamedHrEligibility(tx, input.organizationId, application.vacancyId, input.actorUserId);
   await tx.hrUser.findFirstOrThrow({ where: { id: input.actorUserId, organizationId: input.organizationId, status: 'ACTIVE' } });
-  if (input.stage >= 6) await lockHrAuthority(tx, input.organizationId, application.vacancyId);
   const vacancy = await tx.hrVacancy.findFirstOrThrow({ where: { id: application.vacancyId, organizationId: input.organizationId } });
   if (input.stage >= 6) {
     if (vacancy.responsibleHrUserId !== input.actorUserId) throw new StageAuthorityError('Only the assigned HR person may review this stage.');
