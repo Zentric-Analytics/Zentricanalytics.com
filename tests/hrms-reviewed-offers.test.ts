@@ -67,6 +67,38 @@ describe("reviewed offer approval and agreement handover", () => {
     expect(enqueueHrEmail).toHaveBeenCalledTimes(1);
     expect(enqueueHrEmail).toHaveBeenCalledWith(tx, expect.objectContaining({ recipient: "candidate@example.test" }));
   });
+  it("does not append a second acceptance audit when an accepted offer is retried", async () => {
+    const { tx, mocks } = fixture();
+    const offer = await mocks.hrRecruitmentOffer.findFirstOrThrow();
+    offer.status = "ISSUED";
+    mocks.hrRecruitmentOffer.updateMany.mockImplementation(async () => { offer.status = "ACCEPTED"; return { count: 1 }; });
+    const input = { organizationId: "org", offerId: "offer", applicantId: "candidate", offerVersionId: "v1", method: "PORTAL" };
+    await acceptOffer(tx, input);
+    await acceptOffer(tx, input);
+    expect(mocks.hrAuditEvent.create).toHaveBeenCalledTimes(1);
+  });
+  it("does not repeat history when another request already claimed acceptance", async () => {
+    const { tx, mocks } = fixture();
+    const offer = await mocks.hrRecruitmentOffer.findFirstOrThrow();
+    offer.status = "ISSUED";
+    mocks.hrRecruitmentOffer.updateMany.mockResolvedValueOnce({ count: 0 });
+    await acceptOffer(tx, { organizationId: "org", offerId: "offer", applicantId: "candidate", offerVersionId: "v1", method: "PORTAL" });
+    expect(mocks.hrRecruitmentOffer.findFirstOrThrow).toHaveBeenLastCalledWith({ where: {
+      id: "offer", organizationId: "org", status: "ACCEPTED", activeVersionId: "v1", acceptedVersionId: "v1",
+    } });
+    expect(mocks.jobApplication.update).not.toHaveBeenCalled();
+    expect(mocks.hrAuditEvent.create).not.toHaveBeenCalled();
+  });
+  it("rejects a conflicting change rather than treating it as a successful acceptance retry", async () => {
+    const { tx, mocks } = fixture();
+    const offer = await mocks.hrRecruitmentOffer.findFirstOrThrow();
+    offer.status = "ISSUED";
+    mocks.hrRecruitmentOffer.findFirstOrThrow.mockResolvedValueOnce(offer).mockRejectedValueOnce(new Error("No matching accepted version"));
+    mocks.hrRecruitmentOffer.updateMany.mockResolvedValueOnce({ count: 0 });
+    await expect(acceptOffer(tx, { organizationId: "org", offerId: "offer", applicantId: "candidate", offerVersionId: "v1", method: "PORTAL" })).rejects.toThrow("No matching accepted version");
+    expect(mocks.hrAuditEvent.create).not.toHaveBeenCalled();
+    expect(enqueueHrEmail).not.toHaveBeenCalled();
+  });
   it("rejects acceptance for an already accepted different version", async () => {
     const { tx, mocks } = fixture();
     mocks.hrRecruitmentOfferAcceptance.upsert.mockResolvedValueOnce({ id: "accepted", applicantId: "candidate", offerVersionId: "other" });

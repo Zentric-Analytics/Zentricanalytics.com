@@ -248,18 +248,29 @@ export async function acceptOffer(
     });
   }
   if (offer.status !== "ACCEPTED") {
-    await tx.hrRecruitmentOffer.update({ where: { id: offer.id }, data: { status: "ACCEPTED", acceptedVersionId: input.offerVersionId, version: { increment: 1 } } });
-    await tx.jobApplication.update({ where: { id: application.id }, data: { recruitmentStatus: "OFFER_ACCEPTED", version: { increment: 1 } } });
+    // Only the transaction that claims this issued version records acceptance history.
+    const changed = await tx.hrRecruitmentOffer.updateMany({
+      where: { id: offer.id, organizationId: input.organizationId, status: "ISSUED", activeVersionId: input.offerVersionId, version: offer.version },
+      data: { status: "ACCEPTED", acceptedVersionId: input.offerVersionId, version: { increment: 1 } },
+    });
+    if (changed.count !== 1) {
+      await tx.hrRecruitmentOffer.findFirstOrThrow({ where: {
+        id: offer.id, organizationId: input.organizationId, status: "ACCEPTED",
+        activeVersionId: input.offerVersionId, acceptedVersionId: input.offerVersionId,
+      } });
+    } else {
+      await tx.jobApplication.update({ where: { id: application.id }, data: { recruitmentStatus: "OFFER_ACCEPTED", version: { increment: 1 } } });
+      await appendHrAudit(tx, {
+        organizationId: input.organizationId,
+        entityType: "HrRecruitmentOffer",
+        entityId: offer.id,
+        action: "hr.recruitment.offer.accepted",
+        previousValues: { status: "ISSUED" },
+        newValues: { status: "ACCEPTED" },
+        reason: "Applicant accepted the active offer version",
+      });
+    }
   }
-  await appendHrAudit(tx, {
-    organizationId: input.organizationId,
-    entityType: "HrRecruitmentOffer",
-    entityId: offer.id,
-    action: "hr.recruitment.offer.accepted",
-    previousValues: { status: "ISSUED" },
-    newValues: { status: "ACCEPTED" },
-    reason: "Applicant accepted the active offer version",
-  });
   await enqueueHrEmail(tx, {
     organizationId: input.organizationId,
     recipient: application.applicant.email,
