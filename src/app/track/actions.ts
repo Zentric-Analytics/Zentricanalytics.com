@@ -637,19 +637,21 @@ export async function submitOfferDecision(formData: FormData) {
     where: { applicationId: application.id },
     include: { activeVersion: true },
   });
-  if (governedOffer?.status === "ISSUED" && governedOffer.activeVersion && application.organizationId) {
+  if (governedOffer && ["ISSUED", "ACCEPTED"].includes(governedOffer.status) && governedOffer.activeVersion && application.organizationId) {
     if (parsed.data.decision === "accept") {
       const { acceptOffer: acceptGovernedOffer } = await import("@/lib/hr/recruitment/offers");
-      await prisma.$transaction((tx) => acceptGovernedOffer(tx, {
+      const { withOfferAcceptanceRetry } = await import("@/lib/hr/recruitment/acceptance-retry");
+      await withOfferAcceptanceRetry(() => prisma.$transaction((tx) => acceptGovernedOffer(tx, {
         organizationId: application.organizationId!,
         offerId: governedOffer.id,
         applicantId: application.applicantId,
         offerVersionId: governedOffer.activeVersionId!,
         method: "SECURE_CANDIDATE_PORTAL",
         evidence: { sessionVerified: true, confirmation: true },
-      }), { isolationLevel: "Serializable" });
+      }), { isolationLevel: "Serializable" }));
       redirect(portalUrl(session, { stage: "4", success: "offer_accepted" }));
     }
+    if (governedOffer.status === "ACCEPTED") redirect(portalUrl(session, { stage: "4", error: "offer_not_open" }));
     await prisma.$transaction(async (tx) => {
       await tx.hrRecruitmentOfferDecline.upsert({
         where: { offerId: governedOffer.id },
