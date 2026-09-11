@@ -4,6 +4,7 @@ vi.mock('@/lib/hr/permissions/authorize', () => ({ requireAuthenticatedUser: vi.
 vi.mock('@/lib/hr/recruitment/delegation', () => ({ assertVacancyCreatorOrDelegate: vi.fn() }));
 import { assertRecruitmentStageAccess } from '@/lib/hr/recruitment/stage-access';
 import { assertVacancyCreatorOrDelegate } from '@/lib/hr/recruitment/delegation';
+import { StageAuthorityError } from '@/lib/hr/recruitment/stage-authority-error';
 
 function fixture(member = false, hr = 'hr') {
   return {
@@ -17,6 +18,18 @@ function fixture(member = false, hr = 'hr') {
 }
 const input = { applicationId: 'app', organizationId: 'org', actorUserId: 'actor', stage: 1 };
 describe('preserved recruitment stage authority', () => {
+  it.each([1, 2, 3, 5])('holds membership eligibility locks before checking stage %s authority', async stage => {
+    const tx = fixture(true);
+    await assertRecruitmentStageAccess(tx as never, { ...input, stage });
+    expect(tx.$queryRaw).toHaveBeenCalled();
+    expect(tx.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(tx.hrHiringTeamMember.findFirst.mock.invocationCallOrder[0]);
+  });
+  it.each([1, 2, 3])('uses the safe authority explanation after membership removal at stage %s', async stage => {
+    const tx = fixture(true);
+    await assertRecruitmentStageAccess(tx as never, { ...input, stage });
+    tx.hrHiringTeamMember.findFirst.mockResolvedValue(null);
+    await expect(assertRecruitmentStageAccess(tx as never, { ...input, stage })).rejects.toBeInstanceOf(StageAuthorityError);
+  });
   it('requires a scoped nondeleted application', async () => {
     const tx = fixture(true);
     await assertRecruitmentStageAccess(tx as never, input);

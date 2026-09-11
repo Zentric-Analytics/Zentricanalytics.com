@@ -8,7 +8,7 @@ vi.mock('@/lib/hr/permissions/authorize', () => ({ requireAuthenticatedUser: moc
 vi.mock('@/lib/hr/recruitment/stage-access', () => ({ assertRecruitmentStageAccess: mocks.guard }));
 vi.mock('@/lib/prisma', () => ({ prisma: { $transaction: mocks.tx, jobApplication: { findUnique: mocks.read } } }));
 vi.mock('@/lib/email', () => ({ sendAndRecordEmail: mocks.send }));
-import { adminStage6Action, adminStage7Action, adminStage8Action } from '@/app/admin/applications/actions';
+import { adminStage1Action, adminStage2Action, adminStage3Action, adminStage6Action, adminStage7Action, adminStage8Action } from '@/app/admin/applications/actions';
 
 describe('named HR authority denial feedback', () => {
   beforeEach(() => {
@@ -16,7 +16,7 @@ describe('named HR authority denial feedback', () => {
     mocks.auth.mockResolvedValue({ user: { id: 'hr', email: 'hr@example.test', organizationId: 'org' } });
     mocks.tx.mockImplementation(async (run) => run({ $queryRaw: vi.fn().mockResolvedValue([{ id: 'app' }]), hiringStage: { update: mocks.write }, stageApproval: { create: mocks.write } }));
   });
-  it.each([adminStage6Action, adminStage7Action, adminStage8Action])('redirects an old-page denial before loading or writing review data', async action => {
+  it.each([adminStage1Action, adminStage2Action, adminStage3Action, adminStage6Action, adminStage7Action, adminStage8Action])('redirects an old-page denial before loading or writing review data', async action => {
     mocks.guard.mockRejectedValue(new StageAuthorityError('Only the assigned HR person may review this stage.'));
     const form = new FormData(); form.set('applicationDbId', 'app');
     await expect(action(form)).rejects.toThrow('NEXT_REDIRECT');

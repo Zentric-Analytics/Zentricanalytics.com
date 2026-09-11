@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAuthenticatedUser } from '@/lib/hr/permissions/authorize';
 import { StageAuthorityError } from './stage-authority-error';
 import { lockHrAuthority } from './hr-authority-lock';
+import { lockHiringTeamAuthority } from './team-authority-lock';
 export async function recruitmentOversight() {
   const auth = await requireAuthenticatedUser();
   if (!auth.roles.some((role) => role === 'ADMIN' || role === 'HR_ADMIN')) throw new Error('Recruitment oversight requires an admin role.');
@@ -29,7 +30,7 @@ export async function requireRecruitmentRead(applicationId: string) {
     hiringTeamId: vacancy.hiringTeamId, userId: auth.user.id, status: 'ACTIVE', effectiveFrom: { lte: now },
     OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }], hiringTeam: { status: 'ACTIVE', organizationId: auth.user.organizationId },
   } });
-  if (!member) throw new Error('Application is outside your assigned recruitment scope.');
+  if (!member) throw new StageAuthorityError('Application is outside your assigned recruitment scope.');
   return auth.user;
 }
 export async function canReadRecruitmentSensitive(applicationId: string) {
@@ -58,6 +59,7 @@ export async function assertRecruitmentStageAccess(tx: Prisma.TransactionClient,
   if (!Number.isInteger(input.stage) || input.stage < 1 || input.stage > 8) throw new Error('Invalid recruitment stage.');
   const application = await tx.jobApplication.findFirstOrThrow({ where: { id: input.applicationId, organizationId: input.organizationId, deletedAt: null } });
   if (!application.vacancyId) throw new Error('Application requires a reviewed vacancy link before migration.');
+  if (input.stage <= 3 || input.stage === 5) await lockHiringTeamAuthority(tx, input.organizationId, application.vacancyId, input.actorUserId);
   await tx.hrUser.findFirstOrThrow({ where: { id: input.actorUserId, organizationId: input.organizationId, status: 'ACTIVE' } });
   if (input.stage >= 6) await lockHrAuthority(tx, input.organizationId, application.vacancyId);
   const vacancy = await tx.hrVacancy.findFirstOrThrow({ where: { id: application.vacancyId, organizationId: input.organizationId } });
@@ -75,7 +77,7 @@ export async function assertRecruitmentStageAccess(tx: Prisma.TransactionClient,
       hiringTeam: { organizationId: input.organizationId, status: 'ACTIVE' },
     } });
     if (!member) {
-      if (input.stage !== 5) throw new Error('Only an active assigned hiring-team member may review this stage.');
+      if (input.stage !== 5) throw new StageAuthorityError('Only an active assigned hiring-team member may review this stage.');
       await assertVacancyCreatorOrDelegate(tx, { ...input, vacancyId: vacancy.id });
     }
   }

@@ -9,6 +9,34 @@ import { recruitmentOversight, requireRecruitmentRead, canReadRecruitmentSensiti
 const auth = (primary = false, roles = ['ADMIN'], permissions: string[] = []) => ({ user: { id: 'user', organizationId: 'org', isPrimaryAdmin: primary }, roles, permissions: new Set(permissions) });
 beforeEach(() => { vi.resetAllMocks(); requireAuthenticatedUser.mockResolvedValue(auth()); });
 describe('recruitment read isolation', () => {
+  it('scopes ordinary member reads to the vacancy team and active membership dates', async () => {
+    requireAuthenticatedUser.mockResolvedValue(auth(false, ['EMPLOYEE']));
+    prisma.jobApplication.findFirstOrThrow.mockResolvedValue({ vacancyId: 'assigned-vacancy' });
+    prisma.hrVacancy.findFirstOrThrow.mockResolvedValue({ hiringTeamId: 'assigned-team' });
+    prisma.hrHiringTeamMember.findFirst.mockResolvedValue({ id: 'membership' });
+    await expect(requireRecruitmentRead('app')).resolves.toMatchObject({ id: 'user' });
+    expect(prisma.hrHiringTeamMember.findFirst).toHaveBeenCalledWith({ where: {
+      hiringTeamId: 'assigned-team', userId: 'user', status: 'ACTIVE', effectiveFrom: { lte: expect.any(Date) },
+      OR: [{ effectiveTo: null }, { effectiveTo: { gt: expect.any(Date) } }], hiringTeam: { status: 'ACTIVE', organizationId: 'org' },
+    } });
+    prisma.hrHiringTeamMember.findFirst.mockResolvedValue(null);
+    await expect(requireRecruitmentRead('app')).rejects.toThrow('outside your assigned recruitment scope');
+  });
+  it('does not reuse membership for a different vacancy team', async () => {
+    requireAuthenticatedUser.mockResolvedValue(auth(false, ['EMPLOYEE']));
+    prisma.jobApplication.findFirstOrThrow.mockResolvedValue({ vacancyId: 'other-vacancy' });
+    prisma.hrVacancy.findFirstOrThrow.mockResolvedValue({ hiringTeamId: 'other-team' });
+    prisma.hrHiringTeamMember.findFirst.mockResolvedValue(null);
+    await expect(requireRecruitmentRead('other-app')).rejects.toThrow('outside your assigned recruitment scope');
+    expect(prisma.hrHiringTeamMember.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ hiringTeamId: 'other-team' }) }));
+  });
+  it('retains independently authorized creator access without membership', async () => {
+    requireAuthenticatedUser.mockResolvedValue(auth(false, ['EMPLOYEE']));
+    prisma.jobApplication.findFirstOrThrow.mockResolvedValue({ vacancyId: 'own-vacancy' });
+    prisma.hrVacancy.findFirstOrThrow.mockResolvedValue({ createdById: 'user', hiringTeamId: 'team' });
+    await expect(requireRecruitmentRead('app')).resolves.toMatchObject({ id: 'user' });
+    expect(prisma.hrHiringTeamMember.findFirst).not.toHaveBeenCalled();
+  });
   it('limits secondary admin to own organization', async () => {
     expect((await recruitmentOversight()).where).toEqual({ organizationId: 'org' });
   });
