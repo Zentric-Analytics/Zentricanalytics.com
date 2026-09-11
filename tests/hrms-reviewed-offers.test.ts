@@ -10,6 +10,7 @@ function fixture() {
   const offer = { id: "offer", applicationId: "application", activeVersionId: "v1", acceptedVersionId: "v1", version: 1, createdById: "creator", status: "DRAFT", activeVersion: { expiresAt: new Date("2099-01-01") } };
   const application = { id: "application", applicantId: "candidate", vacancyId: "vacancy", applicationId: "public", applicant: { email: "candidate@example.test", fullName: "Test" } };
   const mocks = {
+    $queryRaw: vi.fn().mockResolvedValue([{ id: "offer" }]),
     hrRecruitmentOffer: { findFirstOrThrow: vi.fn().mockResolvedValue(offer), updateMany: vi.fn().mockResolvedValue({ count: 1 }), update: vi.fn() },
     jobApplication: { findFirstOrThrow: vi.fn().mockResolvedValue(application), update: vi.fn(), updateMany: vi.fn() },
     hrRecruitmentOfferApproval: { upsert: vi.fn(), create: vi.fn() },
@@ -76,6 +77,15 @@ describe("reviewed offer approval and agreement handover", () => {
     await acceptOffer(tx, input);
     await acceptOffer(tx, input);
     expect(mocks.hrAuditEvent.create).toHaveBeenCalledTimes(1);
+    expect(mocks.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(mocks.hrRecruitmentOfferAcceptance.upsert.mock.invocationCallOrder[0]);
+  });
+  it("requires the organization-scoped offer lock before acceptance writes", async () => {
+    const { tx, mocks } = fixture();
+    mocks.$queryRaw.mockResolvedValueOnce([]);
+    await expect(acceptOffer(tx, { organizationId: "org", offerId: "offer", applicantId: "candidate", offerVersionId: "v1", method: "PORTAL" })).rejects.toThrow("Offer not found");
+    expect(mocks.hrRecruitmentOfferAcceptance.upsert).not.toHaveBeenCalled();
+    expect(mocks.$queryRaw.mock.calls[0].slice(1)).toEqual(["offer", "org"]);
+    expect(mocks.$queryRaw.mock.calls[0][0].join("?")).toContain("FOR UPDATE");
   });
   it("does not repeat history when another request already claimed acceptance", async () => {
     const { tx, mocks } = fixture();

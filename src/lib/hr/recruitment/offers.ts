@@ -200,6 +200,15 @@ export async function acceptOffer(
   input: { organizationId: string; offerId: string; applicantId: string; offerVersionId: string; method: string; evidence?: Prisma.InputJsonValue },
   now = new Date(),
 ) {
+  // Serialize acceptance before the unique acceptance upsert and legacy-stage bridge.
+  // Prisma may implement an upsert as read/create, so the unique key alone is not
+  // sufficient to make simultaneous first submissions return the same result.
+  const locked = await tx.$queryRaw<Array<{ id: string }>>`
+    SELECT id FROM "HrRecruitmentOffer"
+    WHERE id = ${input.offerId} AND "organizationId" = ${input.organizationId}
+    FOR UPDATE
+  `;
+  if (locked.length !== 1) throw new Error("Offer not found.");
   const offer = await tx.hrRecruitmentOffer.findFirstOrThrow({
     where: { id: input.offerId, organizationId: input.organizationId, status: { in: ["ISSUED", "ACCEPTED"] }, activeVersionId: input.offerVersionId },
     include: { activeVersion: true },
