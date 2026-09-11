@@ -39,10 +39,16 @@ async function recheckStageActor(tx: Parameters<typeof assertRecruitmentStageAcc
     throw error;
   }
 }
-async function repeatedStageDecision(tx: Parameters<typeof assertRecruitmentStageAccess>[0], applicationId: string, stageOrder: number, approving: boolean) {
+async function repeatedStageDecision(tx: Parameters<typeof assertRecruitmentStageAccess>[0], applicationId: string, stageOrder: number, approving: boolean, negativeDecision?: 'correction' | 'reject') {
   const app = await tx.jobApplication.findUniqueOrThrow({ where: { id: applicationId } });
   const stage = await tx.hiringStage.findFirstOrThrow({ where: { applicationId, stageOrder } });
-  return stageDecisionIsRepeat(app, stage, approving);
+  const repeatedApproval = stageDecisionIsRepeat(app, stage, approving);
+  // Called under the application decision lock. Preserve the first negative
+  // decision until a candidate resubmission puts this stage Under Review again.
+  if (negativeDecision && stage.status === (negativeDecision === 'correction' ? 'Correction Requested' : 'Rejected')) {
+    redirect(redirectPath(applicationId, '?success=decision_already_recorded'));
+  }
+  return repeatedApproval;
 }
 async function lockStageDecision(tx: Parameters<typeof assertRecruitmentStageAccess>[0], applicationId: string, organizationId: string) {
   // Serialize decisions for this application before re-reading authority and
@@ -415,7 +421,7 @@ export async function adminStage5Action(formData: FormData) {
     await prisma.$transaction(async (tx) => {
       await lockStageDecision(tx, applicationId, adminSession.organizationId);
       await recheckStageActor(tx, applicationId, adminSession);
-      if (await repeatedStageDecision(tx, applicationId, 5, action === 'approve')) redirect(redirectPath(applicationId, '?success=already_approved'));
+      if (await repeatedStageDecision(tx, applicationId, 5, action === 'approve', action === 'correction' ? 'correction' : action === 'reject' ? 'reject' : undefined)) redirect(redirectPath(applicationId, '?success=already_approved'));
       if (action === 'approve') {
         await tx.hiringStage.update({ where: { id: stage5.id }, data: { status: 'Approved', approvedAt: new Date() } });
         await tx.stageApproval.create({ data: { stageId: stage5.id, action: 'Approved', adminEmail: adminSession.email, notes } });
@@ -476,7 +482,7 @@ export async function adminStage6Action(formData: FormData) {
     await prisma.$transaction(async (tx) => {
       await lockStageDecision(tx, applicationId, adminSession.organizationId);
       await recheckStageActor(tx, applicationId, adminSession);
-      if (await repeatedStageDecision(tx, applicationId, 6, action === 'approve')) redirect(redirectPath(applicationId, '?success=already_approved'));
+      if (await repeatedStageDecision(tx, applicationId, 6, action === 'approve', action === 'approve' ? undefined : action)) redirect(redirectPath(applicationId, '?success=already_approved'));
       if (action === 'approve') {
         await tx.hiringStage.update({ where: { id: stage6.id }, data: { status: 'Approved', approvedAt: new Date() } });
         await tx.stageApproval.create({ data: { stageId: stage6.id, action: 'Approved', adminEmail: adminSession.email, notes } });
@@ -526,7 +532,7 @@ export async function adminStage7Action(formData: FormData) {
     await prisma.$transaction(async (tx) => {
       await lockStageDecision(tx, applicationId, adminSession.organizationId);
       await recheckStageActor(tx, applicationId, adminSession);
-      if (await repeatedStageDecision(tx, applicationId, 7, action === 'approve')) redirect(redirectPath(applicationId, '?success=already_approved'));
+      if (await repeatedStageDecision(tx, applicationId, 7, action === 'approve', action === 'approve' ? undefined : action)) redirect(redirectPath(applicationId, '?success=already_approved'));
       if (action === 'approve') {
         await tx.hiringStage.update({ where: { id: stage7.id }, data: { status: 'Approved', approvedAt: new Date() } });
         await tx.stageApproval.create({ data: { stageId: stage7.id, action: 'Approved', adminEmail: adminSession.email, notes } });

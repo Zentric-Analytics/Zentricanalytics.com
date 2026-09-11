@@ -296,6 +296,8 @@ function actionBanner(params: Record<string, string | undefined>) {
   const messages: string[] = [];
   if (params.success === "approved")
     messages.push("Stage 1 was approved and Stage 2 is now available.");
+  if (params.success === "decision_already_recorded")
+    messages.push("This decision is already recorded. No additional notification was sent.");
   if (params.success === "already_approved")
     messages.push("Stage 1 is already approved.");
   if (params.success === "rejected") messages.push("Application was rejected.");

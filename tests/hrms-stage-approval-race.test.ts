@@ -14,8 +14,12 @@ import { adminStage5Action, adminStage6Action, adminStage7Action } from '@/app/a
 // Without locking, both repeat reads finish before either approval write.
 // With locking, the waiting caller sees the first caller's approved state.
 describe('simultaneous stage approval preserves first successful decision', () => {
-  it.each([[5, adminStage5Action], [6, adminStage6Action], [7, adminStage7Action]] as const)(
-    'Stage %i records one approval and sends one unlock email', async (order, action) => {
+  it.each([
+    [5, adminStage5Action, 'approve'], [6, adminStage6Action, 'approve'], [7, adminStage7Action, 'approve'],
+    [5, adminStage5Action, 'correction'], [6, adminStage6Action, 'correction'], [7, adminStage7Action, 'correction'],
+    [5, adminStage5Action, 'reject'], [6, adminStage6Action, 'reject'], [7, adminStage7Action, 'reject'],
+  ] as const)(
+    'Stage %i action %s decision %s records and notifies once', async (order, action, decision) => {
       mocks.send.mockReset().mockResolvedValue({ status: 'sent' });
       let reads = 0;
       let release!: () => void;
@@ -51,7 +55,7 @@ describe('simultaneous stage approval preserves first successful decision', () =
         },
         jobApplication: { findUnique: async () => app },
       });
-      const form = () => { const f = new FormData(); f.set('applicationDbId', 'app'); f.set('action', 'approve'); f.set('notes', 'Synthetic race reproduction'); return f; };
+      const form = () => { const f = new FormData(); f.set('applicationDbId', 'app'); f.set('action', decision); f.set('notes', 'Synthetic race reproduction'); return f; };
       const results = await Promise.allSettled([action(form()), action(form())]);
       expect(results.every(r => r.status === 'rejected' && r.reason.message === 'NEXT_REDIRECT')).toBe(true);
       expect(reads).toBe(2);
