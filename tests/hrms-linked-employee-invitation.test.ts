@@ -58,6 +58,14 @@ describe("linked employee invitations", () => {
     await createLinkedEmployeeInvitation(input);
     expect(m.create).not.toHaveBeenCalled();
   });
+  it("does not record a second account-link event when retrying an already linked invitation", async () => {
+    m.employee.mockResolvedValue({ ...employee, userId: "same-user" });
+    m.existing.mockResolvedValue({ id: "same-user", employee: { id: "employee" }, status: "INVITED", passwordHash: null });
+    await createLinkedEmployeeInvitation(input);
+    await createLinkedEmployeeInvitation(input);
+    expect(m.audit).not.toHaveBeenCalled();
+    expect(m.update).not.toHaveBeenCalled();
+  });
   it("does not reset an active account", async () => {
     m.existing.mockResolvedValue({ id: "same-user", employee: { id: "employee" }, status: "ACTIVE", passwordHash: "hash" });
     await expect(createLinkedEmployeeInvitation(input)).rejects.toThrow("already set up");

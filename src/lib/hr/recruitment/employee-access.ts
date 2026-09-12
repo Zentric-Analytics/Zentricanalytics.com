@@ -41,8 +41,10 @@ export async function createLinkedEmployeeInvitation(input: {
     const user = existing ?? await tx.hrUser.create({ data: { organizationId: input.organizationId, email, status: "INVITED" } });
     const role = await tx.hrRole.findUniqueOrThrow({ where: { organizationId_key: { organizationId: input.organizationId, key: "EMPLOYEE" } } });
     await tx.hrUserRole.upsert({ where: { userId_roleId: { userId: user.id, roleId: role.id } }, update: { revokedAt: null, assignedById: actor.id }, create: { userId: user.id, roleId: role.id, assignedById: actor.id } });
-    await tx.hrEmployee.update({ where: { id: employee.id }, data: { userId: user.id } });
-    await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: actor.id, entityType: "HrEmployee", entityId: employee.id, action: "hr.employee.account_linked", newValues: { applicationId: application.id, userId: user.id } });
+    if (employee.userId !== user.id) {
+      await tx.hrEmployee.update({ where: { id: employee.id }, data: { userId: user.id } });
+      await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: actor.id, entityType: "HrEmployee", entityId: employee.id, action: "hr.employee.account_linked", newValues: { applicationId: application.id, userId: user.id } });
+    }
     return { userId: user.id, email };
   }, { isolationLevel: "Serializable" });
   // Retry after a delivery failure reuses the same stable employee/account link.
