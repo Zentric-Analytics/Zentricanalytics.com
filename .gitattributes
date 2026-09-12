@@ -1,1 +1,11 @@
 *.pdf binary
+
+# Preserve exact LF bytes bound by immutable payroll evidence manifests.
+docs/hrms/delivery-units/unit-09/nigeria-certification-manifest.json text eol=lf
+docs/hrms/delivery-units/unit-09/nigeria-certification-handoff.md text eol=lf
+docs/hrms/delivery-units/unit-09/nigeria-certification-signoff-template.md text eol=lf
+docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-stage1-package.md text eol=lf
+docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-stage1-manifest.json text eol=lf
+scripts/hr-unit9-ng-2026-6-concurrency.ts text eol=lf
+tests/hrms-unit9-ng-2026-6-preservation.test.ts text eol=lf
+tests/hrms-unit9-ng-2026-6-package.test.ts text eol=lf
