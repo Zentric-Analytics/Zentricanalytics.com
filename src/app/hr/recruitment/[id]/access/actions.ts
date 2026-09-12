@@ -11,6 +11,7 @@ import { createLinkedEmployeeInvitation } from "@/lib/hr/recruitment/employee-ac
 import { reconcileRecruitmentEmployment } from "@/lib/hr/recruitment/employment-handover";
 import { completeReviewedRecruitment } from "@/lib/hr/recruitment/reviewed-completion";
 import { reconcileApprovedStageEvidence } from "@/lib/hr/recruitment/stage-evidence";
+import { lockNamedHrEligibility } from "@/lib/hr/recruitment/hr-authority-lock";
 
 export async function reconcileReviewedFlowAction(_previous: { message: string }, formData: FormData) {
   const auth = await requireAuthenticatedUser();
@@ -73,6 +74,14 @@ export async function sendMailboxWelcomeAction(formData: FormData) {
   if (app.hrEmployee.userId) throw new Error("This employee already has an HRMS account. Use the governed account-management flow.");
   const message = renderMailboxWelcome(input);
   await prisma.$transaction(async tx => {
+    await lockNamedHrEligibility(tx, auth.user.organizationId, app.vacancyId!, auth.user.id);
+    const actor = await tx.hrUser.findFirst({ where: {
+      id: auth.user.id, organizationId: auth.user.organizationId, status: "ACTIVE",
+    }, include: { roles: { where: { revokedAt: null }, include: { role: true } } } });
+    const currentRoles = actor?.roles.map(grant => grant.role.key) ?? [];
+    if (!actor || !currentRoles.some(role => role === "ADMIN" || role === "HR_ADMIN")) {
+      throw new Error("An active HR or admin role is required. Reload before sending.");
+    }
     const completed = await tx.jobApplication.findFirstOrThrow({ where: {
       id: app.id, organizationId: auth.user.organizationId, deletedAt: null, status: "Hired",
       stages: { some: { stageOrder: 8, status: "Approved" } },
@@ -81,7 +90,7 @@ export async function sendMailboxWelcomeAction(formData: FormData) {
     const currentVerification = await tx.applicationAccessCode.findFirst({ where: { applicationId: app.id, usedAt: { not: null } } });
     if (!currentVerification) throw new Error("The applicant's personal email verification is no longer available.");
     const current = await tx.hrVacancy.findFirstOrThrow({ where: { id: app.vacancyId!, organizationId: auth.user.organizationId } });
-    if (current.responsibleHrUserId !== auth.user.id && !(auth.user.isPrimaryAdmin && auth.roles.includes("ADMIN"))) throw new Error("The assigned HR person changed. Reload before sending.");
+    if (current.responsibleHrUserId !== actor.id && !(actor.isPrimaryAdmin && currentRoles.includes("ADMIN"))) throw new Error("The assigned HR person changed. Reload before sending.");
     const employee = await tx.hrEmployee.findFirstOrThrow({ where: { id: app.hrEmployee!.id, organizationId: auth.user.organizationId } });
     if (employee.userId) throw new Error("This employee already has an HRMS account.");
     if (employee.recruitmentApplicationId !== app.id || !["DRAFT", "PRE_HIRE", "ONBOARDING", "ACTIVE"].includes(employee.employmentStatus)) throw new Error("Employee linkage or employment status no longer permits setup.");
