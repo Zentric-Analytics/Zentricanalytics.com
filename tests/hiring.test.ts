@@ -1123,7 +1123,11 @@ describe("Stage 1 download and admin safety source checks", () => {
     expect(actions).toContain(
       "revalidatePath(`/admin/applications/${applicationId}`)",
     );
-    expect(actions).not.toContain("console.error");
+    // The approved Stage Eight diagnostic may log only its safe classification.
+    const safeDiagnostic = "console.error('stage8ActionFailure', { phase: failurePhase, ...finalizationFailure(error) });";
+    expect(actions).toContain(safeDiagnostic);
+    expect(actions.replace(safeDiagnostic, "")).not.toContain("console.error");
+    expect(actions).toContain("import { finalizationFailure } from '@/lib/hr/recruitment/finalization-diagnostics'");
     expect(actions).not.toContain("stack");
   });
 });
