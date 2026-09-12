@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const m = vi.hoisted(() => ({ actor: vi.fn(), employee: vi.fn(), vacancy: vi.fn(), existing: vi.fn(), create: vi.fn(), update: vi.fn(), role: vi.fn(), assign: vi.fn(), audit: vi.fn(), invite: vi.fn() }));
+const m = vi.hoisted(() => ({ actor: vi.fn(), employee: vi.fn(), vacancy: vi.fn(), existing: vi.fn(), create: vi.fn(), update: vi.fn(), role: vi.fn(), assign: vi.fn(), audit: vi.fn(), invite: vi.fn(), lockNamed: vi.fn(), lockAccount: vi.fn() }));
+vi.mock("../src/lib/hr/recruitment/hr-authority-lock", () => ({ lockNamedHrEligibility: m.lockNamed, lockHrAccountEligibility: m.lockAccount }));
 vi.mock("@/lib/prisma", () => ({ prisma: { $transaction: async (fn: (tx: unknown) => unknown) => fn({ hrUser: { findFirstOrThrow: m.actor, findUnique: m.existing, create: m.create }, hrEmployee: { findFirstOrThrow: m.employee, update: m.update }, hrVacancy: { findFirst: m.vacancy }, hrRole: { findUniqueOrThrow: m.role }, hrUserRole: { upsert: m.assign } }) } }));
 vi.mock("@/lib/hr/audit", () => ({ appendHrAudit: m.audit }));
 vi.mock("@/lib/hr/auth/invitations", () => ({ createHrInvitation: m.invite }));
@@ -26,7 +27,26 @@ describe("linked employee invitations", () => {
   it("links the completed applicant and invites company email without activating employment", async () => {
     expect(await createLinkedEmployeeInvitation(input)).toEqual({ userId: "new-user", invitationId: "invite" });
     expect(m.update).toHaveBeenCalledWith({ where: { id: "employee" }, data: { userId: "new-user" } });
-    expect(m.invite).toHaveBeenCalledWith({ organizationId: "org", userId: "new-user", createdById: "hr", recipient: "company@zentricanalytics.com" });
+    expect(m.invite).toHaveBeenCalledWith({ organizationId: "org", userId: "new-user", createdById: "hr", recipient: "company@zentricanalytics.com" }, expect.any(Function));
+    expect(m.lockNamed).toHaveBeenCalledWith(expect.anything(), "org", "vacancy", "hr");
+    expect(m.lockNamed.mock.invocationCallOrder[0]).toBeLessThan(m.actor.mock.invocationCallOrder[0]);
+  });
+  it("locks primary-admin eligibility even without a vacancy", async () => {
+    m.employee.mockResolvedValue({ ...employee, recruitmentApplication: { ...application, vacancyId: null } });
+    m.actor.mockResolvedValue({ id: "hr", isPrimaryAdmin: true, roles: [{ role: { key: "ADMIN" } }] });
+    await createLinkedEmployeeInvitation(input);
+    expect(m.lockAccount).toHaveBeenCalledWith(expect.anything(), "org", "hr");
+    expect(m.lockAccount.mock.invocationCallOrder[0]).toBeLessThan(m.actor.mock.invocationCallOrder[0]);
+  });
+  it("rechecks lost HR authority in the separate invitation transaction", async () => {
+    m.invite.mockImplementationOnce(async (_input, authorize) => {
+      m.actor.mockResolvedValue({ id: "hr", isPrimaryAdmin: false, roles: [] });
+      m.employee.mockResolvedValue({ ...employee, userId: "new-user" });
+      await authorize({ hrEmployee: { findFirstOrThrow: m.employee }, hrUser: { findFirstOrThrow: m.actor }, hrVacancy: { findFirst: m.vacancy } });
+      throw new Error("Unexpected authorization");
+    });
+    await expect(createLinkedEmployeeInvitation(input)).rejects.toThrow("assigned HR");
+    expect(m.lockNamed).toHaveBeenCalledTimes(2);
   });
   it.each([null, { ...application, organizationId: "other" }, { ...application, status: "Review" }, { ...application, stages: [] }])("refuses incomplete or cross-org lineage", async (recruitmentApplication) => {
     m.employee.mockResolvedValue({ ...employee, recruitmentApplication });
@@ -36,6 +56,19 @@ describe("linked employee invitations", () => {
   it("refuses unassigned HR", async () => {
     m.vacancy.mockResolvedValue({ responsibleHrUserId: "other" });
     await expect(createLinkedEmployeeInvitation(input)).rejects.toThrow("assigned HR");
+  });
+  it.each([{ roles: [] }, { roles: [{ role: { key: "EMPLOYEE" } }] }])("blocks a named reviewer without a qualifying HR role", async ({ roles }) => {
+    m.actor.mockResolvedValue({ id: "hr", isPrimaryAdmin: false, roles });
+    await expect(createLinkedEmployeeInvitation(input)).rejects.toThrow("assigned HR");
+    expect(m.create).not.toHaveBeenCalled();
+    expect(m.assign).not.toHaveBeenCalled();
+    expect(m.invite).not.toHaveBeenCalled();
+  });
+  it("does not treat the primary flag alone as administrator authority", async () => {
+    m.actor.mockResolvedValue({ id: "hr", isPrimaryAdmin: true, roles: [{ role: { key: "EMPLOYEE" } }] });
+    m.vacancy.mockResolvedValue(null);
+    await expect(createLinkedEmployeeInvitation(input)).rejects.toThrow("assigned HR");
+    expect(m.invite).not.toHaveBeenCalled();
   });
   it("permits primary administrator", async () => {
     m.actor.mockResolvedValue({ id: "hr", isPrimaryAdmin: true, roles: [{ role: { key: "ADMIN" } }] });

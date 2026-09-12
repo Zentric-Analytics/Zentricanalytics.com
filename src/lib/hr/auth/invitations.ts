@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { enqueueHrEmail } from "@/lib/hr/notifications/outbox";
 import { processHrOutboxItem } from "@/lib/hr/notifications/worker";
@@ -14,8 +15,10 @@ export class HrInvitationAcceptanceError extends Error {
   }
 }
 
-export async function createHrInvitation(input: { organizationId: string; userId: string; createdById: string; recipient: string; replaceInvitationId?: string }) {
+export async function createHrInvitation(input: { organizationId: string; userId: string; createdById: string; recipient: string; replaceInvitationId?: string }, authorize?: (tx: Prisma.TransactionClient) => Promise<void>) {
   const invitation = await prisma.$transaction(async (tx) => {
+    // Context-specific authority must remain locked through invitation/outbox commit.
+    if (authorize) await authorize(tx);
     // Serialize sends for this account, including when no invitation exists yet.
     // Parameterized row locking avoids changing user data just to acquire a lock.
     await tx.$queryRaw`SELECT "id" FROM "HrUser" WHERE "id" = ${input.userId} AND "organizationId" = ${input.organizationId} FOR UPDATE`;

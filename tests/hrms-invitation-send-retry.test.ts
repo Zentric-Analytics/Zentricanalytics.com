@@ -42,6 +42,12 @@ describe('invitation send retry preservation', () => {
     expect(m.lock.mock.calls[0][0].join('?')).toContain('FOR UPDATE');
     expect(m.transaction).toHaveBeenCalledWith(expect.any(Function), { isolationLevel: 'ReadCommitted' });
   });
+  it('rejects lost contextual authority before invitation or outbox writes', async () => {
+    const authorize = vi.fn().mockRejectedValue(new Error('Authority revoked'));
+    await expect(createHrInvitation(input, authorize)).rejects.toThrow('Authority revoked');
+    expect(authorize).toHaveBeenCalledOnce();
+    for (const fn of [m.lock, m.create, m.enqueue, m.audit, m.process]) expect(fn).not.toHaveBeenCalled();
+  });
   it('an explicit resend replaces only the expected invitation once', async () => {
     const original = await createHrInvitation(input);
     const resend = { ...input, replaceInvitationId: original.invitation.id };

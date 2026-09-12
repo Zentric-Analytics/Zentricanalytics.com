@@ -1,18 +1,25 @@
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { createHrInvitation } from "@/lib/hr/auth/invitations";
+import { lockHrAccountEligibility, lockNamedHrEligibility } from "./hr-authority-lock";
 
 /** Called after HR has received mailbox confirmation. This function does not
  * claim to verify Microsoft login/MFA and does not activate employment.
  */
-export async function createLinkedEmployeeInvitation(input: {
+type LinkedInvitationInput = {
   organizationId: string; actorUserId: string; employeeId: string;
-}) {
-  const provisioned = await prisma.$transaction(async (tx) => {
-    const actor = await tx.hrUser.findFirstOrThrow({ where: { id: input.actorUserId, organizationId: input.organizationId, status: "ACTIVE" }, include: { roles: { where: { revokedAt: null }, include: { role: true } } } });
+};
+async function authorizeLinkedSetup(tx: Prisma.TransactionClient, input: LinkedInvitationInput) {
     const employee = await tx.hrEmployee.findFirstOrThrow({ where: { id: input.employeeId, organizationId: input.organizationId }, include: { recruitmentApplication: { include: { stages: true } } } });
     const application = employee.recruitmentApplication;
+    if (application?.vacancyId) {
+      await lockNamedHrEligibility(tx, input.organizationId, application.vacancyId, input.actorUserId);
+    } else {
+      await lockHrAccountEligibility(tx, input.organizationId, input.actorUserId);
+    }
+    const actor = await tx.hrUser.findFirstOrThrow({ where: { id: input.actorUserId, organizationId: input.organizationId, status: "ACTIVE" }, include: { roles: { where: { revokedAt: null }, include: { role: true } } } });
     if (!["DRAFT", "PRE_HIRE", "ONBOARDING", "ACTIVE"].includes(employee.employmentStatus)) {
       throw new Error("This employee's employment status does not permit new account setup.");
     }
@@ -28,6 +35,12 @@ export async function createLinkedEmployeeInvitation(input: {
     const parsed = z.string().email().max(180).safeParse(employee.companyEmail?.trim().toLowerCase());
     if (!parsed.success || !parsed.data.endsWith("@zentricanalytics.com")) throw new Error("Assign a valid company email before sending the invitation.");
     const email = parsed.data;
+    return { employee, application, actor, email };
+}
+
+export async function createLinkedEmployeeInvitation(input: LinkedInvitationInput) {
+  const provisioned = await prisma.$transaction(async (tx) => {
+    const { employee, application, actor, email } = await authorizeLinkedSetup(tx, input);
     const existing = await tx.hrUser.findUnique({ where: { organizationId_email: { organizationId: input.organizationId, email } }, include: { employee: true } });
     if (existing && (existing.employee?.id !== employee.id || (employee.userId && employee.userId !== existing.id))) {
       throw new Error("Company email belongs to another account; resolve the identity link first.");
@@ -48,6 +61,11 @@ export async function createLinkedEmployeeInvitation(input: {
     return { userId: user.id, email };
   }, { isolationLevel: "Serializable" });
   // Retry after a delivery failure reuses the same stable employee/account link.
-  const result = await createHrInvitation({ organizationId: input.organizationId, userId: provisioned.userId, createdById: input.actorUserId, recipient: provisioned.email });
+  const result = await createHrInvitation({ organizationId: input.organizationId, userId: provisioned.userId, createdById: input.actorUserId, recipient: provisioned.email }, async tx => {
+    const current = await authorizeLinkedSetup(tx, input);
+    if (current.employee.userId !== provisioned.userId || current.email !== provisioned.email) {
+      throw new Error("Employee account linkage changed. Reload before sending the invitation.");
+    }
+  });
   return { userId: provisioned.userId, invitationId: result.invitation.id };
 }
