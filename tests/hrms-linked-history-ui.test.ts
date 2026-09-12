@@ -16,7 +16,7 @@ describe("linked history UI data minimization", () => {
   });
   it("access history fetches metadata, never invitation tokens or retained message bodies", () => {
     const page = readFileSync("src/app/hr/recruitment/[id]/access/page.tsx", "utf8");
-    expect(page).toContain('vacancy.responsibleHrUserId !== auth.user.id && !auth.user.isPrimaryAdmin');
+    expect(page).toContain('vacancy.responsibleHrUserId !== auth.user.id && !isPrimaryAdministrator');
     expect(page).toContain('select: { id: true, createdAt: true, status: true }');
     expect(page).toContain('where: { organizationId: auth.user.organizationId, userId: app.hrEmployee.userId }');
     expect(page).toContain('expiresAt: true, usedAt: true, status: true');

@@ -5,10 +5,14 @@ import { ReviewedFlowForm } from "./ReviewedFlowForm";
 
 export default async function EmployeeAccessPage({ params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuthenticatedUser();
+  if (auth.user.status !== "ACTIVE" || (!auth.roles.includes("HR_ADMIN") && !auth.roles.includes("ADMIN"))) {
+    throw new Error("Active HR or administrator access is required to view new-hire access history.");
+  }
+  const isPrimaryAdministrator = auth.user.isPrimaryAdmin && auth.roles.includes("ADMIN");
   const { id } = await params;
   const app = await prisma.jobApplication.findFirstOrThrow({ where: { id, organizationId: auth.user.organizationId, deletedAt: null }, include: { applicant: true, hrEmployee: true, emails: { where: { template: "hr-mailbox-welcome" }, select: { id: true, createdAt: true, status: true }, orderBy: { createdAt: "desc" }, take: 10 } } });
   const vacancy = app.vacancyId ? await prisma.hrVacancy.findFirstOrThrow({ where: { id: app.vacancyId, organizationId: auth.user.organizationId }, include: { responsibleHrUser: true } }) : null;
-  if (!vacancy || (vacancy.responsibleHrUserId !== auth.user.id && !auth.user.isPrimaryAdmin)) throw new Error("Only the assigned HR person or primary administrator may manage new-hire access.");
+  if (!vacancy || (vacancy.responsibleHrUserId !== auth.user.id && !isPrimaryAdministrator)) throw new Error("Only the assigned HR person or primary administrator may manage new-hire access.");
   const invitations = app.hrEmployee?.userId ? await prisma.hrAccountInvitation.findMany({
     where: { organizationId: auth.user.organizationId, userId: app.hrEmployee.userId },
     select: { id: true, createdAt: true, expiresAt: true, usedAt: true, status: true, createdBy: { select: { email: true } } },
