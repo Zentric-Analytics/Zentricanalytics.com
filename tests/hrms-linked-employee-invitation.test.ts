@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const m = vi.hoisted(() => ({ actor: vi.fn(), employee: vi.fn(), vacancy: vi.fn(), existing: vi.fn(), create: vi.fn(), update: vi.fn(), role: vi.fn(), assign: vi.fn(), audit: vi.fn(), invite: vi.fn(), lockNamed: vi.fn(), lockAccount: vi.fn() }));
+const m = vi.hoisted(() => ({ transaction: vi.fn(), actor: vi.fn(), employee: vi.fn(), vacancy: vi.fn(), existing: vi.fn(), create: vi.fn(), update: vi.fn(), role: vi.fn(), assign: vi.fn(), audit: vi.fn(), invite: vi.fn(), lockNamed: vi.fn(), lockAccount: vi.fn() }));
 vi.mock("../src/lib/hr/recruitment/hr-authority-lock", () => ({ lockNamedHrEligibility: m.lockNamed, lockHrAccountEligibility: m.lockAccount }));
-vi.mock("@/lib/prisma", () => ({ prisma: { $transaction: async (fn: (tx: unknown) => unknown) => fn({ hrUser: { findFirstOrThrow: m.actor, findUnique: m.existing, create: m.create }, hrEmployee: { findFirstOrThrow: m.employee, update: m.update }, hrVacancy: { findFirst: m.vacancy }, hrRole: { findUniqueOrThrow: m.role }, hrUserRole: { upsert: m.assign } }) } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { $transaction: m.transaction } }));
 vi.mock("@/lib/hr/audit", () => ({ appendHrAudit: m.audit }));
 vi.mock("@/lib/hr/auth/invitations", () => ({ createHrInvitation: m.invite }));
 import { createLinkedEmployeeInvitation } from "../src/lib/hr/recruitment/employee-access";
@@ -16,6 +16,7 @@ describe("linked employee invitations", () => {
   });
   beforeEach(() => {
     vi.clearAllMocks();
+    m.transaction.mockReset().mockImplementation(async fn => fn({ hrUser: { findFirstOrThrow: m.actor, findUnique: m.existing, create: m.create }, hrEmployee: { findFirstOrThrow: m.employee, update: m.update }, hrVacancy: { findFirst: m.vacancy }, hrRole: { findUniqueOrThrow: m.role }, hrUserRole: { upsert: m.assign } }));
     m.actor.mockResolvedValue({ id: "hr", isPrimaryAdmin: false, roles: [{ role: { key: "HR_ADMIN" } }] });
     m.employee.mockResolvedValue(employee);
     m.vacancy.mockResolvedValue({ responsibleHrUserId: "hr" });
@@ -23,6 +24,42 @@ describe("linked employee invitations", () => {
     m.create.mockResolvedValue({ id: "new-user" });
     m.role.mockResolvedValue({ id: "employee-role" });
     m.invite.mockResolvedValue({ invitation: { id: "invite" }, rawToken: "not-returned" });
+  });
+  it("retries an aborted provisioning transaction and reuses the winning account", async () => {
+    m.transaction.mockRejectedValueOnce({ code: "P2034" });
+    m.employee.mockResolvedValue({ ...employee, userId: "same-user" });
+    m.existing.mockResolvedValue({ id: "same-user", employee: { id: "employee" }, status: "INVITED", passwordHash: null });
+    expect(await createLinkedEmployeeInvitation(input)).toEqual({ userId: "same-user", invitationId: "invite" });
+    expect(m.transaction).toHaveBeenCalledTimes(2);
+    expect(m.create).not.toHaveBeenCalled();
+    expect(m.audit).not.toHaveBeenCalled();
+    expect(m.invite).toHaveBeenCalledOnce();
+  });
+  it("bounds transaction conflict retries and never sends on exhaustion", async () => {
+    m.transaction.mockRejectedValue({ code: "P2034" });
+    await expect(createLinkedEmployeeInvitation(input)).rejects.toThrow("Reload");
+    expect(m.transaction).toHaveBeenCalledTimes(3);
+    expect(m.invite).not.toHaveBeenCalled();
+  });
+  it("rechecks authority on retry instead of carrying the previous permission forward", async () => {
+    m.transaction.mockRejectedValueOnce({ code: "P2034" });
+    m.actor.mockResolvedValue({ id: "hr", isPrimaryAdmin: false, roles: [] });
+    await expect(createLinkedEmployeeInvitation(input)).rejects.toThrow("assigned HR");
+    expect(m.transaction).toHaveBeenCalledTimes(2);
+    expect(m.create).not.toHaveBeenCalled();
+    expect(m.invite).not.toHaveBeenCalled();
+  });
+  it("does not retry an authority or unexpected provisioning failure", async () => {
+    m.transaction.mockRejectedValue(new Error("Authority denied"));
+    await expect(createLinkedEmployeeInvitation(input)).rejects.toThrow("Authority denied");
+    expect(m.transaction).toHaveBeenCalledOnce();
+    expect(m.invite).not.toHaveBeenCalled();
+  });
+  it("does not replay provisioning when the separate invitation step fails", async () => {
+    m.invite.mockRejectedValueOnce({ code: "P2034" });
+    await expect(createLinkedEmployeeInvitation(input)).rejects.toEqual({ code: "P2034" });
+    expect(m.transaction).toHaveBeenCalledOnce();
+    expect(m.invite).toHaveBeenCalledOnce();
   });
   it("links the completed applicant and invites company email without activating employment", async () => {
     expect(await createLinkedEmployeeInvitation(input)).toEqual({ userId: "new-user", invitationId: "invite" });

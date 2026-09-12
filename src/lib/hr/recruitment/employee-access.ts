@@ -38,8 +38,12 @@ async function authorizeLinkedSetup(tx: Prisma.TransactionClient, input: LinkedI
     return { employee, application, actor, email };
 }
 
-export async function createLinkedEmployeeInvitation(input: LinkedInvitationInput) {
-  const provisioned = await prisma.$transaction(async (tx) => {
+async function provisionLinkedAccount(input: LinkedInvitationInput) {
+  // Only retry a transaction PostgreSQL has aborted. Re-read all eligibility and
+  // linkage on each attempt; never include external invitation delivery here.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await prisma.$transaction(async (tx) => {
     const { employee, application, actor, email } = await authorizeLinkedSetup(tx, input);
     const existing = await tx.hrUser.findUnique({ where: { organizationId_email: { organizationId: input.organizationId, email } }, include: { employee: true } });
     if (existing && (existing.employee?.id !== employee.id || (employee.userId && employee.userId !== existing.id))) {
@@ -60,6 +64,16 @@ export async function createLinkedEmployeeInvitation(input: LinkedInvitationInpu
     }
     return { userId: user.id, email };
   }, { isolationLevel: "Serializable" });
+    } catch (error) {
+      if ((error as { code?: string } | null)?.code !== "P2034") throw error;
+      if (attempt === 2) throw new Error("Account setup changed while saving. Reload and try again.");
+    }
+  }
+  throw new Error("Account setup could not complete. Reload and try again.");
+}
+
+export async function createLinkedEmployeeInvitation(input: LinkedInvitationInput) {
+  const provisioned = await provisionLinkedAccount(input);
   // Retry after a delivery failure reuses the same stable employee/account link.
   const result = await createHrInvitation({ organizationId: input.organizationId, userId: provisioned.userId, createdById: input.actorUserId, recipient: provisioned.email }, async tx => {
     const current = await authorizeLinkedSetup(tx, input);
