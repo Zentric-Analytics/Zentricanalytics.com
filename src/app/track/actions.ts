@@ -641,6 +641,14 @@ export async function submitOfferDecision(formData: FormData) {
   if (governedOffer && (!displayedOfferVersionId || displayedOfferVersionId !== governedOffer.activeVersionId)) {
     redirect(portalUrl(session, { stage: "4", error: "offer_changed" }));
   }
+  if (governedOffer?.status === "DECLINED") {
+    const recorded = parsed.data.decision === "decline" && await prisma.hrRecruitmentOfferDecline.findFirst({
+      where: { offerId: governedOffer.id, offerVersionId: displayedOfferVersionId, applicantId: application.applicantId },
+      select: { id: true },
+    });
+    if (recorded) redirect(portalUrl(session, { stage: "4", success: "offer_declined" }));
+    redirect(portalUrl(session, { stage: "4", error: "offer_not_open" }));
+  }
   if (governedOffer && ["ISSUED", "ACCEPTED"].includes(governedOffer.status) && governedOffer.activeVersion && application.organizationId) {
     if (parsed.data.decision === "accept") {
       const { acceptOffer: acceptGovernedOffer } = await import("@/lib/hr/recruitment/offers");
