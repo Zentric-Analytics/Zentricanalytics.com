@@ -9,7 +9,8 @@ describe("linked history UI data minimization", () => {
     expect(page).toContain('entityType: "HrEmployee", entityId: employee.id');
     expect(page).toContain('entityType: "HrUser", entityId: employee.userId');
     expect(page).toContain('entityType: "JobApplication", entityId: employee.recruitmentApplicationId');
-    expect(page).toContain('select: { id: true, createdAt: true, action: true, actor: { select: { email: true } } }');
+    expect(page).toContain('select: { id: true, createdAt: true, action: true, reason: true, actor: { select: { email: true } } }');
+    expect(page).toContain('event.action.startsWith("hr.recruitment.prehire.") && event.reason ? <p>Reason: {event.reason}</p> : null');
     expect(page).not.toContain('event.newValues');
     expect(page).not.toContain('event.previousValues');
     expect(page).toContain('href={`/hr/recruitment/${employee.recruitmentApplicationId}`}');

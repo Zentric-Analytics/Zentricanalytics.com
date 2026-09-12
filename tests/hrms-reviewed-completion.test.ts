@@ -55,6 +55,30 @@ describe("reviewed recruitment completion", () => {
     expect(await f.run()).toMatchObject({ id: "existing" }); expect(m.evidence).not.toHaveBeenCalled(); expect(f.tx.hrLifecycleInstance.create).not.toHaveBeenCalled();
     expect(m.profile).toHaveBeenCalledOnce();
   });
+  it("rejects a conversion belonging to a different organization or application before transfer", async () => {
+    for (const previous of [
+      { id: "existing", organizationId: "other-org", applicationId: "app" },
+      { id: "existing", organizationId: "org", applicationId: "other-app" },
+    ]) {
+      const f = fixture();
+      m.profile.mockClear();
+      f.tx.hrPreHireConversion.findUnique.mockResolvedValue(previous as never);
+      await expect(f.run()).rejects.toThrow("Conflicting employee conversion");
+      expect(m.profile).not.toHaveBeenCalled();
+      expect(f.tx.hrLifecycleInstance.create).not.toHaveBeenCalled();
+    }
+  });
+  it("preserves each source stage approval time and reference without creating another approval", async () => {
+    const f = fixture();
+    f.app.stages.forEach((stage, index) => { stage.approvedAt = new Date(Date.UTC(2026, 0, index + 1)); });
+    await f.run();
+    const tasks = f.tx.hrLifecycleInstance.create.mock.calls[0][0].data.tasks.create;
+    for (const [index, stage] of f.app.stages.entries()) {
+      expect(tasks[index].completedAt).toEqual(stage.approvedAt);
+      expect(tasks[index].evidenceReference).toBe(`recruitment-stage:${stage.id}`);
+      expect(tasks[index].completionNotes).toContain("not a new stage approval");
+    }
+  });
   it("blocks incomplete stages", async () => {
     const f = fixture(); f.app.stages[5].status = "Correction Requested";
     await expect(f.run()).rejects.toThrow("All eight");
