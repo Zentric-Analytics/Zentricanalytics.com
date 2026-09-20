@@ -1,5 +1,12 @@
 *.pdf binary
 
+# New versioned correction payloads must survive Windows checkout byte-exactly.
+docs/hrms/delivery-units/unit-09/*historical-integrity*.md text eol=lf
+docs/hrms/delivery-units/unit-09/NG-CANDIDATE-2026.9_Historical_Evidence_Exception_Assessment.md text eol=lf
+docs/hrms/delivery-units/unit-09/historical-integrity-corrections/*.json text eol=lf
+docs/hrms/delivery-units/unit-09/historical-integrity-corrections/*.sha256 text eol=lf
+docs/hrms/delivery-units/unit-09/historical-integrity-corrections/*.zip binary
+
 # Preserve exact LF bytes bound by immutable payroll evidence manifests.
 docs/hrms/delivery-units/unit-09/nigeria-certification-manifest.json text eol=lf
 docs/hrms/delivery-units/unit-09/nigeria-certification-handoff.md text eol=lf
