@@ -18,6 +18,8 @@ lighthouse-reports/
 *.mp4
 *.webm
 *.zip
+!docs/hrms/delivery-units/unit-09/historical-integrity-corrections/Zentric_NG-CANDIDATE-2026.2_Historical_Integrity_Correction.zip
+!docs/hrms/delivery-units/unit-09/historical-integrity-corrections/Zentric_NG-CANDIDATE-2026.3_Historical_Integrity_Correction.zip
 *.trace
 
 # macOS metadata

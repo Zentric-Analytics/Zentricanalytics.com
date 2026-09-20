@@ -1,0 +1,45 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.3",
+  "originalArtifactPath": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-remediation-matrix.md",
+  "originalManifestPath": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-manifest.json",
+  "originalChecksumPath": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-package.sha256",
+  "originalClaimedSha256": "517b048c6689d1a872fdbd2d6b87401c033c83101cfe598a2fd569d1352cd7a9",
+  "authoritativeRetainedSha256": "d7bf9466ed568b350d9d3e11d41f7b393a312e04f522b553123cc121852f3dec",
+  "authoritativeRetainedCommit": "f13696df41a20f07a165215c0b1a57e376b4b16b",
+  "authoritativeRetainedGitBlob": "7853154d2614296f4923af5945a5ebfcdc6f15ac",
+  "originalBytesAvailable": false,
+  "historicalClaimStatus": "SUPERSEDED",
+  "correctionStatus": "CLOSED_BY_VERSIONED_INTEGRITY_CORRECTION",
+  "unit9Status": "NOT_CERTIFIED",
+  "officialPayrollOutputsBlocked": true,
+  "payloads": [
+    {
+      "path": "authoritative-retained/ng-candidate-2026-3-remediation-matrix.md",
+      "sha256": "d7bf9466ed568b350d9d3e11d41f7b393a312e04f522b553123cc121852f3dec"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-10-historical-integrity-correction-register.md",
+      "sha256": "aa8c356400797e102596ce8222c56243274215ffbab7013e39971592f4a11a71"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-10-owner-historical-integrity-correction.md",
+      "sha256": "97b8db73df02a8c86ffd73ca3cd41247e135aa5b2dda903500faa28a04a2b54d"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-historical-integrity-supersession.md",
+      "sha256": "6a0840fd3a510eb4906afa6bfa12a26ca23627ad4b15304c6e3d5190bce00153"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-manifest.json",
+      "sha256": "5d10d678e6e2a7ec2b397d26f1fc794d9679609e446ec4341fc34d3551b407dd"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-package.sha256",
+      "sha256": "a996bffc112d7ad763644cf48d13951b0da6fdf3a86f8562d278b6bee3fff5fc"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/NG-CANDIDATE-2026.9_Historical_Evidence_Exception_Assessment.md",
+      "sha256": "6ae60001ec82c152d1dfffdee4ddaf77a03bf8b4ae22f84ba9093c55af833ccb"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "candidateVersion": "NG-CANDIDATE-2026.2",
+  "originalArtifactPath": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-postgresql-evidence.md",
+  "originalManifestPath": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-stage1-manifest.json",
+  "originalChecksumPath": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-stage1-package.sha256",
+  "originalClaimedSha256": "bd1906347d019c23d1ccf1f01d4072bff457badca80efb5c7beeacedc59aca68",
+  "authoritativeRetainedSha256": "0c220b75ec03045644ffa8d8dcb29610a26e209314ab53e1d4823863a4dac7e2",
+  "authoritativeRetainedCommit": "a793a25416f98ca41c47c3e71fd25ecc4423f849",
+  "authoritativeRetainedGitBlob": "15e6cf14c953b6bbb5ded950f33fba9898cf5034",
+  "originalBytesAvailable": false,
+  "historicalClaimStatus": "SUPERSEDED",
+  "correctionStatus": "CLOSED_BY_VERSIONED_INTEGRITY_CORRECTION",
+  "unit9Status": "NOT_CERTIFIED",
+  "officialPayrollOutputsBlocked": true,
+  "payloads": [
+    {
+      "path": "authoritative-retained/ng-candidate-2026-2-postgresql-evidence.md",
+      "sha256": "0c220b75ec03045644ffa8d8dcb29610a26e209314ab53e1d4823863a4dac7e2"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-10-historical-integrity-correction-register.md",
+      "sha256": "aa8c356400797e102596ce8222c56243274215ffbab7013e39971592f4a11a71"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-10-owner-historical-integrity-correction.md",
+      "sha256": "97b8db73df02a8c86ffd73ca3cd41247e135aa5b2dda903500faa28a04a2b54d"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-historical-integrity-supersession.md",
+      "sha256": "f576dad1d6fb4353653948d77318d0ccb2761fc24f087a66608272a6aa36c877"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-stage1-manifest.json",
+      "sha256": "e1306597e807f977e158a6279d493e43ebe0e87b7069223eea28ae8bd6e93e3a"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-stage1-package.sha256",
+      "sha256": "cb914f5e01cfe52bc43f4aa78cd7b774577b3d15cddb045896c54fdc16e47c60"
+    },
+    {
+      "path": "docs/hrms/delivery-units/unit-09/NG-CANDIDATE-2026.9_Historical_Evidence_Exception_Assessment.md",
+      "sha256": "6ae60001ec82c152d1dfffdee4ddaf77a03bf8b4ae22f84ba9093c55af833ccb"
+    },
+    {
+      "path": "recovered-sealed/ng-candidate-2026-2-source-register.md",
+      "sha256": "cb9f11bafa82627f389e62e97de6160143f56db94b8e3598d7ede94d91f32015"
+    }
+  ],
+  "sourceRegisterRecovery": {
+    "authoritativeCommit": "85f099be7b309adda88d84e73a2c4ce00586f6d1",
+    "originalArtifactPath": "docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-source-register.md",
+    "payloadPath": "recovered-sealed/ng-candidate-2026-2-source-register.md",
+    "authoritativeGitBlobSha256": "2c4220c6f25f03eb3a74e99b9cb4e9ac84c743a7290f49cdc2712e55c16add5b",
+    "authoritativeGitBlobId": "32dd4ca7ce494299887db159b35946205b1607da",
+    "authoritativeGitBlobSize": 4016,
+    "recoveredSealedSha256": "cb9f11bafa82627f389e62e97de6160143f56db94b8e3598d7ede94d91f32015",
+    "recoveredSealedSize": 4039,
+    "lineEndingTransformation": "LF_TO_CRLF",
+    "transformedLineEndingCount": 23,
+    "recoveryStatus": "EXACT_SEALED_REPRESENTATION_RECOVERED"
+  }
+}
