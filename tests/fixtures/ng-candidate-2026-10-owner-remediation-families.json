@@ -3,22 +3,298 @@
   "status": "NOT_CERTIFIED",
   "ownerReviewSha256": "9f1ae0b58d78b6814f6c05c21b2f3b85a6bd2b25d47087187d68a5daf558ed9a",
   "families": [
-    { "id": "F01_ZERO_INCOME", "expected": "0.00" },
-    { "id": "F02_MINIMUM_WAGE_BOUNDARY", "expected": "COMPLIANCE_HOLD_PENDING_GAZETTE" },
-    { "id": "F03_BELOW_ABOVE_MINIMUM_WAGE", "expected": "COMPLIANCE_HOLD_PENDING_GAZETTE" },
-    { "id": "F04_TAX_BAND_BOUNDARIES", "expected": "OWNER_ACCEPTED_ENGINEERING" },
-    { "id": "F05_JOINER_LEAVER", "expected": "ACTUAL_INCOME_WITH_FROZEN_EVIDENCE" },
-    { "id": "F06_BONUS_CURRENT_PRIOR_YTD", "expected": "CUMULATIVE_MINUS_VERIFIED_PRIOR_PAYE" },
-    { "id": "F07_OTHER_EMPLOYMENT_INCOME", "expected": "OWNER_ACCEPTED_TREATMENT_OR_HOLD" },
-    { "id": "F08_PRIOR_EMPLOYER", "expected": "VERIFIED_ONLY_OR_HOLD" },
-    { "id": "F09_RELIEFS", "expected": "EVIDENCE_GATED_WITH_RENT_CAP" },
-    { "id": "F10_PENSION_POPULATION", "expected": "COVERAGE_RSA_PFA_AND_REMITTANCE_GATED" },
-    { "id": "F11_LEAVE_SALARY_CHANGE", "expected": "CONFIGURED_PRORATION_TRACE_REQUIRED" },
-    { "id": "F12_RETRO", "expected": "AUDITABLE_CORRECTION_OR_HOLD" },
-    { "id": "F13_NEGATIVE_CUMULATIVE", "expected": "REFUND_CANDIDATE_HELD" },
-    { "id": "F14_RTA_ROUTING", "expected": "ROUTING_EVIDENCE_REQUIRED" },
-    { "id": "F15_ROUNDING_DRIFT", "expected": "HALF_UP_AT_OUTPUT_BOUNDARIES" },
-    { "id": "F16_CORRECTED_OUTPUTS", "expected": "OFFICIAL_MUTATION_BLOCKED" },
-    { "id": "F17_FAIL_CLOSED", "expected": "UNSUPPORTED_OR_BAD_EVIDENCE_HELD" }
+    {
+      "id": "F01_ZERO_INCOME",
+      "ownerDecision": "0.00",
+      "input": {
+        "income": "0"
+      },
+      "expected": {
+        "status": "SUPPORTED",
+        "classification": "ACCEPTED",
+        "reasonCode": "ENGINEERING_CALCULATION_ONLY",
+        "rounded": "0.00",
+        "unrounded": "0"
+      }
+    },
+    {
+      "id": "F02_MINIMUM_WAGE_BOUNDARY",
+      "ownerDecision": "COMPLIANCE_HOLD_PENDING_GAZETTE",
+      "input": {
+        "ruleId": "minimum-wage-gazette",
+        "ruleState": "COMPLIANCE_HOLD"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "NG_2026_10_RULE_HELD:minimum-wage-gazette"
+      }
+    },
+    {
+      "id": "F03_BELOW_ABOVE_MINIMUM_WAGE",
+      "ownerDecision": "COMPLIANCE_HOLD_PENDING_GAZETTE",
+      "input": {
+        "ruleId": "minimum-wage-gazette",
+        "ruleState": "COMPLIANCE_HOLD"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "NG_2026_10_RULE_HELD:minimum-wage-gazette"
+      }
+    },
+    {
+      "id": "F04_TAX_BAND_BOUNDARIES",
+      "ownerDecision": "OWNER_ACCEPTED_ENGINEERING",
+      "input": {
+        "incomes": [
+          "799999.99",
+          "800000",
+          "800000.01",
+          "2999999.99",
+          "3000000",
+          "3000000.01",
+          "11999999.99",
+          "12000000",
+          "12000000.01",
+          "24999999.99",
+          "25000000",
+          "25000000.01",
+          "49999999.99",
+          "50000000",
+          "50000000.01"
+        ]
+      },
+      "expected": {
+        "status": "SUPPORTED",
+        "classification": "ACCEPTED",
+        "reasonCode": "ENGINEERING_CALCULATION_ONLY",
+        "rounded": [
+          "0.00",
+          "0.00",
+          "0.00",
+          "330000.00",
+          "330000.00",
+          "330000.00",
+          "1950000.00",
+          "1950000.00",
+          "1950000.00",
+          "4680000.00",
+          "4680000.00",
+          "4680000.00",
+          "10430000.00",
+          "10430000.00",
+          "10430000.00"
+        ],
+        "unrounded": [
+          "0",
+          "0",
+          "0.0015",
+          "329999.9985",
+          "330000",
+          "330000.0018",
+          "1949999.9982",
+          "1950000",
+          "1950000.0021",
+          "4679999.9979",
+          "4680000",
+          "4680000.0023",
+          "10429999.9977",
+          "10430000",
+          "10430000.0025"
+        ]
+      }
+    },
+    {
+      "id": "F05_JOINER_LEAVER",
+      "ownerDecision": "ACTUAL_INCOME_WITH_FROZEN_EVIDENCE",
+      "input": {
+        "ruleId": "joiner-leaver-frozen-evidence-adapter-required",
+        "ruleState": "COMPLIANCE_HOLD"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "NG_2026_10_RULE_HELD:joiner-leaver-frozen-evidence-adapter-required"
+      }
+    },
+    {
+      "id": "F06_BONUS_CURRENT_PRIOR_YTD",
+      "ownerDecision": "CUMULATIVE_MINUS_VERIFIED_PRIOR_PAYE",
+      "input": {
+        "cumulativeLiability": "50000",
+        "validPriorPaye": "20000"
+      },
+      "expected": {
+        "status": "SUPPORTED",
+        "classification": "ACCEPTED",
+        "reasonCode": "CURRENT_PAYE_DEDUCTION",
+        "rounded": "30000.00",
+        "refund": "0.00",
+        "unrounded": "30000"
+      }
+    },
+    {
+      "id": "F07_OTHER_EMPLOYMENT_INCOME",
+      "ownerDecision": "OWNER_ACCEPTED_TREATMENT_OR_HOLD",
+      "input": {
+        "ruleId": "other-employment-treatment-required",
+        "ruleState": "COMPLIANCE_HOLD"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "NG_2026_10_RULE_HELD:other-employment-treatment-required"
+      }
+    },
+    {
+      "id": "F08_PRIOR_EMPLOYER",
+      "ownerDecision": "VERIFIED_ONLY_OR_HOLD",
+      "input": {
+        "ruleId": "prior-employer-verification-required",
+        "ruleState": "COMPLIANCE_HOLD"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "NG_2026_10_RULE_HELD:prior-employer-verification-required"
+      }
+    },
+    {
+      "id": "F09_RELIEFS",
+      "ownerDecision": "EVIDENCE_GATED_WITH_RENT_CAP",
+      "input": {
+        "annualRent": "1000000",
+        "months": 1
+      },
+      "expected": {
+        "status": "SUPPORTED",
+        "classification": "ACCEPTED",
+        "reasonCode": "ENGINEERING_CALCULATION_ONLY",
+        "rounded": "16666.67",
+        "unrounded": "16666.666666666666667",
+        "accepted": [
+          true
+        ],
+        "holds": []
+      }
+    },
+    {
+      "id": "F10_PENSION_POPULATION",
+      "ownerDecision": "COVERAGE_RSA_PFA_AND_REMITTANCE_GATED",
+      "input": {
+        "headcount": 15,
+        "covered": true,
+        "base": "100000",
+        "employeeRate": "8",
+        "employerRate": "10"
+      },
+      "expected": {
+        "status": "SUPPORTED",
+        "classification": "ACCEPTED",
+        "reasonCode": "ENGINEERING_CALCULATION_ONLY",
+        "covered": true,
+        "rounded": "8000.00",
+        "employer": "10000.00",
+        "unrounded": "8000",
+        "unroundedEmployer": "10000"
+      }
+    },
+    {
+      "id": "F11_LEAVE_SALARY_CHANGE",
+      "ownerDecision": "CONFIGURED_PRORATION_TRACE_REQUIRED",
+      "input": {
+        "ruleId": "configured-proration-trace-required",
+        "ruleState": "COMPLIANCE_HOLD"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "NG_2026_10_RULE_HELD:configured-proration-trace-required"
+      }
+    },
+    {
+      "id": "F12_RETRO",
+      "ownerDecision": "AUDITABLE_CORRECTION_OR_HOLD",
+      "input": {
+        "ruleId": "governed-retro-correction-required",
+        "ruleState": "COMPLIANCE_HOLD"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "NG_2026_10_RULE_HELD:governed-retro-correction-required"
+      }
+    },
+    {
+      "id": "F13_NEGATIVE_CUMULATIVE",
+      "ownerDecision": "REFUND_CANDIDATE_HELD",
+      "input": {
+        "cumulativeLiability": "50000",
+        "validPriorPaye": "60000"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "COMPLIANCE_HOLD_REFUND_PROCEDURE_REQUIRED",
+        "rounded": "0.00",
+        "refund": "10000.00",
+        "unrounded": "-10000"
+      }
+    },
+    {
+      "id": "F14_RTA_ROUTING",
+      "ownerDecision": "ROUTING_EVIDENCE_REQUIRED",
+      "input": {
+        "ruleId": "rta-routing-evidence-required",
+        "ruleState": "COMPLIANCE_HOLD"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "NG_2026_10_RULE_HELD:rta-routing-evidence-required"
+      }
+    },
+    {
+      "id": "F15_ROUNDING_DRIFT",
+      "ownerDecision": "HALF_UP_AT_OUTPUT_BOUNDARIES",
+      "input": {
+        "cumulativeLiability": "0.015",
+        "validPriorPaye": "0"
+      },
+      "expected": {
+        "status": "SUPPORTED",
+        "classification": "ACCEPTED",
+        "reasonCode": "CURRENT_PAYE_DEDUCTION",
+        "rounded": "0.02",
+        "refund": "0.00",
+        "unrounded": "0.015"
+      }
+    },
+    {
+      "id": "F16_CORRECTED_OUTPUTS",
+      "ownerDecision": "OFFICIAL_MUTATION_BLOCKED",
+      "input": {
+        "officialOutput": true
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "REJECTED",
+        "reasonCode": "NG-CANDIDATE-2026.10_NOT_CERTIFIED"
+      }
+    },
+    {
+      "id": "F17_FAIL_CLOSED",
+      "ownerDecision": "UNSUPPORTED_OR_BAD_EVIDENCE_HELD",
+      "input": {
+        "ruleId": "unsupported-rule",
+        "ruleState": "COMPLIANCE_HOLD"
+      },
+      "expected": {
+        "status": "COMPLIANCE_HOLD",
+        "classification": "HELD",
+        "reasonCode": "NG_2026_10_RULE_HELD:unsupported-rule"
+      }
+    }
   ]
 }
