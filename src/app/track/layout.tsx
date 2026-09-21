@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+  referrer: 'no-referrer',
   title: 'Track Your Zentric Analytics Application',
   description: 'Use your application ID and email to receive a secure code and view updates in the Zentric Analytics candidate portal.',
   alternates: { canonical: '/track' },

@@ -1,11 +1,14 @@
 'use server';
+import { candidateSessionToken } from '@/lib/candidate-session';
 import { prisma } from '@/lib/prisma';
 import { submitCandidateAssessmentResponse } from '@/lib/hr/recruitment/candidate-assessments';
+import { withOfferAcceptanceRetry } from '@/lib/hr/recruitment/acceptance-retry';
 import { revalidatePath } from 'next/cache';
 
 export async function submitAssessmentResponse(_previous: { error?: string; success?: boolean }, form: FormData): Promise<{ error?: string; success?: boolean }> {
+  const session = await candidateSessionToken();
   try {
-    await prisma.$transaction(tx => submitCandidateAssessmentResponse(tx, Object.fromEntries(form)), { isolationLevel: 'Serializable' });
+    await withOfferAcceptanceRetry(() => prisma.$transaction(tx => submitCandidateAssessmentResponse(tx, { ...Object.fromEntries(form), session }), { isolationLevel: 'Serializable' }));
     revalidatePath('/track/portal');
     return { success: true };
   } catch (error) {

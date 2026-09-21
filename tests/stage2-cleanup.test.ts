@@ -5,7 +5,7 @@ import {
   toStage2SubmissionPayload,
 } from "../src/lib/hiring";
 
-const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
 const actions = readFileSync("src/app/track/actions.ts", "utf8");
 const adminDetail = readFileSync(
   "src/app/admin/applications/[id]/RecruitmentDetail.tsx",

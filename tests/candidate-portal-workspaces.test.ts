@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "fs";
+import { isSelectable } from "../src/lib/candidate-portal-state";
+import type { StageStatus } from "../src/lib/hiring";
 
 describe("candidate portal selected-stage workspaces", () => {
-  const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+  const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
   const actions = readFileSync("src/app/track/actions.ts", "utf8");
 
   it("renders real Stage 2, Stage 3, and Stage 4 workspaces with backend actions", () => {
-    expect(portal).toContain(
-      "import { submitOfferDecision, submitStage2, submitStage3 }",
-    );
+    expect(portal).toContain('from "../actions"');
     expect(portal).toContain("action={submitStage2}");
     expect(portal).toContain('name="fullLegalName"');
     expect(portal).toContain('name="primaryIdDocument"');
@@ -28,7 +28,7 @@ describe("candidate portal selected-stage workspaces", () => {
     );
     expect(portal).toContain("isCandidateActionable(stage.status)");
     expect(portal).toContain(
-      "requestedStage && isSelectable(requestedStage.status)",
+      "requestedStage && (isSelectable(requestedStage.status)",
     );
     expect(portal).toContain(
       "Your initial application is under review. The next step will",
@@ -45,9 +45,7 @@ describe("candidate portal selected-stage workspaces", () => {
   });
 
   it("uses precomputed status helper booleans for review paths", () => {
-    expect(portal).toContain(
-      "function isReviewStageStatus(status: StageStatus)",
-    );
+    expect(portal).toContain('from "@/lib/candidate-portal-state"');
     expect(portal).toContain(
       "const selectedStageIsReview = isReviewStageStatus(selectedStageStatus);",
     );
@@ -64,7 +62,7 @@ describe("candidate portal selected-stage workspaces", () => {
       "Under Review",
       "Rejected",
     ]) {
-      expect(portal).toContain(status);
+      expect(isSelectable(status as StageStatus)).toBe(true);
     }
     expect(portal).not.toContain("Application Documents");
     expect(portal).not.toContain(

@@ -153,8 +153,10 @@ export async function recordAdminStage3Action(applicationId: string, action: 'Re
   });
 }
 
-export async function acceptOffer(applicationId: string, note?: string) {
+export async function acceptOffer(applicationId: string, note?: string, authorize?: (tx: Prisma.TransactionClient) => Promise<unknown>) {
   return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "JobApplication" WHERE id = ${applicationId} FOR UPDATE`;
+    await authorize?.(tx);
     const app = await tx.jobApplication.findUnique({ where: { id: applicationId } });
     if (!app || app.deletedAt) throw new StageActionError('missing_application', 'Application not found.');
     const [stage4, stage5, offer] = await Promise.all([
@@ -163,6 +165,7 @@ export async function acceptOffer(applicationId: string, note?: string) {
       tx.offer.findUnique({ where: { applicationId } }),
     ]);
     if (!stage4 || !stage5) throw new StageActionError('missing_stage', 'Required stage row is missing.');
+    if (app.currentStageOrder > 4 || ['Hired', 'Rejected', 'Withdrawn'].includes(app.status) || !['Available', 'In Progress', 'Correction Requested'].includes(stage4.status)) throw new StageActionError('action_failed', 'Offer stage is closed.');
     if (!offer || offer.status !== 'Released') throw new StageActionError('action_failed', 'Offer is not open.');
     if (offer.offerExpiryDate && offer.offerExpiryDate.getTime() < Date.now()) throw new StageActionError('action_failed', 'Offer expired.');
     await tx.offer.update({ where: { applicationId }, data: { status: 'Accepted', candidateDecisionAt: new Date(), candidateDecisionNote: note || null } });
