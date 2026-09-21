@@ -1,6 +1,9 @@
 "use server";
 import { notifyRecruitmentStageSubmitted } from "@/lib/hr/recruitment/stage-notifications";
 import { redirect } from "next/navigation";
+import { candidateSessionToken, setCandidateSession, clearCandidateSession, CANDIDATE_SESSION_SECONDS } from "@/lib/candidate-session";
+import { lockCandidateStage, nextSubmissionVersion } from "@/lib/candidate-submission";
+import { candidateUploadsTooLarge } from "@/lib/candidate-upload-limits";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { maskGeneric, randomDigits, randomToken, sha256 } from "@/lib/security";
@@ -268,32 +271,33 @@ export async function verifyAccessCode(formData: FormData) {
   });
   if (!access) redirect(failedUrl);
   const token = randomToken();
-  await prisma.applicationAccessCode.update({
-    where: { id: access.id },
-    data: {
-      usedAt: new Date(),
-      verifiedSessionTokenHash: sha256(token),
-      sessionExpiresAt: new Date(Date.now() + 30 * 60 * 1000),
-    },
+  const consumed = await prisma.$transaction(async tx => {
+    const claimed = await tx.applicationAccessCode.updateMany({
+      where: { id: access.id, usedAt: null, expiresAt: { gt: new Date() }, application: { deletedAt: null } },
+      data: {
+        usedAt: new Date(), verifiedSessionTokenHash: sha256(token),
+        sessionExpiresAt: new Date(Date.now() + CANDIDATE_SESSION_SECONDS * 1000),
+      },
+    });
+    if (claimed.count !== 1) return false;
+    await tx.auditLog.create({ data: {
+      applicationId: app.id, actorType: "applicant", actorRef: "masked-email", action: "Access code verified",
+    } });
+    return true;
   });
-  await prisma.auditLog.create({
-    data: {
-      applicationId: app.id,
-      actorType: "applicant",
-      actorRef: "masked-email",
-      action: "Access code verified",
-    },
-  });
-  redirect(`/track/portal?session=${token}`);
+  if (!consumed) redirect(failedUrl);
+  await setCandidateSession(token);
+  redirect("/track/portal");
 }
 
-function portalUrl(session: string, params: Record<string, string>) {
-  const search = new URLSearchParams({ session, ...params });
+function portalUrl(params: Record<string, string>) {
+  const search = new URLSearchParams(params);
   return `/track/portal?${search.toString()}`;
 }
 
 export async function submitStage2(formData: FormData) {
-  const session = String(formData.get("session") ?? "");
+  const session = await candidateSessionToken();
+  if (candidateUploadsTooLarge(formData)) redirect(portalUrl({ stage: "2", error: "uploads_too_large" }));
   const parsed = stage2SubmissionSchema.safeParse(
     Object.fromEntries(formData.entries()),
   );
@@ -338,7 +342,7 @@ export async function submitStage2(formData: FormData) {
       : null,
   ].filter(Boolean);
   if (!parsed.success || fileErrors.length)
-    redirect(portalUrl(session, { stage: "2", error: "stage2_validation" }));
+    redirect(portalUrl({ stage: "2", error: "stage2_validation" }));
 
   const access = await prisma.applicationAccessCode.findFirst({
     where: {
@@ -353,13 +357,13 @@ export async function submitStage2(formData: FormData) {
   const stage1 = application.stages.find((stage) => stage.stageOrder === 1);
   const stage2 = application.stages.find((stage) => stage.stageOrder === 2);
   if (!stage2 || stage1?.status !== "Approved" || stage2.status === "Locked")
-    redirect(portalUrl(session, { stage: "2", error: "stage2_locked" }));
+    redirect(portalUrl({ stage: "2", error: "stage2_locked" }));
   if (
     !["Available", "In Progress", "Correction Requested"].includes(
       stage2.status,
     )
   )
-    redirect(portalUrl(session, { stage: "2", error: "stage2_not_open" }));
+    redirect(portalUrl({ stage: "2", error: "stage2_not_open" }));
 
   const saved: Array<{
     file: File;
@@ -382,8 +386,8 @@ export async function submitStage2(formData: FormData) {
       saved.push({ ...item, ...stored });
     }
     await prisma.$transaction(async (tx) => {
-      const version =
-        (await tx.stageSubmission.count({ where: { stageId: stage2.id } })) + 1;
+      await lockCandidateStage(tx, { applicationId: application.id, stageId: stage2.id, stageOrder: 2, session });
+      const version = await nextSubmissionVersion(tx, stage2.id);
       const submission = await tx.stageSubmission.create({
         data: {
           stageId: stage2.id,
@@ -453,13 +457,14 @@ export async function submitStage2(formData: FormData) {
       filesCleaned: saved.length,
       errorName: error instanceof Error ? error.name : "UnknownError",
     });
-    redirect(portalUrl(session, { stage: "2", error: "stage2_submit_failed" }));
+    redirect(portalUrl({ stage: "2", error: "stage2_submit_failed" }));
   }
-  redirect(portalUrl(session, { stage: "2", success: "stage2_submitted" }));
+  redirect(portalUrl({ stage: "2", success: "stage2_submitted" }));
 }
 
 export async function submitStage3(formData: FormData) {
-  const session = String(formData.get("session") ?? "");
+  const session = await candidateSessionToken();
+  if (candidateUploadsTooLarge(formData)) redirect(portalUrl({ stage: "3", error: "uploads_too_large" }));
   const diagnostics: Record<string, unknown> = {
     candidateStage3SubmitRequested: true,
     sessionValid: false,
@@ -476,7 +481,7 @@ export async function submitStage3(formData: FormData) {
       ? (formData.get("assessmentFile") as File)
       : null;
   if (!parsed.success)
-    redirect(portalUrl(session, { stage: "3", error: "stage3_validation" }));
+    redirect(portalUrl({ stage: "3", error: "stage3_validation" }));
   const access = await prisma.applicationAccessCode.findFirst({
     where: {
       verifiedSessionTokenHash: sha256(session),
@@ -496,12 +501,12 @@ export async function submitStage3(formData: FormData) {
       stage3.status,
     )
   )
-    redirect(portalUrl(session, { stage: "3", error: "stage3_not_open" }));
+    redirect(portalUrl({ stage: "3", error: "stage3_not_open" }));
   if (!metadata.releasedAt)
-    redirect(portalUrl(session, { stage: "3", error: "stage3_not_released" }));
+    redirect(portalUrl({ stage: "3", error: "stage3_not_released" }));
   if (metadata.requiresCandidateResponse && !parsed.data.availability)
     redirect(
-      portalUrl(session, { stage: "3", error: "stage3_response_required" }),
+      portalUrl({ stage: "3", error: "stage3_response_required" }),
     );
   const fileError =
     upload && upload.size > 0
@@ -511,7 +516,7 @@ export async function submitStage3(formData: FormData) {
         : null;
   if (fileError)
     redirect(
-      portalUrl(session, { stage: "3", error: "stage3_upload_required" }),
+      portalUrl({ stage: "3", error: "stage3_upload_required" }),
     );
   const saved: Array<{
     file: File;
@@ -534,8 +539,9 @@ export async function submitStage3(formData: FormData) {
       diagnostics.uploadSaved = true;
     }
     await prisma.$transaction(async (tx) => {
-      const version =
-        (await tx.stageSubmission.count({ where: { stageId: stage3.id } })) + 1;
+      const currentStage = await lockCandidateStage(tx, { applicationId: application.id, stageId: stage3.id, stageOrder: 3, session });
+      if (JSON.stringify(currentStage.metadata) !== JSON.stringify(stage3.metadata)) throw new Error("Screening instructions changed.");
+      const version = await nextSubmissionVersion(tx, stage3.id);
       const submission = await tx.stageSubmission.create({
         data: {
           stageId: stage3.id,
@@ -596,15 +602,15 @@ export async function submitStage3(formData: FormData) {
     diagnostics.errorName =
       error instanceof Error ? error.name : "UnknownError";
     console.info("candidateStage3SubmitDiagnostics", diagnostics);
-    redirect(portalUrl(session, { stage: "3", error: "stage3_submit_failed" }));
+    redirect(portalUrl({ stage: "3", error: "stage3_submit_failed" }));
   }
-  redirect(portalUrl(session, { stage: "3", success: "stage3_submitted" }));
+  redirect(portalUrl({ stage: "3", success: "stage3_submitted" }));
 }
 
 export async function submitOfferDecision(formData: FormData) {
   const { offerDecisionSchema } = await import("../../lib/hiring");
   const { acceptOffer, StageActionError } = await import("../../lib/workflow");
-  const session = String(formData.get("session") ?? "");
+  const session = await candidateSessionToken();
   const diagnostics: Record<string, unknown> = {
     candidateOfferDecisionRequested: true,
     sessionValid: false,
@@ -619,7 +625,7 @@ export async function submitOfferDecision(formData: FormData) {
     Object.fromEntries(formData.entries()),
   );
   if (!parsed.success)
-    redirect(portalUrl(session, { stage: "4", error: "offer_validation" }));
+    redirect(portalUrl({ stage: "4", error: "offer_validation" }));
   const access = await prisma.applicationAccessCode.findFirst({
     where: {
       verifiedSessionTokenHash: sha256(session),
@@ -639,20 +645,21 @@ export async function submitOfferDecision(formData: FormData) {
   });
   const displayedOfferVersionId = String(formData.get("offerVersionId") ?? "");
   if (governedOffer && (!displayedOfferVersionId || displayedOfferVersionId !== governedOffer.activeVersionId)) {
-    redirect(portalUrl(session, { stage: "4", error: "offer_changed" }));
+    redirect(portalUrl({ stage: "4", error: "offer_changed" }));
   }
   if (governedOffer?.status === "DECLINED") {
     const recorded = parsed.data.decision === "decline" && await prisma.hrRecruitmentOfferDecline.findFirst({
       where: { offerId: governedOffer.id, offerVersionId: displayedOfferVersionId, applicantId: application.applicantId },
       select: { id: true },
     });
-    if (recorded) redirect(portalUrl(session, { stage: "4", success: "offer_declined" }));
-    redirect(portalUrl(session, { stage: "4", error: "offer_not_open" }));
+    if (recorded) redirect(portalUrl({ stage: "4", success: "offer_declined" }));
+    redirect(portalUrl({ stage: "4", error: "offer_not_open" }));
   }
   if (governedOffer && ["ISSUED", "ACCEPTED"].includes(governedOffer.status) && governedOffer.activeVersion && application.organizationId) {
     if (parsed.data.decision === "accept") {
       const { acceptOffer: acceptGovernedOffer } = await import("@/lib/hr/recruitment/offers");
       const { withOfferAcceptanceRetry } = await import("@/lib/hr/recruitment/acceptance-retry");
+      try {
       await withOfferAcceptanceRetry(() => prisma.$transaction((tx) => acceptGovernedOffer(tx, {
         organizationId: application.organizationId!,
         offerId: governedOffer.id,
@@ -661,15 +668,20 @@ export async function submitOfferDecision(formData: FormData) {
         method: "SECURE_CANDIDATE_PORTAL",
         evidence: { sessionVerified: true, confirmation: true },
       }), { isolationLevel: "Serializable" }));
-      redirect(portalUrl(session, { stage: "4", success: "offer_accepted" }));
+      } catch {
+        redirect(portalUrl({ stage: "4", error: "offer_decision_failed" }));
+      }
+      redirect(portalUrl({ stage: "4", success: "offer_accepted" }));
     }
-    if (governedOffer.status === "ACCEPTED") redirect(portalUrl(session, { stage: "4", error: "offer_not_open" }));
-    await prisma.$transaction(async (tx) => {
+    if (governedOffer.status === "ACCEPTED") redirect(portalUrl({ stage: "4", error: "offer_not_open" }));
+    let declined = false;
+    try {
+      declined = await prisma.$transaction(async (tx) => {
       const changed = await tx.hrRecruitmentOffer.updateMany({
         where: { id: governedOffer.id, organizationId: application.organizationId!, status: "ISSUED", activeVersionId: displayedOfferVersionId, version: governedOffer.version },
         data: { status: "DECLINED", version: { increment: 1 } },
       });
-      if (changed.count !== 1) redirect(portalUrl(session, { stage: "4", error: "offer_changed" }));
+      if (changed.count !== 1) return false;
       await tx.hrRecruitmentOfferDecline.upsert({
         where: { offerId: governedOffer.id },
         update: {},
@@ -692,8 +704,13 @@ export async function submitOfferDecision(formData: FormData) {
         payload: { offerId: governedOffer.id, recipientName: application.applicant.fullName, href: `/track?applicationId=${encodeURIComponent(application.applicationId)}&email=${encodeURIComponent(application.applicant.email)}` },
         idempotencyKey: `offer-declined:${governedOffer.id}:${governedOffer.activeVersionId}`,
       });
+      return true;
     });
-    redirect(portalUrl(session, { stage: "4", success: "offer_declined" }));
+    } catch {
+      redirect(portalUrl({ stage: "4", error: "offer_decision_failed" }));
+    }
+    if (!declined) redirect(portalUrl({ stage: "4", error: "offer_changed" }));
+    redirect(portalUrl({ stage: "4", success: "offer_declined" }));
   }
   const stage4 = application.stages.find((s) => s.stageOrder === 4);
   const offer = application.offer;
@@ -701,10 +718,10 @@ export async function submitOfferDecision(formData: FormData) {
     offer?.offerExpiryDate && offer.offerExpiryDate.getTime() < Date.now(),
   );
   if (!stage4 || stage4.status === "Locked")
-    redirect(portalUrl(session, { stage: "4", error: "offer_locked" }));
+    redirect(portalUrl({ stage: "4", error: "offer_locked" }));
   if (!offer || offer.status !== "Released" || expired)
     redirect(
-      portalUrl(session, {
+      portalUrl({
         stage: "4",
         error: expired ? "offer_expired" : "offer_not_open",
       }),
@@ -715,6 +732,9 @@ export async function submitOfferDecision(formData: FormData) {
       await acceptOffer(
         application.id,
         parsed.data.candidateDecisionNote || undefined,
+        async tx => {
+          await lockCandidateStage(tx, { applicationId: application.id, stageId: stage4.id, stageOrder: 4, session });
+        },
       );
       diagnostics.decisionAccepted = true;
       diagnostics.dbWriteSucceeded = true;
@@ -737,20 +757,22 @@ export async function submitOfferDecision(formData: FormData) {
       }
       diagnostics.redirectStatus = "success";
       console.info("candidateOfferDecisionDiagnostics", diagnostics);
-      destination = portalUrl(session, {
+      destination = portalUrl({
         stage: "4",
         success: "offer_accepted",
       });
     } else {
       await prisma.$transaction(async (tx) => {
-        await tx.offer.update({
-          where: { applicationId: application.id },
+        await lockCandidateStage(tx, { applicationId: application.id, stageId: stage4.id, stageOrder: 4, session });
+        const claimed = await tx.offer.updateMany({
+          where: { applicationId: application.id, status: "Released", OR: [{ offerExpiryDate: null }, { offerExpiryDate: { gt: new Date() } }] },
           data: {
             status: "Declined",
             candidateDecisionAt: new Date(),
             candidateDecisionNote: parsed.data.candidateDecisionNote || null,
           },
         });
+        if (claimed.count !== 1) throw new StageActionError("action_failed", "Offer is no longer open.");
         await tx.hiringStage.update({
           where: { id: stage4.id },
           data: { status: "Rejected" },
@@ -775,7 +797,7 @@ export async function submitOfferDecision(formData: FormData) {
       diagnostics.dbWriteSucceeded = true;
       diagnostics.redirectStatus = "declined";
       console.info("candidateOfferDecisionDiagnostics", diagnostics);
-      destination = portalUrl(session, {
+      destination = portalUrl({
         stage: "4",
         success: "offer_declined",
       });
@@ -786,24 +808,25 @@ export async function submitOfferDecision(formData: FormData) {
     diagnostics.redirectStatus = "error";
     console.info("candidateOfferDecisionDiagnostics", diagnostics);
     if (error instanceof StageActionError)
-      redirect(portalUrl(session, { stage: "4", error: "offer_not_open" }));
+      redirect(portalUrl({ stage: "4", error: "offer_not_open" }));
     redirect(
-      portalUrl(session, { stage: "4", error: "offer_decision_failed" }),
+      portalUrl({ stage: "4", error: "offer_decision_failed" }),
     );
   }
   redirect(
     destination ||
-      portalUrl(session, { stage: "4", error: "offer_decision_failed" }),
+      portalUrl({ stage: "4", error: "offer_decision_failed" }),
   );
 }
 
 export async function submitGovernedDocumentReplacement(formData: FormData) {
-  const session = String(formData.get("session") ?? "");
+  const session = await candidateSessionToken();
+  if (candidateUploadsTooLarge(formData)) redirect(portalUrl({ stage: "", error: "uploads_too_large" }));
   const reviewId = String(formData.get("reviewId") ?? "");
   const file = formData.get("replacementFile");
-  if (!(file instanceof File) || !reviewId) redirect(portalUrl(session, { error: "replacement_validation" }));
+  if (!(file instanceof File) || !reviewId) redirect(portalUrl({ error: "replacement_validation" }));
   const fileError = validateOnboardingDocumentFile(file);
-  if (fileError) redirect(portalUrl(session, { error: "replacement_file_invalid" }));
+  if (fileError) redirect(portalUrl({ error: "replacement_file_invalid" }));
   const access = await prisma.applicationAccessCode.findFirst({
     where: {
       verifiedSessionTokenHash: sha256(session),
@@ -820,13 +843,21 @@ export async function submitGovernedDocumentReplacement(formData: FormData) {
       handover: { applicationId: access.application.id, organizationId: access.application.organizationId ?? undefined },
     },
   });
-  if (!review) redirect(portalUrl(session, { error: "replacement_not_open" }));
+  if (!review) redirect(portalUrl({ error: "replacement_not_open" }));
   const previous = await prisma.uploadedDocument.findFirstOrThrow({
     where: { id: review.uploadedDocumentId, applicationId: access.application.id },
   });
-  const saved = await savePrivateUpload(file, access.application.applicationId);
+  let saved: Awaited<ReturnType<typeof savePrivateUpload>> | undefined;
   try {
+    const stored = await savePrivateUpload(file, access.application.applicationId);
+    saved = stored;
     await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "JobApplication" WHERE id = ${access.application.id} FOR UPDATE`;
+      const liveAccess = await tx.applicationAccessCode.findFirst({ where: {
+        applicationId: access.application.id, verifiedSessionTokenHash: sha256(session),
+        sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null },
+      } });
+      if (!liveAccess) throw new Error("Candidate session expired.");
       const replacement = await tx.uploadedDocument.create({
         data: {
           applicationId: access.application.id,
@@ -834,8 +865,8 @@ export async function submitGovernedDocumentReplacement(formData: FormData) {
           fileName: file.name,
           mimeType: file.type,
           sizeBytes: file.size,
-          provider: saved.provider,
-          storageKey: saved.storageKey,
+          provider: stored.provider,
+          storageKey: stored.storageKey,
           restricted: true,
         },
       });
@@ -865,17 +896,17 @@ export async function submitGovernedDocumentReplacement(formData: FormData) {
         },
       });
     });
-  } catch (error) {
-    await deletePrivateUpload(saved.storageKey, saved.provider);
-    throw error;
+  } catch {
+    if (saved) await deletePrivateUpload(saved.storageKey, saved.provider);
+    redirect(portalUrl({ error: "replacement_submit_failed" }));
   }
-  redirect(portalUrl(session, { success: "replacement_submitted" }));
+  redirect(portalUrl({ success: "replacement_submitted" }));
 }
 
 export async function submitStage5(formData: FormData) {
-  const session = String(formData.get("session") ?? "");
+  const session = await candidateSessionToken();
   const parsed = stage5CandidateSubmissionSchema.safeParse(Object.fromEntries(formData.entries()));
-  if (!parsed.success) redirect(portalUrl(session, { stage: "5", error: "stage5_validation" }));
+  if (!parsed.success) redirect(portalUrl({ stage: "5", error: "stage5_validation" }));
   const h = await headers();
   const access = await prisma.applicationAccessCode.findFirst({
     where: { verifiedSessionTokenHash: sha256(session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } },
@@ -885,11 +916,14 @@ export async function submitStage5(formData: FormData) {
   const application = access.application;
   const stage5 = application.stages.find((stage) => stage.stageOrder === 5);
   const agreement = application.employmentAgreement;
-  if (!stage5 || !["Available", "In Progress", "Correction Requested"].includes(stage5.status)) redirect(portalUrl(session, { stage: "5", error: "stage5_not_open" }));
-  if (!agreement || !["Released", "Correction Requested"].includes(agreement.status) && agreement.status !== "Approved") redirect(portalUrl(session, { stage: "5", error: "stage5_not_released" }));
+  if (!stage5 || !["Available", "In Progress", "Correction Requested"].includes(stage5.status)) redirect(portalUrl({ stage: "5", error: "stage5_not_open" }));
+  if (!agreement || !["Released", "Correction Requested"].includes(agreement.status) && agreement.status !== "Approved") redirect(portalUrl({ stage: "5", error: "stage5_not_released" }));
   try {
     await prisma.$transaction(async (tx) => {
-      const version = (await tx.stageSubmission.count({ where: { stageId: stage5.id } })) + 1;
+      await lockCandidateStage(tx, { applicationId: application.id, stageId: stage5.id, stageOrder: 5, session });
+      const currentAgreement = await tx.employmentAgreement.findUnique({ where: { applicationId: application.id } });
+      if (!currentAgreement || currentAgreement.version !== agreement.version || currentAgreement.status !== agreement.status) throw new Error("Agreement changed.");
+      const version = await nextSubmissionVersion(tx, stage5.id);
       const submission = await tx.stageSubmission.create({ data: { stageId: stage5.id, version, payload: toStage5SubmissionPayload(parsed.data, agreement.id, agreement.version), status: "Under Review", submittedAt: new Date() } });
       await tx.electronicSignature.create({ data: { submissionId: submission.id, typedName: parsed.data.signatureName, confirmed: true, ipHash: sha256(h.get("x-forwarded-for") ?? "unknown"), userAgent: (h.get("user-agent") ?? "unknown").slice(0, 500) } });
       await tx.hiringStage.update({ where: { id: stage5.id }, data: { status: "Under Review", submittedAt: new Date() } });
@@ -900,14 +934,15 @@ export async function submitStage5(formData: FormData) {
     });
   } catch (error) {
     console.info("candidateStage5SubmitDiagnostics", { sessionValid: true, dbWriteSucceeded: false, errorName: error instanceof Error ? error.name : "UnknownError" });
-    redirect(portalUrl(session, { stage: "5", error: "stage5_submit_failed" }));
+    redirect(portalUrl({ stage: "5", error: "stage5_submit_failed" }));
   }
-  redirect(portalUrl(session, { stage: "5", success: "stage5_submitted" }));
+  redirect(portalUrl({ stage: "5", success: "stage5_submitted" }));
 }
 
 
 export async function submitStage6(formData: FormData) {
-  const session = String(formData.get("session") ?? "");
+  const session = await candidateSessionToken();
+  if (candidateUploadsTooLarge(formData)) redirect(portalUrl({ stage: "6", error: "uploads_too_large" }));
   const parsed = stage6CandidateSchema.safeParse(Object.fromEntries(formData.entries()));
   const fileInputs = [
     ["bankProof", "Stage 6 Bank Proof"],
@@ -916,7 +951,7 @@ export async function submitStage6(formData: FormData) {
   ] as const;
   const uploads = fileInputs.map(([field, kind]) => ({ field, kind, file: formData.get(field) instanceof File ? (formData.get(field) as File) : null })).filter((item) => item.file && item.file.size > 0);
   const fileErrors = uploads.map((item) => validateOnboardingDocumentFile(item.file)).filter(Boolean);
-  if (!parsed.success || fileErrors.length) redirect(portalUrl(session, { stage: "6", error: "stage6_validation" }));
+  if (!parsed.success || fileErrors.length) redirect(portalUrl({ stage: "6", error: "stage6_validation" }));
   const h = await headers();
   const access = await prisma.applicationAccessCode.findFirst({
     where: { verifiedSessionTokenHash: sha256(session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } },
@@ -926,8 +961,8 @@ export async function submitStage6(formData: FormData) {
   const application = access.application;
   const stage5 = application.stages.find((stage) => stage.stageOrder === 5);
   const stage6 = application.stages.find((stage) => stage.stageOrder === 6);
-  if (stage5?.status !== "Approved") redirect(portalUrl(session, { stage: "6", error: "stage6_stage5_required" }));
-  if (!stage6 || !["Available", "In Progress", "Correction Requested"].includes(stage6.status)) redirect(portalUrl(session, { stage: "6", error: "stage6_not_open" }));
+  if (stage5?.status !== "Approved") redirect(portalUrl({ stage: "6", error: "stage6_stage5_required" }));
+  if (!stage6 || !["Available", "In Progress", "Correction Requested"].includes(stage6.status)) redirect(portalUrl({ stage: "6", error: "stage6_not_open" }));
   const saved: Array<{ file: File; kind: string; storageKey: string; provider: string; restricted: boolean }> = [];
   try {
     for (const item of uploads) {
@@ -935,7 +970,8 @@ export async function submitStage6(formData: FormData) {
       saved.push({ file: item.file!, kind: item.kind, ...stored });
     }
     await prisma.$transaction(async (tx) => {
-      const version = (await tx.stageSubmission.count({ where: { stageId: stage6.id } })) + 1;
+      await lockCandidateStage(tx, { applicationId: application.id, stageId: stage6.id, stageOrder: 6, session });
+      const version = await nextSubmissionVersion(tx, stage6.id);
       const submission = await tx.stageSubmission.create({ data: { stageId: stage6.id, version, payload: toStage6SubmissionPayload(parsed.data), status: "Under Review", submittedAt: new Date() } });
       for (const item of saved) {
         const uploaded = await tx.uploadedDocument.create({ data: { applicationId: application.id, kind: item.kind, fileName: item.file.name, mimeType: item.file.type || "application/octet-stream", sizeBytes: item.file.size, provider: item.provider, storageKey: item.storageKey, restricted: item.restricted } });
@@ -951,16 +987,16 @@ export async function submitStage6(formData: FormData) {
     await Promise.all(saved.map((item) => deletePrivateUpload(item.storageKey, item.provider)));
     await prisma.auditLog.create({ data: { applicationId: application.id, actorType: "system", action: "Stage 6 upload failure cleanup", metadata: { filesCleaned: saved.length, errorName: error instanceof Error ? error.name : "UnknownError" } } }).catch(() => undefined);
     console.info("candidateStage6SubmitDiagnostics", { sessionValid: true, dbWriteSucceeded: false, filesCleaned: saved.length, errorName: error instanceof Error ? error.name : "UnknownError" });
-    redirect(portalUrl(session, { stage: "6", error: "stage6_submit_failed" }));
+    redirect(portalUrl({ stage: "6", error: "stage6_submit_failed" }));
   }
-  redirect(portalUrl(session, { stage: "6", success: "stage6_submitted" }));
+  redirect(portalUrl({ stage: "6", success: "stage6_submitted" }));
 }
 
 
 export async function submitStage7(formData: FormData) {
-  const session = String(formData.get("session") ?? "");
+  const session = await candidateSessionToken();
   const parsed = stage7CandidateSchema.safeParse(Object.fromEntries(formData.entries()));
-  if (!parsed.success) redirect(portalUrl(session, { stage: "7", error: "stage7_validation" }));
+  if (!parsed.success) redirect(portalUrl({ stage: "7", error: "stage7_validation" }));
   const h = await headers();
   const access = await prisma.applicationAccessCode.findFirst({
     where: { verifiedSessionTokenHash: sha256(session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } },
@@ -970,11 +1006,12 @@ export async function submitStage7(formData: FormData) {
   const application = access.application;
   const stage6 = application.stages.find((stage) => stage.stageOrder === 6);
   const stage7 = application.stages.find((stage) => stage.stageOrder === 7);
-  if (stage6?.status !== "Approved") redirect(portalUrl(session, { stage: "7", error: "stage7_stage6_required" }));
-  if (!stage7 || !["Available", "In Progress", "Correction Requested"].includes(stage7.status)) redirect(portalUrl(session, { stage: "7", error: "stage7_not_open" }));
+  if (stage6?.status !== "Approved") redirect(portalUrl({ stage: "7", error: "stage7_stage6_required" }));
+  if (!stage7 || !["Available", "In Progress", "Correction Requested"].includes(stage7.status)) redirect(portalUrl({ stage: "7", error: "stage7_not_open" }));
   try {
     await prisma.$transaction(async (tx) => {
-      const version = (await tx.stageSubmission.count({ where: { stageId: stage7.id } })) + 1;
+      await lockCandidateStage(tx, { applicationId: application.id, stageId: stage7.id, stageOrder: 7, session });
+      const version = await nextSubmissionVersion(tx, stage7.id);
       const submission = await tx.stageSubmission.create({ data: { stageId: stage7.id, version, payload: toStage7SubmissionPayload(parsed.data), status: "Under Review", submittedAt: new Date() } });
       await tx.electronicSignature.create({ data: { submissionId: submission.id, typedName: parsed.data.signatureName, confirmed: true, ipHash: sha256(h.get("x-forwarded-for") ?? "unknown"), userAgent: (h.get("user-agent") ?? "unknown").slice(0, 500) } });
       await tx.hiringStage.update({ where: { id: stage7.id }, data: { status: "Under Review", submittedAt: new Date() } });
@@ -984,7 +1021,14 @@ export async function submitStage7(formData: FormData) {
     });
   } catch (error) {
     console.info("candidateStage7SubmitDiagnostics", { sessionValid: true, dbWriteSucceeded: false, errorName: error instanceof Error ? error.name : "UnknownError" });
-    redirect(portalUrl(session, { stage: "7", error: "stage7_submit_failed" }));
+    redirect(portalUrl({ stage: "7", error: "stage7_submit_failed" }));
   }
-  redirect(portalUrl(session, { stage: "7", success: "stage7_submitted" }));
+  redirect(portalUrl({ stage: "7", success: "stage7_submitted" }));
+}
+
+export async function signOutCandidate() {
+  const token = await candidateSessionToken();
+  if (token) await prisma.applicationAccessCode.updateMany({ where: { verifiedSessionTokenHash: sha256(token) }, data: { sessionExpiresAt: new Date(0) } });
+  await clearCandidateSession();
+  redirect('/track');
 }

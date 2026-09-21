@@ -106,6 +106,8 @@ model StageSubmission {
   signature   ElectronicSignature?
   documents   ApplicantDocument[]
   createdAt   DateTime             @default(now())
+
+  @@unique([stageId, version])
 }
 
 model StageApproval {

@@ -59,7 +59,7 @@ vi.mock("@/lib/access-code-config", async () => {
   >("../src/lib/access-code-config");
   return actual;
   it("candidate portal removes lower Stage 2 presentation while preserving backend action coverage", () => {
-    const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+    const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
     const button = readFileSync(
       "src/app/track/portal/Stage2SubmitButton.tsx",
       "utf8",
@@ -74,7 +74,7 @@ vi.mock("@/lib/access-code-config", async () => {
   });
 
   it("candidate portal keeps only the top progress card and actionable offer decision UI", () => {
-    const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+    const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
     expect(portal).toContain("Application progress");
     expect(portal).toContain("showOfferDecision");
     expect(portal).toContain("Accept Offer");
@@ -154,7 +154,7 @@ vi.mock("@/lib/security", async () => {
   );
   return { ...actual, randomDigits: vi.fn(() => "654321") };
   it("candidate portal removes lower Stage 2 presentation while preserving backend action coverage", () => {
-    const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+    const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
     const button = readFileSync(
       "src/app/track/portal/Stage2SubmitButton.tsx",
       "utf8",
@@ -169,7 +169,7 @@ vi.mock("@/lib/security", async () => {
   });
 
   it("candidate portal keeps only the top progress card and actionable offer decision UI", () => {
-    const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+    const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
     expect(portal).toContain("Application progress");
     expect(portal).toContain("showOfferDecision");
     expect(portal).toContain("Accept Offer");
@@ -379,7 +379,7 @@ describe("track access-code flow", () => {
     expect(accessCodeRateLimitConfig.windowMs()).toBe(600000);
   });
   it("candidate portal removes lower Stage 2 presentation while preserving backend action coverage", () => {
-    const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+    const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
     const button = readFileSync(
       "src/app/track/portal/Stage2SubmitButton.tsx",
       "utf8",
@@ -394,7 +394,7 @@ describe("track access-code flow", () => {
   });
 
   it("candidate portal keeps only the top progress card and actionable offer decision UI", () => {
-    const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+    const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
     expect(portal).toContain("Application progress");
     expect(portal).toContain("showOfferDecision");
     expect(portal).toContain("Accept Offer");
@@ -640,7 +640,7 @@ describe("admin and track UI source checks", () => {
 
   it("candidate tracking and portal ignore soft-deleted applications", () => {
     const actions = readFileSync("src/app/track/actions.ts", "utf8");
-    const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+    const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
     expect(actions).toContain("deletedAt: null");
     expect(portal).toContain("application: { deletedAt: null }");
   });
@@ -665,7 +665,7 @@ describe("admin and track UI source checks", () => {
   });
 
   it("candidate portal removes lower Stage 2 presentation while preserving backend action coverage", () => {
-    const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+    const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
     const button = readFileSync(
       "src/app/track/portal/Stage2SubmitButton.tsx",
       "utf8",
@@ -680,7 +680,7 @@ describe("admin and track UI source checks", () => {
   });
 
   it("candidate portal keeps only the top progress card and actionable offer decision UI", () => {
-    const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
+    const portal = (readFileSync("src/app/track/portal/page.tsx", "utf8") + readFileSync("src/app/track/portal/Stage2Form.tsx", "utf8"));
     expect(portal).toContain("Application progress");
     expect(portal).toContain("showOfferDecision");
     expect(portal).toContain("Accept Offer");
@@ -694,7 +694,8 @@ describe("admin and track UI source checks", () => {
     const offerStart = actions.indexOf(
       "export async function submitOfferDecision",
     );
-    const offerBody = actions.slice(offerStart);
+    const legacyStart = actions.indexOf("  const stage4 =", offerStart);
+    const offerBody = actions.slice(legacyStart, actions.indexOf("export async function submitGovernedDocumentReplacement", legacyStart));
     const catchStart = offerBody.indexOf("} catch (error)");
     const finalRedirect = offerBody.lastIndexOf("destination ||");
 

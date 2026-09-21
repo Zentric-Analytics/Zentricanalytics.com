@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export function Stage1DownloadButton({ session, label = 'Download PDF' }: { session: string; label?: string }) {
+export function Stage1DownloadButton({ label = 'Download PDF' }: { label?: string }) {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -10,7 +10,7 @@ export function Stage1DownloadButton({ session, label = 'Download PDF' }: { sess
     setBusy(true);
     setMessage('Preparing PDF...');
     try {
-      const response = await fetch(`/api/candidate/documents/stage-1?session=${encodeURIComponent(session)}`, { cache: 'no-store' });
+      const response = await fetch('/api/candidate/documents/stage-1', { cache: 'no-store' });
       if (response.status === 401 || response.status === 403) {
         setMessage('Session expired. Request a new passcode.');
         return;

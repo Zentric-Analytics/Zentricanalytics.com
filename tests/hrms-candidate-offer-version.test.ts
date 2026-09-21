@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({ accept: vi.fn(), prisma: {
 } }));
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("next/navigation", () => ({ redirect: (url: string) => { throw new Error(url); } }));
-vi.mock("next/headers", () => ({ headers: vi.fn() }));
+vi.mock("next/headers", () => ({ headers: vi.fn(), cookies: async () => ({ get: () => ({ value: "synthetic-session-for-test" }) }) }));
 vi.mock("@/lib/hr/recruitment/offers", () => ({ acceptOffer: mocks.accept }));
 vi.mock("@/lib/workflow", () => ({ acceptOffer: vi.fn(), StageActionError: class extends Error {} }));
 vi.mock("@/lib/storage", () => ({}));
@@ -82,4 +82,14 @@ it.each(["accept", "decline"])("does not permit %s on a declined offer without a
   await expect(submitOfferDecision(data)).rejects.toThrow("offer_not_open");
   expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
   expect(mocks.accept).not.toHaveBeenCalled();
+});
+
+it("returns safe feedback when governed acceptance fails", async () => {
+  mocks.accept.mockRejectedValueOnce(new Error("internal database detail"));
+  await expect(submitOfferDecision(form("current"))).rejects.toThrow("offer_decision_failed");
+});
+it("returns safe feedback when governed decline persistence fails", async () => {
+  mocks.prisma.$transaction.mockRejectedValueOnce(new Error("internal database detail"));
+  const data = form("current"); data.set("decision", "decline");
+  await expect(submitOfferDecision(data)).rejects.toThrow("offer_decision_failed");
 });

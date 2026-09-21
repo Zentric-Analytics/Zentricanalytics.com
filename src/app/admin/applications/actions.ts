@@ -1,4 +1,5 @@
 'use server';
+import { nextSubmissionVersion } from '@/lib/candidate-submission';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getAdminSession } from '@/lib/admin-auth';
@@ -594,7 +595,7 @@ export async function adminStage8Action(formData: FormData) {
       if (await repeatedStageDecision(tx, applicationId, 8, action === 'finalize', action === 'finalize' ? undefined : action)) redirect(redirectPath(applicationId, '?success=already_approved'));
       if (action === 'finalize') {
         failurePhase = 'save_final_checklist';
-        const version = (await tx.stageSubmission.count({ where: { stageId: stage8.id } })) + 1;
+        const version = await nextSubmissionVersion(tx, stage8.id);
         await tx.stageSubmission.create({ data: { stageId: stage8.id, version, payload: toStage8ChecklistPayload(parsed.data), status: 'Approved', submittedAt: new Date() } });
         await tx.hiringStage.update({ where: { id: stage8.id }, data: { status: 'Approved', approvedAt: new Date(), submittedAt: stage8.submittedAt ?? new Date() } });
         await tx.stageApproval.create({ data: { stageId: stage8.id, action: 'Approved', adminEmail: adminSession.email, notes: finalHrNotes || null } });

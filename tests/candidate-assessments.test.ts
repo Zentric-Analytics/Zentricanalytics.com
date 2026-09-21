@@ -5,6 +5,7 @@ import { assessmentResponse, candidateAssessmentSelect, submitCandidateAssessmen
 import { enqueueHrEmail } from '@/lib/hr/notifications/outbox';
 const id = 'cm1234567890123456789012';
 const tx = {
+  $queryRaw: vi.fn(),
   applicationAccessCode: { findFirst: vi.fn() }, hrAssessment: { findFirst: vi.fn(), updateMany: vi.fn() },
   stageSubmission: { findFirst: vi.fn(), aggregate: vi.fn(), create: vi.fn() },
   hiringStage: { update: vi.fn() }, auditLog: { create: vi.fn() }, hrUser: { findFirst: vi.fn() },

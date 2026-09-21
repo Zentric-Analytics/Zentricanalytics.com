@@ -1,4 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { candidateSessionToken } from "@/lib/candidate-session";
+import { PortalFeedback } from "./PortalFeedback";
+import { PortalForm } from "./PortalForm";
+import { PortalSubmitButton } from "./PortalSubmitButton";
+import { isActionableStageStatus, isReviewStageStatus, isCompletedStageStatus, isRejectedStageStatus, isComplete, isCandidateActionable, isSelectable } from "@/lib/candidate-portal-state";
+import { PortalProgress } from "./PortalProgress";
+import { Stage2Form } from "./Stage2Form";
 import type { Prisma } from "@prisma/client";
 
 import { PageShell } from "@/components/PageShell";
@@ -8,15 +16,11 @@ import {
   parseStage3Metadata,
   stages as stageDefs,
   toStageStatus,
-  type StageStatus,
-  stage2IdTypeOptions,
   parseStage5RoleSchedule,
 } from "@/lib/hiring";
-import { submitGovernedDocumentReplacement, submitOfferDecision, submitStage2, submitStage3, submitStage5, submitStage6, submitStage7 } from "../actions";
-// Backward-compatible source check: import { submitOfferDecision, submitStage2, submitStage3 }
+import { signOutCandidate, submitGovernedDocumentReplacement, submitOfferDecision, submitStage3, submitStage5, submitStage6, submitStage7 } from "../actions";
 import { prisma } from "@/lib/prisma";
 import { sha256 } from "@/lib/security";
-import { countryPhoneOptions } from "@/lib/phone";
 import { loadCandidateInterviews } from "@/lib/hr/recruitment/candidate-interviews";
 import { CandidateInterviews } from "./CandidateInterviews";
 import { candidateAssessmentSelect, assessmentResponse } from "@/lib/hr/recruitment/candidate-assessments";
@@ -42,56 +46,6 @@ type PortalApplication = Prisma.JobApplicationGetPayload<{
 
 type PortalStage = PortalApplication["stages"][number];
 
-function isActionableStageStatus(status: StageStatus) {
-  return (
-    status === "Available" ||
-    status === "In Progress" ||
-    status === "Correction Requested"
-  );
-}
-
-function isReviewStageStatus(status: StageStatus) {
-  return status === "Submitted" || status === "Under Review";
-}
-
-function isCompletedStageStatus(status: StageStatus) {
-  return status === "Approved" || status === "Completed";
-}
-
-function isRejectedStageStatus(status: StageStatus) {
-  return status === "Rejected";
-}
-
-function isComplete(status: StageStatus) {
-  return isCompletedStageStatus(status);
-}
-
-function isCandidateActionable(status: StageStatus) {
-  return isActionableStageStatus(status);
-}
-
-function isSelectable(status: StageStatus) {
-  return [
-    "Available",
-    "In Progress",
-    "Correction Requested",
-    "Submitted",
-    "Under Review",
-    "Approved",
-    "Completed",
-    "Rejected",
-  ].includes(status);
-}
-
-function stageCardActionLabel(status: StageStatus, selected: boolean) {
-  if (selected) return "Selected";
-  if (isCandidateActionable(status))
-    return status === "Available" ? "Open form" : "Continue";
-  if (isReviewStageStatus(status)) return "Under review";
-  if (isCompletedStageStatus(status)) return "Completed";
-  return "Locked";
-}
-
 function formatDate(value?: Date | null) {
   return value
     ? new Intl.DateTimeFormat("en", {
@@ -105,9 +59,12 @@ function formatDate(value?: Date | null) {
 export default async function Portal({
   searchParams,
 }: {
-  searchParams: Promise<{ session?: string; stage?: string; error?: string }>;
+  searchParams: Promise<{ session?: string; stage?: string; error?: string; success?: string }>;
 }) {
-  const { session, stage: stageParam, error } = await searchParams;
+  const { session: legacySession, stage: stageParam, error, success } = await searchParams;
+  // Never render or propagate a bearer token from an old bookmarked URL.
+  if (legacySession) redirect("/track/portal");
+  const session = await candidateSessionToken();
   const access = session
     ? await prisma.applicationAccessCode.findFirst({
         where: {
@@ -124,7 +81,7 @@ export default async function Portal({
               documents: true,
               stages: {
                 orderBy: { stageOrder: "asc" },
-                include: { submissions: { include: { signature: true } } },
+                include: { submissions: { orderBy: { version: "desc" }, include: { signature: true } } },
               },
             },
           },
@@ -189,7 +146,6 @@ export default async function Portal({
     (currentStage && isSelectable(currentStage.status)
       ? currentStage
       : portalStages[0]);
-  // Backward-compatible selection path: requestedStage && isSelectable(requestedStage.status)
   const selectedStage =
     requestedStage && (isSelectable(requestedStage.status) || requestedStage.order === 8)
       ? requestedStage
@@ -245,7 +201,9 @@ export default async function Portal({
   return (
     <PageShell>
       <Section eyebrow="Candidate portal" title="Track your application">
-        {error === "offer_changed" ? <p role="alert" className="mb-4 font-semibold">The offer has changed. Reload and review the current offer when available before submitting your decision. No decision was saved.</p> : null}
+        <PortalFeedback error={error} success={success} />
+        {!governedLifecycleActive && <a href="#portal-progress-title" className="mb-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline lg:hidden">Choose another stage</a>}
+        <form action={signOutCandidate} className="mb-4 flex justify-end"><PortalSubmitButton className="btn btn-secondary">Sign out</PortalSubmitButton></form>
         {governedOffer?.activeVersion && ["ISSUED", "ACCEPTED", "DECLINED"].includes(governedOffer.status) ? <section className="card mb-5 p-5 sm:p-6" aria-labelledby="governed-offer-title">
           <p className="text-xs font-bold uppercase tracking-widest text-accent">Governed employment offer · exact version {governedOffer.activeVersion.version}</p>
           <h2 id="governed-offer-title" className="mt-2 text-2xl font-bold">{governedOffer.activeVersion.positionTitle}</h2>
@@ -256,30 +214,30 @@ export default async function Portal({
             <p><strong>Expires:</strong> {formatDate(governedOffer.activeVersion.expiresAt)}</p>
           </div>
           <div className="mt-4 whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm">{String((governedOffer.activeVersion.terms as { text?: string } | null)?.text ?? "Review the employment terms supplied by HR.")}</div>
-          {governedOffer.status === "ISSUED" ? <form action={submitOfferDecision} className="mt-4 space-y-3">
-            <input type="hidden" name="session" value={session ?? ""} />
+          {governedOffer.status === "ISSUED" ? <PortalForm action={submitOfferDecision} className="mt-4 space-y-3">
+
             <input type="hidden" name="offerVersionId" value={governedOffer.activeVersion.id} />
             <textarea className="input" name="candidateDecisionNote" placeholder="Optional decision note" />
             <label className="flex gap-2 text-sm font-semibold"><input name="confirmation" type="checkbox" required /> I confirm this decision applies to exact offer version {governedOffer.activeVersion.version}.</label>
-            <div className="flex gap-3"><button className="btn btn-primary" name="decision" value="accept">Accept exact offer</button><button className="btn btn-secondary" name="decision" value="decline">Decline offer</button></div>
-          </form> : <p className="mt-4 font-semibold">{governedOffer.status === "ACCEPTED" ? "This exact offer version has been accepted." : "This offer has been declined."}</p>}
+            <div className="flex gap-3"><PortalSubmitButton className="btn btn-primary" name="decision" value="accept">Accept exact offer</PortalSubmitButton><PortalSubmitButton className="btn btn-secondary" name="decision" value="decline">Decline offer</PortalSubmitButton></div>
+          </PortalForm> : <p className="mt-4 font-semibold">{governedOffer.status === "ACCEPTED" ? "This exact offer version has been accepted." : "This offer has been declined."}</p>}
         </section> : null}
         {replacementRequests.length ? <section className="card mb-5 p-5 sm:p-6" aria-labelledby="replacement-title">
           <h2 id="replacement-title" className="text-xl font-bold">Document replacement requested</h2>
           <p className="mt-2 text-sm text-slate-600">Upload a new private version for each requested document. Earlier versions remain preserved for audit history.</p>
           <div className="mt-4 space-y-4">{replacementRequests.map((review) => {
             const document = application.documents.find((item) => item.id === review.uploadedDocumentId);
-            return <article className="rounded-2xl border p-4" key={review.id}><strong>{document?.kind ?? "Requested document"}</strong><p className="mt-1 text-sm text-slate-600">{review.reason ?? "HR requested a replacement."}</p>{review.replacedById ? <p className="mt-3 font-semibold text-emerald-700">Replacement submitted and awaiting exact-version review.</p> : <form action={submitGovernedDocumentReplacement} className="mt-3 space-y-3"><input type="hidden" name="session" value={session ?? ""} /><input type="hidden" name="reviewId" value={review.id} /><input className="input" name="replacementFile" type="file" required /><button className="btn btn-primary">Submit private replacement</button></form>}</article>;
+            return <article className="rounded-2xl border p-4" key={review.id}><strong>{document?.kind ?? "Requested document"}</strong><p className="mt-1 text-sm text-slate-600">{review.reason ?? "HR requested a replacement."}</p>{review.replacedById ? <p className="mt-3 font-semibold text-emerald-700">Replacement submitted and awaiting exact-version review.</p> : <PortalForm action={submitGovernedDocumentReplacement} className="mt-3 space-y-3"><input type="hidden" name="reviewId" value={review.id} /><input className="input" name="replacementFile" type="file" required /><PortalSubmitButton className="btn btn-primary">Submit private replacement</PortalSubmitButton></PortalForm>}</article>;
           })}</div>
         </section> : null}
         {governedLifecycleActive ? <section className="card p-5 sm:p-6" aria-labelledby="governed-lifecycle-title">
           <p className="text-xs font-bold uppercase tracking-widest text-accent">Application ID</p>
           <h2 id="governed-lifecycle-title" className="mt-2 break-all text-2xl font-bold tracking-tight text-ink sm:text-3xl">{application.applicationId}</h2>
-          <p className="mt-2 text-sm text-slate-600">{application.applicant.fullName} Â· {application.roleAppliedFor}</p>
+          <p className="mt-2 text-sm text-slate-600">{application.applicant.fullName} · {application.roleAppliedFor}</p>
           <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Governed lifecycle status</p>
             <p className="mt-2 text-base font-bold text-ink">{governedLifecycleStep}</p>
-            <p className="mt-2 text-sm text-slate-600">The governed recruitment record above is authoritative. Legacy stage percentages are hidden once an immutable offer is issued.</p>
+            <p className="mt-2 text-sm text-slate-600">The governed recruitment record above is authoritative. Your offer decision is shown here. After acceptance, the remaining agreement and onboarding steps appear below.</p>
           </div>
         </section> : <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] lg:items-start">
           <section
@@ -337,7 +295,12 @@ export default async function Portal({
             <div className="px-5 pb-5 sm:px-6 sm:pb-6">
               <div
                 className="h-2 overflow-hidden rounded-full bg-slate-100"
-                aria-label={`${progressPercent}% complete`}
+                role="progressbar"
+                aria-label="Application progress"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progressPercent}
+                aria-valuetext={`${completedStageCount} of ${stageDefs.length} stages completed`}
               >
                 <div
                   className="h-full rounded-full bg-brand"
@@ -347,98 +310,6 @@ export default async function Portal({
             </div>
           </section>
 
-          <aside
-            className="card p-5 sm:p-6 lg:col-start-2 lg:row-span-3 lg:row-start-1"
-            aria-labelledby="portal-progress-title"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-base font-bold uppercase tracking-[0.18em] text-accent">
-                  Progress
-                </p>
-                <h2
-                  id="portal-progress-title"
-                  className="mt-2 text-xl font-bold tracking-tight text-ink"
-                >
-                  Application progress
-                </h2>
-              </div>
-              <p className="text-sm font-bold text-slate-700">
-                {progressPercent}%
-              </p>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {portalStages.map((definition) => {
-                const selected = selectedStage?.order === definition.order;
-                const selectable = isSelectable(definition.status);
-                const href = session
-                  ? `/track/portal?session=${encodeURIComponent(session)}&stage=${definition.order}`
-                  : `/track/portal?stage=${definition.order}`;
-                const cardClassName = `flex items-start gap-3 rounded-2xl border p-3 text-left transition ${
-                  selected
-                    ? "border-brand bg-brand/5 shadow-sm ring-2 ring-brand/20"
-                    : selectable
-                      ? "border-slate-200 bg-white hover:border-brand/60 hover:bg-slate-50"
-                      : "border-slate-100 bg-slate-50 opacity-75"
-                }`;
-                const content = (
-                  <>
-                    <div
-                      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                        isComplete(definition.status)
-                          ? "bg-emerald-600 text-white"
-                          : definition.isCurrent
-                            ? "bg-brand text-white"
-                            : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {definition.order}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-bold text-ink">
-                          {definition.title}
-                        </p>
-                        {definition.isCurrent ? (
-                          <span className="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">
-                            Current
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 text-xs font-semibold text-slate-500">
-                        {definition.status}
-                      </p>
-                      <p
-                        className={`mt-2 text-xs font-bold ${selected ? "text-brand" : selectable ? "text-slate-600" : "text-slate-400"}`}
-                      >
-                        {stageCardActionLabel(definition.status, selected)}
-                      </p>
-                    </div>
-                  </>
-                );
-
-                return selectable ? (
-                  <Link
-                    className={cardClassName}
-                    href={href}
-                    key={definition.key}
-                    aria-current={selected ? "step" : undefined}
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  <div
-                    className={cardClassName}
-                    key={definition.key}
-                    aria-disabled="true"
-                  >
-                    {content}
-                  </div>
-                );
-              })}
-            </div>
-          </aside>
 
           <section
             className="card p-5 sm:p-6 lg:col-start-1 lg:row-start-2"
@@ -451,6 +322,7 @@ export default async function Portal({
                 </p>
                 <h2
                   id="selected-stage-title"
+                  tabIndex={-1}
                   className="mt-2 text-2xl font-bold tracking-tight text-ink"
                 >
                   Stage {selectedStage?.order ?? currentStage?.order}:{" "}
@@ -488,367 +360,8 @@ export default async function Portal({
                   Stage 2 unlocks after Stage 1 approval.
                 </p>
               ) : selectedStageIsActionable ? (
-                <form
-                  action={submitStage2}
-                  className="mt-6 space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5"
-                >
-                  <input type="hidden" name="session" value={session ?? ""} />
-                  <h3 className="text-lg font-bold text-ink">
-                    Candidate Information / Identity Verification
-                  </h3>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="block text-sm font-semibold">
-                      Full legal name
-                      <input
-                        className="input mt-1"
-                        name="fullLegalName"
-                        required
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Date of birth
-                      <input
-                        className="input mt-1"
-                        name="dateOfBirth"
-                        type="date"
-                        required
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Gender
-                      <select className="input mt-1" name="gender" required>
-                        <option value="">Select</option>
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Prefer not to say</option>
-                      </select>
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Nationality
-                      <input
-                        className="input mt-1"
-                        name="nationality"
-                        required
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      State of origin
-                      <input
-                        className="input mt-1"
-                        name="stateOfOrigin"
-                        required
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      State of residence
-                      <input
-                        className="input mt-1"
-                        name="stateOfResidence"
-                        required
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      LGA
-                      <input className="input mt-1" name="lga" required />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Current city/location
-                      <input
-                        className="input mt-1"
-                        name="currentCity"
-                        required
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold md:col-span-2">
-                      Residential address
-                      <textarea
-                        className="input mt-1 min-h-24"
-                        name="residentialAddress"
-                        required
-                      />
-                    </label>
-                    <div className="block text-sm font-semibold md:col-span-2">
-                      <span>Applicant phone</span>
-                      <div className="mt-1 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
-                        <select
-                          className="input"
-                          name="applicantPhoneCountryIso"
-                          aria-label="Applicant phone country"
-                          required
-                          defaultValue="NG"
-                        >
-                          {countryPhoneOptions.map((country) => (
-                            <option key={country.iso} value={country.iso}>
-                              {country.name} {country.dialCode}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          className="input"
-                          name="applicantPhoneNational"
-                          inputMode="tel"
-                          autoComplete="tel"
-                          aria-label="Applicant national phone number"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <label className="block text-sm font-semibold">
-                      Email
-                      <input
-                        className="input mt-1"
-                        name="email"
-                        type="email"
-                        required
-                        defaultValue={application.applicant.email}
-                      />
-                    </label>
-                    <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
-                      <div className="mb-4">
-                        <h4 className="font-bold text-ink">
-                          Primary ID{" "}
-                          <span className="text-red-600">required</span>
-                        </h4>
-                        <p className="mt-1 text-sm font-normal text-slate-600">
-                          Only your Primary ID is required. Add a Secondary ID
-                          only if you choose to provide one.
-                        </p>
-                      </div>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <label className="block text-sm font-semibold">
-                          Primary ID type
-                          <select
-                            className="input mt-1"
-                            name="primaryIdType"
-                            required
-                          >
-                            <option value="">Select</option>
-                            {stage2IdTypeOptions.map((type) => (
-                              <option key={type}>{type}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Primary ID number
-                          <input
-                            className="input mt-1"
-                            name="primaryIdNumber"
-                            required
-                          />
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Issuing authority
-                          <input
-                            className="input mt-1"
-                            name="primaryIdIssuingAuthority"
-                            required
-                          />
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Issue date{" "}
-                          <span className="font-normal text-slate-500">
-                            optional
-                          </span>
-                          <input
-                            className="input mt-1"
-                            name="primaryIdIssueDate"
-                            type="date"
-                          />
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Expiry date{" "}
-                          <span className="font-normal text-slate-500">
-                            optional
-                          </span>
-                          <input
-                            className="input mt-1"
-                            name="primaryIdExpiryDate"
-                            type="date"
-                          />
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Primary ID document upload
-                          <input
-                            className="input mt-1"
-                            name="primaryIdDocument"
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png,.webp"
-                            required
-                          />
-                        </label>
-                      </div>
-                    </section>
-                    <section className="rounded-2xl border border-slate-200 p-4 md:col-span-2">
-                      <h4 className="font-bold text-ink">
-                        Secondary ID{" "}
-                        <span className="font-normal text-slate-500">
-                          optional
-                        </span>
-                      </h4>
-                      <div className="mt-4 grid gap-4 md:grid-cols-2">
-                        <label className="block text-sm font-semibold">
-                          Secondary ID type{" "}
-                          <span className="font-normal text-slate-500">
-                            optional
-                          </span>
-                          <select className="input mt-1" name="secondaryIdType">
-                            <option value="">Not provided</option>
-                            {stage2IdTypeOptions.map((type) => (
-                              <option key={type}>{type}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Secondary ID number{" "}
-                          <span className="font-normal text-slate-500">
-                            optional
-                          </span>
-                          <input
-                            className="input mt-1"
-                            name="secondaryIdNumber"
-                          />
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Secondary issuing authority{" "}
-                          <span className="font-normal text-slate-500">
-                            optional
-                          </span>
-                          <input
-                            className="input mt-1"
-                            name="secondaryIdIssuingAuthority"
-                          />
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Secondary issue date{" "}
-                          <span className="font-normal text-slate-500">
-                            optional
-                          </span>
-                          <input
-                            className="input mt-1"
-                            name="secondaryIdIssueDate"
-                            type="date"
-                          />
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Secondary expiry date{" "}
-                          <span className="font-normal text-slate-500">
-                            optional
-                          </span>
-                          <input
-                            className="input mt-1"
-                            name="secondaryIdExpiryDate"
-                            type="date"
-                          />
-                        </label>
-                        <label className="block text-sm font-semibold">
-                          Secondary ID document upload{" "}
-                          <span className="font-normal text-slate-500">
-                            optional
-                          </span>
-                          <input
-                            className="input mt-1"
-                            name="secondaryIdDocument"
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png,.webp"
-                          />
-                        </label>
-                      </div>
-                    </section>
-                    <label className="block text-sm font-semibold md:col-span-2">
-                      Passport/profile photo, optional
-                      <input
-                        className="input mt-1"
-                        name="passportPhoto"
-                        type="file"
-                        accept=".jpg,.jpeg,.png,.webp"
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Emergency contact name
-                      <input
-                        className="input mt-1"
-                        name="emergencyContactName"
-                        required
-                      />
-                    </label>
-                    <label className="block text-sm font-semibold">
-                      Emergency contact relationship
-                      <input
-                        className="input mt-1"
-                        name="emergencyContactRelationship"
-                        required
-                      />
-                    </label>
-                    <div className="block text-sm font-semibold md:col-span-2">
-                      <span>Emergency contact phone</span>
-                      <div className="mt-1 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
-                        <select
-                          className="input"
-                          name="emergencyContactPhoneCountryIso"
-                          aria-label="Emergency contact phone country"
-                          required
-                          defaultValue="NG"
-                        >
-                          {countryPhoneOptions.map((country) => (
-                            <option key={country.iso} value={country.iso}>
-                              {country.name} {country.dialCode}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          className="input"
-                          name="emergencyContactPhoneNational"
-                          inputMode="tel"
-                          autoComplete="tel"
-                          aria-label="Emergency contact national phone number"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <label className="block text-sm font-semibold">
-                      Emergency contact address
-                      <input
-                        className="input mt-1"
-                        name="emergencyContactAddress"
-                      />
-                    </label>
-                  </div>
-                  <label className="flex gap-2 text-sm font-semibold">
-                    <input
-                      name="declarationAccuracy"
-                      type="checkbox"
-                      required
-                    />{" "}
-                    I declare the information provided is accurate.
-                  </label>
-                  <label className="flex gap-2 text-sm font-semibold">
-                    <input
-                      name="identityProcessingConsent"
-                      type="checkbox"
-                      required
-                    />{" "}
-                    I consent to identity verification processing.
-                  </label>
-                  <label className="block text-sm font-semibold">
-                    Typed electronic signature
-                    <input
-                      className="input mt-1"
-                      name="signatureName"
-                      required
-                    />
-                  </label>
-                  <label className="flex gap-2 text-sm font-semibold">
-                    <input name="signatureConsent" type="checkbox" required /> I
-                    confirm this electronic signature.
-                  </label>
-                  <button className="btn btn-primary" type="submit">
-                    Submit Stage 2
-                  </button>
-                </form>
-              ) : selectedStageIsActionable ? (
-                <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
-                  Stage 2 details will be shared by the admin.
-                </p>
+                <Stage2Form email={application.applicant.email} />
+
               ) : selectedStageIsReview ? (
                 <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
                   Stage 2 submitted and under review.
@@ -874,7 +387,7 @@ export default async function Portal({
                     <p className="whitespace-pre-wrap">{assessment.instructions}</p>
                     <p>Deadline: {assessment.dueAt ? `${assessment.dueAt.toUTCString()}` : 'No deadline set'}</p>
                     {response ? <><p>Your response has been submitted for review.</p><p className="whitespace-pre-wrap">{response}</p></>
-                      : open && !overdue ? <AssessmentResponseForm session={session ?? ''} assessmentId={assessment.id} version={assessment.version} />
+                      : open && !overdue ? <AssessmentResponseForm assessmentId={assessment.id} version={assessment.version} />
                       : overdue && open ? <p>The deadline has passed. Contact the hiring team.</p> : <p>This assessment is closed for responses.</p>}
                   </article>;
                 })}
@@ -885,11 +398,11 @@ export default async function Portal({
                   Stage 3 unlocks after Stage 2 approval.
                 </p>
               ) : selectedStageIsActionable && stage3Metadata.releasedAt ? (
-                <form
+                <PortalForm
                   action={submitStage3}
                   className="mt-6 space-y-5 rounded-2xl border border-slate-200 p-4 sm:p-5"
                 >
-                  <input type="hidden" name="session" value={session ?? ""} />
+
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">
                       Stage 3 workspace
@@ -992,10 +505,10 @@ export default async function Portal({
                     />{" "}
                     I declare this response is accurate.
                   </label>
-                  <button className="btn btn-primary" type="submit">
+                  <PortalSubmitButton className="btn btn-primary" type="submit">
                     Submit Stage 3
-                  </button>
-                </form>
+                  </PortalSubmitButton>
+                </PortalForm>
               ) : selectedStageIsActionable ? (
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
                   {candidateInterviews.length
@@ -1083,11 +596,11 @@ export default async function Portal({
                     </div>
                   </div>
 
-                  <form
+                  <PortalForm
                     action={submitOfferDecision}
                     className="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5"
                   >
-                    <input type="hidden" name="session" value={session ?? ""} />
+
                     <h3 className="font-bold text-ink">Your decision</h3>
                     <label className="block text-sm font-semibold">
                       Optional decision note
@@ -1101,25 +614,25 @@ export default async function Portal({
                       confirm my selected offer decision.
                     </label>
                     <div className="flex flex-wrap gap-3">
-                      <button
+                      <PortalSubmitButton
                         className="btn btn-primary"
                         name="decision"
                         value="accept"
                         type="submit"
                       >
                         Accept Offer
-                      </button>
-                      <button
+                      </PortalSubmitButton>
+                      <PortalSubmitButton
                         className="btn btn-secondary"
                         name="decision"
                         value="decline"
                         type="submit"
                       >
                         Decline Offer
-                      </button>
+                      </PortalSubmitButton>
                     </div>
                     <p className="text-xs text-slate-500">Submitting...</p>
-                  </form>
+                  </PortalForm>
                 </div>
               ) : (
                 <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
@@ -1148,13 +661,13 @@ export default async function Portal({
                     </div>
                     <div className="rounded-2xl bg-white p-4 text-sm leading-6 text-slate-700"><h4 className="font-bold text-ink">Employment agreement text</h4><p className="mt-2 whitespace-pre-wrap">{agreement.agreementText}</p></div>
                   </article>
-                  <form action={submitStage5} className="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
-                    <input type="hidden" name="session" value={session ?? ""} />
+                  <PortalForm action={submitStage5} className="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
+
                     {selectedStageStatus === "Correction Requested" ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">Correction requested. Please review and resubmit Stage 5.</p> : null}
                     {[ ["agreementRead", "I have read the employment agreement and role schedule."], ["understanding", "I understand this agreement forms part of the employment process with Zentric Analytics LTD."], ["onboardingStillRequired", "I understand that employment remains subject to completion of required onboarding, policy acknowledgements, and final HR approval."], ["accuracy", "I confirm the information I submit is accurate to the best of my knowledge."], ["electronicSignatureConsent", "I consent to sign electronically."] ].map(([name, label]) => <label className="flex gap-2 text-sm font-semibold" key={name}><input name={name} type="checkbox" required /> {label}</label>)}
                     <label className="block text-sm font-semibold">Type full legal name as electronic signature<input className="input mt-1" name="signatureName" required /></label>
-                    <button className="btn btn-primary" type="submit">Submit signed agreement</button>
-                  </form>
+                    <PortalSubmitButton className="btn btn-primary" type="submit">Submit signed agreement</PortalSubmitButton>
+                  </PortalForm>
                 </div>
               )
             ) : selectedStage?.order === 6 ? (
@@ -1167,8 +680,8 @@ export default async function Portal({
               ) : selectedStageIsRejected ? (
                 <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">Onboarding was not approved. Follow instructions from Zentric Analytics LTD.</p>
               ) : (
-                <form action={submitStage6} className="mt-6 space-y-6 rounded-2xl border border-slate-200 p-4 sm:p-5">
-                  <input type="hidden" name="session" value={session ?? ""} />
+                <PortalForm action={submitStage6} className="mt-6 space-y-6 rounded-2xl border border-slate-200 p-4 sm:p-5">
+
                   {selectedStageStatus === "Correction Requested" ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">Correction requested. Please review HR notes and resubmit onboarding.</p> : null}
                   <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">Final HR approval and policy acknowledgements are still required. Payroll/statutory details are collected only for employment administration and are not shown in public summaries.</p>
                   {[
@@ -1177,10 +690,10 @@ export default async function Portal({
                     ["Next of kin / emergency contact", [["nextOfKinName","Next of kin name", "", "text"],["nextOfKinRelationship","Next of kin relationship", "", "text"],["nextOfKinPhone","Next of kin phone", "", "tel"],["nextOfKinEmail","Next of kin email (optional)", "", "email"],["nextOfKinAddress","Next of kin address (optional)", "", "textarea"],["emergencyContactName","Emergency contact name", "", "text"],["emergencyContactRelationship","Emergency contact relationship", "", "text"],["emergencyContactPhone","Emergency contact phone", "", "tel"],["emergencyContactAddress","Emergency contact address (optional)", "", "textarea"]]],
                     ["Payroll / statutory details", [["bankName","Bank name", "", "text"],["accountName","Account name", "", "text"],["accountNumber","Account number", "", "text"],["taxIdentificationNumber","Tax identification number (optional)", "", "text"],["pensionProvider","Pension provider (optional)", "", "text"],["pensionAccountNumber","Pension account number (optional)", "", "text"],["nationalIdentificationNumber","National identification number (optional)", "", "text"],["statutoryContributionNotes","Statutory contribution notes (optional)", "", "textarea"]]],
                   ].map(([title, fields]) => <section className="rounded-2xl border border-slate-200 p-4" key={title as string}><h3 className="font-bold text-ink">{title as string}</h3><div className="mt-4 grid gap-4 md:grid-cols-2">{(fields as string[][]).map(([name,label,defaultValue,type]) => <label className="block text-sm font-semibold" key={name}>{label}{type === "textarea" ? <textarea className="input mt-1 min-h-24" name={name} defaultValue={defaultValue} required={!label.includes("optional")} /> : <input className="input mt-1" name={name} type={type} defaultValue={defaultValue} required={!label.includes("optional")} />}</label>)}</div></section>)}
-                  <section className="rounded-2xl border border-slate-200 p-4"><h3 className="font-bold text-ink">Uploads</h3><div className="mt-4 grid gap-4 md:grid-cols-3">{[["bankProof","Bank proof (optional)"],["statutoryDocument","Tax/statutory document (optional)"],["additionalDocument","Additional onboarding document (optional)"]].map(([name,label]) => <label className="block text-sm font-semibold" key={name}>{label}<input className="input mt-1" name={name} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" /></label>)}</div></section>
+                  <section className="rounded-2xl border border-slate-200 p-4"><h3 className="font-bold text-ink">Uploads</h3><p className="mt-2 text-sm text-slate-600">Maximum 20 MB per file and 24 MB combined.</p><div className="mt-4 grid gap-4 md:grid-cols-3">{[["bankProof","Bank proof (optional)"],["statutoryDocument","Tax/statutory document (optional)"],["additionalDocument","Additional onboarding document (optional)"]].map(([name,label]) => <label className="block text-sm font-semibold" key={name}>{label}<input className="input mt-1" name={name} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" /></label>)}</div></section>
                   <section className="space-y-3 rounded-2xl border border-slate-200 p-4"><h3 className="font-bold text-ink">Declarations and e-signature</h3>{[["declarationAccuracy","I confirm the information is accurate."],["payrollProcessingConsent","I submit payroll/statutory details for HR onboarding purposes."],["employmentAdministrationConsent","I consent to Zentric Analytics LTD processing this information for employment administration."],["finalApprovalAcknowledgement","I understand onboarding remains subject to policy acknowledgements and final HR approval."],["changeNotificationAgreement","I agree to notify HR if onboarding information changes."],["electronicSignatureConsent","I consent to sign electronically."]].map(([name,label]) => <label className="flex gap-2 text-sm font-semibold" key={name}><input name={name} type="checkbox" required /> {label}</label>)}<label className="block text-sm font-semibold">Type full legal name as electronic signature<input className="input mt-1" name="signatureName" required /></label></section>
-                  <button className="btn btn-primary" type="submit">Submit onboarding for HR review</button>
-                </form>
+                  <PortalSubmitButton className="btn btn-primary" type="submit">Submit onboarding for HR review</PortalSubmitButton>
+                </PortalForm>
               )
             ) : selectedStage?.order === 7 ? (
               selectedStageIsLocked ? (
@@ -1192,8 +705,8 @@ export default async function Portal({
               ) : selectedStageIsRejected ? (
                 <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">Acknowledgements were not approved. Follow instructions from Zentric Analytics LTD.</p>
               ) : (
-                <form action={submitStage7} className="mt-6 space-y-6 rounded-2xl border border-slate-200 p-4 sm:p-5">
-                  <input type="hidden" name="session" value={session ?? ""} />
+                <PortalForm action={submitStage7} className="mt-6 space-y-6 rounded-2xl border border-slate-200 p-4 sm:p-5">
+
                   {selectedStageStatus === "Correction Requested" ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">Correction requested. Please review HR instructions and resubmit your acknowledgements.</p> : null}
                   <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">Review each acknowledgement carefully. This stage is not final hiring completion; Stage 8 final HR approval is still required before the workflow is complete.</p>
                   {[
@@ -1204,8 +717,8 @@ export default async function Portal({
                     ["Communication and Professional Conduct Acknowledgement", "communicationAcknowledgement", ["I will use approved communication channels professionally.", "I will not misrepresent Zentric Analytics LTD or contact clients, partners, vendors, or applicants outside authorized duties.", "I will maintain respectful and lawful conduct in workplace communications."]],
                   ].map(([title, name, items]) => <section className="rounded-2xl border border-slate-200 p-4" key={name as string}><h3 className="font-bold text-ink">{title as string}</h3><ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700">{(items as string[]).map((item) => <li key={item}>{item}</li>)}</ul><label className="mt-4 flex gap-2 text-sm font-semibold"><input name={name as string} type="checkbox" required /> I acknowledge this section.</label></section>)}
                   <section className="space-y-3 rounded-2xl border border-slate-200 p-4"><h3 className="font-bold text-ink">Final Declaration and E-Signature</h3>{[["finalDeclaration","I have read and understood these acknowledgements, and my acknowledgements are truthful."],["finalHrApprovalUnderstanding","I understand this stage is not final hiring completion and Stage 8 final HR approval is still required."],["electronicSignatureConsent","I consent to sign electronically."]].map(([name,label]) => <label className="flex gap-2 text-sm font-semibold" key={name}><input name={name} type="checkbox" required /> {label}</label>)}<label className="block text-sm font-semibold">Optional note to HR<textarea className="input mt-1 min-h-20" name="candidateNote" maxLength={1000} /></label><label className="block text-sm font-semibold">Type full legal name as electronic signature<input className="input mt-1" name="signatureName" required /></label></section>
-                  <button className="btn btn-primary" type="submit">Submit acknowledgements for HR review</button>
-                </form>
+                  <PortalSubmitButton className="btn btn-primary" type="submit">Submit acknowledgements for HR review</PortalSubmitButton>
+                </PortalForm>
               )
             ) : selectedStage?.order === 8 ? (
               selectedStageIsLocked ? (
@@ -1226,6 +739,8 @@ export default async function Portal({
               </p>
             )}
           </section>
+          <PortalProgress portalStages={portalStages} selectedStageOrder={selectedStage?.order} progressPercent={progressPercent} />
+
         </div>}
       </Section>
     </PageShell>

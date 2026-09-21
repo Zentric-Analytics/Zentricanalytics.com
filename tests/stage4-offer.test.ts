@@ -1,5 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { PortalProgress } from "../src/app/track/portal/PortalProgress";
 
 const portal = readFileSync("src/app/track/portal/page.tsx", "utf8");
 const trackActions = readFileSync("src/app/track/actions.ts", "utf8");
@@ -60,12 +63,15 @@ describe("Stage 4 offer workflow source checks", () => {
   });
 
   it("keeps selectable Stage 4 cards visibly actionable", () => {
-    expect(portal).toContain("aria-current={selected ? ");
-    expect(portal).toContain(
-      "{stageCardActionLabel(definition.status, selected)}",
-    );
-    expect(portal).toContain("ring-2 ring-brand/20");
-    expect(portal).toContain("encodeURIComponent(session)");
+    const html = renderToStaticMarkup(createElement(PortalProgress, {
+      portalStages: [{ key: 'offer', title: 'Offer Stage', order: 4, status: 'Available', isCurrent: true }],
+      selectedStageOrder: 4, progressPercent: 38,
+    }));
+    expect(html).toContain('aria-current="step"');
+    expect(html).toContain('Selected');
+    expect(html).toContain('ring-2 ring-brand/20');
+    expect(html).toContain('/track/portal?stage=4#selected-stage-title');
+    expect(html).not.toContain('session=');
   });
 
   it("removes applicant documents card without applicant download links or conflict markers", () => {

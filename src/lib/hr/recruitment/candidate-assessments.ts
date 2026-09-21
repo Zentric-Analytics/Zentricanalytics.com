@@ -21,6 +21,13 @@ export const candidateAssessmentResponseSchema = z.object({
 /** Called in a Serializable transaction: session, ownership, lifecycle and version rechecked together. */
 export async function submitCandidateAssessmentResponse(tx: Prisma.TransactionClient, raw: unknown) {
   const input = candidateAssessmentResponseSchema.parse(raw);
+  const initialAccess = await tx.applicationAccessCode.findFirst({
+    where: { verifiedSessionTokenHash: sha256(input.session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } },
+    select: { applicationId: true },
+  });
+  if (!initialAccess) throw new Error('Your session has expired. Request a new access code.');
+  await tx.$queryRaw`SELECT id FROM "JobApplication" WHERE id = ${initialAccess.applicationId} FOR UPDATE`;
+  await tx.$queryRaw`SELECT id FROM "HiringStage" WHERE "applicationId" = ${initialAccess.applicationId} AND "stageOrder" = 3 FOR UPDATE`;
   const access = await tx.applicationAccessCode.findFirst({
     where: { verifiedSessionTokenHash: sha256(input.session), sessionExpiresAt: { gt: new Date() }, application: { deletedAt: null } },
     include: { application: { include: { stages: true } } },
