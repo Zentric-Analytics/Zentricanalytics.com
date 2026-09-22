@@ -235,6 +235,6 @@ describe('public layout shell', () => {
     const page = readFileSync(pagePath, 'utf8');
 
     expect(page).toContain('PageShell');
-    expect(page).toContain('<PageShell>');
+    expect(page).toMatch(/<PageShell(?:>|\s)/);
   });
 });
