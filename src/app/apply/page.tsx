@@ -1,5 +1,7 @@
 import { PageShell } from '@/components/PageShell';
-import { Section } from '@/components/Section';
+import Link from 'next/link';
+import { HiringProcess } from './HiringProcess';
+import styles from './application.module.css';
 import { Stage1ApplicationForm } from './Stage1ApplicationForm';
 import { prisma } from '@/lib/prisma';
 
@@ -13,16 +15,44 @@ export default async function Apply({ searchParams }: { searchParams: Promise<{ 
   }) : null;
 
   return (
-    <PageShell>
-      <Section eyebrow="Stage 1" title="Candidate Application" className="za-task-section">
-        <p className="mb-6 max-w-3xl break-words rounded-2xl bg-gradient-to-r from-brand/10 via-white to-accent/10 px-4 py-3 text-sm leading-6 text-slate-700 ring-1 ring-brand/10 sm:px-5">Provide your contact details, role preference, experience summary, CV, and declarations. After review, we will send updates to the email you provide.</p>
-        {params.submitted ? (
-          <div className="card mb-6 p-5 sm:p-6">
-            <h2 className="break-words text-2xl font-bold">Application received</h2>
-            <p className="mt-3 break-words">Your Application ID is <strong className="break-all">{params.submitted}</strong>. Keep it safe; you will need it with your email to track your application. Recruitment updates and any next steps will be sent to that email.</p>
+    <PageShell
+      header={
+        <header className={styles.masthead}>
+          <div className={styles.mastheadInner}>
+            <div className={styles.brandArea}>
+              <Link href="/" className={styles.wordmark}>Zentric <span>Analytics</span></Link>
+              <span className={styles.careersLabel}>Careers</span>
+            </div>
+            <Link href="/careers" className={styles.back}>← <span>Back to careers</span></Link>
           </div>
-        ) : <Stage1ApplicationForm vacancy={vacancy} />}
-      </Section>
+        </header>
+      }
+      footer={
+        <footer className={styles.footer}>
+          <span>Zentric Analytics</span>
+          <span>Candidate application · Initial application</span>
+        </footer>
+      }
+    >
+      <div className={styles.page}>
+        <div className={styles.workspace}>
+          <HiringProcess />
+          <div className={styles.formColumn}>
+            <header className={styles.intro}>
+              <p className={styles.stageLabel}>Stage 1 of 8</p>
+              <h1>Initial application</h1>
+              <p className={styles.introText}>Share your details, experience and CV. <strong>This submits Stage 1 for review.</strong> You can proceed to Stage 2 after approval.</p>
+              {!params.submitted && <p className={styles.requiredNote}><span>*</span> Required fields</p>}
+            </header>
+            {params.submitted ? (
+              <div className={styles.received} role="status">
+                <h2 className="break-words text-2xl font-bold">Stage 1 application received</h2>
+                <p className="mt-3 break-words">Your Application ID is <strong className="break-all">{params.submitted}</strong>. Keep it safe; you will need it with your email to track your application. Recruitment updates and any next steps will be sent to that email.</p>
+              </div>
+            ) : <Stage1ApplicationForm vacancy={vacancy} />}
+          </div>
+        </div>
+      </div>
     </PageShell>
   );
 }
