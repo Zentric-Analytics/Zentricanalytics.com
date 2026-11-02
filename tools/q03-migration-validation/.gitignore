@@ -1,0 +1,16 @@
+# Local execution material is intentionally absent from this source archive.
+resource-manifest.json
+runner-artifact-manifest.json
+a8-authorization.json
+.env*
+node_modules/
+a8-runtime/
+*-evidence/
+evidence/
+tmp/
+home/
+*.tar
+*.xz
+*.exe
+*.dll*
+*.so*

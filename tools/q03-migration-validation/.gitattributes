@@ -1,0 +1,4 @@
+# Preserve historical source/snapshot checksum bytes across checkout platforms.
+* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# Historical checksum-pinned snapshots retain pre-existing final blank lines.
+harness/inputs/** whitespace=blank-at-eol,space-before-tab,cr-at-eol,-blank-at-eof

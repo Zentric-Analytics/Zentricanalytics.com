@@ -1,0 +1,477 @@
+[
+  {
+    "Path": "harness/a5-security.test.mjs",
+    "Bytes": 18971,
+    "SHA256": "3B8E3F994BA61B3CFA6305BBCC7A5B8F19B79D32F83F3ABEEC593708B0398D7E"
+  },
+  {
+    "Path": "harness/a8-connectivity.test.mjs",
+    "Bytes": 10804,
+    "SHA256": "112FF4EB318D39FFEB8E2D0F1AC157C4B6E4894469D2F15B46325A204D54F870"
+  },
+  {
+    "Path": "harness/concurrency.mjs",
+    "Bytes": 4284,
+    "SHA256": "3B8FCB35BA545A20CB40546DBF0DEB1200C7E58475B1B243AC60AF5D5FEAD708"
+  },
+  {
+    "Path": "harness/config.mjs",
+    "Bytes": 5071,
+    "SHA256": "A2042580817695684C25780CDF18319A8109BC8C2639786FF2D25C0A8F9B0AC4"
+  },
+  {
+    "Path": "harness/connectivity-proof.mjs",
+    "Bytes": 13460,
+    "SHA256": "9187FE95911B3F9E8CEDC523B930DE2FB9D0C1CB98629F483BAE455B7EFA4848"
+  },
+  {
+    "Path": "harness/db-tests.mjs",
+    "Bytes": 18720,
+    "SHA256": "62D40228E9544AA1E97A54F69BB48C0EADDC129E6A8B52B8BDA6A8277F18214D"
+  },
+  {
+    "Path": "harness/evidence-rules.mjs",
+    "Bytes": 6804,
+    "SHA256": "25017A25FA03035B9AEEEC0708315D799E750BD590AF703BACD4DE27D156FB33"
+  },
+  {
+    "Path": "harness/fixtures.mjs",
+    "Bytes": 6145,
+    "SHA256": "CE764DA8987FA6BB5A16D0766EF775F1E7ABC521C8733D2BF64BDFF6A4584089"
+  },
+  {
+    "Path": "harness/input-manifest.json",
+    "Bytes": 14757,
+    "SHA256": "96E8C1DBB306679F0FA8C1757ECE3D2ABF27F8AFD138E908DE919C1CDB0D2E28"
+  },
+  {
+    "Path": "harness/lifecycle.mjs",
+    "Bytes": 2362,
+    "SHA256": "3B912C991B90DD7BCA141A4D7D64DA6B062942E85C01110543952DD29E1C0438"
+  },
+  {
+    "Path": "harness/offline-validation-guard.cjs",
+    "Bytes": 777,
+    "SHA256": "B7408F3F4F77788657AC6338AAC7B42A19686EB1DEEA84B725CEE5CE28579F0C"
+  },
+  {
+    "Path": "harness/run-q03b.mjs",
+    "Bytes": 7123,
+    "SHA256": "40785E84ECCC095D7AF4031C3A01B1B283D93366FFCD572E2E4B0A04508137AF"
+  },
+  {
+    "Path": "harness/runner-boundary.test.mjs",
+    "Bytes": 7681,
+    "SHA256": "3F8150166D1951AB522717DA2D65111817EA1FC584F21B49659D76D938177A68"
+  },
+  {
+    "Path": "harness/runner-controller.mjs",
+    "Bytes": 21609,
+    "SHA256": "3CF15A95FEE02D4A5D2BBB164F878A157C57A2822C0A202815E7127245C4E909"
+  },
+  {
+    "Path": "harness/runner-entrypoint.mjs",
+    "Bytes": 4103,
+    "SHA256": "EEFAAC86D7D17D220F556C872FA7242A0D326C84F81F6BB4C8CB24C17FACF959"
+  },
+  {
+    "Path": "harness/runner.Dockerfile",
+    "Bytes": 650,
+    "SHA256": "5D374DBD39D3D3138A449A47A178D405C5BF52FBFA128B3AFC894580F50ED6C1"
+  },
+  {
+    "Path": "harness/runtime.mjs",
+    "Bytes": 9014,
+    "SHA256": "48DAEFB65CF5F48ADD93DA1EC61A7DCD7BB1310EED84810FEFD0BBA8369FF02B"
+  },
+  {
+    "Path": "harness/self-check.test.mjs",
+    "Bytes": 4960,
+    "SHA256": "A3B4A0A47163D07138C874310138CA4FDFBE3E726B20A9BEDCCC8C83B5EEC514"
+  },
+  {
+    "Path": "harness/target-boundary.mjs",
+    "Bytes": 2148,
+    "SHA256": "4C030EE69620871D9E6E09EA113310A2E0B6D5C4435431469F31DE43400F4F86"
+  },
+  {
+    "Path": "harness/tool-network-guard.cjs",
+    "Bytes": 612,
+    "SHA256": "D26CFAE0EC0FC8607F9A642EDCFD6D08B6AADB1C6631D4364510071DCC67C546"
+  },
+  {
+    "Path": "harness/transport.mjs",
+    "Bytes": 800,
+    "SHA256": "727A641C15A6AFE111BD6A15DB6F8D5AD7150200DDA1F4524FD32C9824BF75F7"
+  },
+  {
+    "Path": "harness/inputs/prisma/schema.prisma",
+    "Bytes": 248322,
+    "SHA256": "612506992DDAC8BCBAD648316BD20F49FD906699645918C5B34158953B950193"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/migration_lock.toml",
+    "Bytes": 131,
+    "SHA256": "BC487C02C71AD9CAE8694647129E3EA7F32B1FE7007D0A6CED064E51022CD3FB"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260622000000_phase2_backend/migration.sql",
+    "Bytes": 8048,
+    "SHA256": "25545C35C513887C02D9D6A478661D0BEE74278BCB25900A8193CBE1C9DDFDBC"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260622010000_phase2_1_stage1_form_quality/migration.sql",
+    "Bytes": 462,
+    "SHA256": "061086AB9C2F5A3DE546917B31FE62FB748ED54FEFFB198CFE07B2F739751C59"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260622030000_production_hardening/migration.sql",
+    "Bytes": 714,
+    "SHA256": "2F8D216F5ACEBFFE3AEA0AA5D70829F892C3E95476123720B31CF6D541624B04"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260622040000_application_soft_delete/migration.sql",
+    "Bytes": 499,
+    "SHA256": "717234C24CE82F625901B468BC80443E2E91B82AF5C6F90ADE35B42456CDD2C3"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260622050000_stage3_metadata/migration.sql",
+    "Bytes": 70,
+    "SHA256": "00D82A8DDF6FA971AC999564C0A4AEBE3DDB62A4F8124085A9F2CF8C12E65822"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260623000000_stage4_offer/migration.sql",
+    "Bytes": 508,
+    "SHA256": "B7955A24D060A4486F250BC9F64ADDFFA2DD9021F565602F4622D3B43807A9ED"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260625000000_stage5_employment_agreement/migration.sql",
+    "Bytes": 720,
+    "SHA256": "755FED11628B463DD90B26E3FA1E8721D1C657B38460A4885C7F863D3159DD09"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260729000000_hrms_secure_foundation/migration.sql",
+    "Bytes": 16441,
+    "SHA256": "3E163227916DAE6ED255858F889F6684900D2863D884C986C4E93853B5241D54"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730000000_hrms_core_hr/migration.sql",
+    "Bytes": 11735,
+    "SHA256": "8A6DFD35900CF17047E34F6D7EC8D457B40E6A9A1547F0051E1A75E4627FB2B4"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730010000_hrms_leave_management/migration.sql",
+    "Bytes": 13604,
+    "SHA256": "1C66166ECEB85EFEEB58B35F1F0C81E207ADC833A2DBDF423867DEE530F55933"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730020000_hrms_payroll/migration.sql",
+    "Bytes": 18101,
+    "SHA256": "DB7952D962D59EDE450D0E5B463244B3B7D25084AA5881AA9730A593CB4D3BDC"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730030000_hrms_documents_assets/migration.sql",
+    "Bytes": 13147,
+    "SHA256": "DAD614BAF778A3DD75BFFE873E44835249EB191F814EDD4ADFEA6F8DF6526D39"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730040000_hrms_onboarding_offboarding/migration.sql",
+    "Bytes": 9020,
+    "SHA256": "EE7DA2D4937684BF6CAF87C342445028A9D9BFC0ECEA775024A9E50F7C58F675"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730050000_hrms_workflow_engine/migration.sql",
+    "Bytes": 9755,
+    "SHA256": "FA66A64891777B24C0630E9EF7B206AFDF1E37B0A4C1DD36FB5B33F0AB05C263"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730060000_hrms_reports_analytics/migration.sql",
+    "Bytes": 1492,
+    "SHA256": "E8E75C7A2CFC2FC67A646EE4480F837839C728C0741F9CF9299FC1F1FCF7917A"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730070000_hrms_production_hardening/migration.sql",
+    "Bytes": 1078,
+    "SHA256": "411CE707156286BD2CB33CCD75A3F0A6B210B46F4A47E98446744272D377B138"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730080000_hrms_blueprint_completion/migration.sql",
+    "Bytes": 8774,
+    "SHA256": "9B3308A831E864B5E9280FEA998BDB84E86D2F9184B0FF7FF5FC00E689F2229C"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730100000_hrms_employee_provisioning/migration.sql",
+    "Bytes": 2176,
+    "SHA256": "A8678119F0ED6778359E54FBF9D1AA974D368ACFF3CDE7369BA7AE33619CCE39"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730110000_hrms_organization_management/migration.sql",
+    "Bytes": 19470,
+    "SHA256": "A468838E370ACA2BA5C1F86BEAFF5327011149F7752F56242DF128AF9174D2B7"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730120000_hrms_organization_default_backfill/migration.sql",
+    "Bytes": 6081,
+    "SHA256": "02E2AD980B094761888EAB73965778FB6BDD50C36C3C9C71E836BBB1E98D3E77"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730130000_hrms_organization_permissions/migration.sql",
+    "Bytes": 1813,
+    "SHA256": "F841B2F356E107F95C7242C10A25DEF0E5518185F26AC9ADF30B940C294EF94A"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730140000_hrms_primary_admin_deletion_governance/migration.sql",
+    "Bytes": 62,
+    "SHA256": "586C898F102F70E5A4DB33242FD7613329FF38D6FC18890B70333A0E5CA23BAA"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730141000_hrms_primary_admin_deletion_fields/migration.sql",
+    "Bytes": 1072,
+    "SHA256": "BBF98B1F82DCD4B7B2D9E68A3EE8AA0473BEBEDCFCD6F97E67C22BC5512F0355"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql",
+    "Bytes": 2746,
+    "SHA256": "2F1A30EA60111FA56E21D13FCA743BC85D0DD7ACA18B7D1560EFE10C5A5F5E6D"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730160000_hrms_position_dimension_reconciliation/migration.sql",
+    "Bytes": 1425,
+    "SHA256": "20C21828685E1A05EB3A7BA34D79046E72022A663F08E79234769A12206B8C58"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260730170000_hrms_primary_admin_physical_deletion/migration.sql",
+    "Bytes": 6004,
+    "SHA256": "71CFCACBCB4163F7A602A96BD1623E4531D75F1C09A6F2D0A7421A23383DE023"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260731000000_hrms_recruitment_hiring_teams/migration.sql",
+    "Bytes": 11948,
+    "SHA256": "BF830CF7B5AB6B15789456F33781CF078FECBF49DA43C7738A9FA60BCD677F5C"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260731010000_hrms_recruitment_vacancies/migration.sql",
+    "Bytes": 6665,
+    "SHA256": "8223A2B762C80E97A2478BE4DCC3CD59FE5FD47DB7F5B4140C36E85D681E24F6"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql",
+    "Bytes": 25771,
+    "SHA256": "9FA240F3A0B0C63DC3AD8B07B6C165080DFBB27EF6C7990AB61D06B674C8705A"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260801000000_hrms_document_provider_abstractions/migration.sql",
+    "Bytes": 664,
+    "SHA256": "6C4A3805E96469B3185D86C6AE237B19436292D65DA6BBDD6640694BD2ACFB53"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260809090000_hrms_unit4_workforce_foundation/migration.sql",
+    "Bytes": 13015,
+    "SHA256": "A382DB0E0398E74B1439BB5FDF512A696F65E3CD8CDF6A5A13F29C1F14ADE7D9"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260809103000_hrms_unit4_employment_lifecycles/migration.sql",
+    "Bytes": 7783,
+    "SHA256": "BAD13A46F928A004D5525DF86D8FE5983C1ED3997824499D41707614769CD3A6"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260809190000_document_clean_release_invariant/migration.sql",
+    "Bytes": 527,
+    "SHA256": "03AE2A9784B5FC30AD7A485F14A2C472B45BCC136893D979D0C8F5FBBE1DAF47"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260810153000_hrms_unit4_auditor_role/migration.sql",
+    "Bytes": 59,
+    "SHA256": "021007E8D76678D7B8BEFB6F2A038CC45CAED0CCAEB67B1DF4C2F37B98CD77BB"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260810153100_hrms_unit4_auditor_role_seed/migration.sql",
+    "Bytes": 733,
+    "SHA256": "A3457EDCF6FDA76FFFFED791EE54F5620EFB2F0D3B8C43E183EABB0160D8B595"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260810190000_hr_password_reset_otp/migration.sql",
+    "Bytes": 887,
+    "SHA256": "6E4CF792ECB9C28547FAC1543A8A989F7E90F9098BFAAB22EA2FC279E83CDF93"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260811090000_hrms_unit5_leave_foundation/migration.sql",
+    "Bytes": 29231,
+    "SHA256": "8C721D3959B74CD8D2825EE1E9A6DA91C392643222FD0B0E7D68B7BE0FC18BD8"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260811120000_hrms_unit5_ledger_direction/migration.sql",
+    "Bytes": 302,
+    "SHA256": "703F1E6056FAF7C5DD6C557620628BA70E94AA9E0CADDE7922442DCB814CB9E9"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260811130000_hrms_unit5_carryover_projection/migration.sql",
+    "Bytes": 169,
+    "SHA256": "30499A96B7CB6E1BA9B5559B85BF3FC0A7A92A758C413D41C4F676735EB3D0C6"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql",
+    "Bytes": 33223,
+    "SHA256": "E5B49E72E2C09BF1EC93E7F44691A04FFB49432A4AFD7C8FD1960775EC6034A9"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql",
+    "Bytes": 39116,
+    "SHA256": "AA54012EBB54B9311A9C35BDC4D8E22B10E0435A2B3071337E88B7EF71CD93A8"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260812175500_hrms_unit7_permission_backfill/migration.sql",
+    "Bytes": 4312,
+    "SHA256": "2C36D6251E24DA2C7FB13955649FD9181A8388B25BDF6E2E98AB0EA5CFF7E4F4"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260812181000_hrms_unit7_calibration_finalization_audit/migration.sql",
+    "Bytes": 1808,
+    "SHA256": "CEC313DD51742437B2E46B767B47305FC91D4725FE1EF264FF935B005A9C67D4"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260813193000_hrms_unit8_compensation_foundation/migration.sql",
+    "Bytes": 34664,
+    "SHA256": "B069E301D2522F02EFD01FE626E9B08A23F6F0099DE3BC13CC2643605CAD5F12"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260813194500_hrms_unit8_compensation_permissions/migration.sql",
+    "Bytes": 3644,
+    "SHA256": "B97CD5229ED3D9F70E2AF72A6638EBA4850C961D743BA78781E51CCC17DB2BE9"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260813195500_hrms_unit8_compensation_trigger_scope/migration.sql",
+    "Bytes": 2880,
+    "SHA256": "60DE06A392A4572099348AE1FF17D693B3A8EFB3194754C89521653B0C213CC7"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260813200000_hrms_unit8_compensation_trigger_record_guards/migration.sql",
+    "Bytes": 2967,
+    "SHA256": "086F4B8E02D119C4981A025BBACBE5F687A35718281CB580041152FBC84DAA11"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260813201500_hrms_unit8_promotion_decision_guard/migration.sql",
+    "Bytes": 488,
+    "SHA256": "F30D49D7832182108AB48BB9928922B919647536E0CFD914688E6DA2B9502681"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260813203000_hrms_unit8_manager_compensation_scope/migration.sql",
+    "Bytes": 630,
+    "SHA256": "F9D2B6A9EF5808C2FDAAB5374D23EA212E3DF62ACE83971609F058EF141D6925"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260813224000_hrms_unit8_role_permission_alignment/migration.sql",
+    "Bytes": 1585,
+    "SHA256": "FA6C3C7D21AA866DC19DBE0AECAC96E94AC2F6B740D63BAA910740D0F17EA196"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260814020000_hrms_unit8_role_permission_grant_remediation/migration.sql",
+    "Bytes": 2154,
+    "SHA256": "546E47667C0569F8E91B4D267791825816534F3492E72A1A800CD00FE6A9E2D0"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260814110000_hrms_unit9_payroll_foundation/migration.sql",
+    "Bytes": 19646,
+    "SHA256": "A27B465C6BFD126B8AEF5753889F41176FCC2BF965B8AC4C854AA69F2231BD61"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260814120000_hrms_unit9_financial_evidence/migration.sql",
+    "Bytes": 12276,
+    "SHA256": "4A6918F6CA66D62CD5DF80619C8A78D327A66C740D4F14572883AE647587C835"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql",
+    "Bytes": 7366,
+    "SHA256": "D63C7FEB90E2B7B3783F28407A25DDFE6B7F9387461D2B2565106AE75583CE0D"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql",
+    "Bytes": 7725,
+    "SHA256": "BECCD8610611C0E9C7438C89C04482DE3EB75B21B689A8B19670F04243BE97D0"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260815064500_hrms_unit9_ng_2026_2_overlap_guards/migration.sql",
+    "Bytes": 1446,
+    "SHA256": "144609CB12FC8852F14D32FF842A780DA81B5D905E615FD7ADA8C310643B379D"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260815073000_hrms_unit9_ng_2026_2_immutability/migration.sql",
+    "Bytes": 1729,
+    "SHA256": "CC262EB400B76904C1DBAC2C5BD88E9958A2CCD19113B611F027FEF2582E8FB6"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260815081500_hrms_unit9_ng_2026_2_statutory_amendments/migration.sql",
+    "Bytes": 1264,
+    "SHA256": "CB09EC3B4C5C796BADBFC3B7A118A3C159DB429CCFB84D15A3407088685DD0C1"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260824120000_hrms_unit9_ng_limited_launch_controls/migration.sql",
+    "Bytes": 4915,
+    "SHA256": "613E4F5686A1A991BC4E7263A5AF7213091BD8304818F4D908373414EAA19775"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260824143000_hrms_unit9_limited_launch_permission_backfill/migration.sql",
+    "Bytes": 1508,
+    "SHA256": "615A59C21363E970E0F652AC589F9BA559E6AF495E862347990AC9EB05C3DFD5"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260825080000_hrms_unit9_ng_2026_5_minimum_wage_governance/migration.sql",
+    "Bytes": 744,
+    "SHA256": "2075688A87AAA803A09EFAA6E7ED5A42917CB426D552181F6720D8E44A796347"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260825120000_hrms_unit9_ng_2026_6_income_binding/migration.sql",
+    "Bytes": 680,
+    "SHA256": "AF1B44F92F4ECC462F023DFA2B3681832C55D39E91867C548C82B955AB2B5132"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260825160000_hrms_unit9_ng_2026_7_annualization/migration.sql",
+    "Bytes": 1413,
+    "SHA256": "CF4C02B10EE0962AD6BEE030403CD2EAC2DF0B3C4AC66C28EE185E5EE623B2AE"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260906000000_reviewed_recruitment_ownership/migration.sql",
+    "Bytes": 1669,
+    "SHA256": "FFE3416732E5EEF88C4E703089E565377266220EBB56F67CF4BE52FA38196455"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260909010000_activation_status_history/migration.sql",
+    "Bytes": 461,
+    "SHA256": "7816C604E0B4069C7C9B1D0E590CACE3CB50AA40A34A8DA9A69D22072CF201DF"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20260921150000_candidate_submission_versions/migration.sql",
+    "Bytes": 474,
+    "SHA256": "6F4B65122DD972B868D09D13D20A120B3A0A0E75C20824546579F3C3E39840D9"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20261029000100_email_queue_held_enum/migration.sql",
+    "Bytes": 301,
+    "SHA256": "F38F8DF65C937D3E7A10467A4DD6DE1967CB974FA0905954CED822D2A24551C2"
+  },
+  {
+    "Path": "harness/inputs/prisma/migrations/20261029000200_email_queue_safety_contract/migration.sql",
+    "Bytes": 14155,
+    "SHA256": "1EBAF3737964F25BEC6AB17C85A3F62448BE50A512D59EE6B5E6F1EE5A4EF31F"
+  },
+  {
+    "Path": "harness/inputs/security/queue-transition-rules.d.mts",
+    "Bytes": 5546,
+    "SHA256": "42F505FFE1773FB503C14D8BBB2F1980D9ADA2AC95D757E1BAC64995DE39E04C"
+  },
+  {
+    "Path": "harness/inputs/security/queue-transition-rules.mjs",
+    "Bytes": 10767,
+    "SHA256": "0C832018F3F68239B12D8F92416636B1728CC35C9BB7A4D0639A0EF35EA65D99"
+  },
+  {
+    "Path": "reference/linux-engine-integrity.json",
+    "Bytes": 985,
+    "SHA256": "BEB3325978EBCF5D19EEE965817DACD33B89DA550AE65D3DAE435FD682668BE2"
+  },
+  {
+    "Path": "reference/node-integrity.json",
+    "Bytes": 265,
+    "SHA256": "E55E6E5E70B43BD918209896384BF8E12AC3C6F63BFB63592A8B9CA61A8B8E5E"
+  }
+]

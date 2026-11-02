@@ -1,0 +1,20 @@
+[
+  {
+    "Filename": "schema-engine",
+    "Revision": "9b628578b3b7cae625e8c927178f15a170e74a9c",
+    "Platform": "debian-openssl-3.0.x",
+    "Source": "https://binaries.prisma.sh/all_commits/9b628578b3b7cae625e8c927178f15a170e74a9c/debian-openssl-3.0.x/schema-engine",
+    "CompressedSHA256": "e10b7bfa1dfa6f3fc069b156de4a56d1a7298daa42a806e26d808bb87e900016",
+    "SHA256": "348b9e6f5c531d13a2cdb1e130b90306b8fe8d30cda879fbf22d21ea787f6244",
+    "Length": 19925120
+  },
+  {
+    "Filename": "libquery_engine.so.node",
+    "Revision": "9b628578b3b7cae625e8c927178f15a170e74a9c",
+    "Platform": "debian-openssl-3.0.x",
+    "Source": "https://binaries.prisma.sh/all_commits/9b628578b3b7cae625e8c927178f15a170e74a9c/debian-openssl-3.0.x/libquery_engine.so.node",
+    "CompressedSHA256": "942a6e76b74baba2679064961d5fbb7252f1c5a701289f861ba485762f292b33",
+    "SHA256": "aef387b0b42412126048b637c502bd30ac32f696da402d39985f83ac95899544",
+    "Length": 17523032
+  }
+]
