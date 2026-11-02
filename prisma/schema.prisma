@@ -306,6 +306,37 @@ enum HrOutboxStatus {
   DELIVERED
   FAILED
   ABANDONED
+  HELD
+}
+
+enum HrEmailDispatchPhase {
+  NONE
+  INTENT
+  RESERVED
+  ATTEMPTED
+}
+
+enum HrEmailHoldReason {
+  STAGING_RECIPIENT_NOT_ALLOWLISTED
+  INVALID_RECIPIENT
+  UNSUPPORTED_TEMPLATE
+  CREDENTIAL_EXPIRED_OR_UNUSABLE
+  PROVIDER_OUTCOME_UNCERTAIN
+  LEGACY_PROCESSING_REVIEW_REQUIRED
+  PRE_INVOCATION_CANCELLED
+}
+
+enum HrEmailDispatchEventKind {
+  CLAIMED
+  INTENT_RECORDED
+  RESERVED
+  RESERVATION_CANCELLED
+  INVOCATION_BOUNDARY
+  PROVIDER_ACCEPTED
+  PROVIDER_FAILED
+  OUTCOME_UNCERTAIN
+  HELD
+  RELEASED
 }
 
 enum HrRecordStatus {
@@ -942,6 +973,7 @@ model HrUser {
   workflowInstancesStarted         HrWorkflowInstance[]            @relation("WorkflowInstanceStarter")
   workflowApprovals                HrWorkflowApproval[]
   auditEvents                      HrAuditEvent[]
+  emailDispatchEvents              HrEmailDispatchEvent[]
   notifications                    HrNotification[]
   notificationPreferences          HrNotificationPreference[]
   employeeStatusChanges            HrEmployeeStatusHistory[]
@@ -1056,6 +1088,7 @@ model HrAccountInvitation {
   createdAt      DateTime      @default(now())
   user           HrUser        @relation("InvitationRecipient", fields: [userId], references: [id], onDelete: Cascade)
   createdBy      HrUser        @relation("InvitationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  emailOutbox    HrEmailOutbox[]
 
   @@index([organizationId, userId, status, expiresAt])
 }
@@ -1084,6 +1117,7 @@ model HrPasswordResetChallenge {
   usedAt       DateTime?
   createdAt    DateTime      @default(now())
   user         HrUser        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailOutbox  HrEmailOutbox[]
 
   @@index([userId, status, expiresAt])
 }
@@ -1788,6 +1822,7 @@ model HrAuditEvent {
   createdAt      DateTime       @default(now())
   organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   actor          HrUser?        @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  emailDispatchEvents HrEmailDispatchEvent[]
 
   @@index([organizationId, entityType, entityId, createdAt])
   @@index([organizationId, actorUserId, createdAt])
@@ -1814,9 +1849,62 @@ model HrEmailOutbox {
   organization      HrOrganization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   attempts          HrEmailDeliveryAttempt[]
 
+  // NULL discriminator/phase retain unknown legacy history. Never default these to v1/NONE.
+  safetyContractVersion Int?
+  version               BigInt @default(0)
+  dispatchPhase         HrEmailDispatchPhase?
+  claimId               String? @db.VarChar(128)
+  claimedAt             DateTime?
+  claimExpiresAt        DateTime?
+  dispatchId            String? @unique @db.VarChar(128)
+  holdReason            HrEmailHoldReason?
+  heldAt                DateTime?
+  holdPolicyRevision    String? @db.VarChar(128)
+  reviewDueAt           DateTime?
+  retentionReviewAt     DateTime?
+  messageExpiresAt      DateTime?
+  providerAcceptedAt    DateTime?
+  invitationId          String?
+  resetChallengeId      String?
+  invitation            HrAccountInvitation? @relation(fields: [invitationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  resetChallenge        HrPasswordResetChallenge? @relation(fields: [resetChallengeId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  dispatchEvents        HrEmailDispatchEvent[]
+
+  // SQL-only CHECKs, partial uniqueness and immutability live in the safety migration.
+  @@unique([id, organizationId])
+  @@index([status, reviewDueAt])
+  @@index([organizationId, status, reviewDueAt])
+  @@index([status, claimExpiresAt])
+
   @@index([status, nextAttemptAt])
   @@index([status, createdAt])
   @@index([organizationId, createdAt])
+}
+
+// Append-only evidence, not proof of provider invocation or mailbox delivery.
+model HrEmailDispatchEvent {
+  id                String @id @default(cuid())
+  outboxId          String
+  organizationId    String
+  dispatchId        String? @db.VarChar(128)
+  kind              HrEmailDispatchEventKind
+  // NULL permits late evidence that does not itself apply a queue transition.
+  transitionVersion BigInt?
+  claimId           String? @db.VarChar(128)
+  recordedAt        DateTime @default(now())
+  reason            HrEmailHoldReason?
+  policyRevision    String? @db.VarChar(128)
+  actorUserId       String?
+  providerMessageId String? @db.VarChar(256)
+  auditEventId      String?
+  outbox            HrEmailOutbox @relation(fields: [outboxId, organizationId], references: [id, organizationId], onDelete: Restrict, onUpdate: Restrict)
+  actor             HrUser? @relation(fields: [actorUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  auditEvent        HrAuditEvent? @relation(fields: [auditEventId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([outboxId, transitionVersion])
+  @@index([outboxId, recordedAt])
+  @@index([organizationId, recordedAt])
+  @@index([outboxId, dispatchId, recordedAt])
 }
 
 model HrEmailDeliveryAttempt {
