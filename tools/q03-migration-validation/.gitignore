@@ -14,3 +14,9 @@ home/
 *.exe
 *.dll*
 *.so*
+# B1 authorization and execution evidence must remain outside Git.
+**/auth/
+**/authorization.json
+**/offline-gate.json
+**/execution-started.json
+b1-20*/

@@ -1,5 +1,38 @@
 # Q03 migration-validation source preservation (WIP)
 
+## Q03-B1 opt-in Track A adapter
+
+The new `harness/b1-contract.mjs`, `b1-controller.mjs`, `b1-runner.mjs` and
+`b1-contract.test.mjs` implement the separately owner-authorized Track A scope.
+Importing them does not execute Docker or SQL. B1 uses its own exact CLI scope,
+source fingerprint, offline evidence and short-lived local authorization; A8
+authorization and the old Windows relay are not used. Operational records live
+outside this repository and must never be committed.
+
+The controller only accepts the exact dedicated run, original immutable Docker
+resources, pinned runner image and single Track A database. Source paths are
+checked against the pinned 72-file manifest and translated to Linux separators
+without changing snapshot bytes. A network-none runner first verifies Node,
+Prisma and engine hashes. The migration runner then receives the existing
+disposable credential through private stdin, checks for a database collision,
+creates only Track A, and runs exactly one `prisma migrate deploy`. It captures
+ledger/catalog evidence and stops without repair or retry on migration failure.
+Schema comparison emits a proposal only; it never applies that proposal.
+
+For offline validation, add `b1-contract.test.mjs` to the guarded self-check
+command below. It uses fake Docker drivers and opens no network/database
+connection. The actual migration entrypoint is intentionally not listed as a
+general setup command: exact flags and local records are safety controls, not
+owner authorization. A durable execution marker and database collision rejection
+prevent blind replay. Do not remove those controls to retry a historical run.
+
+On 2026-11-02 the authorized Track A replay completed all 68 migrations using
+Prisma 6.10.1 / PostgreSQL 18.6. Ledger checksums and Q02-B SQL definition checks
+passed. Prisma's read-only schema comparison reported nonempty drift, including
+foreign-key, index-name and column differences. No diff SQL was applied. This is
+not a drift-free, runtime behavior, Track B or production-readiness certificate.
+Exact execution evidence remains in the separate external B1 evidence directory.
+
 This is a source preservation package, not a certified migration runner. No migration has been executed as part of G01. Historical Q03-A8 proved bounded read-only connectivity only. Q03-B1 and all database execution require separate owner authorization.
 
 The original external workspace and its exact historical evidence remain separate. Source in `harness/` is copied byte-for-byte, with its historical constraints intact; G01 did not integrate it into application runtime, package scripts or CI. `source-checksums.json` records source, snapshot and artifact-reference hashes. The 72 `harness/inputs/` files are schema/migration/security source snapshots, not database records. The input manifest describes their historical baseline, not current deployment readiness.

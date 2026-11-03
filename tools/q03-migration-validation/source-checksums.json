@@ -473,5 +473,25 @@
     "Path": "reference/node-integrity.json",
     "Bytes": 265,
     "SHA256": "E55E6E5E70B43BD918209896384BF8E12AC3C6F63BFB63592A8B9CA61A8B8E5E"
+  },
+  {
+    "Path": "harness/b1-contract.mjs",
+    "Bytes": 6676,
+    "SHA256": "E85375ACA10BF43B9264B7B5F4C528EE4A16899C88747EE45462EAF54D89842A"
+  },
+  {
+    "Path": "harness/b1-runner.mjs",
+    "Bytes": 7781,
+    "SHA256": "003506160DB622D35A03B82347988601627FF4AB0A275FB5ED9C7328A3B6B84E"
+  },
+  {
+    "Path": "harness/b1-controller.mjs",
+    "Bytes": 13454,
+    "SHA256": "FDC13BCBAF2263F048B9DF788C5D79A2B5B0E971371D99A253E17754D8605395"
+  },
+  {
+    "Path": "harness/b1-contract.test.mjs",
+    "Bytes": 12365,
+    "SHA256": "1785456759D7D125D38CA561E094D4AF415204DB5A5BD07635B5A804E7882662"
   }
 ]
