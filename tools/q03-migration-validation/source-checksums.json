@@ -493,5 +493,10 @@
     "Path": "harness/b1-contract.test.mjs",
     "Bytes": 12365,
     "SHA256": "1785456759D7D125D38CA561E094D4AF415204DB5A5BD07635B5A804E7882662"
+  },
+  {
+    "Path": "harness/track-b-fixture-contract.test.mjs",
+    "Bytes": 2265,
+    "SHA256": "2C0C962343404E497481D714D1D07208E4522AF5C79E233BF0DF61DBD9B60F7E"
   }
 ]

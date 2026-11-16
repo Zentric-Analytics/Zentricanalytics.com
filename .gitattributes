@@ -16,3 +16,10 @@ docs/hrms/delivery-units/unit-09/ng-candidate-2026-6-stage1-manifest.json text e
 scripts/hr-unit9-ng-2026-6-concurrency.ts text eol=lf
 tests/hrms-unit9-ng-2026-6-preservation.test.ts text eol=lf
 tests/hrms-unit9-ng-2026-6-package.test.ts text eol=lf
+
+# Exact source payloads retained inside existing immutable correction archives.
+docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-source-register.md text eol=lf
+docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-stage1-manifest.json text eol=lf
+docs/hrms/delivery-units/unit-09/ng-candidate-2026-2-stage1-package.sha256 text eol=lf
+docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-manifest.json text eol=lf
+docs/hrms/delivery-units/unit-09/ng-candidate-2026-3-stage1-package.sha256 text eol=lf

@@ -30,7 +30,15 @@ function record(value, allowedKeys) {
 
 function identifier(value) {
   return typeof value === "string" && value.length > 0 && value.length <= 256
-    && value.trim() === value && !/[\s\u0000-\u001f\u007f]/u.test(value);
+    && value.trim() === value && !/\s/u.test(value) && !hasControlCharacter(value);
+}
+
+function hasControlCharacter(value) {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (code < 32 || code === 127) return true;
+  }
+  return false;
 }
 
 function origin(value) {

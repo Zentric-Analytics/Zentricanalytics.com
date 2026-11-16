@@ -10,7 +10,7 @@ import { resolveDeploymentEnvironment as resolve } from "../src/lib/deployment-e
 import { evaluateOutgoingEmailRecipientEligibility as recipient } from "../src/lib/environment-policy-rules.mjs";
 
 // Existing offline convention; only the test harness reads this runner flag.
-const { describe, it } = process.env.VITEST ? await import("vitest") : await import("node:test");
+import { describe, it } from "./offline-test-api.mjs";
 // Synthetic examples, including all Render-shaped fixtures. No live identities.
 const staging = Object.freeze({ executionKind: "render", identitySource: "render",
   serviceId: "srv-fixture-stage", workloadType: "web", repository: "fixture/example",

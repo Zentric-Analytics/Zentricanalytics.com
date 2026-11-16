@@ -8,7 +8,7 @@ import { decideEmailDispatch as decide, classifyEmailProviderAttempt as failed }
 import { validateDeploymentRuntimeMetadata as validate } from "../src/lib/deployment-runtime-metadata.mjs";
 import { resolveDeploymentEnvironment as resolve } from "../src/lib/deployment-environment.mjs";
 import { evaluateOutgoingEmailRecipientEligibility as eligible } from "../src/lib/environment-policy-rules.mjs";
-const { describe, it } = process.env.VITEST ? await import("vitest") : await import("node:test");
+import { describe, it } from "./offline-test-api.mjs";
 
 // Independently declared synthetic fixtures; no deployed identities or secrets.
 const stageBinding = Object.freeze({ serviceId: "srv-stage-fixture", identitySource: "render", workloadType: "web",

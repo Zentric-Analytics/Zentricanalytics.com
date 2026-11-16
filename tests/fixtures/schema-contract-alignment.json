@@ -1,0 +1,2245 @@
+{
+  "baseline": "Q03-B1 preserved Track A catalogue; source-only reconciliation",
+  "records": [
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrLegalEntity",
+      "name": "HrLegalEntity_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrBusinessUnit",
+      "name": "HrBusinessUnit_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrBusinessUnit",
+      "name": "HrBusinessUnit_legalEntity_fkey",
+      "fields": [
+        "legalEntityId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrBusinessUnit",
+      "name": "HrBusinessUnit_parent_fkey",
+      "fields": [
+        "parentBusinessUnitId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrDivision",
+      "name": "HrDivision_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrDivision",
+      "name": "HrDivision_businessUnit_fkey",
+      "fields": [
+        "businessUnitId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrDivision",
+      "name": "HrDivision_parent_fkey",
+      "fields": [
+        "parentDivisionId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrLocation",
+      "name": "HrLocation_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrLocation",
+      "name": "HrLocation_legalEntity_fkey",
+      "fields": [
+        "legalEntityId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrLocation",
+      "name": "HrLocation_parent_fkey",
+      "fields": [
+        "parentLocationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrCostCenter",
+      "name": "HrCostCenter_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrCostCenter",
+      "name": "HrCostCenter_legalEntity_fkey",
+      "fields": [
+        "legalEntityId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrCostCenter",
+      "name": "HrCostCenter_parent_fkey",
+      "fields": [
+        "parentCostCenterId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrJobFamily",
+      "name": "HrJobFamily_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrJobProfile",
+      "name": "HrJobProfile_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrJobProfile",
+      "name": "HrJobProfile_jobFamily_fkey",
+      "fields": [
+        "jobFamilyId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrGrade",
+      "name": "HrGrade_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrPositionApproval",
+      "name": "HrPositionApproval_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrPositionApproval",
+      "name": "HrPositionApproval_position_fkey",
+      "fields": [
+        "positionId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrOrganizationChange",
+      "name": "HrOrganizationChange_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrOrganizationImportBatch",
+      "name": "HrOrganizationImportBatch_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql",
+        "prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrOrganizationImportRow",
+      "name": "HrOrganizationImportRow_batch_fkey",
+      "fields": [
+        "batchId"
+      ],
+      "onDelete": "Cascade",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql",
+        "prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql"
+      ]
+    },
+    {
+      "kind": "foreignKeyRepresentation",
+      "model": "HrOrganizationStructureRevision",
+      "name": "HrOrganizationStructureRevision_organization_fkey",
+      "fields": [
+        "organizationId"
+      ],
+      "onDelete": "Restrict",
+      "onUpdate": "NoAction",
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql",
+        "prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrBusinessUnit",
+      "name": "HrBusinessUnit_scope_idx",
+      "fields": [
+        "organizationId",
+        "legalEntityId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrCostCenter",
+      "name": "HrCostCenter_scope_idx",
+      "fields": [
+        "organizationId",
+        "legalEntityId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrDivision",
+      "name": "HrDivision_scope_idx",
+      "fields": [
+        "organizationId",
+        "businessUnitId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmployeeAssignment",
+      "name": "HrEmployeeAssignment_organizationId_employeeId_status_effective",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730000000_hrms_core_hr/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmployeeDocument",
+      "name": "HrEmployeeDocument_organizationId_category_retentionStatus_arch",
+      "fields": [
+        "organizationId",
+        "category",
+        "retentionStatus",
+        "archivedAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730030000_hrms_documents_assets/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmployeeDocumentVersion",
+      "name": "HrEmployeeDocumentVersion_organizationId_scanStatus_uploadedAt_",
+      "fields": [
+        "organizationId",
+        "scanStatus",
+        "uploadedAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730030000_hrms_documents_assets/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmployeeDocumentVersion",
+      "name": "HrEmployeeDocumentVersion_storageBucket_storageKey_storageVersi",
+      "fields": [
+        "storageBucket",
+        "storageKey",
+        "storageVersionId"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260801000000_hrms_document_provider_abstractions/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmployeeLeavePolicy",
+      "name": "HrEmployeeLeavePolicy_employeeId_status_effectiveFrom_effective",
+      "fields": [
+        "employeeId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730010000_hrms_leave_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmployeePayrollComponent",
+      "name": "HrEmployeePayrollComponent_employeeId_componentId_effectiveFrom",
+      "fields": [
+        "employeeId",
+        "componentId",
+        "effectiveFrom"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260730020000_hrms_payroll/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmployeePayrollComponent",
+      "name": "HrEmployeePayrollComponent_employeeId_status_effectiveFrom_effe",
+      "fields": [
+        "employeeId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730020000_hrms_payroll/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmployeeStatusHistory",
+      "name": "HrEmployeeStatusHistory_organizationId_newStatus_effectiveAt_id",
+      "fields": [
+        "organizationId",
+        "newStatus",
+        "effectiveAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730080000_hrms_blueprint_completion/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmploymentContract",
+      "name": "HrEmploymentContract_employeeId_status_effective_idx",
+      "fields": [
+        "employeeId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260809103000_hrms_unit4_employment_lifecycles/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrEmploymentContractVersion",
+      "name": "HrEmploymentContractVersion_contractId_effective_idx",
+      "fields": [
+        "contractId",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260809103000_hrms_unit4_employment_lifecycles/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrGrade",
+      "name": "HrGrade_scope_idx",
+      "fields": [
+        "organizationId",
+        "status",
+        "level"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrJobFamily",
+      "name": "HrJobFamily_scope_idx",
+      "fields": [
+        "organizationId",
+        "status",
+        "name"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrJobProfile",
+      "name": "HrJobProfile_scope_idx",
+      "fields": [
+        "organizationId",
+        "jobFamilyId",
+        "status",
+        "title"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrLeavePolicy",
+      "name": "HrLeavePolicy_organizationId_status_effectiveFrom_effectiveTo_i",
+      "fields": [
+        "organizationId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730010000_hrms_leave_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrLegalEntity",
+      "name": "HrLegalEntity_scope_idx",
+      "fields": [
+        "organizationId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrLifecycleInstance",
+      "name": "HrLifecycleInstance_organizationId_type_status_effectiveDate_id",
+      "fields": [
+        "organizationId",
+        "type",
+        "status",
+        "effectiveDate"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730040000_hrms_onboarding_offboarding/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrLocation",
+      "name": "HrLocation_scope_idx",
+      "fields": [
+        "organizationId",
+        "legalEntityId",
+        "status",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrOrganizationChange",
+      "name": "HrOrganizationChange_due_idx",
+      "fields": [
+        "organizationId",
+        "status",
+        "effectiveAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrOrganizationImportBatch",
+      "name": "HrOrganizationImportBatch_scope_idx",
+      "fields": [
+        "organizationId",
+        "status",
+        "createdAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql",
+        "prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrOrganizationImportRow",
+      "name": "HrOrganizationImportRow_valid_idx",
+      "fields": [
+        "batchId",
+        "valid"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql",
+        "prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrOrganizationStructureRevision",
+      "name": "HrOrganizationStructureRevision_effective_idx",
+      "fields": [
+        "organizationId",
+        "entityType",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql",
+        "prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrOrganizationStructureRevision",
+      "name": "HrOrganizationStructureRevision_version_key",
+      "fields": [
+        "organizationId",
+        "entityType",
+        "entityId",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql",
+        "prisma/migrations/20260730150000_hrms_organization_history_tables/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollAnnualizationRuleVersion",
+      "name": "HrPayrollAnnualizationRuleVersion_lookup_idx",
+      "fields": [
+        "organizationId",
+        "jurisdictionVersion",
+        "taxYear",
+        "frequency",
+        "certificationStatus",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260825160000_hrms_unit9_ng_2026_7_annualization/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollAnnualizationRuleVersion",
+      "name": "HrPayrollAnnualizationRuleVersion_org_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260825160000_hrms_unit9_ng_2026_7_annualization/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollAnnualizationRuleVersion",
+      "name": "HrPayrollAnnualizationRuleVersion_org_jurisdiction_year_frequen",
+      "fields": [
+        "organizationId",
+        "jurisdictionVersion",
+        "taxYear",
+        "frequency",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260825160000_hrms_unit9_ng_2026_7_annualization/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollAuthoritativeResult",
+      "name": "HrPayrollAuthoritativeResult_calculationAttemptId_employeeId_ke",
+      "fields": [
+        "calculationAttemptId",
+        "employeeId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollAuthoritativeResult",
+      "name": "HrPayrollAuthoritativeResult_organizationId_employmentIncomeBin",
+      "fields": [
+        "organizationId",
+        "employmentIncomeBindingHash"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260825120000_hrms_unit9_ng_2026_6_income_binding/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollAuthoritativeResult",
+      "name": "HrPayrollAuthoritativeResult_organizationId_minimumWageDecision",
+      "fields": [
+        "organizationId",
+        "minimumWageDecisionHash"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260825080000_hrms_unit9_ng_2026_5_minimum_wage_governance/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollAuthoritativeResult",
+      "name": "HrPayrollAuthoritativeResult_organizationId_payrollRunId_employ",
+      "fields": [
+        "organizationId",
+        "payrollRunId",
+        "employeeId",
+        "authoritativeAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollBikEvidenceVersion",
+      "name": "HrPayrollBikEvidenceVersion_effective_idx",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollBikEvidenceVersion",
+      "name": "HrPayrollBikEvidenceVersion_org_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollBikEvidenceVersion",
+      "name": "HrPayrollBikEvidenceVersion_org_employee_code_version_key",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "code",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollCapabilityAssignment",
+      "name": "HrPayrollCapabilityAssignment_organizationId_subjectUserId_capa",
+      "fields": [
+        "organizationId",
+        "subjectUserId",
+        "capability",
+        "effectiveFrom"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260824120000_hrms_unit9_ng_limited_launch_controls/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollCapabilityAssignment",
+      "name": "HrPayrollCapabilityAssignment_organizationId_subjectUserId_expi",
+      "fields": [
+        "organizationId",
+        "subjectUserId",
+        "expiresAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260824120000_hrms_unit9_ng_limited_launch_controls/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollComplianceException",
+      "name": "HrPayrollComplianceException_organizationId_employeeId_openedAt",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "openedAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260824120000_hrms_unit9_ng_limited_launch_controls/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollComplianceException",
+      "name": "HrPayrollComplianceException_organizationId_payrollRunId_status",
+      "fields": [
+        "organizationId",
+        "payrollRunId",
+        "status"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260824120000_hrms_unit9_ng_limited_launch_controls/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollComplianceExceptionEvent",
+      "name": "HrPayrollComplianceExceptionEvent_organizationId_complianceExce",
+      "fields": [
+        "organizationId",
+        "complianceExceptionId",
+        "createdAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260824120000_hrms_unit9_ng_limited_launch_controls/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollComplianceExceptionEvent",
+      "name": "HrPayrollComplianceExceptionEvent_organizationId_correlationId_",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260824120000_hrms_unit9_ng_limited_launch_controls/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollDeductionDefinition",
+      "name": "HrPayrollDeductionDefinition_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollDeductionDefinition",
+      "name": "HrPayrollDeductionDefinition_scope_key",
+      "fields": [
+        "organizationId",
+        "jurisdictionVersionId",
+        "code",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollEarningDefinition",
+      "name": "HrPayrollEarningDefinition_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollEarningDefinition",
+      "name": "HrPayrollEarningDefinition_scope_key",
+      "fields": [
+        "organizationId",
+        "jurisdictionVersionId",
+        "code",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollEmployeeDeductionElection",
+      "name": "HrPayrollEmployeeDeductionElection_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollEmployeeDeductionElection",
+      "name": "HrPayrollEmployeeDeductionElection_scope_key",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "deductionDefinitionId",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollEmployeeRtaProfileVersion",
+      "name": "HrPayrollEmployeeRtaProfileVersion_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollEmployeeRtaProfileVersion",
+      "name": "HrPayrollEmployeeRtaProfileVersion_effective_idx",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollEmployeeRtaProfileVersion",
+      "name": "HrPayrollEmployeeRtaProfileVersion_logical_key",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "taxYear",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollEmployerContributionDefinition",
+      "name": "HrPayrollEmployerContributionDefinition_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollEmployerContributionDefinition",
+      "name": "HrPayrollEmployerContributionDefinition_scope_key",
+      "fields": [
+        "organizationId",
+        "jurisdictionVersionId",
+        "code",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollInputSnapshot",
+      "name": "HrPayrollInputSnapshot_organizationId_employmentIncomeBindingHa",
+      "fields": [
+        "organizationId",
+        "employmentIncomeBindingHash"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260825120000_hrms_unit9_ng_2026_6_income_binding/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollInputSnapshot",
+      "name": "HrPayrollInputSnapshot_organizationId_minimumWageDecisionHash_i",
+      "fields": [
+        "organizationId",
+        "minimumWageDecisionHash"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260825080000_hrms_unit9_ng_2026_5_minimum_wage_governance/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollManualAdjustment",
+      "name": "HrPayrollManualAdjustment_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollManualAdjustment",
+      "name": "HrPayrollManualAdjustment_scope_idx",
+      "fields": [
+        "organizationId",
+        "payrollRunId",
+        "employeeId",
+        "status"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollPaymentDestinationVersion",
+      "name": "HrPayrollPaymentDestinationVersion_organizationId_correlationId",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollPaymentDestinationVersion",
+      "name": "HrPayrollPaymentDestinationVersion_organizationId_employeeId_ef",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollPaymentDestinationVersion",
+      "name": "HrPayrollPaymentDestinationVersion_organizationId_employeeId_ve",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollPensionProfileVersion",
+      "name": "HrPayrollPensionProfileVersion_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollPensionProfileVersion",
+      "name": "HrPayrollPensionProfileVersion_effective_idx",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollPensionProfileVersion",
+      "name": "HrPayrollPensionProfileVersion_logical_key",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollPopulationPartition",
+      "name": "HrPayrollPopulationPartition_organizationId_payrollRunId_calcul",
+      "fields": [
+        "organizationId",
+        "payrollRunId",
+        "calculationAttemptId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260824120000_hrms_unit9_ng_limited_launch_controls/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollPriorEmployerYtdVersion",
+      "name": "HrPayrollPriorEmployerYtdVersion_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollPriorEmployerYtdVersion",
+      "name": "HrPayrollPriorEmployerYtdVersion_logical_key",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "taxYear",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollRetentionPolicyVersion",
+      "name": "HrPayrollRetentionPolicyVersion_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollRetentionPolicyVersion",
+      "name": "HrPayrollRetentionPolicyVersion_logical_key",
+      "fields": [
+        "organizationId",
+        "jurisdictionVersionId",
+        "recordCategory",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollStatutoryAmendment",
+      "name": "HrPayrollStatutoryAmendment_batch_version_key",
+      "fields": [
+        "originalRemittanceBatchId",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815081500_hrms_unit9_ng_2026_2_statutory_amendments/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollStatutoryAmendment",
+      "name": "HrPayrollStatutoryAmendment_lineage_idx",
+      "fields": [
+        "organizationId",
+        "originalRemittanceBatchId",
+        "createdAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260815081500_hrms_unit9_ng_2026_2_statutory_amendments/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollStatutoryAmendment",
+      "name": "HrPayrollStatutoryAmendment_org_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815081500_hrms_unit9_ng_2026_2_statutory_amendments/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollStatutoryAmendment",
+      "name": "HrPayrollStatutoryAmendment_org_idempotency_key",
+      "fields": [
+        "organizationId",
+        "idempotencyKey"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815081500_hrms_unit9_ng_2026_2_statutory_amendments/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollStatutoryApplicabilityVersion",
+      "name": "HrPayrollStatutoryApplicabilityVersion_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollStatutoryApplicabilityVersion",
+      "name": "HrPayrollStatutoryApplicabilityVersion_effective_idx",
+      "fields": [
+        "organizationId",
+        "legalEntityId",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollStatutoryApplicabilityVersion",
+      "name": "HrPayrollStatutoryApplicabilityVersion_logical_key",
+      "fields": [
+        "organizationId",
+        "legalEntityId",
+        "schemeCode",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollTaxReliefClaimVersion",
+      "name": "HrPayrollTaxReliefClaimVersion_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollTaxReliefClaimVersion",
+      "name": "HrPayrollTaxReliefClaimVersion_logical_key",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "taxYear",
+        "claimType",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollTaxReliefClaimVersion",
+      "name": "HrPayrollTaxReliefClaimVersion_status_idx",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "taxYear",
+        "status"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260815053000_hrms_unit9_ng_2026_2_evidence/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollTaxableBaseDefinition",
+      "name": "HrPayrollTaxableBaseDefinition_correlation_key",
+      "fields": [
+        "organizationId",
+        "correlationId"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPayrollTaxableBaseDefinition",
+      "name": "HrPayrollTaxableBaseDefinition_scope_key",
+      "fields": [
+        "organizationId",
+        "jurisdictionVersionId",
+        "code",
+        "version"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260814143000_hrms_unit9_authoritative_attempt_lineage/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrPositionApproval",
+      "name": "HrPositionApproval_scope_idx",
+      "fields": [
+        "organizationId",
+        "positionId",
+        "createdAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730110000_hrms_organization_management/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrProbationReview",
+      "name": "HrProbationReview_case_type_checkpoint_key",
+      "fields": [
+        "probationCaseId",
+        "type",
+        "checkpointAt"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260809103000_hrms_unit4_employment_lifecycles/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrSalaryRecord",
+      "name": "HrSalaryRecord_organizationId_employeeId_effectiveFrom_effectiv",
+      "fields": [
+        "organizationId",
+        "employeeId",
+        "effectiveFrom",
+        "effectiveTo"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730020000_hrms_payroll/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrSupervisorAssignment",
+      "name": "HrSupervisorAssignment_organizationId_departmentScopeId_teamSco",
+      "fields": [
+        "organizationId",
+        "departmentScopeId",
+        "teamScopeId",
+        "status"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730080000_hrms_blueprint_completion/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrSystemAccessAssignment",
+      "name": "HrSystemAccessAssignment_organizationId_status_expectedEndAt_id",
+      "fields": [
+        "organizationId",
+        "status",
+        "expectedEndAt"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730080000_hrms_blueprint_completion/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrVacancy",
+      "name": "HrVacancy_status_careersVisible_publishedAt_applicationDeadline",
+      "fields": [
+        "status",
+        "careersVisible",
+        "publishedAt",
+        "applicationDeadline"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260731010000_hrms_recruitment_vacancies/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrWorkflowDefinition",
+      "name": "HrWorkflowDefinition_organizationId_module_subjectType_active_i",
+      "fields": [
+        "organizationId",
+        "module",
+        "subjectType",
+        "active"
+      ],
+      "unique": false,
+      "source": [
+        "prisma/migrations/20260730050000_hrms_workflow_engine/migration.sql"
+      ]
+    },
+    {
+      "kind": "indexNaming",
+      "model": "HrWorkforceEventExecutionAttempt",
+      "name": "HrWorkforceEventExecutionAttempt_event_version_attempt_key",
+      "fields": [
+        "eventId",
+        "eventVersion",
+        "attemptNumber"
+      ],
+      "unique": true,
+      "source": [
+        "prisma/migrations/20260809090000_hrms_unit4_workforce_foundation/migration.sql"
+      ]
+    },
+    {
+      "kind": "columnRepresentation",
+      "model": "EmploymentAgreement",
+      "field": "updatedAt"
+    },
+    {
+      "kind": "columnRepresentation",
+      "model": "Offer",
+      "field": "updatedAt"
+    },
+    {
+      "kind": "columnRepresentation",
+      "model": "HrPayrollPaymentBatch",
+      "field": "createdById"
+    },
+    {
+      "kind": "columnRepresentation",
+      "model": "HrRecruitmentOfferVersion",
+      "field": "createdById"
+    },
+    {
+      "kind": "retainedIndex",
+      "model": "JobApplication",
+      "name": "JobApplication_deletedAt_idx",
+      "fields": [
+        "deletedAt"
+      ],
+      "source": [
+        "prisma/migrations/20260622040000_application_soft_delete/migration.sql"
+      ]
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "Applicant",
+      "name": "Applicant_organizationId_fkey",
+      "definition": "FOREIGN KEY (\"organizationId\") REFERENCES \"HrOrganization\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrApplicationAnswer",
+      "name": "HrApplicationAnswer_applicationId_fkey",
+      "definition": "FOREIGN KEY (\"applicationId\") REFERENCES \"JobApplication\"(id) ON UPDATE CASCADE ON DELETE CASCADE",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrApplicationReviewTask",
+      "name": "HrApplicationReviewTask_applicationId_fkey",
+      "definition": "FOREIGN KEY (\"applicationId\") REFERENCES \"JobApplication\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrApplicationStageHistory",
+      "name": "HrApplicationStageHistory_applicationId_fkey",
+      "definition": "FOREIGN KEY (\"applicationId\") REFERENCES \"JobApplication\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrAssessment",
+      "name": "HrAssessment_applicationId_fkey",
+      "definition": "FOREIGN KEY (\"applicationId\") REFERENCES \"JobApplication\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrAttendanceDay",
+      "name": "HrAttendanceDay_assignmentId_fkey",
+      "definition": "FOREIGN KEY (\"assignmentId\") REFERENCES \"HrEmployeeAssignment\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrAttendanceDay",
+      "name": "HrAttendanceDay_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrAttendanceDay",
+      "name": "HrAttendanceDay_workRelationshipId_fkey",
+      "definition": "FOREIGN KEY (\"workRelationshipId\") REFERENCES \"HrWorkRelationship\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrAuthoritativeTimeEntry",
+      "name": "HrAuthoritativeTimeEntry_assignmentId_fkey",
+      "definition": "FOREIGN KEY (\"assignmentId\") REFERENCES \"HrEmployeeAssignment\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrAuthoritativeTimeEntry",
+      "name": "HrAuthoritativeTimeEntry_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrAuthoritativeTimeEntry",
+      "name": "HrAuthoritativeTimeEntry_workRelationshipId_fkey",
+      "definition": "FOREIGN KEY (\"workRelationshipId\") REFERENCES \"HrWorkRelationship\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrCalibrationDecision",
+      "name": "HrCalibrationDecision_reviewId_fkey",
+      "definition": "FOREIGN KEY (\"reviewId\") REFERENCES \"HrPerformanceReview\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrCalibrationDecision",
+      "name": "HrCalibrationDecision_sessionId_fkey",
+      "definition": "FOREIGN KEY (\"sessionId\") REFERENCES \"HrCalibrationSession\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrCalibrationGrant",
+      "name": "HrCalibrationGrant_sessionId_fkey",
+      "definition": "FOREIGN KEY (\"sessionId\") REFERENCES \"HrCalibrationSession\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrCandidateEmployeeLink",
+      "name": "HrCandidateEmployeeLink_applicantId_fkey",
+      "definition": "FOREIGN KEY (\"applicantId\") REFERENCES \"Applicant\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrCandidateEmployeeLink",
+      "name": "HrCandidateEmployeeLink_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrClockSession",
+      "name": "HrClockSession_assignmentId_fkey",
+      "definition": "FOREIGN KEY (\"assignmentId\") REFERENCES \"HrEmployeeAssignment\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrClockSession",
+      "name": "HrClockSession_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrClockSession",
+      "name": "HrClockSession_timePolicyVersionId_fkey",
+      "definition": "FOREIGN KEY (\"timePolicyVersionId\") REFERENCES \"HrTimePolicyVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrClockSession",
+      "name": "HrClockSession_workRelationshipId_fkey",
+      "definition": "FOREIGN KEY (\"workRelationshipId\") REFERENCES \"HrWorkRelationship\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrCompanyLevelVersion",
+      "name": "HrCompanyLevelVersion_companyLevelId_fkey",
+      "definition": "FOREIGN KEY (\"companyLevelId\") REFERENCES \"HrCompanyLevel\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrCompetencyExpectation",
+      "name": "HrCompetencyExpectation_competencyVersionId_fkey",
+      "definition": "FOREIGN KEY (\"competencyVersionId\") REFERENCES \"HrCompetencyVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrCompetencyExpectation",
+      "name": "HrCompetencyExpectation_jobProfileVersionId_fkey",
+      "definition": "FOREIGN KEY (\"jobProfileVersionId\") REFERENCES \"HrJobProfileVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrCompetencyVersion",
+      "name": "HrCompetencyVersion_competencyId_fkey",
+      "definition": "FOREIGN KEY (\"competencyId\") REFERENCES \"HrCompetency\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrDevelopmentAction",
+      "name": "HrDevelopmentAction_planVersionId_fkey",
+      "definition": "FOREIGN KEY (\"planVersionId\") REFERENCES \"HrDevelopmentPlanVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrDevelopmentPlanVersion",
+      "name": "HrDevelopmentPlanVersion_planId_fkey",
+      "definition": "FOREIGN KEY (\"planId\") REFERENCES \"HrDevelopmentPlan\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrGoalMilestone",
+      "name": "HrGoalMilestone_goalVersionId_fkey",
+      "definition": "FOREIGN KEY (\"goalVersionId\") REFERENCES \"HrPerformanceGoalVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrGoalProgress",
+      "name": "HrGoalProgress_goalId_fkey",
+      "definition": "FOREIGN KEY (\"goalId\") REFERENCES \"HrPerformanceGoal\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrInterview",
+      "name": "HrInterview_applicationId_fkey",
+      "definition": "FOREIGN KEY (\"applicationId\") REFERENCES \"JobApplication\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrJobProfileVersion",
+      "name": "HrJobProfileVersion_careerTrackId_fkey",
+      "definition": "FOREIGN KEY (\"careerTrackId\") REFERENCES \"HrCareerTrack\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrJobProfileVersion",
+      "name": "HrJobProfileVersion_companyLevelVersionId_fkey",
+      "definition": "FOREIGN KEY (\"companyLevelVersionId\") REFERENCES \"HrCompanyLevelVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrJobProfileVersion",
+      "name": "HrJobProfileVersion_jobFunctionId_fkey",
+      "definition": "FOREIGN KEY (\"jobFunctionId\") REFERENCES \"HrJobFunction\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrPerformanceCycle",
+      "name": "HrPerformanceCycle_reviewTemplateVersionId_fkey",
+      "definition": "FOREIGN KEY (\"reviewTemplateVersionId\") REFERENCES \"HrReviewTemplateVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrPerformanceGoalVersion",
+      "name": "HrPerformanceGoalVersion_goalId_fkey",
+      "definition": "FOREIGN KEY (\"goalId\") REFERENCES \"HrPerformanceGoal\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrPerformanceReviewSubmission",
+      "name": "HrPerformanceReviewSubmission_reviewId_fkey",
+      "definition": "FOREIGN KEY (\"reviewId\") REFERENCES \"HrPerformanceReview\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrPreHireConversion",
+      "name": "HrPreHireConversion_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrPreHireConversion",
+      "name": "HrPreHireConversion_lifecycleInstanceId_fkey",
+      "definition": "FOREIGN KEY (\"lifecycleInstanceId\") REFERENCES \"HrLifecycleInstance\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrPromotionCase",
+      "name": "HrPromotionCase_readinessAssessmentId_fkey",
+      "definition": "FOREIGN KEY (\"readinessAssessmentId\") REFERENCES \"HrPromotionReadinessAssessment\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrPromotionDecision",
+      "name": "HrPromotionDecision_promotionCaseId_fkey",
+      "definition": "FOREIGN KEY (\"promotionCaseId\") REFERENCES \"HrPromotionCase\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrPromotionDecision",
+      "name": "HrPromotionDecision_readinessAssessmentId_fkey",
+      "definition": "FOREIGN KEY (\"readinessAssessmentId\") REFERENCES \"HrPromotionReadinessAssessment\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrRatingScaleItem",
+      "name": "HrRatingScaleItem_ratingScaleVersionId_fkey",
+      "definition": "FOREIGN KEY (\"ratingScaleVersionId\") REFERENCES \"HrRatingScaleVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrRatingScaleVersion",
+      "name": "HrRatingScaleVersion_ratingScaleId_fkey",
+      "definition": "FOREIGN KEY (\"ratingScaleId\") REFERENCES \"HrRatingScale\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrRecruitmentActivation",
+      "name": "HrRecruitmentActivation_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrRecruitmentDocumentReview",
+      "name": "HrRecruitmentDocumentReview_uploadedDocumentId_fkey",
+      "definition": "FOREIGN KEY (\"uploadedDocumentId\") REFERENCES \"UploadedDocument\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrRecruitmentHandover",
+      "name": "HrRecruitmentHandover_applicationId_fkey",
+      "definition": "FOREIGN KEY (\"applicationId\") REFERENCES \"JobApplication\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrRecruitmentOffer",
+      "name": "HrRecruitmentOffer_applicationId_fkey",
+      "definition": "FOREIGN KEY (\"applicationId\") REFERENCES \"JobApplication\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrReviewTemplateVersion",
+      "name": "HrReviewTemplateVersion_ratingScaleVersionId_fkey",
+      "definition": "FOREIGN KEY (\"ratingScaleVersionId\") REFERENCES \"HrRatingScaleVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrReviewTemplateVersion",
+      "name": "HrReviewTemplateVersion_reviewTemplateId_fkey",
+      "definition": "FOREIGN KEY (\"reviewTemplateId\") REFERENCES \"HrReviewTemplate\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260812170000_hrms_unit7_performance_career_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrScheduleInterval",
+      "name": "HrScheduleInterval_workScheduleVersionId_fkey",
+      "definition": "FOREIGN KEY (\"workScheduleVersionId\") REFERENCES \"HrWorkScheduleVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrShiftAssignment",
+      "name": "HrShiftAssignment_assignmentId_fkey",
+      "definition": "FOREIGN KEY (\"assignmentId\") REFERENCES \"HrEmployeeAssignment\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrShiftAssignment",
+      "name": "HrShiftAssignment_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrShiftAssignment",
+      "name": "HrShiftAssignment_shiftTemplateVersionId_fkey",
+      "definition": "FOREIGN KEY (\"shiftTemplateVersionId\") REFERENCES \"HrShiftTemplateVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrShiftAssignment",
+      "name": "HrShiftAssignment_workRelationshipId_fkey",
+      "definition": "FOREIGN KEY (\"workRelationshipId\") REFERENCES \"HrWorkRelationship\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimeCorrection",
+      "name": "HrTimeCorrection_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimeEvent",
+      "name": "HrTimeEvent_assignmentId_fkey",
+      "definition": "FOREIGN KEY (\"assignmentId\") REFERENCES \"HrEmployeeAssignment\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimeEvent",
+      "name": "HrTimeEvent_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimeEvent",
+      "name": "HrTimeEvent_workRelationshipId_fkey",
+      "definition": "FOREIGN KEY (\"workRelationshipId\") REFERENCES \"HrWorkRelationship\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimePolicyAssignment",
+      "name": "HrTimePolicyAssignment_assignmentId_fkey",
+      "definition": "FOREIGN KEY (\"assignmentId\") REFERENCES \"HrEmployeeAssignment\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimePolicyAssignment",
+      "name": "HrTimePolicyAssignment_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimePolicyAssignment",
+      "name": "HrTimePolicyAssignment_timePolicyVersionId_fkey",
+      "definition": "FOREIGN KEY (\"timePolicyVersionId\") REFERENCES \"HrTimePolicyVersion\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimePolicyAssignment",
+      "name": "HrTimePolicyAssignment_workRelationshipId_fkey",
+      "definition": "FOREIGN KEY (\"workRelationshipId\") REFERENCES \"HrWorkRelationship\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimesheet",
+      "name": "HrTimesheet_assignmentId_fkey",
+      "definition": "FOREIGN KEY (\"assignmentId\") REFERENCES \"HrEmployeeAssignment\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimesheet",
+      "name": "HrTimesheet_employeeId_fkey",
+      "definition": "FOREIGN KEY (\"employeeId\") REFERENCES \"HrEmployee\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "HrTimesheet",
+      "name": "HrTimesheet_workRelationshipId_fkey",
+      "definition": "FOREIGN KEY (\"workRelationshipId\") REFERENCES \"HrWorkRelationship\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260811160000_hrms_unit6_time_attendance_foundation/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    },
+    {
+      "kind": "sqlOnlyForeignKey",
+      "model": "JobApplication",
+      "name": "JobApplication_vacancyId_fkey",
+      "definition": "FOREIGN KEY (\"vacancyId\") REFERENCES \"HrVacancy\"(id) ON UPDATE CASCADE ON DELETE RESTRICT",
+      "source": [
+        "prisma/migrations/20260731020000_hrms_recruitment_lifecycle/migration.sql"
+      ],
+      "decision": "PRESERVE_DATABASE_CONSTRAINT; not automatically expressible as an existing Prisma relation"
+    }
+  ],
+  "unmapped": [],
+  "changes": {
+    "foreignKeyRepresentation": 23,
+    "indexNaming": 87,
+    "columnRepresentation": 4,
+    "retainedIndex": 1,
+    "sqlOnlyForeignKey": 65
+  },
+  "sqlExecuted": false
+}

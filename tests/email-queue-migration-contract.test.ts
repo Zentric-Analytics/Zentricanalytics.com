@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
-const { describe, it } = process.env.VITEST ? await import("vitest") : await import("node:test");
+import { describe, it } from "./offline-test-api.mjs";
 // Static inspection only: no Prisma, SQL execution, subprocess or database client.
 const read = (path: string) => fs.readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const schema = read("prisma/schema.prisma");

@@ -6,7 +6,7 @@ import http from "node:http";
 import https from "node:https";
 import { evaluateQueueTransition as evaluate } from "../src/lib/hr/notifications/queue-transition-rules.mjs";
 import type { QueueSnapshot, QueueCommand } from "../src/lib/hr/notifications/queue-transition-rules.mjs";
-const { describe, it } = process.env.VITEST ? await import("vitest") : await import("node:test");
+import { describe, it } from "./offline-test-api.mjs";
 const now = 1000;
 const pending = Object.freeze({ state: "PENDING", version: 2, claimId: null, claimExpiresAt: null,
   dispatchPhase: "NONE", attemptCount: 0, maxAttempts: 5, nextAttemptAt: 100,

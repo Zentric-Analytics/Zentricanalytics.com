@@ -48,7 +48,11 @@ function webEnvironment(resolution) {
 }
 
 function normalizedEmail(input) {
-  if (typeof input !== "string" || /[\u0000-\u001f\u007f]/u.test(input)) return null;
+  if (typeof input !== "string") return null;
+  for (const character of input) {
+    const code = character.charCodeAt(0);
+    if (code < 32 || code === 127) return null;
+  }
   const email = input.trim().toLowerCase();
   if (email.length > 254) return null;
   const parts = email.split("@");

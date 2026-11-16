@@ -13,7 +13,7 @@ import {
 import type { InternalHrmsAccountAuthorization } from "../src/lib/environment-policy-rules.mjs";
 
 // No package installation: same dual offline runner convention as U02-I01.
-const { describe, it } = process.env.VITEST ? await import("vitest") : await import("node:test");
+import { describe, it } from "./offline-test-api.mjs";
 
 // All bindings, accounts, addresses and authorization attestations are test data.
 const stagingBinding = Object.freeze({
@@ -55,7 +55,7 @@ describe("internal HRMS account email eligibility", () => {
   it("normalizes outer spaces and case without changing the exact production domain", () => {
     assert.equal(account(production, "  Policy.Fixture@ZENTRICANALYTICS.COM  ", productionAuthorization).eligible, true);
   });
-  for (const [resolution, authorization] of [[staging, stagingAuthorization], [production, productionAuthorization]]) {
+  for (const [resolution, authorization] of [[staging, stagingAuthorization], [production, productionAuthorization]] as const) {
     it(`does not authorize ${resolution.status} from a company address alone`, () => {
       deny(account(resolution, companyEmail, { ...authorization, authorized: false }), "ACCOUNT_NOT_AUTHORIZED");
       deny(account(resolution, companyEmail, undefined), "INVALID_ACCOUNT_AUTHORIZATION");

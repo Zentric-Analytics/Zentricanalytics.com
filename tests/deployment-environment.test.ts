@@ -3,7 +3,7 @@ import { resolveDeploymentEnvironment as resolve } from "../src/lib/deployment-e
 import type { ApprovedDeploymentBinding, DeploymentMetadata, UnverifiedReasonCode } from "../src/lib/deployment-environment.mjs";
 
 // Existing Vitest when available/in use; otherwise the bundled Node offline runner.
-const { describe, it } = process.env.VITEST ? await import("vitest") : await import("node:test");
+import { describe, it } from "./offline-test-api.mjs";
 
 // All IDs, repository names and origins below are synthetic, including Render-shaped fixtures.
 const staging = Object.freeze({

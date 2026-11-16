@@ -77,6 +77,8 @@ model JobApplication {
   @@index([organizationId, recruitmentStatus, createdAt])
   @@index([vacancyId, recruitmentStatus])
   @@index([assignedHiringTeamId, recruitmentStatus])
+
+  @@index([deletedAt], map: "JobApplication_deletedAt_idx")
 }
 
 model HiringStage {
@@ -195,7 +197,7 @@ model Offer {
   releasedAt            DateTime?
   releasedByAdminEmail  String?
   createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  updatedAt             DateTime @default(now()) @updatedAt
 }
 
 model EmploymentAgreement {
@@ -212,7 +214,7 @@ model EmploymentAgreement {
   candidateSubmittedAt DateTime?
   approvedAt           DateTime?
   createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  updatedAt            DateTime @default(now()) @updatedAt
 }
 
 model AuditLog {
@@ -1267,7 +1269,7 @@ model HrEmployeeStatusHistory {
   changedBy      HrUser?             @relation(fields: [changedById], references: [id], onDelete: Restrict)
 
   @@index([employeeId, effectiveAt])
-  @@index([organizationId, newStatus, effectiveAt])
+  @@index([organizationId, newStatus, effectiveAt], map: "HrEmployeeStatusHistory_organizationId_newStatus_effectiveAt_id")
 }
 
 model HrSystemAccessAssignment {
@@ -1293,7 +1295,7 @@ model HrSystemAccessAssignment {
   endedBy        HrUser?              @relation("SystemAccessEnder", fields: [endedById], references: [id], onDelete: Restrict)
 
   @@index([employeeId, systemKey, status])
-  @@index([organizationId, status, expectedEndAt])
+  @@index([organizationId, status, expectedEndAt], map: "HrSystemAccessAssignment_organizationId_status_expectedEndAt_id")
 }
 
 model HrDepartment {
@@ -1425,7 +1427,7 @@ model HrEmployeeAssignment {
   createdBy         HrUser             @relation("EmployeeAssignmentCreator", fields: [createdById], references: [id], onDelete: Restrict)
   endedBy           HrUser?            @relation("EmployeeAssignmentEnder", fields: [endedById], references: [id], onDelete: Restrict)
 
-  @@index([organizationId, employeeId, status, effectiveFrom, effectiveTo])
+  @@index([organizationId, employeeId, status, effectiveFrom, effectiveTo], map: "HrEmployeeAssignment_organizationId_employeeId_status_effective")
   @@index([departmentId, positionId, status])
 }
 
@@ -1541,7 +1543,7 @@ model HrWorkforceEventExecutionAttempt {
   completedAt    DateTime?
   event          HrWorkforceEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
 
-  @@unique([eventId, eventVersion, attemptNumber])
+  @@unique([eventId, eventVersion, attemptNumber], map: "HrWorkforceEventExecutionAttempt_event_version_attempt_key")
   @@index([status, startedAt])
 }
 
@@ -1616,7 +1618,7 @@ model HrProbationReview {
   updatedAt       DateTime                   @updatedAt
   probationCase   HrProbationCase            @relation(fields: [probationCaseId], references: [id], onDelete: Restrict)
 
-  @@unique([probationCaseId, type, checkpointAt])
+  @@unique([probationCaseId, type, checkpointAt], map: "HrProbationReview_case_type_checkpoint_key")
   @@index([checkpointAt, submittedAt])
 }
 
@@ -1639,7 +1641,7 @@ model HrEmploymentContract {
   versions           HrEmploymentContractVersion[]
 
   @@unique([organizationId, contractRef])
-  @@index([employeeId, status, effectiveFrom, effectiveTo])
+  @@index([employeeId, status, effectiveFrom, effectiveTo], map: "HrEmploymentContract_employeeId_status_effective_idx")
 }
 
 model HrEmploymentContractVersion {
@@ -1659,7 +1661,7 @@ model HrEmploymentContractVersion {
   contract          HrEmploymentContract @relation(fields: [contractId], references: [id], onDelete: Restrict)
 
   @@unique([contractId, version])
-  @@index([contractId, effectiveFrom, effectiveTo])
+  @@index([contractId, effectiveFrom, effectiveTo], map: "HrEmploymentContractVersion_contractId_effective_idx")
 }
 
 model HrSeparationCase {
@@ -1801,7 +1803,7 @@ model HrSupervisorAssignment {
 
   @@index([organizationId, supervisorEmployeeId, status, effectiveFrom, effectiveTo])
   @@index([organizationId, assignedEmployeeId, status])
-  @@index([organizationId, departmentScopeId, teamScopeId, status])
+  @@index([organizationId, departmentScopeId, teamScopeId, status], map: "HrSupervisorAssignment_organizationId_departmentScopeId_teamSco")
 }
 
 model HrAuditEvent {
@@ -1983,7 +1985,7 @@ model HrLeavePolicy {
   requestVersions       HrLeaveRequestVersion[]
 
   @@unique([organizationId, leaveTypeId, version])
-  @@index([organizationId, status, effectiveFrom, effectiveTo])
+  @@index([organizationId, status, effectiveFrom, effectiveTo], map: "HrLeavePolicy_organizationId_status_effectiveFrom_effectiveTo_i")
 }
 
 model HrLeavePolicyApplicability {
@@ -2370,7 +2372,7 @@ model HrEmployeeLeavePolicy {
   assignedBy    HrUser             @relation("LeavePolicyAssigner", fields: [assignedById], references: [id], onDelete: Restrict)
   endedBy       HrUser?            @relation("LeavePolicyEnder", fields: [endedById], references: [id], onDelete: Restrict)
 
-  @@index([employeeId, status, effectiveFrom, effectiveTo])
+  @@index([employeeId, status, effectiveFrom, effectiveTo], map: "HrEmployeeLeavePolicy_employeeId_status_effectiveFrom_effective")
   @@index([leavePolicyId, status])
 }
 
@@ -2523,7 +2525,7 @@ model HrSalaryRecord {
   payrollItems   HrPayrollItem[]
 
   @@unique([employeeId, effectiveFrom])
-  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo], map: "HrSalaryRecord_organizationId_employeeId_effectiveFrom_effectiv")
 }
 
 model HrPayrollComponent {
@@ -2562,8 +2564,8 @@ model HrEmployeePayrollComponent {
   component     HrPayrollComponent @relation(fields: [componentId], references: [id], onDelete: Restrict)
   createdBy     HrUser             @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
-  @@unique([employeeId, componentId, effectiveFrom])
-  @@index([employeeId, status, effectiveFrom, effectiveTo])
+  @@unique([employeeId, componentId, effectiveFrom], map: "HrEmployeePayrollComponent_employeeId_componentId_effectiveFrom")
+  @@index([employeeId, status, effectiveFrom, effectiveTo], map: "HrEmployeePayrollComponent_employeeId_status_effectiveFrom_effe")
   @@index([componentId, status])
 }
 
@@ -2747,7 +2749,7 @@ model HrEmployeeDocument {
   archivedBy      HrUser?                     @relation("DocumentArchiver", fields: [archivedById], references: [id], onDelete: Restrict)
   versions        HrEmployeeDocumentVersion[]
 
-  @@index([organizationId, category, retentionStatus, archivedAt])
+  @@index([organizationId, category, retentionStatus, archivedAt], map: "HrEmployeeDocument_organizationId_category_retentionStatus_arch")
   @@index([employeeId, createdAt])
   @@index([organizationId, expiresAt])
 }
@@ -2787,10 +2789,10 @@ model HrEmployeeDocumentVersion {
   HrLeaveEvidence     HrLeaveEvidence[]
 
   @@unique([documentId, version])
-  @@index([organizationId, scanStatus, uploadedAt])
+  @@index([organizationId, scanStatus, uploadedAt], map: "HrEmployeeDocumentVersion_organizationId_scanStatus_uploadedAt_")
   @@index([scanStatus, uploadedAt])
   @@index([checksum])
-  @@index([storageBucket, storageKey, storageVersionId])
+  @@index([storageBucket, storageKey, storageVersionId], map: "HrEmployeeDocumentVersion_storageBucket_storageKey_storageVersi")
 }
 
 model HrDocumentAccessLog {
@@ -2935,7 +2937,7 @@ model HrLifecycleInstance {
   createdBy                HrUser              @relation("LifecycleInstanceCreator", fields: [createdById], references: [id], onDelete: Restrict)
   tasks                    HrLifecycleTask[]
 
-  @@index([organizationId, type, status, effectiveDate])
+  @@index([organizationId, type, status, effectiveDate], map: "HrLifecycleInstance_organizationId_type_status_effectiveDate_id")
   @@index([employeeId, type, status])
 }
 
@@ -2990,7 +2992,7 @@ model HrWorkflowDefinition {
   instances      HrWorkflowInstance[]
 
   @@unique([organizationId, key, version])
-  @@index([organizationId, module, subjectType, active])
+  @@index([organizationId, module, subjectType, active], map: "HrWorkflowDefinition_organizationId_module_subjectType_active_i")
 }
 
 model HrWorkflowDefinitionStage {
@@ -3116,13 +3118,13 @@ model HrLegalEntity {
   effectiveTo            DateTime?
   createdAt              DateTime         @default(now())
   updatedAt              DateTime         @updatedAt
-  organization           HrOrganization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization           HrOrganization   @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrLegalEntity_organization_fkey")
   businessUnits          HrBusinessUnit[]
   locations              HrLocation[]
   costCenters            HrCostCenter[]
 
   @@unique([organizationId, code])
-  @@index([organizationId, status, effectiveFrom, effectiveTo])
+  @@index([organizationId, status, effectiveFrom, effectiveTo], map: "HrLegalEntity_scope_idx")
 }
 
 model HrBusinessUnit {
@@ -3138,14 +3140,14 @@ model HrBusinessUnit {
   effectiveTo          DateTime?
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
-  organization         HrOrganization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  legalEntity          HrLegalEntity    @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
-  parent               HrBusinessUnit?  @relation("BusinessUnitHierarchy", fields: [parentBusinessUnitId], references: [id], onDelete: Restrict)
+  organization         HrOrganization   @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrBusinessUnit_organization_fkey")
+  legalEntity          HrLegalEntity    @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrBusinessUnit_legalEntity_fkey")
+  parent               HrBusinessUnit?  @relation("BusinessUnitHierarchy", fields: [parentBusinessUnitId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrBusinessUnit_parent_fkey")
   children             HrBusinessUnit[] @relation("BusinessUnitHierarchy")
   divisions            HrDivision[]
 
   @@unique([organizationId, code])
-  @@index([organizationId, legalEntityId, status, effectiveFrom, effectiveTo])
+  @@index([organizationId, legalEntityId, status, effectiveFrom, effectiveTo], map: "HrBusinessUnit_scope_idx")
 }
 
 model HrDivision {
@@ -3160,13 +3162,13 @@ model HrDivision {
   effectiveTo      DateTime?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  organization     HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  businessUnit     HrBusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
-  parent           HrDivision?    @relation("DivisionHierarchy", fields: [parentDivisionId], references: [id], onDelete: Restrict)
+  organization     HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrDivision_organization_fkey")
+  businessUnit     HrBusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrDivision_businessUnit_fkey")
+  parent           HrDivision?    @relation("DivisionHierarchy", fields: [parentDivisionId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrDivision_parent_fkey")
   children         HrDivision[]   @relation("DivisionHierarchy")
 
   @@unique([organizationId, code])
-  @@index([organizationId, businessUnitId, status, effectiveFrom, effectiveTo])
+  @@index([organizationId, businessUnitId, status, effectiveFrom, effectiveTo], map: "HrDivision_scope_idx")
 }
 
 model HrLocation {
@@ -3188,13 +3190,13 @@ model HrLocation {
   effectiveTo      DateTime?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  organization     HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  legalEntity      HrLegalEntity  @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
-  parent           HrLocation?    @relation("LocationHierarchy", fields: [parentLocationId], references: [id], onDelete: Restrict)
+  organization     HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrLocation_organization_fkey")
+  legalEntity      HrLegalEntity  @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrLocation_legalEntity_fkey")
+  parent           HrLocation?    @relation("LocationHierarchy", fields: [parentLocationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrLocation_parent_fkey")
   children         HrLocation[]   @relation("LocationHierarchy")
 
   @@unique([organizationId, code])
-  @@index([organizationId, legalEntityId, status, effectiveFrom, effectiveTo])
+  @@index([organizationId, legalEntityId, status, effectiveFrom, effectiveTo], map: "HrLocation_scope_idx")
 }
 
 model HrCostCenter {
@@ -3212,13 +3214,13 @@ model HrCostCenter {
   effectiveTo        DateTime?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
-  organization       HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  legalEntity        HrLegalEntity  @relation(fields: [legalEntityId], references: [id], onDelete: Restrict)
-  parent             HrCostCenter?  @relation("CostCenterHierarchy", fields: [parentCostCenterId], references: [id], onDelete: Restrict)
+  organization       HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrCostCenter_organization_fkey")
+  legalEntity        HrLegalEntity  @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrCostCenter_legalEntity_fkey")
+  parent             HrCostCenter?  @relation("CostCenterHierarchy", fields: [parentCostCenterId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrCostCenter_parent_fkey")
   children           HrCostCenter[] @relation("CostCenterHierarchy")
 
   @@unique([organizationId, code])
-  @@index([organizationId, legalEntityId, status, effectiveFrom, effectiveTo])
+  @@index([organizationId, legalEntityId, status, effectiveFrom, effectiveTo], map: "HrCostCenter_scope_idx")
 }
 
 model HrJobFamily {
@@ -3230,11 +3232,11 @@ model HrJobFamily {
   status         HrRecordStatus @default(ACTIVE)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrJobFamily_organization_fkey")
   jobProfiles    HrJobProfile[]
 
   @@unique([organizationId, code])
-  @@index([organizationId, status, name])
+  @@index([organizationId, status, name], map: "HrJobFamily_scope_idx")
 }
 
 model HrJobProfile {
@@ -3250,11 +3252,11 @@ model HrJobProfile {
   status              HrRecordStatus @default(ACTIVE)
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
-  organization        HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  jobFamily           HrJobFamily    @relation(fields: [jobFamilyId], references: [id], onDelete: Restrict)
+  organization        HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrJobProfile_organization_fkey")
+  jobFamily           HrJobFamily    @relation(fields: [jobFamilyId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrJobProfile_jobFamily_fkey")
 
   @@unique([organizationId, code])
-  @@index([organizationId, jobFamilyId, status, title])
+  @@index([organizationId, jobFamilyId, status, title], map: "HrJobProfile_scope_idx")
 }
 
 model HrGrade {
@@ -3270,11 +3272,11 @@ model HrGrade {
   status         HrRecordStatus @default(ACTIVE)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrGrade_organization_fkey")
 
   @@unique([organizationId, code])
   @@unique([organizationId, level])
-  @@index([organizationId, status, level])
+  @@index([organizationId, status, level], map: "HrGrade_scope_idx")
 }
 
 model HrPositionApproval {
@@ -3288,10 +3290,10 @@ model HrPositionApproval {
   decisionReason String?
   createdAt      DateTime            @default(now())
   decidedAt      DateTime?
-  organization   HrOrganization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  position       HrPosition          @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  organization   HrOrganization      @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrPositionApproval_organization_fkey")
+  position       HrPosition          @relation(fields: [positionId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrPositionApproval_position_fkey")
 
-  @@index([organizationId, positionId, createdAt])
+  @@index([organizationId, positionId, createdAt], map: "HrPositionApproval_scope_idx")
 }
 
 model HrOrganizationChange {
@@ -3311,9 +3313,9 @@ model HrOrganizationChange {
   attempts       Int                        @default(0)
   createdAt      DateTime                   @default(now())
   updatedAt      DateTime                   @updatedAt
-  organization   HrOrganization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization   HrOrganization             @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrOrganizationChange_organization_fkey")
 
-  @@index([organizationId, status, effectiveAt])
+  @@index([organizationId, status, effectiveAt], map: "HrOrganizationChange_due_idx")
 }
 
 model HrOrganizationImportBatch {
@@ -3330,10 +3332,10 @@ model HrOrganizationImportBatch {
   committedAt    DateTime?
   createdAt      DateTime                  @default(now())
   updatedAt      DateTime                  @updatedAt
-  organization   HrOrganization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization   HrOrganization            @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrOrganizationImportBatch_organization_fkey")
   rows           HrOrganizationImportRow[]
 
-  @@index([organizationId, status, createdAt])
+  @@index([organizationId, status, createdAt], map: "HrOrganizationImportBatch_scope_idx")
 }
 
 model HrOrganizationImportRow {
@@ -3345,10 +3347,10 @@ model HrOrganizationImportRow {
   errors      Json
   committedId String?
   createdAt   DateTime                  @default(now())
-  batch       HrOrganizationImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  batch       HrOrganizationImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "HrOrganizationImportRow_batch_fkey")
 
   @@unique([batchId, rowNumber])
-  @@index([batchId, valid])
+  @@index([batchId, valid], map: "HrOrganizationImportRow_valid_idx")
 }
 
 model HrOrganizationStructureRevision {
@@ -3362,10 +3364,10 @@ model HrOrganizationStructureRevision {
   effectiveTo    DateTime?
   createdById    String
   createdAt      DateTime       @default(now())
-  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization   HrOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "HrOrganizationStructureRevision_organization_fkey")
 
-  @@unique([organizationId, entityType, entityId, version])
-  @@index([organizationId, entityType, effectiveFrom, effectiveTo])
+  @@unique([organizationId, entityType, entityId, version], map: "HrOrganizationStructureRevision_version_key")
+  @@index([organizationId, entityType, effectiveFrom, effectiveTo], map: "HrOrganizationStructureRevision_effective_idx")
 }
 
 enum HrTimeTrackingMode {
@@ -4079,7 +4081,7 @@ model HrVacancy {
   @@index([organizationId, status, updatedAt])
   @@index([hiringTeamId, status])
   @@index([departmentId, status])
-  @@index([status, careersVisible, publishedAt, applicationDeadline])
+  @@index([status, careersVisible, publishedAt, applicationDeadline], map: "HrVacancy_status_careersVisible_publishedAt_applicationDeadline")
 }
 
 model HrVacancyDelegation {
@@ -4321,7 +4323,7 @@ model HrRecruitmentOfferVersion {
   contractType     String
   expiresAt        DateTime
   terms            Json
-  createdById      String?
+  createdById      String
   createdAt        DateTime            @default(now())
   offer            HrRecruitmentOffer  @relation("OfferVersions", fields: [offerId], references: [id], onDelete: Cascade)
   activeForOffer   HrRecruitmentOffer? @relation("ActiveOfferVersion")
@@ -6008,8 +6010,8 @@ model HrPayrollTaxableBaseDefinition {
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([organizationId, jurisdictionVersionId, code, version])
-  @@unique([organizationId, correlationId])
+  @@unique([organizationId, jurisdictionVersionId, code, version], map: "HrPayrollTaxableBaseDefinition_scope_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollTaxableBaseDefinition_correlation_key")
 }
 
 model HrPayrollEarningDefinition {
@@ -6025,8 +6027,8 @@ model HrPayrollEarningDefinition {
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([organizationId, jurisdictionVersionId, code, version])
-  @@unique([organizationId, correlationId])
+  @@unique([organizationId, jurisdictionVersionId, code, version], map: "HrPayrollEarningDefinition_scope_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollEarningDefinition_correlation_key")
 }
 
 model HrPayrollDeductionDefinition {
@@ -6043,8 +6045,8 @@ model HrPayrollDeductionDefinition {
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([organizationId, jurisdictionVersionId, code, version])
-  @@unique([organizationId, correlationId])
+  @@unique([organizationId, jurisdictionVersionId, code, version], map: "HrPayrollDeductionDefinition_scope_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollDeductionDefinition_correlation_key")
 }
 
 model HrPayrollEmployeeDeductionElection {
@@ -6061,8 +6063,8 @@ model HrPayrollEmployeeDeductionElection {
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([organizationId, employeeId, deductionDefinitionId, version])
-  @@unique([organizationId, correlationId])
+  @@unique([organizationId, employeeId, deductionDefinitionId, version], map: "HrPayrollEmployeeDeductionElection_scope_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollEmployeeDeductionElection_correlation_key")
 }
 
 model HrPayrollEmployerContributionDefinition {
@@ -6078,8 +6080,8 @@ model HrPayrollEmployerContributionDefinition {
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([organizationId, jurisdictionVersionId, code, version])
-  @@unique([organizationId, correlationId])
+  @@unique([organizationId, jurisdictionVersionId, code, version], map: "HrPayrollEmployerContributionDefinition_scope_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollEmployerContributionDefinition_correlation_key")
 }
 
 model HrPayrollManualAdjustment {
@@ -6098,8 +6100,8 @@ model HrPayrollManualAdjustment {
   correlationId  String
   createdAt      DateTime  @default(now())
 
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, payrollRunId, employeeId, status])
+  @@unique([organizationId, correlationId], map: "HrPayrollManualAdjustment_correlation_key")
+  @@index([organizationId, payrollRunId, employeeId, status], map: "HrPayrollManualAdjustment_scope_idx")
 }
 
 model HrPayrollCalendarPeriod {
@@ -6181,8 +6183,8 @@ model HrPayrollInputSnapshot {
   @@unique([payrollRunId, employeeId])
   @@unique([organizationId, correlationId])
   @@index([organizationId, payrollRunId, certificationStatus])
-  @@index([organizationId, minimumWageDecisionHash])
-  @@index([organizationId, employmentIncomeBindingHash])
+  @@index([organizationId, minimumWageDecisionHash], map: "HrPayrollInputSnapshot_organizationId_minimumWageDecisionHash_i")
+  @@index([organizationId, employmentIncomeBindingHash], map: "HrPayrollInputSnapshot_organizationId_employmentIncomeBindingHa")
 }
 
 model HrPayrollCalculationAttempt {
@@ -6232,12 +6234,12 @@ model HrPayrollAuthoritativeResult {
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([calculationAttemptId, employeeId])
+  @@unique([calculationAttemptId, employeeId], map: "HrPayrollAuthoritativeResult_calculationAttemptId_employeeId_ke")
   @@unique([organizationId, correlationId])
-  @@index([organizationId, payrollRunId, employeeId, authoritativeAt])
+  @@index([organizationId, payrollRunId, employeeId, authoritativeAt], map: "HrPayrollAuthoritativeResult_organizationId_payrollRunId_employ")
   @@index([organizationId, employeeId, createdAt])
-  @@index([organizationId, minimumWageDecisionHash])
-  @@index([organizationId, employmentIncomeBindingHash])
+  @@index([organizationId, minimumWageDecisionHash], map: "HrPayrollAuthoritativeResult_organizationId_minimumWageDecision")
+  @@index([organizationId, employmentIncomeBindingHash], map: "HrPayrollAuthoritativeResult_organizationId_employmentIncomeBin")
 }
 
 model HrPayrollResultLine {
@@ -6315,9 +6317,9 @@ model HrPayrollPaymentDestinationVersion {
   correlationId          String
   createdAt              DateTime  @default(now())
 
-  @@unique([organizationId, employeeId, version])
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+  @@unique([organizationId, employeeId, version], map: "HrPayrollPaymentDestinationVersion_organizationId_employeeId_ve")
+  @@unique([organizationId, correlationId], map: "HrPayrollPaymentDestinationVersion_organizationId_correlationId")
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo], map: "HrPayrollPaymentDestinationVersion_organizationId_employeeId_ef")
 }
 
 model HrPayrollCertificationIssue {
@@ -6372,8 +6374,8 @@ model HrPayrollComplianceException {
 
   @@unique([organizationId, logicalKey])
   @@unique([organizationId, correlationId])
-  @@index([organizationId, payrollRunId, status])
-  @@index([organizationId, employeeId, openedAt])
+  @@index([organizationId, payrollRunId, status], map: "HrPayrollComplianceException_organizationId_payrollRunId_status")
+  @@index([organizationId, employeeId, openedAt], map: "HrPayrollComplianceException_organizationId_employeeId_openedAt")
 }
 
 model HrPayrollComplianceExceptionEvent {
@@ -6388,8 +6390,8 @@ model HrPayrollComplianceExceptionEvent {
   correlationId          String
   createdAt              DateTime @default(now())
 
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, complianceExceptionId, createdAt])
+  @@unique([organizationId, correlationId], map: "HrPayrollComplianceExceptionEvent_organizationId_correlationId_")
+  @@index([organizationId, complianceExceptionId, createdAt], map: "HrPayrollComplianceExceptionEvent_organizationId_complianceExce")
 }
 
 model HrPayrollPopulationPartition {
@@ -6414,7 +6416,7 @@ model HrPayrollPopulationPartition {
   correlationId            String
   createdAt                DateTime @default(now())
 
-  @@unique([organizationId, payrollRunId, calculationAttemptId])
+  @@unique([organizationId, payrollRunId, calculationAttemptId], map: "HrPayrollPopulationPartition_organizationId_payrollRunId_calcul")
   @@unique([organizationId, partitionHash])
   @@unique([organizationId, correlationId])
 }
@@ -6435,9 +6437,9 @@ model HrPayrollCapabilityAssignment {
   correlationId  String
   createdAt      DateTime @default(now())
 
-  @@unique([organizationId, subjectUserId, capability, effectiveFrom])
+  @@unique([organizationId, subjectUserId, capability, effectiveFrom], map: "HrPayrollCapabilityAssignment_organizationId_subjectUserId_capa")
   @@unique([organizationId, correlationId])
-  @@index([organizationId, subjectUserId, expiresAt])
+  @@index([organizationId, subjectUserId, expiresAt], map: "HrPayrollCapabilityAssignment_organizationId_subjectUserId_expi")
 }
 
 model HrPayrollReconciliation {
@@ -6567,7 +6569,7 @@ model HrPayrollPaymentBatch {
   instructionCount  Int
   totalAmount       Decimal   @db.Decimal(20, 4)
   exportHash        String?
-  createdById       String
+  createdById       String?
   approvedById      String?
   approvedAt        DateTime?
   exportedAt        DateTime?
@@ -6674,10 +6676,10 @@ model HrPayrollStatutoryAmendment {
   correlationId           String
   createdAt               DateTime @default(now())
 
-  @@unique([organizationId, idempotencyKey])
-  @@unique([originalRemittanceBatchId, version])
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, originalRemittanceBatchId, createdAt])
+  @@unique([organizationId, idempotencyKey], map: "HrPayrollStatutoryAmendment_org_idempotency_key")
+  @@unique([originalRemittanceBatchId, version], map: "HrPayrollStatutoryAmendment_batch_version_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollStatutoryAmendment_org_correlation_key")
+  @@index([organizationId, originalRemittanceBatchId, createdAt], map: "HrPayrollStatutoryAmendment_lineage_idx")
 }
 
 model HrPayrollBikEvidenceVersion {
@@ -6699,9 +6701,9 @@ model HrPayrollBikEvidenceVersion {
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([organizationId, employeeId, code, version])
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+  @@unique([organizationId, employeeId, code, version], map: "HrPayrollBikEvidenceVersion_org_employee_code_version_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollBikEvidenceVersion_org_correlation_key")
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo], map: "HrPayrollBikEvidenceVersion_effective_idx")
 }
 
 model HrPayrollTaxReliefClaimVersion {
@@ -6725,9 +6727,9 @@ model HrPayrollTaxReliefClaimVersion {
   correlationId         String
   createdAt             DateTime @default(now())
 
-  @@unique([organizationId, employeeId, taxYear, claimType, version])
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, employeeId, taxYear, status])
+  @@unique([organizationId, employeeId, taxYear, claimType, version], map: "HrPayrollTaxReliefClaimVersion_logical_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollTaxReliefClaimVersion_correlation_key")
+  @@index([organizationId, employeeId, taxYear, status], map: "HrPayrollTaxReliefClaimVersion_status_idx")
 }
 
 model HrPayrollPriorEmployerYtdVersion {
@@ -6749,8 +6751,8 @@ model HrPayrollPriorEmployerYtdVersion {
   correlationId          String
   createdAt              DateTime @default(now())
 
-  @@unique([organizationId, employeeId, taxYear, version])
-  @@unique([organizationId, correlationId])
+  @@unique([organizationId, employeeId, taxYear, version], map: "HrPayrollPriorEmployerYtdVersion_logical_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollPriorEmployerYtdVersion_correlation_key")
 }
 
 model HrPayrollAnnualizationRuleVersion {
@@ -6772,9 +6774,9 @@ model HrPayrollAnnualizationRuleVersion {
   correlationId       String
   createdAt           DateTime @default(now())
 
-  @@unique([organizationId, jurisdictionVersion, taxYear, frequency, version])
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, jurisdictionVersion, taxYear, frequency, certificationStatus, effectiveFrom, effectiveTo])
+  @@unique([organizationId, jurisdictionVersion, taxYear, frequency, version], map: "HrPayrollAnnualizationRuleVersion_org_jurisdiction_year_frequen")
+  @@unique([organizationId, correlationId], map: "HrPayrollAnnualizationRuleVersion_org_correlation_key")
+  @@index([organizationId, jurisdictionVersion, taxYear, frequency, certificationStatus, effectiveFrom, effectiveTo], map: "HrPayrollAnnualizationRuleVersion_lookup_idx")
 }
 
 model HrPayrollEmployeeRtaProfileVersion {
@@ -6794,9 +6796,9 @@ model HrPayrollEmployeeRtaProfileVersion {
   correlationId          String
   createdAt              DateTime  @default(now())
 
-  @@unique([organizationId, employeeId, taxYear, version])
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+  @@unique([organizationId, employeeId, taxYear, version], map: "HrPayrollEmployeeRtaProfileVersion_logical_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollEmployeeRtaProfileVersion_correlation_key")
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo], map: "HrPayrollEmployeeRtaProfileVersion_effective_idx")
 }
 
 model HrPayrollPensionProfileVersion {
@@ -6819,9 +6821,9 @@ model HrPayrollPensionProfileVersion {
   correlationId           String
   createdAt               DateTime  @default(now())
 
-  @@unique([organizationId, employeeId, version])
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, employeeId, effectiveFrom, effectiveTo])
+  @@unique([organizationId, employeeId, version], map: "HrPayrollPensionProfileVersion_logical_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollPensionProfileVersion_correlation_key")
+  @@index([organizationId, employeeId, effectiveFrom, effectiveTo], map: "HrPayrollPensionProfileVersion_effective_idx")
 }
 
 model HrPayrollStatutoryApplicabilityVersion {
@@ -6841,9 +6843,9 @@ model HrPayrollStatutoryApplicabilityVersion {
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([organizationId, legalEntityId, schemeCode, version])
-  @@unique([organizationId, correlationId])
-  @@index([organizationId, legalEntityId, effectiveFrom, effectiveTo])
+  @@unique([organizationId, legalEntityId, schemeCode, version], map: "HrPayrollStatutoryApplicabilityVersion_logical_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollStatutoryApplicabilityVersion_correlation_key")
+  @@index([organizationId, legalEntityId, effectiveFrom, effectiveTo], map: "HrPayrollStatutoryApplicabilityVersion_effective_idx")
 }
 
 model HrPayrollRetentionPolicyVersion {
@@ -6861,6 +6863,6 @@ model HrPayrollRetentionPolicyVersion {
   correlationId         String
   createdAt             DateTime  @default(now())
 
-  @@unique([organizationId, jurisdictionVersionId, recordCategory, version])
-  @@unique([organizationId, correlationId])
+  @@unique([organizationId, jurisdictionVersionId, recordCategory, version], map: "HrPayrollRetentionPolicyVersion_logical_key")
+  @@unique([organizationId, correlationId], map: "HrPayrollRetentionPolicyVersion_correlation_key")
 }
