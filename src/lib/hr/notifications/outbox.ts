@@ -13,8 +13,12 @@ export function assertSafeOutboxPayload(payload: Record<string, unknown>) {
 export async function enqueueHrEmail(client: OutboxClient, input: {
   organizationId: string; recipient: string; template: string; subject: string;
   payload: Record<string, unknown>; idempotencyKey: string;
+  invitationId?: string; resetChallengeId?: string; messageExpiresAt?: Date;
 }) {
   assertSafeOutboxPayload(input.payload);
+  if (!input.organizationId) throw new Error('OUTBOX_ORGANIZATION_REQUIRED');
+  if (input.template === 'hr-account-invitation' && (!input.invitationId || !input.messageExpiresAt)
+    || input.template === 'hr-password-reset' && (!input.resetChallengeId || !input.messageExpiresAt)) throw new Error('OUTBOX_CREDENTIAL_REFERENCE_REQUIRED');
   const recipientUser = await client.hrUser.findFirst({
     where: { organizationId: input.organizationId, email: input.recipient.toLowerCase() },
     select: { id: true },
@@ -25,8 +29,9 @@ export async function enqueueHrEmail(client: OutboxClient, input: {
   const email = preference?.emailEnabled === false && !mandatoryEmailTemplates.has(input.template) ? null : await client.hrEmailOutbox.upsert({
     where: { idempotencyKey: input.idempotencyKey },
     update: {},
-    create: { ...input, payload: input.payload as Prisma.InputJsonValue },
+    create: { ...input, safetyContractVersion: 1, dispatchPhase: 'NONE', payload: input.payload as Prisma.InputJsonValue },
   });
+  if (email && (email.organizationId !== input.organizationId || email.template !== input.template || email.recipient.trim().toLowerCase() !== input.recipient.trim().toLowerCase())) throw new Error('OUTBOX_IDEMPOTENCY_SCOPE_CONFLICT');
   if (recipientUser && preference?.inAppEnabled !== false) {
     await client.hrNotification.upsert({
       where: { idempotencyKey: input.idempotencyKey },

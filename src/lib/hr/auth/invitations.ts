@@ -37,13 +37,13 @@ export async function createHrInvitation(input: { organizationId: string; userId
     const recipientName = target.employee ? `${target.employee.preferredName ?? target.employee.legalFirstName} ${target.employee.lastName}` : undefined;
     await tx.hrAccountInvitation.updateMany({ where: { userId: input.userId, status: "ACTIVE" }, data: { status: "REVOKED" } });
     const created = await tx.hrAccountInvitation.create({ data: { organizationId: input.organizationId, userId: input.userId, createdById: input.createdById, tokenHash: hashOpaqueToken(rawToken), expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) } });
-    const outbox = await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: input.recipient, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: created.id, credentialEnvelope: sealHrCredential(rawToken), recipientName }, idempotencyKey: `hr-invitation:${created.id}` });
+    const outbox = await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: input.recipient, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: created.id, credentialEnvelope: sealHrCredential(rawToken), recipientName }, invitationId: created.id, messageExpiresAt: created.expiresAt, idempotencyKey: `hr-invitation:${created.id}` });
     await appendHrAudit(tx, { organizationId: input.organizationId, actorUserId: input.createdById, entityType: "HrUser", entityId: input.userId, action: "hr.user.invited" });
     return { created, outboxId: outbox?.id, reused: false };
   }, { isolationLevel: "ReadCommitted" });
   if (invitation.outboxId) {
     try {
-      await processHrOutboxItem(invitation.outboxId);
+      await processHrOutboxItem(invitation.outboxId, new Date(), input.organizationId);
     } catch {
       // The durable cron worker remains the fallback for infrastructure errors.
     }

@@ -23,7 +23,7 @@ export async function requestPasswordReset(organizationId: string, emailInput: s
     await tx.hrPasswordResetChallenge.updateMany({ where: { userId: user.id, status: "ACTIVE" }, data: { status: "REVOKED" } });
     const created = await tx.hrPasswordResetChallenge.create({ data: { userId: user.id, codeHash: hashPasswordResetCode(user.id, code), expiresAt: new Date(now.getTime() + RESET_OTP_TTL_SECONDS * 1000), createdAt: now } });
     const recipientName = user.employee ? `${user.employee.preferredName ?? user.employee.legalFirstName} ${user.employee.lastName}` : undefined;
-    await enqueueHrEmail(tx, { organizationId, recipient: user.email, template: "hr-password-reset", subject: "Your Zentric HR password reset code", payload: { credentialEnvelope: sealHrCredential(code), recipientName }, idempotencyKey: `hr-password-reset:${created.id}` });
+    await enqueueHrEmail(tx, { organizationId, recipient: user.email, template: "hr-password-reset", subject: "Your Zentric HR password reset code", payload: { credentialEnvelope: sealHrCredential(code), recipientName }, resetChallengeId: created.id, messageExpiresAt: created.expiresAt, idempotencyKey: `hr-password-reset:${created.id}` });
     await appendHrAudit(tx, { organizationId, actorUserId: user.id, entityType: "HrUser", entityId: user.id, action: "hr.password.reset_requested" });
     return created;
   });

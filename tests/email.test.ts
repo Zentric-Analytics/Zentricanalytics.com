@@ -23,13 +23,21 @@ describe('email provider abstraction', () => {
     vi.restoreAllMocks();
     mocks.emailNotificationCreate.mockClear();
     mocks.auditLogCreate.mockClear();
+    vi.stubEnv('RENDER', 'true');
+    vi.stubEnv('IS_PULL_REQUEST', 'false');
+    vi.stubEnv('RENDER_SERVICE_ID', 'srv-d8s89fbeo5us73e7ljk0');
+    vi.stubEnv('RENDER_SERVICE_TYPE', 'web');
+    vi.stubEnv('RENDER_GIT_REPO_SLUG', 'Zentric-Analytics/Zentricanalytics.com');
+    vi.stubEnv('RENDER_GIT_BRANCH', 'main');
+    vi.stubEnv('APP_ENV', 'production');
+    vi.stubEnv('APPLICATION_BASE_URL', 'https://www.zentricanalytics.com');
   });
 
   it('uses console provider as fallback', async () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
     const { sendHiringEmail } = await loadEmailModule();
-    await expect(sendHiringEmail({ applicationId: 'app_1', to: 'ada@example.com', template: 'application-received', subject: 'Received', body: 'Body' })).resolves.toEqual({ provider: 'console', status: 'sent' });
-    expect(info).toHaveBeenCalledWith('Hiring email delivery', expect.objectContaining({ provider: 'console', status: 'sent' }));
+    await expect(sendHiringEmail({ applicationId: 'app_1', to: 'ada@example.com', template: 'application-received', subject: 'Received', body: 'Body' })).resolves.toEqual({ provider: 'console', status: 'simulated', invoked: false });
+    expect(info).toHaveBeenCalledWith('Hiring email delivery', expect.objectContaining({ provider: 'console', status: 'simulated' }));
   });
 
   it('selects Resend when EMAIL_PROVIDER=resend and records provider response ID', async () => {
@@ -53,8 +61,8 @@ describe('email provider abstraction', () => {
     vi.stubEnv('EMAIL_PROVIDER', 'resend');
     const { sendAndRecordEmail } = await loadEmailModule();
     const record = await sendAndRecordEmail({ applicationId: 'app_1', to: 'ada@example.com', template: 'access-code', subject: 'Code', body: '123456' });
-    expect(record).toMatchObject({ status: 'failed', failureReason: 'RESEND_API_KEY is required when EMAIL_PROVIDER=resend' });
-    expect(mocks.auditLogCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ metadata: expect.objectContaining({ status: 'failed', provider: 'resend' }) }) });
+    expect(record).toMatchObject({ status: 'configuration_blocked', failureReason: 'EMAIL_PROVIDER_CONFIGURATION_REQUIRED' });
+    expect(mocks.auditLogCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ metadata: expect.objectContaining({ status: 'configuration_blocked', provider: 'resend' }) }) });
   });
 
   it('does not leak API keys in recorded failures or logs', async () => {
@@ -64,7 +72,7 @@ describe('email provider abstraction', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
     const { sendAndRecordEmail } = await loadEmailModule();
     const record = await sendAndRecordEmail({ applicationId: 'app_1', to: 'ada@example.com', template: 'access-code', subject: 'Code', body: '123456' });
-    expect(record.failureReason).toBe('bad [redacted] token');
+    expect(record.failureReason).toBe('EMAIL_PROVIDER_RESPONSE_401');
     expect(JSON.stringify(mocks.emailNotificationCreate.mock.calls)).not.toContain('secret-key');
     expect(JSON.stringify(info.mock.calls)).not.toContain('secret-key');
   });
@@ -74,6 +82,20 @@ describe('email provider abstraction', () => {
     const { sendAndRecordEmail } = await loadEmailModule();
     await sendAndRecordEmail({ applicationId: 'app_1', to: 'ada@example.com', template: 'access-code', subject: 'Code', body: 'Your one-time access code is 123456.' });
     expect(JSON.stringify(info.mock.calls)).not.toContain('123456');
+  });
+
+  it('blocks a direct staging send before fetch when recipient is not approved', async () => {
+    vi.stubEnv('EMAIL_PROVIDER','resend');vi.stubEnv('RESEND_API_KEY','synthetic-key');
+    vi.stubEnv('RENDER_SERVICE_ID','srv-d8s6ovvavr4c73fctksg');vi.stubEnv('RENDER_GIT_BRANCH','dev');vi.stubEnv('APP_ENV','staging');vi.stubEnv('APPLICATION_BASE_URL','https://staging.zentricanalytics.com');vi.stubEnv('STAGING_EMAIL_RECIPIENT_ALLOWLIST','["tester@example.invalid"]');
+    const fetchMock=vi.fn();vi.stubGlobal('fetch',fetchMock);
+    const {sendHiringEmail}=await loadEmailModule();
+    expect(await sendHiringEmail({applicationId:'app',to:'unapproved@gmail.com',template:'access-code',subject:'Synthetic'})).toMatchObject({status:'held',invoked:false});expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it('unknown identity cannot use configured provider credentials', async () => {
+    vi.stubEnv('EMAIL_PROVIDER','resend');vi.stubEnv('RESEND_API_KEY','synthetic-key');vi.stubEnv('RENDER_SERVICE_ID','unknown');const fetchMock=vi.fn();vi.stubGlobal('fetch',fetchMock);const {sendHiringEmail}=await loadEmailModule();expect(await sendHiringEmail({applicationId:'app',to:'candidate@gmail.com',template:'access-code',subject:'Synthetic'})).toMatchObject({status:'configuration_blocked',invoked:false});expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it('an ambiguous provider response is not a confirmed failure', async () => {
+    vi.stubEnv('EMAIL_PROVIDER','resend');vi.stubEnv('RESEND_API_KEY','synthetic-key');vi.stubGlobal('fetch',vi.fn(async()=>new Response('{}',{status:503})));const {sendHiringEmail}=await loadEmailModule();expect(await sendHiringEmail({applicationId:'app',to:'candidate@gmail.com',template:'access-code',subject:'Synthetic'})).toMatchObject({status:'uncertain',invoked:true});
   });
 
 });

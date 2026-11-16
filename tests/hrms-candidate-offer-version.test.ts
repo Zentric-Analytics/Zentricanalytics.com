@@ -66,7 +66,7 @@ it("records a current decline once and preserves its success on replay", async (
   const updateMany = vi.fn().mockImplementation(async () => { offer.status = "DECLINED"; offer.version++; return { count: 1 }; });
   const upsert = vi.fn().mockResolvedValue({ id: "decline", applicantId: "candidate", offerVersionId: "current" });
   mocks.prisma.hrRecruitmentOfferDecline.findFirst.mockResolvedValue({ id: "decline" });
-  const outbox = vi.fn().mockResolvedValue({ id: "email" });
+  const outbox = vi.fn().mockImplementation(async ({ create }) => ({ id: "email", ...create }));
   mocks.prisma.$transaction.mockImplementation(async run => run({ hrRecruitmentOffer: { updateMany }, hrRecruitmentOfferDecline: { upsert }, jobApplication: { update: vi.fn() }, hrUser: { findFirst: vi.fn().mockResolvedValue(null) }, hrEmailOutbox: { upsert: outbox } }));
   const data = form("current"); data.set("decision", "decline");
   await expect(submitOfferDecision(data)).rejects.toThrow("offer_declined");

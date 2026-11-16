@@ -64,7 +64,7 @@ describe("HRMS production hardening", () => {
     const worker = read("src/lib/hr/notifications/worker.ts");
     const invitations = read("src/lib/hr/auth/invitations.ts");
     expect(worker).toContain("export async function processHrOutboxItem");
-    expect(invitations).toContain("await processHrOutboxItem(invitation.outboxId)");
+    expect(invitations).toContain("await processHrOutboxItem(invitation.outboxId, new Date(), input.organizationId)");
     expect(invitations).toContain("durable cron worker remains the fallback");
   });
   it("protects workers, scanner callbacks and metrics with distinct bearer secrets", () => {
