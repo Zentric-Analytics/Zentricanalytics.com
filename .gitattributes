@@ -1,5 +1,9 @@
 *.pdf binary
 
+# Preserve the two Q03 queue safety migration checksums on Windows.
+prisma/migrations/20261029000100_email_queue_held_enum/migration.sql text eol=lf
+prisma/migrations/20261029000200_email_queue_safety_contract/migration.sql text eol=lf
+
 # New versioned correction payloads must survive Windows checkout byte-exactly.
 docs/hrms/delivery-units/unit-09/*historical-integrity*.md text eol=lf
 docs/hrms/delivery-units/unit-09/NG-CANDIDATE-2026.9_Historical_Evidence_Exception_Assessment.md text eol=lf
