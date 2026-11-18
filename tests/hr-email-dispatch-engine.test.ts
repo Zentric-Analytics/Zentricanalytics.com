@@ -31,6 +31,20 @@ describe('transactional queue integration with synthetic store and fake provider
  it('missing tenant scope cannot dispatch one guessed outbox id',async()=>{const f=setup();f.row();expect((await f.engine.processItem('message_1')).blocked).toBe(1);expect(f.tx.hrEmailOutbox.findFirst).not.toHaveBeenCalled();expect(f.send).not.toHaveBeenCalled();});
  it('cross-tenant selection cannot dispatch',async()=>{const f=setup();f.row();await f.engine.processItem('message_1','org_other');expect(f.send).not.toHaveBeenCalled();});
  it('render failure is held without consuming an attempt',async()=>{const f=setup();const r=f.row();f.render.mockImplementation(()=>{throw Error('invalid template');});await f.engine.processBatch();expect(r.status).toBe('HELD');expect(r.holdReason).toBe('UNSUPPORTED_TEMPLATE');expect(r.attemptCount).toBe(0);expect(f.send).not.toHaveBeenCalled();});
+ it('reports a blocked dispatch when the render-failure hold loses its version fence',async()=>{
+  const f=setup();
+  const r=f.row();
+  f.render.mockImplementation(()=>{
+   f.tx.hrEmailOutbox.updateMany.mockResolvedValueOnce({count:0});
+   throw Error('invalid template');
+  });
+  const result=await f.engine.processBatch();
+  expect(result).toMatchObject({claimed:1,held:0,blocked:1});
+  expect(r.status).toBe('PROCESSING');
+  expect(r.attemptCount).toBe(0);
+  expect(f.state.journal.map(event=>event.kind)).toEqual(['CLAIMED']);
+  expect(f.send).not.toHaveBeenCalled();
+ });
  it('provider rejection records a single confirmed failure',async()=>{const f=setup();const r=f.row();f.send.mockResolvedValue({provider:'resend',status:'failed',invoked:true,retryable:false});await f.engine.processBatch();expect(r.status).toBe('ABANDONED');expect(r.attemptCount).toBe(1);expect(f.state.journal.at(-1)?.kind).toBe('PROVIDER_FAILED');});
  it('confirmed rate limit is scheduled with backoff, not immediately replayed',async()=>{const f=setup();const r=f.row();f.send.mockResolvedValue({provider:'resend',status:'failed',invoked:true,retryable:true});await f.engine.processBatch();await f.engine.processBatch();expect(r.status).toBe('FAILED');expect(f.send).toHaveBeenCalledTimes(1);});
  it('timeout or thrown provider outcome is HELD and never automatically retried',async()=>{const f=setup();const r=f.row();f.send.mockRejectedValue(Error('synthetic secret body'));await f.engine.processBatch();await f.engine.processBatch();expect(r.status).toBe('HELD');expect(r.holdReason).toBe('PROVIDER_OUTCOME_UNCERTAIN');expect(r.attemptCount).toBe(1);expect(f.send).toHaveBeenCalledTimes(1);expect(JSON.stringify(f.state.audit)).not.toContain('synthetic secret body');});

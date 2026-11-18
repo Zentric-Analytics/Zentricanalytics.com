@@ -81,7 +81,15 @@ export function createQueueDispatcher(deps:Dependencies){
  async function dispatch(candidate:Row):Promise<Counts>{
   const result=counts();if(candidate.safetyContractVersion!==1){result.blocked++;return result;}
   const claim=id();let row=await move(candidate,'CLAIM',{claim});if(!row){result.blocked++;return result;}if(row.status==='HELD'){result.held++;return result;}result.claimed++;
-  let content:{body:string;html:string};try{content=deps.render(row.template,row.payload);}catch{await move(row,'HOLD',{unsupported:true});result.held++;return result;}
+  let content:{body:string;html:string};
+  try {
+   content=deps.render(row.template,row.payload);
+  } catch {
+   const held=await move(row,'HOLD',{unsupported:true});
+   if(held?.status==='HELD')result.held++;
+   else result.blocked++;
+   return result;
+  }
   for(const type of ['DISPATCH_INTENT','BEGIN_ATTEMPT','BEGIN_INVOCATION'] as const){const next=await move(row,type);if(!next){result.blocked++;return result;}row=next;if(row.status==='HELD'){result.held++;return result;}}
   // Durable ATTEMPTED is possible invocation, not proof of HTTP transmission.
   // A final rejection preserves that counted ambiguity without refund or retry.
