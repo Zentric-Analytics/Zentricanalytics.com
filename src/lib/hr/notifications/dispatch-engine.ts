@@ -71,7 +71,8 @@ export function createQueueDispatcher(deps:Dependencies){
    // never fabricate a provider/claim journal event to fill that enum gap.
    if(kind)await tx.hrEmailDispatchEvent.create({data:{outboxId:row.id,organizationId:row.organizationId,kind,transitionVersion:updated.version,dispatchId:updated.dispatchId??row.dispatchId,claimId:updated.claimId??row.claimId,reason:updated.holdReason,policyRevision:POLICY_REVISION,auditEventId:audit.id,providerMessageId:options.outcome?.providerMessageId}});
    if(decision.attemptDelta===1)await tx.hrEmailDeliveryAttempt.create({data:{outboxId:row.id,attemptNumber:updated.attemptCount,status:'PROCESSING',provider:'resend',attemptedAt:at}});
-   if(['PROVIDER_ACCEPTED','PROVIDER_FAILED','PROVIDER_UNCERTAIN'].includes(type)){
+   const recoveredAttempt=type==='RECOVER'&&row.dispatchPhase==='ATTEMPTED'&&updated.status==='HELD';
+   if(recoveredAttempt||['PROVIDER_ACCEPTED','PROVIDER_FAILED','PROVIDER_UNCERTAIN'].includes(type)){
     const attempt=await tx.hrEmailDeliveryAttempt.updateMany({where:{outboxId:row.id,attemptNumber:row.attemptCount,status:'PROCESSING'},data:{status:updated.status,provider:'resend',providerMessageId:options.outcome?.providerMessageId,safeError:type==='PROVIDER_ACCEPTED'?null:'EMAIL_PROVIDER_OUTCOME_REVIEW'}});
     if(attempt.count!==1)throw new ClaimConflict();
    }

@@ -1,5 +1,32 @@
 # Q03 migration-validation source preservation (WIP)
 
+## Track B offline coordinator
+
+`harness/track-b-offline-runner.mjs` models the Track B-only stage sequence with
+synthetic adapter receipts. It verifies the pinned input manifest and all 72
+input hashes, the exact original resource and runtime profile in the simulated
+preflight, the 66+2 ledger, the preserved synthetic legacy snapshot, and required
+behavior receipts. It writes an exclusive JSONL evidence marker and syncs each
+event. It records only safe stage names, checksums, counts and fixed stop reasons.
+Cancellation signals the fake adapter and stops later stages. This does not
+prove a PostgreSQL session has stopped.
+
+There is no real adapter, credential input or executable Track B command. Direct
+execution rejects. The B1 adapter remains Track A-only. A future Track B run
+requires a separately reviewed live adapter, verified private resource bindings
+and authority for the exact target, independent identity and collision checks,
+and verified PostgreSQL cancellation and evidence handling. The historical
+aggregate runner remains outside that scope.
+
+To run the coordinator tests from `harness/`, set
+`Q03_TRACK_B_TEST_EVIDENCE` to an existing, private, absolute directory outside
+Git. Use the same directory for `<evidence-root>` below. The tests retain their
+synthetic evidence in that directory.
+
+```text
+node --require ./offline-validation-guard.cjs --permission --allow-fs-read=<package-root> --allow-fs-read=<evidence-root> --allow-fs-write=<evidence-root> --test --test-isolation=none --test-reporter=spec track-b-offline-runner.test.mjs
+```
+
 ## Q03-B1 opt-in Track A adapter
 
 The new `harness/b1-contract.mjs`, `b1-controller.mjs`, `b1-runner.mjs` and

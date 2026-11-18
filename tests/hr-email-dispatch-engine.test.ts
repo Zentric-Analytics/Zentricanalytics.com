@@ -51,7 +51,31 @@ describe('transactional queue integration with synthetic store and fake provider
  it('console simulation is never recorded as delivery',async()=>{const f=setup();const r=f.row();f.send.mockResolvedValue({provider:'console',status:'simulated',invoked:false});await f.engine.processBatch();expect(r.status).toBe('HELD');expect(r.providerAcceptedAt).toBeNull();});
  it('two concurrent callers produce one provider invocation under CAS',async()=>{const f=setup();f.row();await Promise.all([f.engine.processBatch(),f.engine.processBatch()]);expect(f.send).toHaveBeenCalledTimes(1);expect(f.state.journal.filter(e=>e.kind==='INVOCATION_BOUNDARY')).toHaveLength(1);});
  it('expired claim with no intent is audited and can be freshly claimed',async()=>{const f=setup();const r=f.row({status:'PROCESSING',claimId:'expired',claimedAt:new Date('2020-01-01'),claimExpiresAt:new Date('2020-01-02')});await f.engine.processBatch();expect(r.status).toBe('DELIVERED');expect(f.state.audit.some(a=>a.action==='hr.email.queue.recover')).toBe(true);expect(f.send).toHaveBeenCalledTimes(1);});
- for(const phase of ['INTENT','RESERVED','ATTEMPTED'])it('expired '+phase+' stays uncertain without replay',async()=>{const f=setup();const r=f.row({status:'PROCESSING',claimId:'expired',claimExpiresAt:new Date('2020-01-01'),dispatchPhase:phase,dispatchId:'old_dispatch',attemptCount:phase==='ATTEMPTED'?1:0});await f.engine.processBatch();expect(r.status).toBe('HELD');expect(f.send).not.toHaveBeenCalled();});
+ for(const phase of ['INTENT','RESERVED'])it('expired '+phase+' stays uncertain without replay',async()=>{const f=setup();const r=f.row({status:'PROCESSING',claimId:'expired',claimExpiresAt:new Date('2020-01-01'),dispatchPhase:phase,dispatchId:'old_dispatch'});await f.engine.processBatch();expect(r.status).toBe('HELD');expect(f.state.attempts).toHaveLength(0);expect(f.send).not.toHaveBeenCalled();});
+ it('closes an expired attempted claim and its existing attempt as uncertain',async()=>{
+  const f=setup();
+  const row=f.row({status:'PROCESSING',claimId:'expired',claimExpiresAt:new Date('2020-01-01'),dispatchPhase:'ATTEMPTED',dispatchId:'old_dispatch',attemptCount:1});
+  const attempt={outboxId:row.id,attemptNumber:1,status:'PROCESSING',provider:'resend',providerMessageId:null};
+  f.state.attempts.push(attempt);
+  await f.engine.processBatch();
+  await f.engine.processBatch();
+  expect(row).toMatchObject({status:'HELD',holdReason:'PROVIDER_OUTCOME_UNCERTAIN',attemptCount:1,dispatchPhase:'ATTEMPTED',providerAcceptedAt:null,deliveredAt:null,version:1n});
+  expect(f.state.attempts).toHaveLength(1);
+  expect(attempt).toMatchObject({status:'HELD',safeError:'EMAIL_PROVIDER_OUTCOME_REVIEW'});
+  expect(attempt.providerMessageId).toBeFalsy();
+  expect(f.state.journal).toHaveLength(1);
+  expect(f.state.journal[0]).toMatchObject({kind:'HELD',reason:'PROVIDER_OUTCOME_UNCERTAIN',auditEventId:f.state.audit[0].id});
+  expect(f.send).not.toHaveBeenCalled();
+ });
+ it('rolls back attempted recovery if the matching processing attempt cannot be closed',async()=>{
+  const f=setup();
+  f.row({status:'PROCESSING',claimId:'expired',claimExpiresAt:new Date('2020-01-01'),dispatchPhase:'ATTEMPTED',dispatchId:'old_dispatch',attemptCount:1});
+  await expect(f.engine.processBatch()).rejects.toThrow();
+  expect(f.state.rows[0]).toMatchObject({status:'PROCESSING',claimId:'expired',attemptCount:1,version:0n});
+  expect(f.state.audit).toHaveLength(0);
+  expect(f.state.journal).toHaveLength(0);
+  expect(f.send).not.toHaveBeenCalled();
+ });
  it('expired credential is held before rendering or invocation',async()=>{const f=setup();const r=f.row({template:'hr-password-reset',resetChallengeId:'old',messageExpiresAt:new Date('2020-01-01')});await f.engine.processBatch();expect(r.holdReason).toBe('CREDENTIAL_EXPIRED_OR_UNUSABLE');expect(f.render).not.toHaveBeenCalled();expect(f.send).not.toHaveBeenCalled();});
  it('configuration changes after reservation cancel with durable zero-attempt evidence',async()=>{const f=setup();const r=f.row();const original=f.tx.hrEmailDispatchEvent.create.getMockImplementation()!;f.tx.hrEmailDispatchEvent.create.mockImplementation(async args=>{const created=await original(args);if(args.data.kind==='RESERVED')f.setPolicy('HOLD');return created;});await f.engine.processBatch();expect(r.status).toBe('HELD');expect(r.holdReason).toBe('PRE_INVOCATION_CANCELLED');expect(r.attemptCount).toBe(0);expect(f.state.journal.at(-1)?.kind).toBe('RESERVATION_CANCELLED');expect(f.send).not.toHaveBeenCalled();});
  it('post-boundary policy changes preserve uncertainty without a counter refund',async()=>{const f=setup();const r=f.row();const original=f.tx.hrEmailDispatchEvent.create.getMockImplementation()!;f.tx.hrEmailDispatchEvent.create.mockImplementation(async args=>{const created=await original(args);if(args.data.kind==='INVOCATION_BOUNDARY')f.setPolicy('HOLD');return created;});await f.engine.processBatch();expect(r.status).toBe('HELD');expect(r.attemptCount).toBe(1);expect(f.send).not.toHaveBeenCalled();});

@@ -498,5 +498,15 @@
     "Path": "harness/track-b-fixture-contract.test.mjs",
     "Bytes": 2265,
     "SHA256": "2C0C962343404E497481D714D1D07208E4522AF5C79E233BF0DF61DBD9B60F7E"
+  },
+  {
+    "Path": "harness/track-b-offline-runner.mjs",
+    "Bytes": 8495,
+    "SHA256": "E593FDF562A75ADC15779069CCD2325DD015206A8F91F267210B56CE82B54B99"
+  },
+  {
+    "Path": "harness/track-b-offline-runner.test.mjs",
+    "Bytes": 8880,
+    "SHA256": "1561D6BDAC46F58E17F6D34428F61C3D670FB04DF4EF179D71C729CD6265757F"
   }
 ]
