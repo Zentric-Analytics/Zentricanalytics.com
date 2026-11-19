@@ -1,4 +1,5 @@
 *.pdf binary
+tools/q03-migration-validation/harness/native-baseline*.sh text eol=lf
 
 # Preserve the two Q03 queue safety migration checksums on Windows.
 prisma/migrations/20261029000100_email_queue_held_enum/migration.sql text eol=lf

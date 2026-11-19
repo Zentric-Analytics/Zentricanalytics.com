@@ -2,6 +2,48 @@
 
 This procedure is for review. Provisioning the persistent replacement and executing Track B require separate approvals. The earlier in-memory smoke test approval covered that test alone.
 
+## Mission 12 reusable baseline
+
+Mission 12 authorized the named local synthetic baseline on the existing WSL
+ext4 disk on C:. The elevated check reported 100% used-space encryption and
+Protection Off. The VHD ACL restricts ordinary local access to the owner and
+authorized system principals. It does not provide offline drive protection.
+Keep real data, passwords, recovery materials and sensitive evidence out of
+this profile. The separate Track B storage and approval gates still apply.
+
+The baseline profile uses PostgreSQL Unix-socket peer authentication instead
+of a password. Only the container's PostgreSQL operating-system identity maps
+to the restricted reader. PostgreSQL listens on no TCP address. There are no
+creator or Track B owner logins in this baseline profile. The Docker admin
+boundary controls access to the mapped operating-system identity.
+
+### Reuse and recovery
+
+1. Check Windows available RAM before a new Docker launch and use the
+   established 6 GiB threshold. In Ubuntu start the local Docker service
+   manually. Keep a WSL session open while PostgreSQL is required. WSL may
+   stop the distribution after its final session closes, and neither Docker
+   nor the container is configured to start automatically.
+2. Run `sudo bash tools/q03-migration-validation/harness/native-baseline.sh start`
+   from the WSL checkout path. The script rechecks the recorded engine,
+   resource labels, container, image, network, volume and PostgreSQL identity
+   before reporting readiness. Use the same script with `verify` for the
+   restricted read-only check against an already running container.
+3. Run the script with `stop` before closing the WSL session. It performs a
+   graceful stop and verifies a clean exit. Use `cycle` for an authorized
+   stop/start persistence check. The volume and cluster identifiers must match
+   before and after. A different identity or existing partial reservation
+   requires investigation. Never invoke initial provisioning as a recovery
+   shortcut.
+4. Keep private synthetic ownership, volume and cluster records in the
+   root-only operator directory outside the checkout. Independently approve
+   any off-machine backup destination and record backup and restore results
+   only after an actual drill. Version application test fixtures in source
+   and keep the baseline empty. See [the synthetic application plan](SYNTHETIC-APPLICATION-PLAN.md).
+
+The following sections describe the separate Track B deployment review. The
+baseline profile alone cannot serve as a Track B write-capable configuration.
+
 ## Provisioning sequence
 
 1. Verify the authorized source branch and all 72 preserved input hashes. Check available Windows memory against the 6 GiB startup threshold and record the WSL limits. Use the local Docker socket, confirm that no Docker API TCP listener exists, and inventory containers, images, networks, and volumes. Stop on any name collision or uncertain ownership.
