@@ -36,6 +36,7 @@ export async function inspectTrackBNativeDocker({ signal } = {}) {
       HostConfig: {
         RestartPolicy: container.HostConfig?.RestartPolicy, Privileged: container.HostConfig?.Privileged,
         PublishAllPorts: container.HostConfig?.PublishAllPorts, PortBindings: container.HostConfig?.PortBindings,
+        Memory: container.HostConfig?.Memory, NanoCpus: container.HostConfig?.NanoCpus,
       },
       Mounts: container.Mounts,
       NetworkSettings: { Networks: container.NetworkSettings?.Networks, Ports: container.NetworkSettings?.Ports },
@@ -45,6 +46,16 @@ export async function inspectTrackBNativeDocker({ signal } = {}) {
     volume: { Name: volume.Name, Driver: volume.Driver, Labels: volume.Labels, CreatedAt: volume.CreatedAt },
     image: { Id: image.Id, Os: image.Os, Architecture: image.Architecture, RepoDigests: image.RepoDigests },
   };
+}
+
+export async function inspectNativeRunner(id, { signal } = {}) {
+  if (!/^[a-f0-9]{64}$/.test(id ?? '')) throw Error('NATIVE_RUNNER_ID_REJECTED');
+  return readLocalDocker('/containers/' + id + '/json', signal);
+}
+
+export async function inspectNativeEvidenceVolume({ signal } = {}) {
+  const volume = await readLocalDocker('/volumes/zentric-q03-replacement-evidence', signal);
+  return { Name: volume.Name, Driver: volume.Driver, Labels: volume.Labels, CreatedAt: volume.CreatedAt };
 }
 
 async function readLocalDocker(path, signal) {

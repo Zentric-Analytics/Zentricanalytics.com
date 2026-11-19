@@ -21,8 +21,9 @@ const localProfile = Object.freeze({
 const postgresReferences = [localProfile.postgresManifest, localProfile.postgresIndex]
   .flatMap(pin => ['postgres@' + pin, 'docker.io/library/postgres@' + pin]);
 const reviewedSource = Object.freeze([
-  'b1-contract.mjs', 'concurrency.mjs', 'db-tests.mjs', 'evidence-rules.mjs', 'fixtures.mjs',
+  'b1-contract.mjs', 'concurrency.mjs', 'config.mjs', 'db-tests.mjs', 'evidence-rules.mjs', 'fixtures.mjs',
   'track-b-docker-gate.mjs', 'track-b-native-boundary.mjs', 'track-b-native-engine.mjs',
+  'track-b-native-host.mjs', 'track-b-native-postgres.mjs', 'track-b-native-prisma-check.mjs',
   'track-b-offline-runner.mjs',
 ]);
 

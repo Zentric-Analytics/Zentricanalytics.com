@@ -3,21 +3,33 @@ import {id,literal} from './fixtures.mjs';
 // Future disposable PostgreSQL only. Three independent sessions plus bounded observers.
 // The controller owns an advisory gate; leader owns the queue row and waits on
 // that gate; follower must be observed blocked by leader BEFORE gate release.
-export function overlapQueries(name,leaderSQL,followerSQL,{interrupt=false}={}){
+export function overlapQueries(name,leaderSQL,followerSQL,{interrupt=false,nativeIdentity}={}){
  if(!/^[a-z_]{1,32}$/.test(name))throw Error('INVALID_RACE_NAME');
- const tag=id(name),controller=tag+'_controller',leader=tag+'_leader',follower=tag+'_follower';
+ if(nativeIdentity&&(!/^q03b_[a-f0-9]{24}$/.test(nativeIdentity.tag)
+   ||!/^q03_[a-z0-9_]{1,42}$/.test(nativeIdentity.role)
+   ||nativeIdentity.database!=='q03_replacement_track_b'))throw Error('INVALID_NATIVE_RACE_IDENTITY');
+ const tag=nativeIdentity?nativeIdentity.tag+'_'+name:id(name),controller=tag+'_controller',leader=tag+'_leader',follower=tag+'_follower';
  const key=1960147000+[...name].reduce((a,c)=>a+c.charCodeAt(0),0);
  const settings=app=>`SET application_name=${literal(app)}; SET statement_timeout='20s'; SET lock_timeout='12s'; SET idle_in_transaction_session_timeout='15s';`;
- const active=(app)=>`(SELECT pid FROM pg_stat_activity WHERE application_name=${literal(app)} AND datname=current_database())`;
+ const owned=app=>`application_name=${literal(app)} AND datname=current_database()${nativeIdentity
+   ?` AND datname=${literal(nativeIdentity.database)} AND usename=${literal(nativeIdentity.role)} AND backend_type='client backend'`:''}`;
+ const active=app=>`(SELECT pid FROM pg_stat_activity WHERE ${owned(app)})`;
  const visible=`SELECT EXISTS (SELECT 1 FROM pg_locks WHERE pid=${active(controller)} AND locktype='advisory' AND granted);`;
  const chain=`${active(controller)}=ANY(pg_blocking_pids(${active(leader)})) AND ${active(leader)}=ANY(pg_blocking_pids(${active(follower)}))`;
+ const cancel=nativeIdentity?`DO $native_cancel$ DECLARE owned_pid int; owned_start timestamptz; BEGIN
+ SELECT pid,backend_start INTO STRICT owned_pid,owned_start FROM pg_stat_activity WHERE ${owned(leader)};
+ PERFORM pg_stat_clear_snapshot();
+ IF NOT EXISTS (SELECT 1 FROM pg_stat_activity WHERE ${owned(leader)} AND pid=owned_pid AND backend_start=owned_start)
+   THEN RAISE EXCEPTION 'Q03_NATIVE_CANCEL_UNVERIFIED'; END IF;
+ IF NOT pg_cancel_backend(owned_pid) THEN RAISE EXCEPTION 'Q03_NATIVE_CANCEL_UNVERIFIED'; END IF;
+ END $native_cancel$;`:`SELECT pg_cancel_backend(${active(leader)});`;
  const control=`${settings(controller)} SELECT pg_advisory_lock(${key});
  DO $q03_overlap$ DECLARE deadline timestamptz:=clock_timestamp()+interval '8 seconds'; BEGIN
  LOOP PERFORM pg_stat_clear_snapshot(); IF (${chain}) IS TRUE THEN EXIT; END IF;
  IF clock_timestamp()>deadline THEN RAISE EXCEPTION 'Q03_OVERLAP_NOT_OBSERVED'; END IF;
  PERFORM pg_sleep(0.02); END LOOP; END $q03_overlap$;
  SELECT json_build_object('q03Overlap',true,'controller',${active(controller)},'leader',${active(leader)},'follower',${active(follower)},'chain',(${chain}));
- ${interrupt?`SELECT pg_cancel_backend(${active(leader)});`:''}
+ ${interrupt?cancel:''}
  SELECT pg_advisory_unlock(${key});`;
  return Object.freeze({visible,leaderVisible:`SELECT COALESCE(${active(controller)}=ANY(pg_blocking_pids(${active(leader)})),false);`,control,leader:`${settings(leader)} BEGIN; ${leaderSQL} SELECT pg_advisory_lock(${key}); SELECT pg_advisory_unlock(${key}); COMMIT;`,follower:`${settings(follower)} BEGIN; ${followerSQL} COMMIT;`,interrupt});
 }

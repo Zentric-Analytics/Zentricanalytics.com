@@ -20,12 +20,12 @@ event. It records only safe stage names, checksums, counts and fixed stop reason
 Cancellation signals the fake adapter and stops later stages. This does not
 prove a PostgreSQL session has stopped.
 
-There is no real adapter, credential input or executable Track B command. Direct
-execution rejects. The B1 adapter remains Track A-only. A future Track B run
-requires a separately reviewed live adapter, verified private resource bindings
-and authority for the exact target, independent identity and collision checks,
-and verified PostgreSQL cancellation and evidence handling. The historical
-aggregate runner remains outside that scope.
+The offline coordinator has no real adapter or credential input. Direct
+execution rejects. The B1 adapter remains Track A-only. Native Track B has a
+separate host supervisor and PostgreSQL/Prisma worker held behind a source
+interlock. A future run requires reviewed artifacts, verified private resource
+bindings and authority for the exact target. The historical aggregate runner
+remains outside that scope.
 
 For native Docker Engine under WSL 2, `harness/track-b-native-engine.mjs` is
 the read-only engine observation component. It queries the local Unix socket

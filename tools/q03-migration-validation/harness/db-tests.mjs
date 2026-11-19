@@ -127,7 +127,7 @@ export async function runDatabaseTests(db){
 }
 
 export const RACE_CASES=Object.freeze([['claim',null,'CLAIMED','CLAIMED'],['cancel_reservation','INTENT','HELD','RESERVED'],['reservation_cancel','INTENT','RESERVED','HELD'],['cancel_invocation','RESERVED','RESERVATION_CANCELLED','INVOCATION_BOUNDARY'],['invocation_cancel','RESERVED','INVOCATION_BOUNDARY','RESERVATION_CANCELLED'],['two_reservations','INTENT','RESERVED','RESERVED'],['interrupted_lock',null,'CLAIMED','CLAIMED']].map(Object.freeze));
-export async function runConcurrencyTests(db){
+export async function runConcurrencyTests(db,nativeIdentity){
  const results=[];
  for(const [name,phase,left,right] of RACE_CASES){
   const row=phase?processing(`overlap_${name}`,phase):queue(`overlap_${name}`);await db.sql(insert('HrEmailOutbox',row));
@@ -142,7 +142,7 @@ export async function runConcurrencyTests(db){
    const reason=kind==='RESERVATION_CANCELLED'?"'PRE_INVOCATION_CANCELLED'":kind==='HELD'?"'STAGING_RECIPIENT_NOT_ALLOWLISTED'":'NULL';
    return `WITH changed AS (UPDATE "HrEmailOutbox" SET version=1,${update} WHERE ${condition} RETURNING *), receipt AS (INSERT INTO "HrEmailDispatchEvent" (id,"outboxId","organizationId",kind,"dispatchId","transitionVersion","claimId",reason,"policyRevision") SELECT ${literal(id(`overlap_event_${name}_${side}`))},id,"organizationId",'${kind}',"dispatchId",version,${literal(owner)},${reason}::"HrEmailHoldReason",'q03-policy' FROM changed RETURNING id) SELECT json_build_object('affected',count(*)) FROM receipt;`;
   }
-  const result=await runOverlap(db,overlapQueries(name,operation(left,'a'),operation(right,'b'),{interrupt:name==='interrupted_lock'}));
+  const result=await runOverlap(db,overlapQueries(name,operation(left,'a'),operation(right,'b'),{interrupt:name==='interrupted_lock',nativeIdentity}));
   if(name==='interrupted_lock')assert.equal(result.follower,1);else assert.deepEqual([result.leader,result.follower],[1,0]);
   const observed=JSON.parse((await db.sql(`SELECT json_build_object('version',version,'counter',"attemptCount",'events',(SELECT count(*) FROM "HrEmailDispatchEvent" WHERE "outboxId"=o.id),'eventVersion',(SELECT max("transitionVersion") FROM "HrEmailDispatchEvent" WHERE "outboxId"=o.id)) FROM "HrEmailOutbox" o WHERE id=${literal(row.id)};`)).trim());
   assert.deepEqual(observed,{version:1,counter:left==='INVOCATION_BOUNDARY'?1:0,events:1,eventVersion:1});
