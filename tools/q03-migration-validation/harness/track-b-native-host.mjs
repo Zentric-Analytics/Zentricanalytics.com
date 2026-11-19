@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { realpath } from 'node:fs/promises';
+import { realpath, stat } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { digest } from './b1-contract.mjs';
 import { verifyNativeResources } from './track-b-native-boundary.mjs';
@@ -10,6 +10,7 @@ const id = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const entrypoint = '/opt/node/bin/node';
 const worker = '/opt/q03/track-b-native-postgres.mjs';
 const evidenceVolume = 'zentric-q03-replacement-evidence';
+const socketView = '/root/.local/state/zentric-q03-synthetic/track-b-socket-view';
 const runtimeEnvironmentOverride = /^(?:DATABASE_URL|DIRECT_URL|PG[A-Z_]*|POSTGRES_[A-Z_]*|NODE_OPTIONS|NODE_PATH|LD_[A-Z_]*|PRISMA_[A-Z_]*|.*(?:SECRET|PASSWORD|TOKEN|API_KEY|PROXY))=/i;
 
 function requireFact(condition, reason) {
@@ -33,6 +34,8 @@ export function verifyNativeRunner(binding, observed, expectedState = 'created')
   const config = observed?.Config;
   const host = observed?.HostConfig;
   const mounts = observed?.Mounts ?? [];
+  const evidence = mounts.find(mount => mount.Destination === '/evidence');
+  const socket = mounts.find(mount => mount.Destination === '/socket');
   requireFact(id(binding?.runnerId) && id(binding?.containerId) && id(binding?.resourceNonce)
     && /^sha256:[a-f0-9]{64}$/.test(binding.runnerImageId ?? '')
     && observed?.Id === binding.runnerId && observed.Image === binding.runnerImageId
@@ -44,7 +47,8 @@ export function verifyNativeRunner(binding, observed, expectedState = 'created')
     && Array.isArray(config.Env) && !config.Env.some(value => runtimeEnvironmentOverride.test(value))
     && observed.State?.Status === expectedState && typeof observed.State.Running === 'boolean'
     && observed.State.Running === (expectedState === 'running')
-    && host?.NetworkMode === 'container:' + binding.containerId
+    && binding.socketSource === socketView
+    && host?.NetworkMode === 'none'
     && host.ReadonlyRootfs === true && host.Privileged === false && host.Init === true
     && ['', 'private'].includes(host.PidMode) && !host.CapAdd?.length && !host.Devices?.length
     && !host.DeviceRequests?.length && !host.DeviceCgroupRules?.length && !host.Binds?.length
@@ -56,8 +60,10 @@ export function verifyNativeRunner(binding, observed, expectedState = 'created')
     && Object.keys(host.Tmpfs ?? {}).sort().join(',') === '/tmp,/work'
     && host.Tmpfs['/tmp'] === 'rw,nosuid,nodev,size=128m,mode=1777'
     && host.Tmpfs['/work'] === 'rw,nosuid,nodev,size=512m,uid=65532,gid=65532,mode=0700'
-    && mounts.length === 1 && mounts[0].Type === 'volume' && mounts[0].RW === true
-    && mounts[0].Name === evidenceVolume && mounts[0].Destination === '/evidence',
+    && mounts.length === 2 && evidence?.Type === 'volume' && evidence.RW === true
+    && evidence.Name === evidenceVolume
+    && socket?.Type === 'bind' && socket.Source === binding.socketSource && socket.RW === false
+    && socket.Propagation === 'rprivate',
   'NATIVE_RUNNER_ISOLATION_REJECTED');
 }
 
@@ -105,6 +111,15 @@ export async function launchNativeTrackB(options) {
     && isolation.runnerEvidenceVerified === true && isolation.runnerArtifactVerified === true,
   'NATIVE_PREREQUISITE_RECEIPT_REJECTED');
   const observed = await inspectTrackBNativeDocker({ signal });
+  requireFact(Number.isSafeInteger(observed.container.State?.Pid) && observed.container.State.Pid > 0
+    && binding.socketSource === socketView, 'NATIVE_DATABASE_SOCKET_REJECTED');
+  const [socketOrigin, socketMount] = await Promise.all([
+    stat('/proc/' + observed.container.State.Pid + '/root/run/postgresql/.s.PGSQL.5432', { bigint: true }),
+    stat(socketView + '/.s.PGSQL.5432', { bigint: true }),
+  ]);
+  requireFact(socketOrigin.isSocket() && socketMount.isSocket()
+    && socketOrigin.dev === socketMount.dev && socketOrigin.ino === socketMount.ino,
+  'NATIVE_DATABASE_SOCKET_REJECTED');
   observed.volume.fingerprint = nativeVolumeFingerprint(observed.volume, binding.resourceNonce);
   requireFact(observed.container.Config.Labels?.['zentric.q03.resource'] === binding.resourceNonce
     && observed.network.Labels?.['zentric.q03.resource'] === binding.resourceNonce

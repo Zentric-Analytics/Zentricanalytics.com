@@ -61,9 +61,34 @@ a reviewed change before activation.
 5. Generate distinct 32-byte random synthetic credentials for `q03_replacement_reader`, `q03_replacement_creator` and `q03_replacement_owner`. Only the creator has `CREATEDB` and the membership needed to assign database ownership to the target role. The reader has baseline connectivity, no object creation rights and read-only transactions. The owner controls only the future Track B target. None has superuser, role creation, replication or RLS bypass. Keep credentials out of Docker command arguments, logs, Git and test evidence. Use approved private bootstrap delivery, and close that path before a validation run.
 6. Independently verify isolation before using the database. Inspect container, network and volume identities, network peers, mounts, and port bindings. Check routes, forwarding, listeners, DNS and egress from the intended execution namespaces, including WSL and Windows where relevant. Use local controlled probes or inspect the enforcing rules to verify egress denial. Confirm the runner has no Docker socket, PostgreSQL data volume, inherited provider credentials, or other host access. A Docker internal bridge is one check in this sequence.
 
-## Track B execution review
+## Mission 13 continuation
 
-Use the following configuration for the provisioning review.
+The current worker accepts only the restricted Track B login on a Unix socket
+and verifies membership in the dedicated non-login owner role. Database creation
+is a separate, fixed maintenance-session program that checks the cluster ID,
+role, socket, target absence and advisory lock. The worker has no maintenance
+connection or creation credential. Its live entry stays disabled until the
+host authority, restricted PostgreSQL roles and exact socket path are verified.
+
+Build the candidate with `harness/track-b-runner.Dockerfile` and a private
+context containing only the pinned Node binary, reviewed Prisma packages and
+engines, and checksum-reviewed Q03 source and inputs. A scratch final stage
+avoids inheriting an implicit PostgreSQL data volume. Bind the resulting
+immutable image ID, apply the resource caps and use `--network none`.
+
+The runner preflight uses a read-only view of the existing PostgreSQL Unix
+socket and the dedicated `zentric-q03-replacement-evidence` volume. That
+volume is accessible to the runner UID and the local Docker administrator.
+The WSL host rejected both the direct cross-container socket bind and the host
+bind alternative. Keep the live gate closed until a restricted transport is
+independently verified. The baseline remains peer-only. Preserve failed
+transport receipts and avoid exposing TCP or replacing the existing container
+to work around a failed mount.
+
+## Earlier Track B deployment design
+
+This table records the prior shared-network design. The continuation uses a
+network-disabled runner and the socket-only boundary described above.
 
 | Component | Required configuration |
 | --- | --- |

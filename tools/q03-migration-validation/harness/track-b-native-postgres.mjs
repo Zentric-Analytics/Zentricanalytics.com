@@ -25,7 +25,6 @@ const schemaEngine = '/opt/engines/schema-engine';
 const queryEngine = '/opt/engines/libquery_engine.so.node';
 const psql = '/usr/bin/psql';
 const sha = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
-const role = value => typeof value === 'string' && /^q03_replacement_[a-z0-9_]{1,36}$/.test(value);
 const childEnvironment = Object.freeze({
   PATH: '/opt/node/bin:/usr/bin:/bin', HOME: '/tmp', TMPDIR: '/tmp',
   LC_ALL: 'C', CHECKPOINT_DISABLE: '1', DO_NOT_TRACK: '1', PRISMA_GENERATE_SKIP_AUTOINSTALL: '1',
@@ -52,8 +51,8 @@ export function verifyNativeWriteAuthority(approval, binding, now = Date.now()) 
 function verifyBinding(binding) {
   requireFact(binding?.target === profile.target && binding.baseline === profile.baseline
     && sha(binding.runId) && sha(binding.serverMarker) && sha(binding.sourceFingerprint)
-    && sha(binding.provisioningReceipt) && role(binding.baselineRole) && role(binding.targetRole)
-    && role(binding.controlRole) && new Set([binding.baselineRole, binding.targetRole, binding.controlRole]).size === 3,
+    && sha(binding.provisioningReceipt) && binding.targetRole === 'q03_replacement_runner'
+    && binding.ownerRole === 'q03_replacement_owner',
   'NATIVE_POSTGRES_BINDING_REJECTED');
 }
 
@@ -61,17 +60,14 @@ function verifyBinding(binding) {
 // Credentials are never SQL interpolation, process arguments, or evidence.
 export function buildNativeSessionGuard(binding, purpose) {
   verifyBinding(binding);
-  requireFact(['baseline', 'control', 'target'].includes(purpose), 'NATIVE_OPERATION_REJECTED');
-  const isTarget = purpose === 'target';
-  const database = isTarget ? profile.target : profile.baseline;
-  const username = binding[purpose + 'Role'];
-  const rolePrivilege = purpose === 'control' ? 'rolcreatedb' : 'NOT rolcreatedb';
-  return `SELECT (current_database() = '${database}' AND session_user = '${username}' AND current_user = session_user
+  requireFact(purpose === 'target', 'NATIVE_OPERATION_REJECTED');
+  return `SELECT (current_database() = '${profile.target}' AND session_user = '${binding.targetRole}' AND current_user = session_user
   AND current_setting('server_version_num')::int = ${profile.serverVersion}
   AND current_setting('zentric.q03_replacement_marker',true) = '${binding.serverMarker}'
-  AND inet_server_addr() = '127.0.0.1'::inet
-  AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname=current_user AND rolcanlogin AND NOT rolsuper AND NOT rolcreaterole AND NOT rolreplication AND NOT rolbypassrls AND ${rolePrivilege})
-  ${isTarget ? "AND EXISTS (SELECT 1 FROM pg_database WHERE datname=current_database() AND datdba=(SELECT oid FROM pg_roles WHERE rolname=current_user))" : ''}
+  AND inet_server_addr() IS NULL AND inet_client_addr() IS NULL
+  AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname=current_user AND rolcanlogin AND NOT rolsuper AND NOT rolcreaterole AND NOT rolreplication AND NOT rolbypassrls AND NOT rolcreatedb)
+  AND EXISTS (SELECT 1 FROM pg_database WHERE datname=current_database()
+    AND pg_get_userbyid(datdba)='${binding.ownerRole}' AND pg_has_role(current_user, datdba, 'USAGE'))
   ) IS TRUE AS native_identity_ok \\gset
 \\if :native_identity_ok
 \\else
@@ -193,9 +189,10 @@ async function verifyGeneratedTransaction(binding, secret, tag, signal) {
 }
 
 function connectionUrl(binding, secret, tag) {
-  const url = new URL('postgresql://127.0.0.1:5432/' + profile.target);
+  const url = new URL('postgresql://localhost:5432/' + profile.target);
   url.username = binding.targetRole;
   url.password = secret;
+  url.searchParams.set('host', '/socket');
   url.searchParams.set('application_name', tag);
   url.searchParams.set('connect_timeout', '5');
   url.searchParams.set('connection_limit', '1');
@@ -212,8 +209,8 @@ export async function runNativePostgresTrackB(options) {
   const { binding, approval, secrets, evidenceDirectory, signal } = options;
   verifyBinding(binding);
   verifyNativeWriteAuthority(approval, binding);
-  requireFact(['baseline', 'control', 'target'].every(key => typeof secrets?.[key] === 'string'
-    && /^[a-f0-9]{64}$/.test(secrets[key])) && new Set(Object.values(secrets)).size === 3,
+  requireFact(typeof secrets?.target === 'string' && /^[a-f0-9]{64}$/.test(secrets.target)
+    && Object.keys(secrets).length === 1,
   'NATIVE_SYNTHETIC_CREDENTIALS_REJECTED');
   requireFact(binding.sourceFingerprint === await fingerprintNativeBoundarySource(), 'NATIVE_SOURCE_CHANGED');
   const migrations = await verifyNativeInputs();
@@ -243,19 +240,17 @@ export async function runNativePostgresTrackB(options) {
     signal?.throwIfAborted();
     verifyNativeWriteAuthority(approval, binding);
   };
-  const sql = async (purpose, body, { allowCancellation = false } = {}) => {
+  const sql = async body => {
     stopCheck();
-    const isTarget = purpose === 'target';
     return runChild(psql, ['-X', '-w', '-qAt', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'],
-      buildNativeSessionGuard(binding, purpose) + body + '\n', {
-        ...childEnvironment, PGHOSTADDR: '127.0.0.1', PGPORT: '5432',
-        PGDATABASE: isTarget ? profile.target : profile.baseline, PGUSER: binding[purpose + 'Role'],
-        PGPASSWORD: secrets[purpose], PGCONNECT_TIMEOUT: '5', PGAPPNAME: tag,
-        PGOPTIONS: '-c statement_timeout=20000 -c lock_timeout=12000 -c idle_in_transaction_session_timeout=15000'
-          + (purpose === 'baseline' ? ' -c default_transaction_read_only=on' : ''),
-      }, { signal, timeoutMs: 30_000, allowCancellation });
+      buildNativeSessionGuard(binding, 'target') + body + '\n', {
+        ...childEnvironment, PGHOST: '/socket', PGPORT: '5432',
+        PGDATABASE: profile.target, PGUSER: binding.targetRole,
+        PGPASSWORD: secrets.target, PGCONNECT_TIMEOUT: '5', PGAPPNAME: tag,
+        PGOPTIONS: '-c statement_timeout=20000 -c lock_timeout=12000 -c idle_in_transaction_session_timeout=15000',
+      }, { signal, timeoutMs: 30_000, allowCancellation: true });
   };
-  const target = Object.freeze({ sql: body => sql('target', body, { allowCancellation: true }) });
+  const target = Object.freeze({ sql });
   const execute = async (name, action, summarize) => {
     stage = name;
     stopCheck();
@@ -275,7 +270,6 @@ export async function runNativePostgresTrackB(options) {
   const publicObjects = `((SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace)
     + (SELECT count(*) FROM pg_proc WHERE pronamespace='public'::regnamespace)
     + (SELECT count(*) FROM pg_type WHERE typnamespace='public'::regnamespace))`;
-  const targetAbsent = `NOT EXISTS (SELECT 1 FROM pg_database WHERE datname='${profile.target}')`;
   try {
     await record('reserved');
     const root = await open(evidence, 'r');
@@ -283,19 +277,8 @@ export async function runNativePostgresTrackB(options) {
     await mkdir(work, { mode: 0o700 });
     await symlink(modules, work + '/node_modules', 'dir');
     await execute('preflight', async () => {
-      const value = await sql('baseline', `SELECT ${targetAbsent} AND ${publicObjects}=0 AND current_setting('transaction_read_only')='on';`);
-      requireFact(value === 't', 'NATIVE_BASELINE_OR_COLLISION_REJECTED');
+      requireFact(await target.sql(`SELECT ${publicObjects}=0;`) === 't', 'NATIVE_EMPTY_TARGET_NOT_VERIFIED');
       await prepareProject(migrations);
-    });
-    await execute('create-target', async () => {
-      // No retry. CREATE DATABASE itself refuses a concurrent same-name create.
-      await sql('control', `SELECT ${targetAbsent} AS target_absent \\gset
-\\if :target_absent
-CREATE DATABASE "${profile.target}" OWNER "${binding.targetRole}" TEMPLATE template0;
-\\else
-SELECT 1/0;
-\\endif`);
-      requireFact(await target.sql(`SELECT ${publicObjects}=0;`) === 't', 'NATIVE_TARGET_CREATION_UNKNOWN');
     });
     await execute('apply-historical', () => migrate('historical', migrations.slice(0, 66)), () => ({ migrations: 66 }));
     const before = await execute('seed-and-capture-legacy', async () => {
@@ -326,8 +309,8 @@ SELECT 1/0;
       const results = await runConcurrencyTests(target, { tag, role: binding.targetRole, database: profile.target });
       requireFact(results.length === 7, 'NATIVE_RACE_SET_INCOMPLETE');
       await verifyGeneratedTransaction(binding, secrets.target, tag, signal);
-      const remaining = await sql('baseline', `SELECT count(*) FROM pg_stat_activity WHERE pid<>pg_backend_pid()
-        AND left(application_name,${tag.length})='${tag}' AND datname IN ('${profile.target}','${profile.baseline}');`);
+      const remaining = await target.sql(`SELECT count(*) FROM pg_stat_activity WHERE pid<>pg_backend_pid()
+        AND left(application_name,${tag.length})='${tag}' AND datname='${profile.target}' AND usename=current_user;`);
       requireFact(remaining === '0', 'NATIVE_SESSION_CLOSURE_UNVERIFIED');
     }, () => ({ concurrencyCases: 7, generatedClientVerified: true, sessionsClosed: true }));
     await record('pass');

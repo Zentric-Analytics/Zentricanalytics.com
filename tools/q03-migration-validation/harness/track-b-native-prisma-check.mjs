@@ -10,14 +10,14 @@ function requireFact(condition) {
 }
 
 export function verifyPrismaConnection(input) {
-  requireFact(input?.database === target && /^q03_replacement_[a-z0-9_]{1,36}$/.test(input.role)
+  requireFact(input?.database === target && input.role === 'q03_replacement_runner'
     && /^[a-f0-9]{64}$/.test(input.marker) && /^q03b_[a-f0-9]{24}$/.test(input.tag));
   const url = new URL(input.url);
   const options = new Map(url.searchParams);
-  requireFact(url.protocol === 'postgresql:' && url.hostname === '127.0.0.1' && url.port === '5432'
+  requireFact(url.protocol === 'postgresql:' && url.hostname === 'localhost' && url.port === '5432'
     && url.pathname === '/' + target && url.username === input.role && !url.hash
     && /^[a-f0-9]{64}$/.test(url.password) && [...url.searchParams].length === options.size
-    && options.size === 4 && options.get('application_name') === input.tag
+    && options.size === 5 && options.get('host') === '/socket' && options.get('application_name') === input.tag
     && options.get('connect_timeout') === '5' && options.get('connection_limit') === '1'
     && options.get('options') === '-c statement_timeout=120000 -c lock_timeout=10000 -c idle_in_transaction_session_timeout=15000');
 }
@@ -35,12 +35,13 @@ export async function verifyPrismaTransaction(client, input) {
   const identity = async tx => {
     const rows = await tx.$queryRaw`
       SELECT current_database() = ${target} AND current_user::text = ${input.role}
-        AND current_user = session_user AND inet_server_addr() = '127.0.0.1'::inet
+        AND current_user = session_user AND inet_server_addr() IS NULL AND inet_client_addr() IS NULL
         AND current_setting('server_version_num')::int = ${version}
         AND current_setting('application_name') = ${input.tag}
         AND current_setting('zentric.q03_replacement_marker',true) = ${input.marker}
-        AND EXISTS (SELECT 1 FROM pg_database d JOIN pg_roles r ON r.oid=d.datdba
-          WHERE d.datname=current_database() AND r.rolname=current_user
+        AND EXISTS (SELECT 1 FROM pg_database d JOIN pg_roles r ON r.rolname=current_user
+          WHERE d.datname=current_database() AND pg_get_userbyid(d.datdba)='q03_replacement_owner'
+            AND pg_has_role(current_user,d.datdba,'USAGE')
             AND NOT r.rolsuper AND NOT r.rolcreaterole AND NOT r.rolcreatedb
             AND NOT r.rolreplication AND NOT r.rolbypassrls) AS verified
     `;

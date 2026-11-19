@@ -7,14 +7,16 @@ import { observeTrackBNativeEngine } from './track-b-native-engine.mjs';
 import { launchNativeTrackB, nativeVolumeFingerprint, verifyNativeDockerContext, verifyNativeRunner } from './track-b-native-host.mjs';
 import { buildNativeSessionGuard, runNativePostgresTrackB, verifyNativeWriteAuthority } from './track-b-native-postgres.mjs';
 import { verifyPrismaConnection, verifyPrismaTransaction } from './track-b-native-prisma-check.mjs';
+import { nativeMaintenanceCreationProgram } from './track-b-native-maintenance.mjs';
 
 const hash = value => value.repeat(64);
 const binding = {
   baseline: 'q03_replacement_baseline', target: 'q03_replacement_track_b',
   baselineRole: 'q03_replacement_reader', controlRole: 'q03_replacement_creator',
-  targetRole: 'q03_replacement_owner', runId: hash('1'), serverMarker: hash('2'),
+  targetRole: 'q03_replacement_runner', ownerRole: 'q03_replacement_owner', runId: hash('1'), serverMarker: hash('2'),
   sourceFingerprint: hash('3'), provisioningReceipt: hash('4'), runnerId: hash('5'),
   runnerImageId: 'sha256:' + hash('6'), containerId: hash('7'), resourceNonce: hash('8'),
+  socketSource: '/root/.local/state/zentric-q03-synthetic/track-b-socket-view',
 };
 const tag = 'q03b_' + binding.runId.slice(0, 24);
 const issuedAt = 20_000;
@@ -25,6 +27,20 @@ const approval = {
 const dockerContext = {
   name: 'default', endpoint: 'unix:///var/run/docker.sock', socketRealpath: '/run/docker.sock', remoteOverridesAbsent: true,
 };
+
+test('maintenance creation plan binds one exact cluster, socket, database, lock, and non-login owner', () => {
+  const sql = nativeMaintenanceCreationProgram('1234567890123456789');
+  assert.match(sql, /current_database\(\) = 'postgres'/);
+  assert.match(sql, /inet_server_addr\(\) IS NULL/);
+  assert.match(sql, /system_identifier::text FROM pg_control_system/);
+  assert.match(sql, /pg_try_advisory_lock/);
+  assert.match(sql, /NOT EXISTS \(SELECT 1 FROM pg_database WHERE datname = 'q03_replacement_track_b'\)/);
+  assert.match(sql, /NOT rolcanlogin AND NOT rolsuper AND NOT rolcreatedb/);
+  assert.deepEqual(sql.match(/CREATE DATABASE[^;]+;/g), [
+    'CREATE DATABASE "q03_replacement_track_b" OWNER "q03_replacement_owner" TEMPLATE template0;',
+  ]);
+  assert.throws(() => nativeMaintenanceCreationProgram("123'; CREATE DATABASE other;"), /CLUSTER_REJECTED/);
+});
 
 test('live host and worker refuse to inspect or launch before activation', async () => {
   const unopened = new Proxy({}, { get() { assert.fail('entry read caller input'); } });
@@ -79,12 +95,13 @@ function runner() {
       Labels: { 'zentric.q03.resource': binding.resourceNonce, 'zentric.q03.role': 'native-runner' },
       Entrypoint: ['/opt/node/bin/node'], Cmd: ['/opt/q03/track-b-native-postgres.mjs'] },
     State: { Status: 'created', Running: false },
-    HostConfig: { NetworkMode: 'container:' + binding.containerId, Privileged: false, ReadonlyRootfs: true,
+    HostConfig: { NetworkMode: 'none', Privileged: false, ReadonlyRootfs: true,
       Init: true, PidMode: '', CapDrop: ['ALL'], SecurityOpt: ['no-new-privileges'], RestartPolicy: { Name: 'no' },
       PublishAllPorts: false, Memory: 1073741824, NanoCpus: 2000000000, PidsLimit: 128,
       Tmpfs: { '/tmp': 'rw,nosuid,nodev,size=128m,mode=1777',
         '/work': 'rw,nosuid,nodev,size=512m,uid=65532,gid=65532,mode=0700' } },
-    Mounts: [{ Type: 'volume', Name: 'zentric-q03-replacement-evidence', Destination: '/evidence', RW: true }],
+    Mounts: [{ Type: 'volume', Name: 'zentric-q03-replacement-evidence', Destination: '/evidence', RW: true },
+      { Type: 'bind', Source: binding.socketSource, Destination: '/socket', RW: false, Propagation: 'rprivate' }],
   };
 }
 
@@ -94,6 +111,8 @@ test('runner refuses additional mounts, inherited secrets, wrong namespace or wr
     value => { value.Mounts.push({ Type: 'bind', Destination: '/run/docker.sock' }); },
     value => { value.Config.Env.push('RESEND_API_KEY=fixture'); },
     value => { value.HostConfig.NetworkMode = 'host'; },
+    value => { value.Mounts[1].RW = true; },
+    value => { value.Mounts[1].Source = '/var/lib/docker'; },
     value => { value.Image = 'sha256:' + hash('0'); },
     value => { value.Config.Labels['zentric.q03.resource'] = hash('0'); },
     value => { value.State.Status = 'exited'; },
@@ -104,16 +123,16 @@ test('runner refuses additional mounts, inherited secrets, wrong namespace or wr
   }
 });
 
-test('every SQL purpose is constrained to exact database, role, marker, loopback and PostgreSQL version', () => {
-  const guards = ['baseline', 'control', 'target'].map(purpose => buildNativeSessionGuard(binding, purpose));
-  for (const [index, purpose] of ['baseline', 'control', 'target'].entries()) {
-    const guard = guards[index];
-    assert.ok(guard.includes(binding[purpose + 'Role']));
-    assert.ok(guard.includes(binding.serverMarker));
-    assert.match(guard, /127\.0\.0\.1/);
-    assert.match(guard, /180006/);
-    assert.match(guard, /SELECT 1\/0/);
-  }
+test('the runner SQL guard accepts only its bound target over a Unix socket', () => {
+  const guard = buildNativeSessionGuard(binding, 'target');
+  assert.ok(guard.includes(binding.targetRole) && guard.includes(binding.ownerRole));
+  assert.ok(guard.includes(binding.serverMarker));
+  assert.match(guard, /inet_server_addr\(\) IS NULL/);
+  assert.match(guard, /NOT rolcreatedb/);
+  assert.match(guard, /180006/);
+  assert.match(guard, /SELECT 1\/0/);
+  assert.throws(() => buildNativeSessionGuard(binding, 'control'), /OPERATION_REJECTED/);
+  assert.throws(() => buildNativeSessionGuard(binding, 'baseline'), /OPERATION_REJECTED/);
   assert.throws(() => buildNativeSessionGuard(binding, 'arbitrary-sql'), /OPERATION_REJECTED/);
   assert.throws(() => buildNativeSessionGuard({ ...binding, target: 'postgres' }, 'target'), /BINDING_REJECTED/);
   assert.throws(() => buildNativeSessionGuard({ ...binding, targetRole: "';\n" }, 'target'), /BINDING_REJECTED/);
@@ -135,9 +154,10 @@ test('native cancellation checks exact database, role, run tag, PID and backend 
 });
 
 function prismaInput() {
-  const url = new URL('postgresql://127.0.0.1:5432/' + binding.target);
+  const url = new URL('postgresql://localhost:5432/' + binding.target);
   url.username = binding.targetRole;
   url.password = hash('0');
+  url.searchParams.set('host', '/socket');
   url.searchParams.set('application_name', tag);
   url.searchParams.set('connect_timeout', '5');
   url.searchParams.set('connection_limit', '1');
@@ -148,7 +168,7 @@ function prismaInput() {
 test('generated Prisma client configuration rejects alternate hosts, schemas, roles and overrides', () => {
   const input = prismaInput();
   assert.doesNotThrow(() => verifyPrismaConnection(input));
-  for (const url of [input.url.replace('127.0.0.1', 'db.example.invalid'),
+  for (const url of [input.url.replace('localhost', 'db.example.invalid'), input.url.replace('%2Fsocket', '%2Fwrong'),
     input.url + '&schema=other', input.url + '&application_name=other',
     input.url.replace(binding.targetRole, binding.controlRole), input.url.replace(binding.target, 'postgres')]) {
     assert.throws(() => verifyPrismaConnection({ ...input, url }), /PRISMA_VERIFICATION_FAILED/);
