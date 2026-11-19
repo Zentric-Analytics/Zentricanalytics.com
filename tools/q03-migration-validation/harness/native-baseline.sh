@@ -17,7 +17,7 @@ docker=(/usr/bin/docker --host unix:///run/docker.sock)
 
 fail() { printf '%s\n' "$1" >&2; exit 1; }
 [[ $(id -u) = 0 && $(realpath /var/run/docker.sock) = /run/docker.sock ]] || fail 'Local root and Docker socket required'
-[[ "$#" = 1 ]] || fail 'Choose provision-synthetic, verify, start, stop, or cycle'
+[[ "$#" = 1 ]] || fail 'Choose provision-synthetic, verify, start, stop, cycle, or preflight-track-b'
 [[ "$("${docker[@]}" info --format '{{.OSType}}/{{.Architecture}}')" = linux/x86_64 ]] || fail 'Unexpected Docker backend'
 engine=$("${docker[@]}" info --format '{{.ID}}')
 [[ -n "$engine" ]] || fail 'Missing engine identity'
@@ -142,6 +142,27 @@ case "$1" in
     verify_database
     ;;
   verify) verify_bindings; verify_database ;;
+  preflight-track-b)
+    verify_bindings
+    verify_database
+    role_flags=$(timeout 8 "${docker[@]}" exec --user postgres "$container_id" psql -X -w -qAt -F / -v ON_ERROR_STOP=1 -h /var/run/postgresql -U "$reader" -d "$baseline" -c "
+SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='q03_replacement_creator' AND rolcanlogin AND rolcreatedb AND NOT rolsuper),
+       EXISTS (SELECT 1 FROM pg_roles WHERE rolname='q03_replacement_owner' AND rolcanlogin AND NOT rolcreatedb AND NOT rolsuper);")
+    [[ "$role_flags" =~ ^[tf]/[tf]$ ]] || fail 'Track B role observation failed'
+    preflight_dir=$(mktemp -d "$state/track-b-preflight.XXXXXXXX")
+    {
+      printf 'utc=%s\n' "$(date -u +%FT%TZ)"
+      printf 'status=blocked-peer-only-profile\nroles_creator_owner=%s\n' "$role_flags"
+      printf 'database=%s\nreader=%s\ntrack_b_target_absent=true\n' "$baseline" "$reader"
+      printf 'image=%s\nnetwork=%s\nvolume=%s\n' "$image_id" "$network_id" "$volume"
+      printf 'engine=%s\ncontainer=%s\ncluster=%s\n' "$engine" "$container_id" "$(cluster_identity)"
+    } >"$preflight_dir/result"
+    sha256sum "$preflight_dir/result" >"$preflight_dir/result.sha256"
+    sync -f "$preflight_dir"
+    printf 'Track B creator/owner roles present: %s\n' "$role_flags"
+    printf '%s\n' 'Track B execution is blocked on this verified peer-only baseline profile.'
+    exit 12
+    ;;
   start) verify_bindings; "${docker[@]}" start "$container_id" >/dev/null; verify_bindings; verify_database ;;
   stop) verify_bindings; stop_db ;;
   cycle)

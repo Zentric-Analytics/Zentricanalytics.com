@@ -4,10 +4,11 @@ import { resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { B1, assertLedger, digest, fixedSQL, inputPath } from './b1-contract.mjs';
 import { runConcurrencyTests, runDatabaseTests } from './db-tests.mjs';
-import { CATALOG_SQL, assertHistoricalPreserved, assertHistoricalSnapshot, assertSafetyDefinitions } from './evidence-rules.mjs';
+import { CATALOG_SQL, assertHistoricalPreserved, assertSafetyDefinitions } from './evidence-rules.mjs';
 import { baseFixturesSQL, legacyFixturesSQL, LEGACY_SNAPSHOT_SQL } from './fixtures.mjs';
 import { fingerprintNativeBoundarySource, verifyNativeInputs } from './track-b-native-boundary.mjs';
 import { dockerTrackBProfile as profile } from './track-b-docker-gate.mjs';
+import { verifySyntheticSnapshot } from './track-b-offline-runner.mjs';
 
 // Deliberate source-level interlock. No flag, environment variable, fixture
 // receipt or private manifest can enable database operations in this revision.
@@ -226,6 +227,18 @@ export async function runNativePostgresTrackB(options) {
     await marker.writeFile(JSON.stringify({ stage, event, proof }) + '\n');
     await marker.sync();
   };
+  const preserveSnapshot = async (phase, snapshot) => {
+    verifySyntheticSnapshot(snapshot);
+    const handle = await open(resolve(evidence, profile.target + '-legacy-' + phase + '.json'), 'wx', 0o600);
+    try {
+      await handle.writeFile(JSON.stringify(snapshot) + '\n');
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    const directory = await open(evidence, 'r');
+    try { await directory.sync(); } finally { await directory.close(); }
+  };
   const stopCheck = () => {
     signal?.throwIfAborted();
     verifyNativeWriteAuthority(approval, binding);
@@ -292,7 +305,7 @@ SELECT 1/0;
       };
       await target.sql('BEGIN;\n' + fixtureBody(baseFixturesSQL()) + '\n' + fixtureBody(legacyFixturesSQL()) + '\nCOMMIT;');
       const snapshot = JSON.parse(await target.sql(LEGACY_SNAPSHOT_SQL));
-      assertHistoricalSnapshot(snapshot);
+      await preserveSnapshot('before', snapshot);
       return snapshot;
     }, snapshot => ({
       snapshotDigest: digest(JSON.stringify(snapshot)),
@@ -300,7 +313,9 @@ SELECT 1/0;
     }));
     await execute('apply-upgrade', () => migrate('upgrade', migrations), () => ({ migrations: 68 }));
     await execute('verify-upgrade', async () => {
-      assertHistoricalPreserved(before, JSON.parse(await target.sql(LEGACY_SNAPSHOT_SQL)));
+      const after = JSON.parse(await target.sql(LEGACY_SNAPSHOT_SQL));
+      await preserveSnapshot('after', after);
+      assertHistoricalPreserved(before, after);
       const migration = migrations.at(-1);
       const bytes = await readFile(new URL('inputs/prisma/migrations/' + migration.name + '/migration.sql', import.meta.url));
       requireFact(digest(bytes) === migration.checksum, 'NATIVE_CATALOG_SOURCE_CHANGED');

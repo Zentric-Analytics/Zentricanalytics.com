@@ -39,7 +39,7 @@ function verifyPreflight(receipt) {
   requireFact(receipt.targetExists === false, 'TARGET_COLLISION_OR_UNKNOWN');
 }
 
-function verifySyntheticSnapshot(snapshot) {
+export function verifySyntheticSnapshot(snapshot) {
   assertHistoricalSnapshot(snapshot);
   requireFact(legacyStatuses.every((status, index) => {
     const outboxId = id('legacy_' + status.toLowerCase());

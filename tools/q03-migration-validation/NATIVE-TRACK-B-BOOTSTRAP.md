@@ -43,6 +43,14 @@ boundary controls access to the mapped operating-system identity.
 
 The following sections describe the separate Track B deployment review. The
 baseline profile alone cannot serve as a Track B write-capable configuration.
+The read-only `preflight-track-b` operator action records a unique private
+preflight receipt and returns status 12 on this peer-only profile. It does
+not reserve a write run. Track B needs a separately verified, narrowly scoped
+creation identity on an approved maintenance connection, a restricted owner,
+and an isolated runner and evidence mount. The existing worker routes its
+control connection through the baseline. A Track B transition must preserve
+the baseline's existing grants and peer-only access, so that route requires
+a reviewed change before activation.
 
 ## Provisioning sequence
 
