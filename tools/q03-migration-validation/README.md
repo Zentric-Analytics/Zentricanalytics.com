@@ -33,6 +33,13 @@ and returns an engine fingerprint for private binding review. It does not
 provision resources or admit a run. The offline fixture still models Docker
 Desktop, so its receipts cannot authorize this native installation.
 
+The [native bootstrap procedure](NATIVE-TRACK-B-BOOTSTRAP.md) describes the
+replacement deployment and independent isolation checks. The
+`track-b-native-boundary.test.mjs` suite rehearses native identity, pinned source
+and ledgers, collision refusal, timeout, and exclusive evidence. Run it with
+the offline guard, repository read permission for the external-path check,
+and a fresh external evidence directory with read and write permission.
+
 To run the coordinator tests from `harness/`, set
 `Q03_TRACK_B_TEST_EVIDENCE` to an existing, private, absolute directory outside
 Git. Use the same directory for `<evidence-root>` below. The tests retain their

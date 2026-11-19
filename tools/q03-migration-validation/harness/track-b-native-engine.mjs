@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { request } from 'node:http';
 import { platform, release } from 'node:os';
+import { dockerTrackBProfile as profile } from './track-b-docker-gate.mjs';
 
 const socketPath = '/run/docker.sock';
 const maxInfoBytes = 128 * 1024;
@@ -11,16 +12,52 @@ const maxInfoBytes = 128 * 1024;
  * authority to provision resources. Importing this module performs no I/O.
  */
 export async function observeTrackBNativeEngine({ signal } = {}) {
+  return engineIdentity(await readLocalDocker('/info', signal));
+}
+
+// Fixed inspection endpoints only. Docker inspect may return private environment
+// values; project the required fields before returning observations.
+export async function inspectTrackBNativeDocker({ signal } = {}) {
+  const engine = await observeTrackBNativeEngine({ signal });
+  const [container, network, volume] = await Promise.all([
+    readLocalDocker('/containers/' + profile.container + '/json', signal),
+    readLocalDocker('/networks/' + profile.network, signal),
+    readLocalDocker('/volumes/' + profile.volume, signal),
+  ]);
+  if (!/^sha256:[a-f0-9]{64}$/.test(container?.Image ?? '')) {
+    throw new Error('TRACK_B_NATIVE_IMAGE_ID_UNVERIFIED');
+  }
+  const image = await readLocalDocker('/images/' + container.Image + '/json', signal);
+  return {
+    engine,
+    container: {
+      Id: container.Id, Name: container.Name, Image: container.Image, State: container.State,
+      Config: { Labels: container.Config?.Labels },
+      HostConfig: {
+        RestartPolicy: container.HostConfig?.RestartPolicy, Privileged: container.HostConfig?.Privileged,
+        PublishAllPorts: container.HostConfig?.PublishAllPorts, PortBindings: container.HostConfig?.PortBindings,
+      },
+      Mounts: container.Mounts,
+      NetworkSettings: { Networks: container.NetworkSettings?.Networks, Ports: container.NetworkSettings?.Ports },
+    },
+    network: { Id: network.Id, Name: network.Name, Driver: network.Driver, Internal: network.Internal,
+      Labels: network.Labels, Containers: network.Containers },
+    volume: { Name: volume.Name, Driver: volume.Driver, Labels: volume.Labels, CreatedAt: volume.CreatedAt },
+    image: { Id: image.Id, Os: image.Os, Architecture: image.Architecture, RepoDigests: image.RepoDigests },
+  };
+}
+
+async function readLocalDocker(path, signal) {
   if (platform() !== 'linux' || !/microsoft-standard-wsl2/i.test(release())) {
     throw new Error('TRACK_B_NATIVE_WSL_REQUIRED');
   }
 
-  const info = await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const deadline = AbortSignal.timeout(3000);
     const requestSignal = signal ? AbortSignal.any([signal, deadline]) : deadline;
     const fail = () => reject(new Error('TRACK_B_NATIVE_ENGINE_UNAVAILABLE'));
     const probe = request({
-      socketPath, path: '/info', method: 'GET', agent: false, signal: requestSignal,
+      socketPath, path, method: 'GET', agent: false, signal: requestSignal,
     }, response => {
       response.once('error', fail);
       response.once('aborted', fail);
@@ -52,7 +89,9 @@ export async function observeTrackBNativeEngine({ signal } = {}) {
     probe.once('error', fail);
     probe.end();
   });
+}
 
+function engineIdentity(info) {
   if (info?.OSType !== 'linux' || info.Architecture !== 'x86_64'
       || info.KernelVersion !== release() || typeof info.ID !== 'string'
       || !/^[a-z0-9:-]{16,128}$/i.test(info.ID)) {
