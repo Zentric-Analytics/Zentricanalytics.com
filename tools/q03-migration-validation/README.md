@@ -2,6 +2,15 @@
 
 ## Track B offline coordinator
 
+The Docker Desktop / WSL 2 replacement has a separate offline gate in
+`harness/track-b-docker-gate.mjs`. Its tests rehearse binding, isolation,
+collision refusal, stage order, stop/preserve behavior and cancellation identity
+without opening sockets or running commands. The gate accepts synthetic receipts
+only. Its binding digest identifies a fixture, and does not authenticate owner
+authority. No live adapter or durable global reservation is supplied. Run
+`track-b-docker-gate.test.mjs` with the same guard and package read restriction
+as the self-check below. This suite needs no evidence write permission.
+
 `harness/track-b-offline-runner.mjs` models the Track B-only stage sequence with
 synthetic adapter receipts. It verifies the pinned input manifest and all 72
 input hashes, the exact original resource and runtime profile in the simulated

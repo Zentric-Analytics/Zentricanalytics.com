@@ -508,5 +508,15 @@
     "Path": "harness/track-b-offline-runner.test.mjs",
     "Bytes": 8880,
     "SHA256": "1561D6BDAC46F58E17F6D34428F61C3D670FB04DF4EF179D71C729CD6265757F"
+  },
+  {
+    "Path": "harness/track-b-docker-gate.mjs",
+    "Bytes": 6091,
+    "SHA256": "2825D094D4F9E6BFC25EDA5E949F075B005263B13E0155B7F17E041BA99E69DF"
+  },
+  {
+    "Path": "harness/track-b-docker-gate.test.mjs",
+    "Bytes": 6227,
+    "SHA256": "94CEFA24981E1507BF68EEEFF2A175648D0B8C911C3D632703C348DAD38BC9C4"
   }
 ]
