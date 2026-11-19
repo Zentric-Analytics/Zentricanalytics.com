@@ -27,6 +27,12 @@ and authority for the exact target, independent identity and collision checks,
 and verified PostgreSQL cancellation and evidence handling. The historical
 aggregate runner remains outside that scope.
 
+For native Docker Engine under WSL 2, `harness/track-b-native-engine.mjs` is
+the read-only engine observation component. It queries the local Unix socket
+and returns an engine fingerprint for private binding review. It does not
+provision resources or admit a run. The offline fixture still models Docker
+Desktop, so its receipts cannot authorize this native installation.
+
 To run the coordinator tests from `harness/`, set
 `Q03_TRACK_B_TEST_EVIDENCE` to an existing, private, absolute directory outside
 Git. Use the same directory for `<evidence-root>` below. The tests retain their
