@@ -20,6 +20,26 @@ const localProfile = Object.freeze({
 });
 const postgresReferences = [localProfile.postgresManifest, localProfile.postgresIndex]
   .flatMap(pin => ['postgres@' + pin, 'docker.io/library/postgres@' + pin]);
+export const nativePostgresDigests = Object.freeze({
+  index: localProfile.postgresIndex,
+  manifest: localProfile.postgresManifest,
+  config: localProfile.postgresConfig,
+});
+
+export function verifyNativePostgresContent(content) {
+  for (const [key, pin] of Object.entries(nativePostgresDigests)) {
+    requireFact(Buffer.isBuffer(content?.[key]) && 'sha256:' + digest(content[key]) === pin,
+      'NATIVE_POSTGRES_CONTENT_MISMATCH');
+  }
+  const index = JSON.parse(content.index);
+  const manifests = index.manifests.filter(item => item.platform?.os === 'linux'
+    && item.platform?.architecture === 'amd64');
+  const manifest = JSON.parse(content.manifest);
+  const config = JSON.parse(content.config);
+  requireFact(manifests.length === 1 && manifests[0].digest === nativePostgresDigests.manifest
+    && manifest.config.digest === nativePostgresDigests.config
+    && config.os === 'linux' && config.architecture === 'amd64', 'NATIVE_POSTGRES_PLATFORM_MISMATCH');
+}
 const reviewedSource = Object.freeze([
   'b1-contract.mjs', 'concurrency.mjs', 'config.mjs', 'db-tests.mjs', 'evidence-rules.mjs', 'fixtures.mjs',
   'track-b-docker-gate.mjs', 'track-b-native-boundary.mjs', 'track-b-native-engine.mjs',
@@ -35,7 +55,7 @@ export function verifyNativeResources(binding, observed) {
   const { engine, container, network, volume, image } = observed ?? {};
   requireFact(sha(binding?.engineFingerprint) && sha(binding.containerId)
     && sha(binding.networkId) && sha(binding.volumeFingerprint)
-    && binding.imageId === localProfile.postgresConfig
+    && Object.values(nativePostgresDigests).includes(binding.imageId)
     && binding.containerId !== B1.container && binding.networkId !== B1.network
     && binding.imageId !== B1.databaseImage, 'NATIVE_BINDING_REJECTED');
   requireFact(engine?.backend === localProfile.backend && engine.platform === localProfile.platform
@@ -43,6 +63,7 @@ export function verifyNativeResources(binding, observed) {
     && container?.Id === binding.containerId && container.Name === '/' + profile.container
     && container.Image === binding.imageId && image?.Id === binding.imageId
     && image.Os === 'linux' && image.Architecture === 'amd64'
+    && observed.postgresContentVerified === true
     && Array.isArray(image.RepoDigests) && image.RepoDigests.some(ref => postgresReferences.includes(ref))
     && network?.Id === binding.networkId && network.Name === profile.network
     && volume?.Name === profile.volume && volume.Driver === 'local'

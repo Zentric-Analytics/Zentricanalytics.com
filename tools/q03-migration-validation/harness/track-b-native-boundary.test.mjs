@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { dockerTrackBProfile as profile } from './track-b-docker-gate.mjs';
-import { fingerprintNativeBoundarySource, rehearseNativeTrackBBoundary, verifyNativeCancellation, verifyNativeInputs, verifyNativeResources } from './track-b-native-boundary.mjs';
+import { fingerprintNativeBoundarySource, nativePostgresDigests, rehearseNativeTrackBBoundary, verifyNativeCancellation, verifyNativeInputs, verifyNativePostgresContent, verifyNativeResources } from './track-b-native-boundary.mjs';
 
 const labels = { 'zentric.q03.replacement': 'true' };
 const fingerprint = digit => digit.repeat(64);
@@ -32,6 +32,7 @@ function fixture(seed) {
     },
     volume: { Name: profile.volume, Driver: 'local', Labels: labels, fingerprint: binding.volumeFingerprint },
     image: { Id: binding.imageId, Os: 'linux', Architecture: 'amd64', RepoDigests: ['postgres@' + profile.postgresManifest] },
+    postgresContentVerified: true,
     egressVerified: true, storageVerified: true, runnerMountIsolationVerified: true, syntheticCredentialsVerified: true,
   };
   const steps = [];
@@ -63,6 +64,7 @@ test('verifies all pinned inputs before reserving a run', async () => {
 for (const [name, mutate] of [
   ['wrong engine', r => { r.engine.engineFingerprint = fingerprint('9'); }],
   ['wrong image repository digest', r => { r.image.RepoDigests = ['postgres@sha256:' + fingerprint('9')]; }],
+  ['missing platform content proof', r => { r.postgresContentVerified = false; }],
   ['published port', r => { r.container.NetworkSettings.Ports['5432/tcp'] = [{ HostPort: '5432' }]; }],
   ['extra mount', r => { r.container.Mounts.push({ Type: 'bind', Destination: '/run/docker.sock' }); }],
   ['unverified egress', r => { r.egressVerified = false; }],
@@ -76,6 +78,14 @@ for (const [name, mutate] of [
     assert.throws(() => verifyNativeResources(binding, resources), /NATIVE_RESOURCE_/);
   });
 }
+
+test('accepts the engine index ID only with bound metadata and local content verification', () => {
+  const { binding, resources } = fixture('a');
+  binding.imageId = resources.container.Image = resources.image.Id = nativePostgresDigests.index;
+  resources.image.RepoDigests = ['postgres@' + nativePostgresDigests.index];
+  assert.doesNotThrow(() => verifyNativeResources(binding, resources));
+  assert.throws(() => verifyNativePostgresContent({ index: Buffer.from('{}') }), /CONTENT_MISMATCH/);
+});
 
 test('uses only fixed stages and the exact 66 plus 2 migration groups', async () => {
   const run = fixture('a');

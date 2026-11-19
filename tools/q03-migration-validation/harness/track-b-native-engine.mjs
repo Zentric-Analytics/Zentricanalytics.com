@@ -1,10 +1,19 @@
 import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { request } from 'node:http';
 import { platform, release } from 'node:os';
 import { dockerTrackBProfile as profile } from './track-b-docker-gate.mjs';
+import { nativePostgresDigests, verifyNativePostgresContent } from './track-b-native-boundary.mjs';
 
 const socketPath = '/run/docker.sock';
 const maxInfoBytes = 128 * 1024;
+const contentStore = '/var/lib/containerd/io.containerd.content.v1.content/blobs/sha256/';
+
+export async function verifyCachedNativePostgres({ signal } = {}) {
+  const entries = await Promise.all(Object.entries(nativePostgresDigests).map(async ([key, pin]) =>
+    [key, await readFile(contentStore + pin.slice('sha256:'.length), { signal })]));
+  verifyNativePostgresContent(Object.fromEntries(entries));
+}
 
 /**
  * Read-only engine observation for the native WSL installation. The fingerprint
@@ -28,8 +37,10 @@ export async function inspectTrackBNativeDocker({ signal } = {}) {
     throw new Error('TRACK_B_NATIVE_IMAGE_ID_UNVERIFIED');
   }
   const image = await readLocalDocker('/images/' + container.Image + '/json', signal);
+  await verifyCachedNativePostgres({ signal });
   return {
     engine,
+    postgresContentVerified: true,
     container: {
       Id: container.Id, Name: container.Name, Image: container.Image, State: container.State,
       Config: { Labels: container.Config?.Labels },
