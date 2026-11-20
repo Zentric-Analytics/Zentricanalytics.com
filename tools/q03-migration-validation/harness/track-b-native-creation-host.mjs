@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { lstat, readFile } from 'node:fs/promises';
 import { nativeMaintenanceCreationProgram } from './track-b-native-maintenance.mjs';
 import { reconcileNativeCreation, runNativeCreationReservation, validateNativeCreationBinding } from './track-b-native-reservation.mjs';
-import { requireNativeLiveEntry, verifyNativeSignedAuthority } from './track-b-native-postgres.mjs';
+import { verifyNativeRuntimeApproval } from './track-b-native-postgres.mjs';
 import { verifyNativeTrackBHost } from './track-b-native-host.mjs';
 import { fingerprintNativeBoundarySource, verifyNativeInputs } from './track-b-native-boundary.mjs';
 
@@ -79,11 +79,14 @@ async function observeBaseline(binding) {
   return { ...observed, clusterId };
 }
 
-export async function observeNativeCreationPreflight() {
+export async function observeNativeCreationPreflight(expected) {
   if (process.platform !== 'linux' || process.getuid?.() !== 0) throw Error('NATIVE_OPERATOR_SCOPE_REJECTED');
   const identities = (await readFile(state + '/identities', 'utf8')).trimEnd().split('\n');
   const clusterId = (await readFile(state + '/cluster-identity', 'utf8')).trim();
   if (identities.length !== 4 || !/^[a-f0-9]{64}$/.test(identities[3]) || !/^[0-9]{16,24}$/.test(clusterId)) {
+    throw Error('NATIVE_CREATION_PRIVATE_BINDING_REJECTED');
+  }
+  if (expected && (expected.containerId !== identities[3] || expected.clusterId !== clusterId)) {
     throw Error('NATIVE_CREATION_PRIVATE_BINDING_REJECTED');
   }
   const observed = await observeBaseline({ containerId: identities[3], clusterId });
@@ -158,7 +161,6 @@ async function observeCreated(binding) {
 }
 
 export async function createNativeTrackBOnce(options) {
-  requireNativeLiveEntry('host');
   const { binding, approval } = options;
   validateNativeCreationBinding(binding);
   const authorityKey = await verifyNativeTrackBHost(options);
@@ -169,8 +171,8 @@ export async function createNativeTrackBOnce(options) {
   return runNativeCreationReservation({
     directory: state, binding, approval, authorityKey,
     preflight: () => observeBaseline(binding),
-    create: () => {
-      verifyNativeSignedAuthority(approval, binding, authorityKey);
+    create: async () => {
+      await verifyNativeRuntimeApproval(approval, binding, 'host');
       if (approval.expiresAt - Date.now() < 50_000) throw Error('NATIVE_CREATION_WINDOW_TOO_SHORT');
       return execPg(binding, ['/usr/bin/timeout', '--kill-after=5', '40', '/bin/bash', '-s'], script, 50_000);
     },

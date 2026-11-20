@@ -8,6 +8,7 @@ import { test } from 'node:test';
 import { B1, digest } from './b1-contract.mjs';
 import { nativeAuthorityMessage } from './track-b-native-postgres.mjs';
 import { buildNativeMaintenanceScript } from './track-b-native-creation-host.mjs';
+import { confirmLocalOperator, localMode } from './track-b-native-local-authority.mjs';
 import { assertNativeCreationConfirmed, reconcileNativeCreation, runNativeCreationReservation } from './track-b-native-reservation.mjs';
 
 const journalName = 'q03_replacement_track_b.creation.jsonl';
@@ -18,12 +19,13 @@ const hex = n => String(n).repeat(64);
 async function fixture() {
   const directory = await mkdtemp(join(tmpdir(), 'zentric-creation-test-'));
   const binding = {
+    authorizationMode: 'signed-owner',
     target: 'q03_replacement_track_b', clusterId: '1234567890123456789',
     runId: hex(1), containerId: hex(2), engineFingerprint: hex(3), sourceFingerprint: hex(4),
     inputManifest: B1.manifest, provisioningReceipt: hex(5), runnerImageId: 'sha256:' + hex(6),
     operationSet: 'Q03_NATIVE_TRACK_B_66_PLUS_2_V1',
   };
-  const approval = { scope: 'Q03_NATIVE_TRACK_B_WRITE', issuedAt: now - 1000, expiresAt: now + 120_000,
+  const approval = { mode: 'signed-owner', scope: 'Q03_NATIVE_TRACK_B_WRITE', issuedAt: now - 1000, expiresAt: now + 120_000,
     bindingDigest: digest(JSON.stringify(binding)), provisioningReceipt: binding.provisioningReceipt };
   approval.signature = sign(null, nativeAuthorityMessage(approval), privateKey).toString('base64url');
   const preflight = () => ({ targetAbsent: true, clusterId: binding.clusterId });
@@ -98,7 +100,7 @@ test('a process crash after STARTED blocks a fresh controller', linux, async () 
 test('signature, expiry, collision, manifest, alias, and empty reservation fail closed', linux, async () => {
   const p = await fixture();
   const trap = () => assert.fail('database operation was reached');
-  await assert.rejects(runNativeCreationReservation({ ...p, approval: {}, create: trap }), /AUTHORITY_REJECTED/);
+  await assert.rejects(runNativeCreationReservation({ ...p, approval: {}, create: trap }), /AUTHORITY_MODE_REJECTED/);
   await assert.rejects(runNativeCreationReservation({ ...p, now: () => p.approval.expiresAt, create: trap }), /AUTHORITY_REJECTED/);
   await assert.rejects(runNativeCreationReservation({ ...p, binding: { ...p.binding, inputManifest: hex(0) }, create: trap }),
     /BINDING_REJECTED/);
@@ -110,4 +112,32 @@ test('signature, expiry, collision, manifest, alias, and empty reservation fail 
   await writeFile(join(p.directory, journalName), '', { flag: 'wx', mode: 0o600 });
   await assert.rejects(runNativeCreationReservation({ ...p, create: trap }), { code: 'EEXIST' });
   await assert.rejects(reconcileNativeCreation({ ...p, observe: trap }), /JOURNAL_INCOMPLETE/);
+});
+
+test('competing local operators share the signed mode reservation and altered evidence is refused', linux, async () => {
+  const p = await fixture();
+  const binding = { ...p.binding, authorizationMode: localMode, environment: 'local-synthetic',
+    baseline: 'q03_replacement_baseline', targetRole: 'q03_replacement_runner', ownerRole: 'q03_replacement_owner',
+    context: { name: 'default', endpoint: 'unix:///var/run/docker.sock',
+      socketRealpath: '/run/docker.sock', remoteOverridesAbsent: true } };
+  const approve = () => {
+    let prompt;
+    return confirmLocalOperator(binding, {
+      interactive: true, uid: 0, device: '/dev/pts/9',
+      show(text) { prompt = text; },
+      read() { return binding.target + ' ' + /token: ([a-f0-9]{24})/.exec(prompt)[1]; },
+    });
+  };
+  const [first, second] = await Promise.all([approve(), approve()]);
+  let writes = 0;
+  const create = () => { writes++; };
+  const outcomes = await Promise.allSettled([first, second].map(approval =>
+    runNativeCreationReservation({ ...p, binding, approval, create })));
+  assert.equal(outcomes.filter(result => result.status === 'fulfilled').length, 1);
+  assert.equal(writes, 1);
+  await assert.rejects(runNativeCreationReservation({ ...p, create }), { code: 'EEXIST' });
+  const file = join(p.directory, journalName);
+  const journal = await readFile(file, 'utf8');
+  await writeFile(file, journal.replace(localMode, 'signed-owner'));
+  await assert.rejects(assertNativeCreationConfirmed(p.directory, binding), /JOURNAL_REJECTED/);
 });

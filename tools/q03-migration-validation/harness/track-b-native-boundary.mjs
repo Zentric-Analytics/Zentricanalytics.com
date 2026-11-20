@@ -44,7 +44,8 @@ const reviewedSource = Object.freeze([
   'b1-contract.mjs', 'concurrency.mjs', 'config.mjs', 'db-tests.mjs', 'evidence-rules.mjs', 'fixtures.mjs',
   'track-b-docker-gate.mjs', 'track-b-native-boundary.mjs', 'track-b-native-engine.mjs',
   'track-b-native-creation-host.mjs', 'track-b-native-host.mjs', 'track-b-native-maintenance.mjs',
-  'track-b-native-operator.mjs', 'track-b-native-postgres.mjs', 'track-b-native-prisma-check.mjs', 'track-b-native-reservation.mjs',
+  'track-b-native-local-authority.mjs', 'track-b-native-local-plan.mjs', 'track-b-native-operator.mjs', 'track-b-native-postgres.mjs',
+  'track-b-native-prisma-check.mjs', 'track-b-native-reservation.mjs',
   'track-b-offline-runner.mjs',
 ]);
 

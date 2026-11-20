@@ -3,6 +3,7 @@ import { lstat, open, realpath } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { B1, digest } from './b1-contract.mjs';
 import { verifyNativeSignedAuthority } from './track-b-native-postgres.mjs';
+import { localMode, verifyLocalHostApproval } from './track-b-native-local-authority.mjs';
 
 const target = 'q03_replacement_track_b';
 const name = target + '.creation.jsonl';
@@ -50,7 +51,11 @@ export async function runNativeCreationReservation({
   directory, approval, binding, authorityKey, preflight, create, reconcile, now = Date.now,
 }) {
   validateNativeCreationBinding(binding);
-  verifyNativeSignedAuthority(approval, binding, authorityKey, now());
+  const authorized = () => {
+    if (binding.authorizationMode === localMode) verifyLocalHostApproval(approval, binding);
+    else verifyNativeSignedAuthority(approval, binding, authorityKey, now());
+  };
+  authorized();
   const root = await openPrivateDirectory(directory);
   let journal;
   let started = false;
@@ -58,7 +63,6 @@ export async function runNativeCreationReservation({
     await journal.writeFile(JSON.stringify({ state, target, runId: binding.runId, detail }) + '\n');
     await journal.sync();
   };
-  const authorized = () => verifyNativeSignedAuthority(approval, binding, authorityKey, now());
   try {
     // Recheck observed target and identity away from the reservation's write path.
     const before = await preflight();
@@ -68,7 +72,8 @@ export async function runNativeCreationReservation({
     authorized();
     journal = await open(journalPath(root), constants.O_WRONLY | constants.O_CREAT
       | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
-    await record('RESERVED', { bindingDigest: approval.bindingDigest, approvalDigest: digest(JSON.stringify(approval)) });
+    await record('RESERVED', { mode: approval.mode, bindingDigest: approval.bindingDigest,
+      approvalDigest: digest(JSON.stringify(approval)) });
     await root.sync();
     authorized();
     await record('STARTED');
@@ -108,6 +113,7 @@ export async function reconcileNativeCreation({ directory, binding, observe }) {
       let reservation;
       try { reservation = JSON.parse(first); } catch { throw Error('NATIVE_CREATION_JOURNAL_INCOMPLETE'); }
       if (reservation.state !== 'RESERVED' || reservation.target !== target || reservation.runId !== binding.runId
+        || reservation.detail?.mode !== binding.authorizationMode
         || reservation.detail?.bindingDigest !== digest(JSON.stringify(binding))) {
         throw Error('NATIVE_CREATION_JOURNAL_REJECTED');
       }

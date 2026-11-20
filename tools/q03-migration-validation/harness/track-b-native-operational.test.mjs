@@ -12,6 +12,7 @@ import { nativeMaintenanceCreationProgram } from './track-b-native-maintenance.m
 
 const hash = value => value.repeat(64);
 const binding = {
+  authorizationMode: 'signed-owner',
   baseline: 'q03_replacement_baseline', target: 'q03_replacement_track_b',
   baselineRole: 'q03_replacement_reader', controlRole: 'q03_replacement_creator',
   targetRole: 'q03_replacement_runner', ownerRole: 'q03_replacement_owner', runId: hash('1'), serverMarker: hash('2'),
@@ -22,6 +23,7 @@ const binding = {
 const tag = 'q03b_' + binding.runId.slice(0, 24);
 const issuedAt = 20_000;
 const approval = {
+  mode: 'signed-owner',
   scope: 'Q03_NATIVE_TRACK_B_WRITE', bindingDigest: digest(JSON.stringify(binding)),
   issuedAt, expiresAt: issuedAt + 10_000, provisioningReceipt: binding.provisioningReceipt,
 };
@@ -43,10 +45,9 @@ test('maintenance creation plan binds one exact cluster, socket, database, lock,
   assert.throws(() => nativeMaintenanceCreationProgram("123'; CREATE DATABASE other;"), /CLUSTER_REJECTED/);
 });
 
-test('live host and worker refuse to inspect or launch before activation', async () => {
-  const unopened = new Proxy({}, { get() { assert.fail('entry read caller input'); } });
-  await assert.rejects(launchNativeTrackB(unopened), /LIVE_ENTRY_DISABLED/);
-  await assert.rejects(runNativePostgresTrackB(unopened), /LIVE_ENTRY_DISABLED/);
+test('live host and worker refuse to inspect or launch without an explicitly authorized mode', async () => {
+  await assert.rejects(launchNativeTrackB({ binding }), /AUTHORITY_MODE_REJECTED/);
+  await assert.rejects(runNativePostgresTrackB({ binding }), /AUTHORITY_MODE_REJECTED/);
   if (process.platform === 'win32') await assert.rejects(observeTrackBNativeEngine(), /NATIVE_WSL_REQUIRED/);
 });
 

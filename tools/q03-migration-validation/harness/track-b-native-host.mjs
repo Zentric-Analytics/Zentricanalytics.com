@@ -4,8 +4,9 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { digest } from './b1-contract.mjs';
 import { verifyNativeResources } from './track-b-native-boundary.mjs';
 import { inspectNativeEvidenceVolume, inspectNativeRunner, inspectNativeSocketVolume, inspectTrackBNativeDocker } from './track-b-native-engine.mjs';
-import { loadNativeAuthorityKey, requireNativeLiveEntry, verifyNativeSignedAuthority } from './track-b-native-postgres.mjs';
+import { verifyNativeRuntimeApproval } from './track-b-native-postgres.mjs';
 import { assertNativeCreationConfirmed } from './track-b-native-reservation.mjs';
+import { localAuthorityDirectory, localMode, runnerAuthorityDirectory, signedMode } from './track-b-native-local-authority.mjs';
 
 const id = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const entrypoint = '/opt/node/bin/node';
@@ -38,7 +39,8 @@ export function verifyNativeRunner(binding, observed, expectedState = 'created')
   const mounts = observed?.Mounts ?? [];
   const evidence = mounts.find(mount => mount.Destination === '/evidence');
   const socket = mounts.find(mount => mount.Destination === '/socket');
-  const authority = mounts.find(mount => mount.Destination === '/opt/q03/track-b-authority.pem');
+  const local = binding?.authorizationMode === localMode;
+  const authority = mounts.find(mount => mount.Destination === (local ? runnerAuthorityDirectory : '/opt/q03/track-b-authority.pem'));
   requireFact(id(binding?.runnerId) && id(binding?.containerId) && id(binding?.resourceNonce)
     && /^sha256:[a-f0-9]{64}$/.test(binding.runnerImageId ?? '')
     && observed?.Id === binding.runnerId && observed.Image === binding.runnerImageId
@@ -66,7 +68,8 @@ export function verifyNativeRunner(binding, observed, expectedState = 'created')
     && mounts.length === 3 && evidence?.Type === 'volume' && evidence.RW === true
     && evidence.Name === evidenceVolume
     && socket?.Type === 'volume' && socket.Name === binding.socketSource && socket.RW === false
-    && authority?.Type === 'bind' && authority.Source === authoritySource && authority.RW === false,
+    && (local || binding.authorizationMode === signedMode)
+    && authority?.Type === 'bind' && authority.Source === (local ? localAuthorityDirectory : authoritySource) && authority.RW === false,
   'NATIVE_RUNNER_ISOLATION_REJECTED');
 }
 
@@ -100,16 +103,14 @@ function docker(args, input, { signal, timeoutMs }) {
   });
 }
 
-export async function verifyNativeTrackBHost({ binding, approval, context, isolation, signal }) {
-  const authorityKey = await loadNativeAuthorityKey('host');
-  verifyNativeSignedAuthority(approval, binding, authorityKey);
+export async function verifyNativeTrackBHostResources({ binding, context, isolation, signal }) {
   verifyNativeDockerContext(context);
   requireFact(JSON.stringify(binding.context) === JSON.stringify(context), 'NATIVE_DOCKER_CONTEXT_BINDING_REJECTED');
   requireFact(await realpath('/var/run/docker.sock') === '/run/docker.sock', 'NATIVE_DOCKER_SOCKET_REJECTED');
   requireFact(!['DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_TLS', 'DOCKER_TLS_VERIFY', 'DOCKER_CERT_PATH']
     .some(variable => process.env[variable]), 'NATIVE_DOCKER_CONTEXT_REJECTED');
   const { bindingDigest, ...isolationEvidence } = isolation ?? {};
-  requireFact(bindingDigest === approval.bindingDigest
+  requireFact(bindingDigest === digest(JSON.stringify(binding))
     && binding.isolationEvidenceDigest === digest(JSON.stringify(isolationEvidence))
     && isolation.provisioningReceipt === binding.provisioningReceipt
     && isolation.runnerEvidenceVerified === true && isolation.runnerArtifactVerified === true,
@@ -135,13 +136,18 @@ export async function verifyNativeTrackBHost({ binding, approval, context, isola
     && nativeVolumeFingerprint(evidence, binding.resourceNonce) === binding.evidenceVolumeFingerprint,
   'NATIVE_EVIDENCE_VOLUME_REJECTED');
   verifyNativeRunner(binding, await inspectNativeRunner(binding.runnerId, { signal }));
-  verifyNativeSignedAuthority(approval, binding, authorityKey);
+}
+
+export async function verifyNativeTrackBHost(options) {
+  const { binding, approval } = options;
+  const authorityKey = await verifyNativeRuntimeApproval(approval, binding, 'host');
+  await verifyNativeTrackBHostResources(options);
+  await verifyNativeRuntimeApproval(approval, binding, 'host');
   return authorityKey;
 }
 
 /** The runner may start only after signed, confirmed target creation. */
 export async function launchNativeTrackB(options) {
-  requireNativeLiveEntry('host');
   const { binding, approval, secrets, signal } = options;
   await verifyNativeTrackBHost(options);
   await assertNativeCreationConfirmed('/root/.local/state/zentric-q03-synthetic', binding);

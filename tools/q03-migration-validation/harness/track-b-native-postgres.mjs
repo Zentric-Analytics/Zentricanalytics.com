@@ -11,6 +11,7 @@ import { baseFixturesSQL, legacyFixturesSQL, LEGACY_SNAPSHOT_SQL } from './fixtu
 import { fingerprintNativeBoundarySource, verifyNativeInputs } from './track-b-native-boundary.mjs';
 import { dockerTrackBProfile as profile } from './track-b-docker-gate.mjs';
 import { verifySyntheticSnapshot } from './track-b-offline-runner.mjs';
+import { localMode, signedMode, verifyLocalHostApproval, verifyLocalRunnerReceipt } from './track-b-native-local-authority.mjs';
 
 // Deliberate source-level interlock. No flag, environment variable, fixture
 // receipt or private manifest can enable database operations in this revision.
@@ -56,16 +57,33 @@ export function verifyNativeWriteAuthority(approval, binding, now = Date.now()) 
 }
 
 export function nativeAuthorityMessage(approval) {
-  return Buffer.from(JSON.stringify(['zentric-native-track-b-v1', approval.scope, approval.bindingDigest,
+  return Buffer.from(JSON.stringify(['zentric-native-track-b-v2', approval.mode, approval.scope, approval.bindingDigest,
     approval.provisioningReceipt, approval.issuedAt, approval.expiresAt]));
 }
 
 export function verifyNativeSignedAuthority(approval, binding, publicKey, now = Date.now()) {
+  requireFact(approval?.mode === signedMode && binding?.authorizationMode === signedMode,
+    'NATIVE_AUTHORITY_MODE_REJECTED');
   verifyNativeWriteAuthority(approval, binding, now);
   requireFact(publicKey?.type === 'public' && publicKey.asymmetricKeyType === 'ed25519'
     && typeof approval.signature === 'string' && /^[a-zA-Z0-9_-]{86}$/.test(approval.signature)
     && verify(null, nativeAuthorityMessage(approval), publicKey, Buffer.from(approval.signature, 'base64url')),
   'NATIVE_WRITE_AUTHORITY_SIGNATURE_REJECTED');
+}
+
+export async function verifyNativeRuntimeApproval(approval, binding, location) {
+  requireFact(['host', 'runner'].includes(location) && approval?.mode === binding?.authorizationMode,
+    'NATIVE_AUTHORITY_MODE_REJECTED');
+  if (approval?.mode === localMode) {
+    verifyNativeWriteAuthority(approval, binding);
+    if (location === 'host') verifyLocalHostApproval(approval, binding);
+    else await verifyLocalRunnerReceipt(approval, binding);
+    return undefined;
+  }
+  requireFact(approval?.mode === signedMode, 'NATIVE_AUTHORITY_MODE_REJECTED');
+  const key = await loadNativeAuthorityKey(location);
+  verifyNativeSignedAuthority(approval, binding, key);
+  return key;
 }
 
 export async function loadNativeAuthorityKey(location) {
@@ -201,7 +219,7 @@ function requireLedger(rows, expected) {
     'NATIVE_POSTGRES_LEDGER_INCOMPLETE');
 }
 
-async function verifyGeneratedTransaction(binding, secret, tag, signal) {
+async function verifyGeneratedTransaction(binding, approval, secret, tag, signal) {
   const original = await readFile(schemaSource, 'utf8');
   requireFact(original === await readFile(work + '/upgrade/schema.prisma', 'utf8'), 'NATIVE_GENERATOR_SOURCE_CHANGED');
   const generatedSchema = original.replace('provider = "prisma-client-js"',
@@ -213,7 +231,7 @@ async function verifyGeneratedTransaction(binding, secret, tag, signal) {
   const env = { ...childEnvironment, DATABASE_URL: url.href };
   await runChild(node, [prisma, 'generate', '--schema', schema], '', env, { signal, timeoutMs: 45_000 });
   await runChild(node, [fileURLToPath(new URL('./track-b-native-prisma-check.mjs', import.meta.url))],
-    JSON.stringify({ url: url.href, database: profile.target, role: binding.targetRole, marker: binding.serverMarker, tag }),
+    JSON.stringify({ url: url.href, database: profile.target, role: binding.targetRole, marker: binding.serverMarker, tag, binding, approval }),
     childEnvironment, { signal, timeoutMs: 25_000 });
 }
 
@@ -234,11 +252,9 @@ function connectionUrl(binding, secret, tag) {
  * supervisor with independently verified Docker and private authority bindings.
  */
 export async function runNativePostgresTrackB(options) {
-  requireNativeLiveEntry();
   const { binding, approval, secrets, evidenceDirectory, signal } = options;
   verifyBinding(binding);
-  const authorityKey = await loadNativeAuthorityKey('runner');
-  verifyNativeSignedAuthority(approval, binding, authorityKey);
+  await verifyNativeRuntimeApproval(approval, binding, 'runner');
   requireFact(typeof secrets?.target === 'string' && /^[a-f0-9]{64}$/.test(secrets.target)
     && Object.keys(secrets).length === 1,
   'NATIVE_SYNTHETIC_CREDENTIALS_REJECTED');
@@ -266,12 +282,12 @@ export async function runNativePostgresTrackB(options) {
     const directory = await open(evidence, 'r');
     try { await directory.sync(); } finally { await directory.close(); }
   };
-  const stopCheck = () => {
+  const stopCheck = async () => {
     signal?.throwIfAborted();
-    verifyNativeSignedAuthority(approval, binding, authorityKey);
+    await verifyNativeRuntimeApproval(approval, binding, 'runner');
   };
   const sql = async body => {
-    stopCheck();
+    await stopCheck();
     return runChild(psql, ['-X', '-w', '-qAt', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'],
       buildNativeSessionGuard(binding, 'target') + body + '\n', {
         ...childEnvironment, PGHOST: '/socket', PGPORT: '5432',
@@ -283,10 +299,10 @@ export async function runNativePostgresTrackB(options) {
   const target = Object.freeze({ sql });
   const execute = async (name, action, summarize) => {
     stage = name;
-    stopCheck();
+    await stopCheck();
     await record('begin');
     const result = await action();
-    stopCheck();
+    await stopCheck();
     await record('verified', summarize?.(result));
     return result;
   };
@@ -338,7 +354,7 @@ export async function runNativePostgresTrackB(options) {
       await runDatabaseTests(target);
       const results = await runConcurrencyTests(target, { tag, role: binding.targetRole, database: profile.target });
       requireFact(results.length === 7, 'NATIVE_RACE_SET_INCOMPLETE');
-      await verifyGeneratedTransaction(binding, secrets.target, tag, signal);
+      await verifyGeneratedTransaction(binding, approval, secrets.target, tag, signal);
       const remaining = await target.sql(`SELECT count(*) FROM pg_stat_activity WHERE pid<>pg_backend_pid()
         AND left(application_name,${tag.length})='${tag}' AND datname='${profile.target}' AND usename=current_user;`);
       requireFact(remaining === '0', 'NATIVE_SESSION_CLOSURE_UNVERIFIED');
@@ -353,7 +369,6 @@ export async function runNativePostgresTrackB(options) {
 }
 
 async function main() {
-  requireNativeLiveEntry();
   const controller = new AbortController();
   const interrupt = () => controller.abort();
   let input = '';

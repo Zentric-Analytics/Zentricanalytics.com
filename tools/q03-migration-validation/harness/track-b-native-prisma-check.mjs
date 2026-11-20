@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'node:url';
 import { id, queue } from './fixtures.mjs';
-import { requireNativeLiveEntry } from './track-b-native-postgres.mjs';
+import { verifyNativeRuntimeApproval } from './track-b-native-postgres.mjs';
 
 const target = 'q03_replacement_track_b';
 const version = 180006;
@@ -74,13 +74,15 @@ export async function verifyPrismaTransaction(client, input) {
 }
 
 async function main() {
-  requireNativeLiveEntry();
   let input = '';
   for await (const chunk of process.stdin) {
     input += chunk;
-    requireFact(input.length <= 4096);
+    requireFact(input.length <= 16384);
   }
   const binding = JSON.parse(input);
+  await verifyNativeRuntimeApproval(binding.approval, binding.binding, 'runner');
+  requireFact(binding.marker === binding.binding.serverMarker && binding.role === binding.binding.targetRole
+    && binding.tag === 'q03b_' + binding.binding.runId.slice(0, 24));
   verifyPrismaConnection(binding);
   const { Prisma, PrismaClient } = (await import('/work/zentric-native-track-b/generated/index.js')).default;
   requireFact(Prisma.prismaVersion.client === '6.10.1'

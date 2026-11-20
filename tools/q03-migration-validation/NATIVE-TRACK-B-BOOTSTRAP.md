@@ -112,6 +112,39 @@ maintenance reservation are verified against the refreshed runner and target.
 
 ## Mission 15 one-time authority and reconciliation
 
+### Mission 16 local synthetic operation
+
+The operator now requires an explicit mode. `signed-owner` continues to require
+an independently verified Ed25519 signature and its original protected key
+mount. Its actions now take the mode before the command, for example
+`signed-owner check`. The signed envelope includes the mode. It never falls
+back to a local approval. Older unsigned or unspecified-mode requests are
+rejected.
+
+`local-synthetic-operator` applies only to this verified replacement cluster.
+The local plan program takes the immutable image ID after the read-only runner
+preflight passes. It verifies the cold archive, source, manifest, image,
+socket and evidence volume, then prepares the stopped restricted runner and a
+root-only plan. Use `local-synthetic-operator check` for a read-only review.
+
+From an interactive local WSL terminal, as the authorized machine operator,
+run `local-synthetic-operator confirm`. The prompt displays the exact cluster,
+container, target, runner and source, evidence scope and one-time run identity.
+Type the target and the freshly displayed token. The controller checks the
+foreground terminal and rejects piped input, unattended invocations and stale
+answers. A successful confirmation is in-process authority and an audit
+receipt. It does not provide cryptographic owner identity. The runner receives
+only a read-only view of that root-created receipt. After confirmation the same
+process reserves the exact database, runs fixed maintenance creation, verifies
+the result and launches the pinned test sequence.
+
+There is no standalone local `create` or `run` command. A local receipt and
+creation journal cannot be reused after interruption. Use
+`local-synthetic-operator reconcile` for observation only, and preserve the
+existing journal, target and evidence on uncertainty.
+
+### Signed-owner operation
+
 The live operator is `harness/track-b-native-operator.mjs` and runs as root
 under WSL. The local authority key is an owner-authenticated Ed25519 **public**
 PEM stored at `/root/.local/state/zentric-q03-synthetic/track-b-authority.pem`.
