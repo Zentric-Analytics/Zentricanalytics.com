@@ -8,6 +8,7 @@ here=$(dirname "$(realpath "$0")")
 d=(/usr/bin/docker --host unix:///run/docker.sock)
 state=/root/.local/state/zentric-q03-synthetic
 volume=zentric-q03-replacement-evidence
+socket_volume=zentric-q03-replacement-socket
 [[ "$#" = 1 && "$1" =~ ^sha256:[0-9a-f]{64}$ && $(id -u) = 0 ]]
 image=$1
 bash "$here/native-baseline.sh" verify
@@ -23,21 +24,8 @@ finish() {
 trap finish EXIT
 mapfile -t identities <"$state/identities"
 [[ "${#identities[@]}" = 4 && "${identities[1]}" =~ ^[a-f0-9]{64}$ && "${identities[3]}" =~ ^[a-f0-9]{64}$ ]]
-pg_pid=$("${d[@]}" inspect "${identities[3]}" --format '{{.State.Pid}}')
-[[ "$pg_pid" =~ ^[1-9][0-9]*$ ]]
-socket_origin="/proc/$pg_pid/root/run/postgresql"
-socket="$state/track-b-socket-view"
-[[ -S "$socket_origin/.s.PGSQL.5432" ]]
-[[ ! -L "$socket" ]]
-if ! mountpoint -q "$socket"; then
-  install -d -m 0700 "$socket"
-  [[ -z "$(find "$socket" -mindepth 1 -maxdepth 1 -print -quit)" ]]
-  stage=socket-bind
-  mount --no-canonicalize --bind "$socket_origin" "$socket"
-  mount -o remount,bind,ro "$socket"
-fi
-[[ "$(stat -Lc '%d:%i' "$socket")" = "$(stat -Lc '%d:%i' "$socket_origin")" ]]
-[[ ",$(findmnt -n -o VFS-OPTIONS --mountpoint "$socket")," = *,ro,* ]]
+[[ "$("${d[@]}" volume inspect "$socket_volume" --format '{{.Driver}}/{{index .Labels "zentric.q03.resource"}}/{{index .Labels "zentric.q03.purpose"}}')" = "local/${identities[1]}/track-b-socket" ]]
+"${d[@]}" exec "${identities[3]}" test -S /run/zentric-track-b/.s.PGSQL.5432
 
 stage=evidence-volume
 volumes=$("${d[@]}" volume ls --format '{{.Name}}')
@@ -56,7 +44,7 @@ chmod 0700 "$mount"
 stage=runner-socket-probe
 "${d[@]}" run --rm --pull never --network none --read-only --user 65532:65532 \
   --cap-drop ALL --security-opt no-new-privileges --memory 1g --cpus 2 --pids-limit 128 \
-  --mount "type=bind,source=$socket,target=/socket,readonly,bind-propagation=rprivate" \
+  --mount "type=volume,source=$socket_volume,target=/socket,readonly,volume-nocopy" \
   --mount "type=volume,source=$volume,target=/evidence,volume-nocopy" \
   --tmpfs /tmp:rw,nosuid,nodev,size=128m,mode=1777 \
   --entrypoint /bin/bash "$image" -euc '

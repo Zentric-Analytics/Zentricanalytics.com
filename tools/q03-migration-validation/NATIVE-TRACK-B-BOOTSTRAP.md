@@ -76,14 +76,39 @@ engines, and checksum-reviewed Q03 source and inputs. A scratch final stage
 avoids inheriting an implicit PostgreSQL data volume. Bind the resulting
 immutable image ID, apply the resource caps and use `--network none`.
 
-The runner preflight uses a read-only view of the existing PostgreSQL Unix
-socket and the dedicated `zentric-q03-replacement-evidence` volume. That
-volume is accessible to the runner UID and the local Docker administrator.
-The WSL host rejected both the direct cross-container socket bind and the host
-bind alternative. Keep the live gate closed until a restricted transport is
-independently verified. The baseline remains peer-only. Preserve failed
-transport receipts and avoid exposing TCP or replacing the existing container
-to work around a failed mount.
+## Mission 14 shared socket and rollback
+
+The direct cross-container and WSL bind attempts failed on this host. A
+disposable client and listener proved a Docker-managed socket volume works
+with networking disabled and the client mount read-only. The PostgreSQL
+container mounts `zentric-q03-replacement-socket` at `/run/zentric-track-b`
+and retains the original socket directory. The runner mounts only the socket
+volume at `/socket` read-only and `zentric-q03-replacement-evidence` at
+`/evidence` writable by its private UID. PostgreSQL has no TCP listener.
+
+`track-b-cold-preservation.sh` stops the recorded container, archives the
+shut-down cluster read-only, verifies the checksums, restarts the original,
+and boots a separate restored copy on a network-disabled container. The
+restore probe verifies cluster identity and the empty peer-only baseline.
+The backup and restore probe stay outside Git on the same disk. Off-machine
+recovery and active disk protection are still unverified.
+
+`track-b-socket-recreate.sh` checks the private backup and socket receipts,
+compares configuration and keeps the original stopped under its held name.
+Only the replacement may run against the shared data volume. To roll back,
+stop and verify the replacement first, preserve its identity and logs, restore
+the held container's original name and recorded private binding, then start
+and verify the original. Never start both against this volume. The original
+and replacement use the same cluster. Restoring a backup over the live volume
+is a separate operation.
+
+`track-b-socket-roles.sh` provisions a non-login owner and restricted runner
+and verifier logins. Its final authentication rules preserve the existing
+baseline peer rule and admit only the named Track B logins on local sockets
+to the Track B target. Temporary maintenance access is removed after role
+setup. Keep synthetic credentials under root-only custody. The live write
+interlock stays closed until an operator-signed authority and one-time
+maintenance reservation are verified against the refreshed runner and target.
 
 ## Earlier Track B deployment design
 

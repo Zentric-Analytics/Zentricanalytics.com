@@ -70,6 +70,8 @@ export function verifyNativeResources(binding, observed) {
     && volume.fingerprint === binding.volumeFingerprint, 'NATIVE_RESOURCE_IDENTITY_REJECTED');
 
   const mounts = container.Mounts ?? [];
+  const data = mounts.find(mount => mount.Destination === profile.mount);
+  const socket = mounts.find(mount => mount.Destination === '/run/zentric-track-b');
   const peers = Object.keys(network.Containers ?? {});
   const attached = container.NetworkSettings?.Networks ?? {};
   const host = container.HostConfig;
@@ -82,8 +84,8 @@ export function verifyNativeResources(binding, observed) {
     && host?.RestartPolicy?.Name === 'no' && host.Privileged === false
     && host.PublishAllPorts === false && Object.keys(host.PortBindings ?? {}).length === 0
     && Object.values(container.NetworkSettings?.Ports ?? {}).every(value => value === null)
-    && mounts.length === 1 && mounts[0].Type === 'volume' && mounts[0].Name === volume.Name
-    && mounts[0].Destination === profile.mount && mounts[0].RW === true
+    && mounts.length === 2 && data?.Type === 'volume' && data.Name === volume.Name && data.RW === true
+    && socket?.Type === 'volume' && socket.Name === 'zentric-q03-replacement-socket' && socket.RW === true
     && observed.egressVerified === true && observed.storageVerified === true
     && observed.runnerMountIsolationVerified === true && observed.syntheticCredentialsVerified === true,
   'NATIVE_RESOURCE_ISOLATION_REJECTED');

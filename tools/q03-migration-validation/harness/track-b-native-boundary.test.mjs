@@ -23,7 +23,8 @@ function fixture(seed) {
       Id: binding.containerId, Name: '/' + profile.container, Image: binding.imageId,
       State: { Running: true, Status: 'running' }, Config: { Labels: labels },
       HostConfig: { RestartPolicy: { Name: 'no' }, Privileged: false, PublishAllPorts: false },
-      Mounts: [{ Name: profile.volume, Type: 'volume', Destination: profile.mount, RW: true }],
+      Mounts: [{ Name: profile.volume, Type: 'volume', Destination: profile.mount, RW: true },
+        { Name: 'zentric-q03-replacement-socket', Type: 'volume', Destination: '/run/zentric-track-b', RW: true }],
       NetworkSettings: { Networks: { [profile.network]: { NetworkID: binding.networkId } }, Ports: { '5432/tcp': null } },
     },
     network: {

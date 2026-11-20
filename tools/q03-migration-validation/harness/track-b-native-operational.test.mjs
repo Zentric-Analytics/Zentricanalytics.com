@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
+import { generateKeyPairSync, sign } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { digest, reviewedInputs } from './b1-contract.mjs';
 import { overlapQueries } from './concurrency.mjs';
 import { observeTrackBNativeEngine } from './track-b-native-engine.mjs';
 import { launchNativeTrackB, nativeVolumeFingerprint, verifyNativeDockerContext, verifyNativeRunner } from './track-b-native-host.mjs';
-import { buildNativeSessionGuard, runNativePostgresTrackB, verifyNativeWriteAuthority } from './track-b-native-postgres.mjs';
+import { buildNativeSessionGuard, nativeAuthorityMessage, runNativePostgresTrackB, verifyNativeSignedAuthority, verifyNativeWriteAuthority } from './track-b-native-postgres.mjs';
 import { verifyPrismaConnection, verifyPrismaTransaction } from './track-b-native-prisma-check.mjs';
 import { nativeMaintenanceCreationProgram } from './track-b-native-maintenance.mjs';
 
@@ -16,7 +17,7 @@ const binding = {
   targetRole: 'q03_replacement_runner', ownerRole: 'q03_replacement_owner', runId: hash('1'), serverMarker: hash('2'),
   sourceFingerprint: hash('3'), provisioningReceipt: hash('4'), runnerId: hash('5'),
   runnerImageId: 'sha256:' + hash('6'), containerId: hash('7'), resourceNonce: hash('8'),
-  socketSource: '/root/.local/state/zentric-q03-synthetic/track-b-socket-view',
+  socketSource: 'zentric-q03-replacement-socket',
 };
 const tag = 'q03b_' + binding.runId.slice(0, 24);
 const issuedAt = 20_000;
@@ -61,6 +62,18 @@ test('write approval is bound to exact resources, distinct provisioning approval
   ]) assert.throws(() => verifyNativeWriteAuthority(permit, candidate, now), /WRITE_AUTHORITY_REJECTED/);
 });
 
+test('signed authority rejects a changed expiry, missing signature and a different operator key', () => {
+  const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+  const other = generateKeyPairSync('ed25519').publicKey;
+  const signature = sign(null, nativeAuthorityMessage(approval), privateKey).toString('base64url');
+  const signed = { ...approval, signature };
+  assert.doesNotThrow(() => verifyNativeSignedAuthority(signed, binding, publicKey, issuedAt));
+  assert.throws(() => verifyNativeSignedAuthority(approval, binding, publicKey, issuedAt), /SIGNATURE_REJECTED/);
+  assert.throws(() => verifyNativeSignedAuthority(signed, binding, other, issuedAt), /SIGNATURE_REJECTED/);
+  assert.throws(() => verifyNativeSignedAuthority({ ...signed, expiresAt: signed.expiresAt + 1 }, binding, publicKey, issuedAt),
+    /SIGNATURE_REJECTED/);
+});
+
 test('altered migration bytes fail before any write can be admitted', () => {
   const manifest = readFileSync(new URL('./input-manifest.json', import.meta.url));
   const edited = 'inputs/prisma/migrations/20261029000200_email_queue_safety_contract/migration.sql';
@@ -101,7 +114,7 @@ function runner() {
       Tmpfs: { '/tmp': 'rw,nosuid,nodev,size=128m,mode=1777',
         '/work': 'rw,nosuid,nodev,size=512m,uid=65532,gid=65532,mode=0700' } },
     Mounts: [{ Type: 'volume', Name: 'zentric-q03-replacement-evidence', Destination: '/evidence', RW: true },
-      { Type: 'bind', Source: binding.socketSource, Destination: '/socket', RW: false, Propagation: 'rprivate' }],
+      { Type: 'volume', Name: binding.socketSource, Destination: '/socket', RW: false }],
   };
 }
 
@@ -112,7 +125,7 @@ test('runner refuses additional mounts, inherited secrets, wrong namespace or wr
     value => { value.Config.Env.push('RESEND_API_KEY=fixture'); },
     value => { value.HostConfig.NetworkMode = 'host'; },
     value => { value.Mounts[1].RW = true; },
-    value => { value.Mounts[1].Source = '/var/lib/docker'; },
+    value => { value.Mounts[1].Name = 'zentric-q03-replacement-data'; },
     value => { value.Image = 'sha256:' + hash('0'); },
     value => { value.Config.Labels['zentric.q03.resource'] = hash('0'); },
     value => { value.State.Status = 'exited'; },

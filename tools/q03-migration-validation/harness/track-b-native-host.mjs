@@ -1,16 +1,16 @@
 import { spawn } from 'node:child_process';
-import { realpath, stat } from 'node:fs/promises';
+import { realpath } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { digest } from './b1-contract.mjs';
 import { verifyNativeResources } from './track-b-native-boundary.mjs';
-import { inspectNativeEvidenceVolume, inspectNativeRunner, inspectTrackBNativeDocker } from './track-b-native-engine.mjs';
-import { requireNativeLiveEntry, verifyNativeWriteAuthority } from './track-b-native-postgres.mjs';
+import { inspectNativeEvidenceVolume, inspectNativeRunner, inspectNativeSocketVolume, inspectTrackBNativeDocker } from './track-b-native-engine.mjs';
+import { loadNativeAuthorityKey, requireNativeLiveEntry, verifyNativeSignedAuthority } from './track-b-native-postgres.mjs';
 
 const id = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const entrypoint = '/opt/node/bin/node';
 const worker = '/opt/q03/track-b-native-postgres.mjs';
 const evidenceVolume = 'zentric-q03-replacement-evidence';
-const socketView = '/root/.local/state/zentric-q03-synthetic/track-b-socket-view';
+const socketVolume = 'zentric-q03-replacement-socket';
 const runtimeEnvironmentOverride = /^(?:DATABASE_URL|DIRECT_URL|PG[A-Z_]*|POSTGRES_[A-Z_]*|NODE_OPTIONS|NODE_PATH|LD_[A-Z_]*|PRISMA_[A-Z_]*|.*(?:SECRET|PASSWORD|TOKEN|API_KEY|PROXY))=/i;
 
 function requireFact(condition, reason) {
@@ -47,7 +47,7 @@ export function verifyNativeRunner(binding, observed, expectedState = 'created')
     && Array.isArray(config.Env) && !config.Env.some(value => runtimeEnvironmentOverride.test(value))
     && observed.State?.Status === expectedState && typeof observed.State.Running === 'boolean'
     && observed.State.Running === (expectedState === 'running')
-    && binding.socketSource === socketView
+    && binding.socketSource === socketVolume
     && host?.NetworkMode === 'none'
     && host.ReadonlyRootfs === true && host.Privileged === false && host.Init === true
     && ['', 'private'].includes(host.PidMode) && !host.CapAdd?.length && !host.Devices?.length
@@ -62,8 +62,7 @@ export function verifyNativeRunner(binding, observed, expectedState = 'created')
     && host.Tmpfs['/work'] === 'rw,nosuid,nodev,size=512m,uid=65532,gid=65532,mode=0700'
     && mounts.length === 2 && evidence?.Type === 'volume' && evidence.RW === true
     && evidence.Name === evidenceVolume
-    && socket?.Type === 'bind' && socket.Source === binding.socketSource && socket.RW === false
-    && socket.Propagation === 'rprivate',
+    && socket?.Type === 'volume' && socket.Name === binding.socketSource && socket.RW === false,
   'NATIVE_RUNNER_ISOLATION_REJECTED');
 }
 
@@ -101,7 +100,8 @@ function docker(args, input, { signal, timeoutMs }) {
 export async function launchNativeTrackB(options) {
   requireNativeLiveEntry();
   const { binding, approval, secrets, context, isolation, signal } = options;
-  verifyNativeWriteAuthority(approval, binding);
+  const authorityKey = await loadNativeAuthorityKey('host');
+  verifyNativeSignedAuthority(approval, binding, authorityKey);
   verifyNativeDockerContext(context);
   requireFact(await realpath('/var/run/docker.sock') === '/run/docker.sock', 'NATIVE_DOCKER_SOCKET_REJECTED');
   requireFact(!['DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_TLS', 'DOCKER_TLS_VERIFY', 'DOCKER_CERT_PATH']
@@ -111,15 +111,11 @@ export async function launchNativeTrackB(options) {
     && isolation.runnerEvidenceVerified === true && isolation.runnerArtifactVerified === true,
   'NATIVE_PREREQUISITE_RECEIPT_REJECTED');
   const observed = await inspectTrackBNativeDocker({ signal });
-  requireFact(Number.isSafeInteger(observed.container.State?.Pid) && observed.container.State.Pid > 0
-    && binding.socketSource === socketView, 'NATIVE_DATABASE_SOCKET_REJECTED');
-  const [socketOrigin, socketMount] = await Promise.all([
-    stat('/proc/' + observed.container.State.Pid + '/root/run/postgresql/.s.PGSQL.5432', { bigint: true }),
-    stat(socketView + '/.s.PGSQL.5432', { bigint: true }),
-  ]);
-  requireFact(socketOrigin.isSocket() && socketMount.isSocket()
-    && socketOrigin.dev === socketMount.dev && socketOrigin.ino === socketMount.ino,
-  'NATIVE_DATABASE_SOCKET_REJECTED');
+  const socket = await inspectNativeSocketVolume({ signal });
+  requireFact(binding.socketSource === socketVolume && socket.Name === socketVolume && socket.Driver === 'local'
+    && socket.Labels?.['zentric.q03.purpose'] === 'track-b-socket'
+    && nativeVolumeFingerprint(socket, binding.resourceNonce) === binding.socketVolumeFingerprint,
+  'NATIVE_DATABASE_SOCKET_VOLUME_REJECTED');
   observed.volume.fingerprint = nativeVolumeFingerprint(observed.volume, binding.resourceNonce);
   requireFact(observed.container.Config.Labels?.['zentric.q03.resource'] === binding.resourceNonce
     && observed.network.Labels?.['zentric.q03.resource'] === binding.resourceNonce
@@ -135,7 +131,7 @@ export async function launchNativeTrackB(options) {
     && nativeVolumeFingerprint(evidence, binding.resourceNonce) === binding.evidenceVolumeFingerprint,
   'NATIVE_EVIDENCE_VOLUME_REJECTED');
   verifyNativeRunner(binding, await inspectNativeRunner(binding.runnerId, { signal }));
-  verifyNativeWriteAuthority(approval, binding);
+  verifyNativeSignedAuthority(approval, binding, authorityKey);
   try {
     const timeoutMs = Math.min(approval.expiresAt - Date.now(), 900_000);
     requireFact(timeoutMs > 0, 'NATIVE_WRITE_AUTHORITY_EXPIRED');

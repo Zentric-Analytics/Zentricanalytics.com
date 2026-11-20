@@ -69,6 +69,11 @@ export async function inspectNativeEvidenceVolume({ signal } = {}) {
   return { Name: volume.Name, Driver: volume.Driver, Labels: volume.Labels, CreatedAt: volume.CreatedAt };
 }
 
+export async function inspectNativeSocketVolume({ signal } = {}) {
+  const volume = await readLocalDocker('/volumes/zentric-q03-replacement-socket', signal);
+  return { Name: volume.Name, Driver: volume.Driver, Labels: volume.Labels, CreatedAt: volume.CreatedAt };
+}
+
 async function readLocalDocker(path, signal) {
   if (platform() !== 'linux' || !/microsoft-standard-wsl2/i.test(release())) {
     throw new Error('TRACK_B_NATIVE_WSL_REQUIRED');

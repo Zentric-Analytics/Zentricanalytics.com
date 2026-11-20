@@ -46,7 +46,12 @@ verify_bindings() {
     [[ "$("${docker[@]}" volume inspect "$volume" --format '{{.CreatedAt}}')" = "$(cat "$state/volume-created")" ]]
   fi
   [[ "$("${docker[@]}" container inspect "$container" --format '{{.Id}}/{{.Image}}/{{index .Config.Labels "zentric.q03.resource"}}/{{.HostConfig.RestartPolicy.Name}}/{{.HostConfig.Memory}}/{{.HostConfig.NanoCpus}}/{{.HostConfig.PidsLimit}}/{{len .HostConfig.PortBindings}}/{{.HostConfig.PublishAllPorts}}')" = "$container_id/$image_id/$nonce/no/536870912/1000000000/128/0/false" ]]
-  [[ "$("${docker[@]}" container inspect "$container_id" --format '{{len .Mounts}}/{{range .Mounts}}{{.Type}}/{{.Name}}{{.Destination}}/{{.RW}}{{end}}')" = "1/volume/$volume/var/lib/postgresql/true" ]]
+  local mounts
+  mounts=$("${docker[@]}" container inspect "$container_id" --format '{{range .Mounts}}{{println .Type .Name .Destination .RW}}{{end}}' | sed '/^$/d' | sort)
+  if [[ "$mounts" != "volume $volume /var/lib/postgresql true" ]]; then
+    [[ "$mounts" = "$(printf '%s\n' "volume $volume /var/lib/postgresql true" 'volume zentric-q03-replacement-socket /run/zentric-track-b true' | sort)" ]]
+    [[ "$("${docker[@]}" volume inspect zentric-q03-replacement-socket --format '{{.Driver}}/{{index .Labels "zentric.q03.resource"}}/{{index .Labels "zentric.q03.purpose"}}')" = "local/$nonce/track-b-socket" ]]
+  fi
   [[ "$("${docker[@]}" container inspect "$container_id" --format '{{.HostConfig.NetworkMode}}')" = "$network" ]]
   [[ "$("${docker[@]}" image inspect "$image_id" --format '{{.Id}}/{{.Os}}/{{.Architecture}}')" = "$image_id/linux/amd64" ]]
 }

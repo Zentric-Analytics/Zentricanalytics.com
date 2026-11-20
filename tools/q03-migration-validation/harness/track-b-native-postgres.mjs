@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
-import { mkdir, open, readFile, realpath, symlink, writeFile } from 'node:fs/promises';
+import { createPublicKey, verify } from 'node:crypto';
+import { lstat, mkdir, open, readFile, realpath, symlink, writeFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { B1, assertLedger, digest, fixedSQL, inputPath } from './b1-contract.mjs';
@@ -46,6 +47,30 @@ export function verifyNativeWriteAuthority(approval, binding, now = Date.now()) 
     && approval.provisioningReceipt === binding.provisioningReceipt
     && sha(approval.bindingDigest) && approval.bindingDigest === digest(JSON.stringify(binding)),
   'NATIVE_WRITE_AUTHORITY_REJECTED');
+}
+
+export function nativeAuthorityMessage(approval) {
+  return Buffer.from(JSON.stringify(['zentric-native-track-b-v1', approval.scope, approval.bindingDigest,
+    approval.provisioningReceipt, approval.issuedAt, approval.expiresAt]));
+}
+
+export function verifyNativeSignedAuthority(approval, binding, publicKey, now = Date.now()) {
+  verifyNativeWriteAuthority(approval, binding, now);
+  requireFact(publicKey?.type === 'public' && publicKey.asymmetricKeyType === 'ed25519'
+    && typeof approval.signature === 'string' && /^[a-zA-Z0-9_-]{86}$/.test(approval.signature)
+    && verify(null, nativeAuthorityMessage(approval), publicKey, Buffer.from(approval.signature, 'base64url')),
+  'NATIVE_WRITE_AUTHORITY_SIGNATURE_REJECTED');
+}
+
+export async function loadNativeAuthorityKey(location) {
+  requireFact(location === 'host' || location === 'runner', 'NATIVE_AUTHORITY_LOCATION_REJECTED');
+  const filename = location === 'host'
+    ? '/root/.local/state/zentric-q03-synthetic/track-b-authority.pem'
+    : '/opt/q03/track-b-authority.pem';
+  const info = await lstat(filename);
+  requireFact(info.isFile() && info.uid === 0 && (info.mode & 0o022) === 0 && info.size <= 1024,
+    'NATIVE_AUTHORITY_KEY_UNTRUSTED');
+  return createPublicKey(await readFile(filename));
 }
 
 function verifyBinding(binding) {
@@ -208,7 +233,8 @@ export async function runNativePostgresTrackB(options) {
   requireNativeLiveEntry();
   const { binding, approval, secrets, evidenceDirectory, signal } = options;
   verifyBinding(binding);
-  verifyNativeWriteAuthority(approval, binding);
+  const authorityKey = await loadNativeAuthorityKey('runner');
+  verifyNativeSignedAuthority(approval, binding, authorityKey);
   requireFact(typeof secrets?.target === 'string' && /^[a-f0-9]{64}$/.test(secrets.target)
     && Object.keys(secrets).length === 1,
   'NATIVE_SYNTHETIC_CREDENTIALS_REJECTED');
@@ -238,7 +264,7 @@ export async function runNativePostgresTrackB(options) {
   };
   const stopCheck = () => {
     signal?.throwIfAborted();
-    verifyNativeWriteAuthority(approval, binding);
+    verifyNativeSignedAuthority(approval, binding, authorityKey);
   };
   const sql = async body => {
     stopCheck();
