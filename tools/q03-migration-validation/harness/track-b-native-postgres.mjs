@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { createPublicKey, verify } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import { lstat, mkdir, open, readFile, realpath, symlink, writeFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -13,9 +14,14 @@ import { verifySyntheticSnapshot } from './track-b-offline-runner.mjs';
 
 // Deliberate source-level interlock. No flag, environment variable, fixture
 // receipt or private manifest can enable database operations in this revision.
-const liveEntryEnabled = false;
-export function requireNativeLiveEntry() {
-  requireFact(liveEntryEnabled, 'NATIVE_LIVE_ENTRY_DISABLED');
+const authorityPaths = Object.freeze({
+  host: '/root/.local/state/zentric-q03-synthetic/track-b-authority.pem',
+  runner: '/opt/q03/track-b-authority.pem',
+});
+
+export function requireNativeLiveEntry(location = 'runner') {
+  requireFact(Object.hasOwn(authorityPaths, location) && process.platform === 'linux'
+    && existsSync(authorityPaths[location]), 'NATIVE_LIVE_ENTRY_DISABLED');
 }
 const schemaSource = new URL('./inputs/prisma/schema.prisma', import.meta.url);
 const work = '/work/zentric-native-track-b';
@@ -64,9 +70,7 @@ export function verifyNativeSignedAuthority(approval, binding, publicKey, now = 
 
 export async function loadNativeAuthorityKey(location) {
   requireFact(location === 'host' || location === 'runner', 'NATIVE_AUTHORITY_LOCATION_REJECTED');
-  const filename = location === 'host'
-    ? '/root/.local/state/zentric-q03-synthetic/track-b-authority.pem'
-    : '/opt/q03/track-b-authority.pem';
+  const filename = authorityPaths[location];
   const info = await lstat(filename);
   requireFact(info.isFile() && info.uid === 0 && (info.mode & 0o022) === 0 && info.size <= 1024,
     'NATIVE_AUTHORITY_KEY_UNTRUSTED');

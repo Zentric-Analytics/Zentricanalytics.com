@@ -110,6 +110,50 @@ setup. Keep synthetic credentials under root-only custody. The live write
 interlock stays closed until an operator-signed authority and one-time
 maintenance reservation are verified against the refreshed runner and target.
 
+## Mission 15 one-time authority and reconciliation
+
+The live operator is `harness/track-b-native-operator.mjs` and runs as root
+under WSL. The local authority key is an owner-authenticated Ed25519 **public**
+PEM stored at `/root/.local/state/zentric-q03-synthetic/track-b-authority.pem`.
+Enroll it only after confirming its fingerprint with the owner through a
+trusted channel. Keep its parent directory root-only. The runner receives
+this one file as a read-only mount at `/opt/q03/track-b-authority.pem`. A
+root-owned public key with mode 0444 is readable by the restricted runner UID.
+The owner retains the private key.
+
+Prepare the root-only mode-0600 `track-b-plan.json` in the same WSL state
+directory. It contains `binding`, `context`, `isolation` and `approval`.
+Record the verified engine, cluster ID, container, network, socket and
+evidence volume fingerprints, created runner ID, immutable runner image,
+source fingerprint, existing manifest digest, run ID, server marker and
+artifact hashes in the binding. Use the operation set
+`Q03_NATIVE_TRACK_B_66_PLUS_2_V1` and exact target
+`q03_replacement_track_b`. Include the reviewed isolation evidence digest
+and provisioning receipt digest. The approval scope is
+`Q03_NATIVE_TRACK_B_WRITE`.
+
+Run the operator with `signing-input` to emit the exact bytes to sign. The
+owner reviews the bound plan and validity window, signs those bytes outside
+the controller, and returns a detached Ed25519 signature. Put its unpadded
+base64url representation in `approval.signature`. The controller never
+reads a private signing key. Run `check` to validate the signed plan against
+the actual engine, resource IDs, runner mounts and private evidence volume.
+
+Use `create` only with a valid signed plan. The host creates one global
+`q03_replacement_track_b.creation.jsonl` with exclusive creation and syncs
+its reservation and start records before issuing fixed maintenance SQL.
+Independent catalog and verifier checks must confirm the name, ownership,
+grants, empty target and unchanged baseline. A partial, started or uncertain
+journal consumes the automatic creation attempt. Use `reconcile` for a
+read-only observation of that journal and the database. Do not clear the
+journal, repeat creation, or upgrade uncertain evidence to confirmed.
+
+`run` is available only after the creation journal is confirmed for the
+same signed binding. Keep that journal, the runner's synced stage records,
+fixture snapshots and migration checksums private. If an operation has an
+uncertain outcome, capture its ledger and resource state with read-only
+checks before deciding how to recover.
+
 ## Earlier Track B deployment design
 
 This table records the prior shared-network design. The continuation uses a

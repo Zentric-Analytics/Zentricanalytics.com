@@ -114,7 +114,9 @@ function runner() {
       Tmpfs: { '/tmp': 'rw,nosuid,nodev,size=128m,mode=1777',
         '/work': 'rw,nosuid,nodev,size=512m,uid=65532,gid=65532,mode=0700' } },
     Mounts: [{ Type: 'volume', Name: 'zentric-q03-replacement-evidence', Destination: '/evidence', RW: true },
-      { Type: 'volume', Name: binding.socketSource, Destination: '/socket', RW: false }],
+      { Type: 'volume', Name: binding.socketSource, Destination: '/socket', RW: false },
+      { Type: 'bind', Source: '/root/.local/state/zentric-q03-synthetic/track-b-authority.pem',
+        Destination: '/opt/q03/track-b-authority.pem', RW: false }],
   };
 }
 
@@ -126,6 +128,7 @@ test('runner refuses additional mounts, inherited secrets, wrong namespace or wr
     value => { value.HostConfig.NetworkMode = 'host'; },
     value => { value.Mounts[1].RW = true; },
     value => { value.Mounts[1].Name = 'zentric-q03-replacement-data'; },
+    value => { value.Mounts[2].RW = true; },
     value => { value.Image = 'sha256:' + hash('0'); },
     value => { value.Config.Labels['zentric.q03.resource'] = hash('0'); },
     value => { value.State.Status = 'exited'; },
