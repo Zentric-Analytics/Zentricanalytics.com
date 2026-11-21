@@ -112,7 +112,7 @@ maintenance reservation are verified against the refreshed runner and target.
 
 ## Mission 15 one-time authority and reconciliation
 
-### Mission 16 local synthetic operation
+### Mission 17 local Windows approval
 
 The operator now requires an explicit mode. `signed-owner` continues to require
 an independently verified Ed25519 signature and its original protected key
@@ -127,16 +127,28 @@ preflight passes. It verifies the cold archive, source, manifest, image,
 socket and evidence volume, then prepares the stopped restricted runner and a
 root-only plan. Use `local-synthetic-operator check` for a read-only review.
 
-From an interactive local WSL terminal, as the authorized machine operator,
-run `local-synthetic-operator confirm`. The prompt displays the exact cluster,
-container, target, runner and source, evidence scope and one-time run identity.
-Type the target and the freshly displayed token. The controller checks the
-foreground terminal and rejects piped input, unattended invocations and stale
-answers. A successful confirmation is in-process authority and an audit
-receipt. It does not provide cryptographic owner identity. The runner receives
-only a read-only view of that root-created receipt. After confirmation the same
-process reserves the exact database, runs fixed maintenance creation, verifies
-the result and launches the pinned test sequence.
+On the interactive Windows desktop, double-click
+[`Approve-Zentric-Track-B.cmd`](harness/Approve-Zentric-Track-B.cmd). Review the
+displayed cluster, container, target, runner, migration manifest, evidence scope
+and one-time run ID. Select **Approve** to begin real writes in this synthetic
+environment. **Cancel**, closing the window, desktop lock, controller
+disconnect and timeout all leave the request unapproved. Tab to the Approve
+button and press Space for keyboard confirmation.
+
+The WSL controller starts the fingerprinted WinForms helper with a private
+child-process pipe. A one-time challenge binds the reply to the preflight
+plan. There is no approval endpoint or caller-supplied reply command.
+The helper admits approval input on the active Windows console desktop and
+rejects ordinary injected messages. Windows can classify input from trusted
+UIAccess software as hardware-originated, and locally privileged software can
+change the workstation. This workflow records local operator consent with
+that trust assumption. Signed-owner mode remains available for independent
+cryptographic approval.
+
+The same controller rechecks the environment after consent, reserves the
+database once, runs fixed maintenance creation, verifies the result and
+launches the pinned Track B sequence. The runner receives only the read-only
+root-created consent receipt. The **preview** command cannot produce consent.
 
 There is no standalone local `create` or `run` command. A local receipt and
 creation journal cannot be reused after interruption. Use

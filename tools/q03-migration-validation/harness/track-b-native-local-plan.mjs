@@ -29,7 +29,7 @@ async function prepare(image) {
   requireFact(directory.uid === 0 && (directory.mode & 0o077) === 0 && directory.isDirectory()
     && await realpath(state) === state, 'NATIVE_OPERATOR_PRIVATE_FILE_REJECTED');
   const entries = await readdir(state);
-  requireFact(!entries.includes('track-b-local-plan.json') && !entries.includes('q03_replacement_track_b.creation.jsonl'),
+  requireFact(!entries.includes('track-b-windows-plan.json') && !entries.includes('q03_replacement_track_b.creation.jsonl'),
     'NATIVE_LOCAL_RESERVATION_ALREADY_USED');
   const identity = (await readFile(state + '/identities', 'utf8')).trim().split('\n');
   const clusterId = (await readFile(state + '/cluster-identity', 'utf8')).trim();
@@ -61,8 +61,9 @@ async function prepare(image) {
   const sourceFingerprint = await fingerprintNativeBoundarySource();
   const probe = ['run', '--rm', '--pull=never', '--network=none', '--read-only', '--user=65532:65532',
     '--cap-drop=ALL', '--security-opt=no-new-privileges', '--memory=256m', '--cpus=1', '--pids-limit=32'];
+  const windowsHelper = '/opt/q03/track-b-windows-approval.ps1';
   const paths = ['/opt/node/bin/node', '/opt/project/node_modules/prisma/build/index.js', '/usr/bin/psql',
-    '/opt/engines/schema-engine', '/opt/engines/libquery_engine.so.node'];
+    '/opt/engines/schema-engine', '/opt/engines/libquery_engine.so.node', windowsHelper];
   requireFact(await docker([...probe, '--entrypoint', '/opt/node/bin/node', image, '--input-type=module', '-e',
     "import {fingerprintNativeBoundarySource as f} from '/opt/q03/track-b-native-boundary.mjs'; console.log(await f())"]) === sourceFingerprint,
   'NATIVE_SOURCE_CHANGED');
@@ -90,16 +91,17 @@ async function prepare(image) {
     imageId: observed.image.Id, resourceNonce, volumeFingerprint: nativeVolumeFingerprint(observed.volume, resourceNonce),
     socketSource: socket.Name, socketVolumeFingerprint: nativeVolumeFingerprint(socket, resourceNonce),
     evidenceVolumeFingerprint: nativeVolumeFingerprint(evidence, resourceNonce), runnerImageId: image, artifactHashes,
+    windowsHelperDigest: artifactHashes[windowsHelper],
   };
   validateLocalBinding(binding);
   validateNativeCreationBinding(binding);
-  if (!entries.includes('m16-authority')) await mkdir(localAuthorityDirectory, { mode: 0o755 });
+  if (!entries.includes('m17-authority')) await mkdir(localAuthorityDirectory, { mode: 0o755 });
   const authority = await lstat(localAuthorityDirectory);
   requireFact(authority.isDirectory() && authority.uid === 0 && (authority.mode & 0o022) === 0
     && await realpath(localAuthorityDirectory) === localAuthorityDirectory
     && (await readdir(localAuthorityDirectory)).length === 0, 'NATIVE_LOCAL_RESERVATION_ALREADY_USED');
   const names = (await docker(['ps', '-a', '--format', '{{.Names}}'])).split('\n');
-  const name = 'zentric-q03-m16-runner';
+  const name = 'zentric-q03-m17-runner';
   binding.runnerId = names.includes(name)
     ? await docker(['inspect', '--format', '{{.Id}}', name])
     : await docker(['create', '--name', name, '--pull=never', '--network=none',
@@ -113,7 +115,7 @@ async function prepare(image) {
     '--mount', 'type=bind,source=' + localAuthorityDirectory + ',target=' + runnerAuthorityDirectory + ',readonly', image]);
   const isolation = { ...isolationEvidence, bindingDigest: digest(JSON.stringify(binding)) };
   await verifyNativeTrackBHostResources({ binding, context, isolation });
-  const plan = await open(state + '/track-b-local-plan.json', 'wx', 0o600);
+  const plan = await open(state + '/track-b-windows-plan.json', 'wx', 0o600);
   try { await plan.writeFile(JSON.stringify({ binding, context, isolation })); await plan.sync(); }
   finally { await plan.close(); }
   const root = await open(state, 'r');

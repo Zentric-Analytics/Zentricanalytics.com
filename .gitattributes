@@ -5,6 +5,8 @@ tools/q03-migration-validation/harness/track-b-socket-volume.sh text eol=lf
 tools/q03-migration-validation/harness/track-b-cold-preservation.sh text eol=lf
 tools/q03-migration-validation/harness/track-b-socket-recreate.sh text eol=lf
 tools/q03-migration-validation/harness/track-b-socket-roles.sh text eol=lf
+tools/q03-migration-validation/harness/track-b-windows-approval.ps1 text eol=lf
+tools/q03-migration-validation/harness/Approve-Zentric-Track-B.cmd text eol=crlf
 
 # Preserve the two Q03 queue safety migration checksums on Windows.
 prisma/migrations/20261029000100_email_queue_held_enum/migration.sql text eol=lf

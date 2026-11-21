@@ -1,6 +1,4 @@
-import { lstat, readFile, readlink } from 'node:fs/promises';
-import { release } from 'node:os';
-import { createInterface } from 'node:readline/promises';
+import { lstat, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { createNativeTrackBOnce, inspectNativeTrackBCreation, observeNativeCreationPreflight } from './track-b-native-creation-host.mjs';
 import { launchNativeTrackB, verifyNativeTrackBHost, verifyNativeTrackBHostResources } from './track-b-native-host.mjs';
@@ -8,7 +6,8 @@ import { loadNativeAuthorityKey, nativeAuthorityMessage, requireNativeLiveEntry 
 import { validateNativeCreationBinding } from './track-b-native-reservation.mjs';
 import { digest } from './b1-contract.mjs';
 import { fingerprintNativeBoundarySource, verifyNativeInputs } from './track-b-native-boundary.mjs';
-import { confirmLocalOperator, localAuthorityDirectory, localMode, publishLocalRunnerReceipt, signedMode, validateLocalBinding } from './track-b-native-local-authority.mjs';
+import { confirmWindowsLocalOperator, localAuthorityDirectory, localMode, publishLocalRunnerReceipt, signedMode, validateLocalBinding } from './track-b-native-local-authority.mjs';
+import { askNativeWindowsApproval } from './track-b-native-windows-approval.mjs';
 
 const state = '/root/.local/state/zentric-q03-synthetic';
 
@@ -21,32 +20,6 @@ async function privateFile(name, limit) {
   return readFile(path, 'utf8');
 }
 
-async function localTerminal() {
-  if (!process.stdin.isTTY || !process.stdout.isTTY || !/microsoft-standard-wsl2/i.test(release())
-    || ['SSH_CONNECTION', 'SSH_CLIENT', 'SSH_TTY', 'CI'].some(key => process.env[key])) {
-    throw Error('NATIVE_LOCAL_TERMINAL_REQUIRED');
-  }
-  const device = await readlink('/proc/self/fd/0');
-  if (await readlink('/proc/self/fd/1') !== device) throw Error('NATIVE_LOCAL_TERMINAL_REQUIRED');
-  const info = await readFile('/proc/self/stat', 'utf8');
-  const fields = info.slice(info.lastIndexOf(')') + 2).split(' ');
-  if (fields[4] === '0' || fields[2] !== fields[5]) throw Error('NATIVE_LOCAL_TERMINAL_REQUIRED');
-  for (let pid = process.ppid, depth = 0; pid > 1 && depth < 64; depth++) {
-    const row = await readFile('/proc/' + pid + '/stat', 'utf8');
-    const command = row.slice(row.indexOf('(') + 1, row.lastIndexOf(')'));
-    if (/^(?:sshd|telnetd|mosh-server)/.test(command)) throw Error('NATIVE_LOCAL_TERMINAL_REQUIRED');
-    pid = Number(row.slice(row.lastIndexOf(')') + 2).split(' ')[1]);
-  }
-  return {
-    interactive: true, uid: process.getuid(), device,
-    show: prompt => process.stdout.write(prompt),
-    async read() {
-      const terminal = createInterface({ input: process.stdin, output: process.stdout, terminal: true, historySize: 0 });
-      try { return await terminal.question('Confirmation> ', { signal: AbortSignal.timeout(300_000) }); }
-      finally { terminal.close(); }
-    },
-  };
-}
 
 async function rejectConsumedLocalRun() {
   for (const file of [state + '/q03_replacement_track_b.creation.jsonl', localAuthorityDirectory + '/approval.json']) {
@@ -60,9 +33,8 @@ async function rejectConsumedLocalRun() {
 }
 
 async function localOperation(operation) {
-  if (!['check', 'confirm', 'reconcile'].includes(operation)) throw Error('NATIVE_OPERATOR_SCOPE_REJECTED');
-  const terminal = operation === 'confirm' ? await localTerminal() : null;
-  const { binding, context, isolation } = JSON.parse(await privateFile('track-b-local-plan.json', 24_576));
+  if (!['check', 'preview', 'confirm', 'reconcile'].includes(operation)) throw Error('NATIVE_OPERATOR_SCOPE_REJECTED');
+  const { binding, context, isolation } = JSON.parse(await privateFile('track-b-windows-plan.json', 24_576));
   validateNativeCreationBinding(binding);
   validateLocalBinding(binding);
   if (operation === 'reconcile') {
@@ -78,9 +50,15 @@ async function localOperation(operation) {
   await verifyNativeInputs();
   console.log('NATIVE_LOCAL_RESOURCE_PREFLIGHT_VERIFIED');
   if (operation === 'check') return;
+  if (operation === 'preview') {
+    await askNativeWindowsApproval(binding, { preview: true });
+    console.log('NATIVE_WINDOWS_PREVIEW_CLOSED_NO_APPROVAL');
+    return;
+  }
   const target = (await privateFile('m14-track-b-roles/runner.secret', 80)).trim();
   if (!/^[a-f0-9]{64}$/.test(target)) throw Error('NATIVE_OPERATOR_SECRET_REJECTED');
-  const approval = await confirmLocalOperator(binding, terminal);
+  const approval = await confirmWindowsLocalOperator(binding, askNativeWindowsApproval);
+  await rejectConsumedLocalRun();
   await publishLocalRunnerReceipt(approval, binding);
   await createNativeTrackBOnce({ ...options, approval });
   console.log('NATIVE_TARGET_CREATION_CONFIRMED');

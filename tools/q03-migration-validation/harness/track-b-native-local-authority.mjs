@@ -4,7 +4,7 @@ import { digest } from './b1-contract.mjs';
 
 export const localMode = 'local-synthetic-operator';
 export const signedMode = 'signed-owner';
-export const localAuthorityDirectory = '/root/.local/state/zentric-q03-synthetic/m16-authority';
+export const localAuthorityDirectory = '/root/.local/state/zentric-q03-synthetic/m17-authority';
 export const runnerAuthorityDirectory = '/opt/q03/local-authority';
 const issued = new WeakSet();
 
@@ -42,11 +42,30 @@ export async function confirmLocalOperator(binding, terminal, now = Date.now) {
     || now() - before >= 300_000 || now() < before || digest(JSON.stringify(binding)) !== bindingDigest) {
     throw Error('NATIVE_LOCAL_CONFIRMATION_REJECTED');
   }
-  const issuedAt = now();
+  return issueLocalApproval(binding, bindingDigest, { uid: terminal.uid, terminal: terminal.device }, now());
+}
+
+export async function confirmWindowsLocalOperator(binding, dialog, now = Date.now) {
+  validateLocalBinding(binding);
+  const bindingDigest = digest(JSON.stringify(binding));
+  const before = now();
+  const response = await dialog(binding);
+  const after = now();
+  if (response?.bindingDigest !== bindingDigest || digest(JSON.stringify(binding)) !== bindingDigest
+    || !Number.isInteger(response?.session) || response.session <= 0
+    || !/^[a-f0-9]{64}$/.test(response.nonceDigest ?? '') || after < before || after - before >= 300_000) {
+    throw Error('NATIVE_WINDOWS_APPROVAL_REFUSED');
+  }
+  return issueLocalApproval(binding, bindingDigest, Object.freeze({
+    uid: 0, surface: 'windows-desktop', session: response.session, challenge: response.nonceDigest,
+  }), after);
+}
+
+function issueLocalApproval(binding, bindingDigest, operator, issuedAt) {
   const approval = Object.freeze({
     mode: localMode, scope: 'Q03_NATIVE_TRACK_B_WRITE', issuedAt, expiresAt: issuedAt + 1_800_000,
     bindingDigest, provisioningReceipt: binding.provisioningReceipt, runId: binding.runId,
-    operator: { uid: terminal.uid, terminal: terminal.device },
+    operator,
   });
   issued.add(approval);
   return approval;
