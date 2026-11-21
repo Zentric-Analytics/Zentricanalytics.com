@@ -1,7 +1,9 @@
 @echo off
 setlocal
 set "OPERATOR="
-for /f "usebackq delims=" %%P in (`wsl.exe -d Ubuntu-24.04 -u root -- wslpath -u "%~dp0track-b-native-operator.mjs"`) do set "OPERATOR=%%P"
+set "WINOP=%~dp0track-b-native-operator.mjs"
+set "WINOP=%WINOP:\=/%"
+for /f "usebackq delims=" %%P in (`wsl.exe -d Ubuntu-24.04 -u root -- wslpath -u "%WINOP%"`) do set "OPERATOR=%%P"
 if not defined OPERATOR (
     echo Zentric Analytics could not locate the local WSL controller.
     pause
