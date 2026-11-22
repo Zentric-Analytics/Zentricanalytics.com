@@ -3,16 +3,16 @@ import {queue,processing,held,journal,insert,id,literal} from './fixtures.mjs';
 import {overlapQueries,runOverlap} from './concurrency.mjs';
 import {assertTransition} from './evidence-rules.mjs';
 /** SQL is only passed to an explicitly authorized adapter by future run-q03b. */
-export async function runDatabaseTests(db){
+export async function runDatabaseTests(db,{onPass=()=>{}}={}){
  const results=[];
- async function test(name,fn){await fn();results.push({name,status:'PASS'});}
+ async function test(name,fn){await fn();const result={name,status:'PASS'};results.push(result);await onPass(result);}
  async function rejectSQL(name,sql,code,{referentialRestrict=false}={}){await test(name,async()=>{
   // Nested exception block rolls back the failed operation; outer rollback removes fixtures.
   const statements=sql.split(';').map(s=>s.trim()).filter(Boolean);
   const target=statements.pop();
   // PostgreSQL 18 distinguishes RESTRICT from ordinary foreign-key violations.
   const exception = referentialRestrict
-    ? "WHEN SQLSTATE '23001' OR SQLSTATE '23503' THEN IF SQLSTATE <> CASE WHEN current_setting('server_version_num')::int >= 180000 THEN '23001' ELSE '23503' END THEN RAISE; END IF;"
+    ? "WHEN SQLSTATE '23001' OR SQLSTATE '23503' THEN IF SQLSTATE <> (CASE WHEN current_setting('server_version_num')::int >= 180000 THEN '23001' ELSE '23503' END) THEN RAISE; END IF;"
     : `WHEN SQLSTATE '${code}' THEN NULL;`;
   const statement=`BEGIN; ${statements.join(';')}${statements.length?';':''} DO $q03$ BEGIN BEGIN ${target}; RAISE EXCEPTION USING ERRCODE='ZX001',MESSAGE='Expected rejection did not occur'; EXCEPTION ${exception} END; END $q03$; ROLLBACK;`;
   await db.sql(statement);
@@ -131,7 +131,7 @@ export async function runDatabaseTests(db){
 }
 
 export const RACE_CASES=Object.freeze([['claim',null,'CLAIMED','CLAIMED'],['cancel_reservation','INTENT','HELD','RESERVED'],['reservation_cancel','INTENT','RESERVED','HELD'],['cancel_invocation','RESERVED','RESERVATION_CANCELLED','INVOCATION_BOUNDARY'],['invocation_cancel','RESERVED','INVOCATION_BOUNDARY','RESERVATION_CANCELLED'],['two_reservations','INTENT','RESERVED','RESERVED'],['interrupted_lock',null,'CLAIMED','CLAIMED']].map(Object.freeze));
-export async function runConcurrencyTests(db,nativeIdentity){
+export async function runConcurrencyTests(db,nativeIdentity,{onPass=()=>{}}={}){
  const results=[];
  for(const [name,phase,left,right] of RACE_CASES){
   const row=phase?processing(`overlap_${name}`,phase):queue(`overlap_${name}`);await db.sql(insert('HrEmailOutbox',row));
@@ -150,7 +150,9 @@ export async function runConcurrencyTests(db,nativeIdentity){
   if(name==='interrupted_lock')assert.equal(result.follower,1);else assert.deepEqual([result.leader,result.follower],[1,0]);
   const observed=JSON.parse((await db.sql(`SELECT json_build_object('version',version,'counter',"attemptCount",'events',(SELECT count(*) FROM "HrEmailDispatchEvent" WHERE "outboxId"=o.id),'eventVersion',(SELECT max("transitionVersion") FROM "HrEmailDispatchEvent" WHERE "outboxId"=o.id)) FROM "HrEmailOutbox" o WHERE id=${literal(row.id)};`)).trim());
   assert.deepEqual(observed,{version:1,counter:left==='INVOCATION_BOUNDARY'?1:0,events:1,eventVersion:1});
-  results.push({name,proof:result.proof,status:'PASS',scope:'synchronized synthetic SQL transactions; not production Q04 worker evidence'});
+  const receipt={name,proof:result.proof,leader:result.leader,follower:result.follower,observed,status:'PASS',scope:'synchronized synthetic SQL transactions; not production Q04 worker evidence'};
+  results.push(receipt);
+  await onPass(receipt);
  }
  return results;
 }

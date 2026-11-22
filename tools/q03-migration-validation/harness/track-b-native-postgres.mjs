@@ -219,7 +219,7 @@ function requireLedger(rows, expected) {
     'NATIVE_POSTGRES_LEDGER_INCOMPLETE');
 }
 
-async function verifyGeneratedTransaction(binding, approval, secret, tag, signal) {
+async function verifyGeneratedTransaction(binding, approval, secret, tag, signal, continuation) {
   const original = await readFile(schemaSource, 'utf8');
   requireFact(original === await readFile(work + '/upgrade/schema.prisma', 'utf8'), 'NATIVE_GENERATOR_SOURCE_CHANGED');
   const generatedSchema = original.replace('provider = "prisma-client-js"',
@@ -230,6 +230,19 @@ async function verifyGeneratedTransaction(binding, approval, secret, tag, signal
   const url = connectionUrl(binding, secret, tag);
   const env = { ...childEnvironment, DATABASE_URL: url.href };
   await runChild(node, [prisma, 'generate', '--schema', schema], '', env, { signal, timeoutMs: 45_000 });
+  if (continuation) {
+    process.env.PRISMA_QUERY_ENGINE_LIBRARY = queryEngine;
+    const { Prisma, PrismaClient } = (await import(work + '/generated/index.js')).default;
+    requireFact(Prisma.prismaVersion.client === profile.prisma
+      && Prisma.prismaVersion.engine === '9b628578b3b7cae625e8c927178f15a170e74a9c', 'NATIVE_PRISMA_VERSION_REJECTED');
+    const { verifyPrismaTransaction } = await import('./track-b-native-prisma-check.mjs');
+    const client = new PrismaClient({ datasourceUrl: url.href, log: [] });
+    try {
+      await verifyPrismaTransaction(client, { url: url.href, database: profile.target,
+        role: binding.targetRole, marker: binding.serverMarker, tag });
+    } finally { await client.$disconnect(); }
+    return;
+  }
   await runChild(node, [fileURLToPath(new URL('./track-b-native-prisma-check.mjs', import.meta.url))],
     JSON.stringify({ url: url.href, database: profile.target, role: binding.targetRole, marker: binding.serverMarker, tag, binding, approval }),
     childEnvironment, { signal, timeoutMs: 25_000 });
@@ -368,6 +381,111 @@ export async function runNativePostgresTrackB(options) {
   }
 }
 
+// Fixed continuation for the confirmed Mission 17 target and its exact stop.
+// This path cannot create, migrate, reseed, or consume a creation reservation.
+async function continueMission18({ binding, approval, secrets, signal }) {
+  verifyBinding(binding);
+  requireFact(binding.authorizationMode === 'local-synthetic-operator'
+    && /^[a-f0-9]{64}$/.test(secrets?.target ?? ''), 'NATIVE_CONTINUATION_BINDING_REJECTED');
+  const oldEvidence = '/evidence/' + profile.target;
+  const receipt = JSON.parse(await readFile('/resume/approval.json', 'utf8'));
+  const journal = (await readFile('/resume/creation.jsonl', 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+  requireFact(digest(JSON.stringify(binding)) === approval.bindingDigest
+    && JSON.stringify(receipt.approval) === JSON.stringify(approval) && receipt.runId === binding.runId
+    && journal.length === 3 && journal.every((entry, index) => entry.runId === binding.runId
+      && entry.target === binding.target && entry.state === ['RESERVED','STARTED','CONFIRMED'][index])
+    && journal[0].detail.bindingDigest === approval.bindingDigest
+    && journal[0].detail.approvalDigest === digest(JSON.stringify(approval)), 'NATIVE_CONTINUATION_RECEIPT_REJECTED');
+  const previous = (await readFile(oldEvidence + '.jsonl', 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+  requireFact(previous.at(-1)?.stage === 'verify-behavior' && previous.at(-1)?.event === 'stop-preserve'
+    && previous.some(entry => entry.stage === 'verify-upgrade' && entry.event === 'verified'
+      && entry.proof?.legacyPreserved === true && entry.proof?.catalogVerified === true),
+  'NATIVE_CONTINUATION_STAGE_REJECTED');
+  await verifyArtifactIntegrity(binding);
+  const migrations = await verifyNativeInputs();
+  await mkdir(work, { mode: 0o700 });
+  await symlink(modules, work + '/node_modules', 'dir');
+  await mkdir(work + '/upgrade', { mode: 0o700 });
+  await writeFile(work + '/upgrade/schema.prisma', await readFile(schemaSource), { flag: 'wx', mode: 0o600 });
+  const tag = 'q03b_' + binding.runId.slice(0, 24);
+  const sql = body => runChild(psql, ['-X', '-w', '-qAt', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'],
+    buildNativeSessionGuard(binding, 'target') + body + '\n', {
+      ...childEnvironment, PGHOST: '/socket', PGPORT: '5432', PGDATABASE: profile.target, PGUSER: binding.targetRole,
+      PGPASSWORD: secrets.target, PGCONNECT_TIMEOUT: '5', PGAPPNAME: tag,
+      PGOPTIONS: '-c statement_timeout=20000 -c lock_timeout=12000 -c idle_in_transaction_session_timeout=15000',
+    }, { signal, timeoutMs: 30_000, allowCancellation: true });
+  const preserved = async () => {
+    requireLedger(JSON.parse(await sql(fixedSQL('ledger'))), migrations);
+    const snapshot = JSON.parse(await sql(LEGACY_SNAPSHOT_SQL));
+    verifySyntheticSnapshot(snapshot);
+    const before = await readFile(oldEvidence + '-legacy-before.json');
+    const after = await readFile(oldEvidence + '-legacy-after.json');
+    requireFact(before.equals(after), 'NATIVE_CONTINUATION_SNAPSHOT_MISMATCH');
+    assertHistoricalPreserved(JSON.parse(before), snapshot);
+    return digest(before);
+  };
+  const snapshotDigest = await preserved();
+  let evidencePath = oldEvidence + '.mission18.jsonl';
+  let prismaOnly = false;
+  for (let retry = 1; ; retry++) {
+    let prior;
+    try { prior = await readFile(evidencePath, 'utf8'); }
+    catch (error) { if (error.code === 'ENOENT') break; throw error; }
+    const rows = prior.trim().split('\n').map(line => JSON.parse(line));
+    const stopped = rows.at(-1);
+    if (stopped?.stage === 'prisma' && stopped.event === 'stop-preserve'
+      && rows.some(entry => entry.stage === 'concurrency' && entry.event === 'verified' && entry.proof?.cases === 7)) {
+      prismaOnly = true;
+    } else {
+      requireFact(stopped?.event === 'stop-preserve' && (!prismaOnly
+        ? stopped.stage === 'sql' && !rows.some(entry => entry.stage === 'concurrency')
+        : stopped.stage === 'prisma'), 'NATIVE_CONTINUATION_REPLAY_REJECTED');
+    }
+    evidencePath = oldEvidence + '.mission18-retry-' + retry + '.jsonl';
+  }
+  const counts = await sql(`SELECT (SELECT count(*) FROM "HrEmailOutbox")=${prismaOnly ? 12 : 5}
+    AND (SELECT count(*) FROM "HrEmailDeliveryAttempt")=10
+    AND (SELECT count(*) FROM "HrAuditEvent")=2
+    AND (SELECT count(*) FROM "HrEmailDispatchEvent")=${prismaOnly ? 7 : 0}
+    AND NOT EXISTS (SELECT 1 FROM "HrEmailOutbox" WHERE id LIKE '%native_prisma_transaction')
+    AND NOT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid());`);
+  requireFact(counts === 't', 'NATIVE_CONTINUATION_UNEXPECTED_DATABASE_STATE');
+  const marker = await open(evidencePath, 'wx', 0o600);
+  let stage = 'preflight';
+  const record = async (event, proof) => {
+    await marker.writeFile(JSON.stringify({ stage, event, proof }) + '\n');
+    await marker.sync();
+  };
+  try {
+    await record('verified', { migrations: 68, snapshotDigest, scope: prismaOnly ? 'prisma-only' : 'behavior' });
+    const directory = await open('/evidence', 'r');
+    try { await directory.sync(); } finally { await directory.close(); }
+    if (!prismaOnly) {
+      stage = 'sql';
+      await record('begin');
+      const results = await runDatabaseTests({ sql }, { onPass: item => record('case-pass', item) });
+      await record('verified', { cases: results.length });
+      stage = 'concurrency';
+      await record('begin');
+      await runConcurrencyTests({ sql }, { tag, role: binding.targetRole, database: profile.target },
+        { onPass: item => record('case-pass', item) });
+      await record('verified', { cases: 7 });
+    }
+    stage = 'prisma';
+    await record('begin');
+    await verifyGeneratedTransaction(binding, approval, secrets.target, tag, signal, true);
+    await record('verified', { generatedClient: true, rollback: true, staleFence: true, tenantScope: true });
+    stage = 'final';
+    await record('pass', { snapshotDigest: await preserved() });
+  } catch (error) {
+    const reason = /^NATIVE_[A-Z0-9_]+$/.test(error.message) ? error.message
+      : /^(?:ERR_[A-Z0-9_]+|P[0-9]{4})$/.test(error.code ?? '') ? error.code
+      : /^(?:PrismaClientInitializationError|PrismaClientValidationError|TypeError)$/.test(error.name) ? error.name : 'UNCLASSIFIED';
+    await record('stop-preserve', { reason });
+    throw Error('NATIVE_MISSION18_STOPPED_PRESERVE');
+  } finally { await marker.close(); }
+}
+
 async function main() {
   const controller = new AbortController();
   const interrupt = () => controller.abort();
@@ -382,7 +500,12 @@ async function main() {
     }
     const { binding, approval, secrets } = JSON.parse(input);
     input = '';
-    await runNativePostgresTrackB({ binding, approval, secrets, evidenceDirectory: '/evidence', signal: controller.signal });
+    const options = { binding, approval, secrets, evidenceDirectory: '/evidence', signal: controller.signal };
+    if (process.argv[2] === 'mission18-behavior' && process.argv.length === 3) await continueMission18(options);
+    else {
+      requireFact(process.argv.length === 2, 'NATIVE_OPERATION_REJECTED');
+      await runNativePostgresTrackB(options);
+    }
   } finally {
     process.removeListener('SIGINT', interrupt);
     process.removeListener('SIGTERM', interrupt);

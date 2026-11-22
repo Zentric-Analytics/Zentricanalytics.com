@@ -5,13 +5,13 @@ import { verifyNativeRuntimeApproval } from './track-b-native-postgres.mjs';
 const target = 'q03_replacement_track_b';
 const version = 180006;
 
-function requireFact(condition) {
-  if (!condition) throw Error('NATIVE_PRISMA_VERIFICATION_FAILED');
+function requireFact(condition, reason = 'VERIFICATION_FAILED') {
+  if (!condition) throw Error('NATIVE_PRISMA_' + reason);
 }
 
 export function verifyPrismaConnection(input) {
   requireFact(input?.database === target && input.role === 'q03_replacement_runner'
-    && /^[a-f0-9]{64}$/.test(input.marker) && /^q03b_[a-f0-9]{24}$/.test(input.tag));
+    && /^[a-f0-9]{64}$/.test(input.marker) && /^q03b_[a-f0-9]{24}$/.test(input.tag), 'INPUT_REJECTED');
   const url = new URL(input.url);
   const options = new Map(url.searchParams);
   requireFact(url.protocol === 'postgresql:' && url.hostname === 'localhost' && url.port === '5432'
@@ -19,7 +19,7 @@ export function verifyPrismaConnection(input) {
     && /^[a-f0-9]{64}$/.test(url.password) && [...url.searchParams].length === options.size
     && options.size === 5 && options.get('host') === '/socket' && options.get('application_name') === input.tag
     && options.get('connect_timeout') === '5' && options.get('connection_limit') === '1'
-    && options.get('options') === '-c statement_timeout=120000 -c lock_timeout=10000 -c idle_in_transaction_session_timeout=15000');
+    && options.get('options') === '-c statement_timeout=120000 -c lock_timeout=10000 -c idle_in_transaction_session_timeout=15000', 'URL_REJECTED');
 }
 
 export async function verifyPrismaTransaction(client, input) {
@@ -45,7 +45,7 @@ export async function verifyPrismaTransaction(client, input) {
             AND NOT r.rolsuper AND NOT r.rolcreaterole AND NOT r.rolcreatedb
             AND NOT r.rolreplication AND NOT r.rolbypassrls) AS verified
     `;
-    requireFact(rows.length === 1 && rows[0].verified === true);
+    requireFact(rows.length === 1 && rows[0].verified === true, 'SESSION_IDENTITY_REJECTED');
   };
   const transaction = fn => client.$transaction(async tx => {
     await identity(tx);
@@ -54,14 +54,14 @@ export async function verifyPrismaTransaction(client, input) {
 
   try {
     await transaction(async outbox => {
-      requireFact(await outbox.count({ where: selector }) === 0);
+      requireFact(await outbox.count({ where: selector }) === 0, 'FIXTURE_ALREADY_PRESENT');
       await outbox.create({ data: { ...fixture, payload: JSON.parse(fixture.payload), status: 'PENDING' } });
       const observed = await outbox.findFirst({ where: { ...selector, status: 'PENDING', dispatchPhase: 'NONE' } });
-      requireFact(observed?.version === 0 && observed.recipient === fixture.recipient);
-      const fenced = await outbox.updateMany({ where: { ...selector, version: 1 }, data: { version: 2 } });
+      requireFact(observed?.version === 0n && observed.recipient === fixture.recipient, 'FIXTURE_READ_FAILED');
+      const fenced = await outbox.updateMany({ where: { ...selector, version: 1n }, data: { version: 2n } });
       if (fenced.count > 0) fakeProvider(observed.recipient);
-      requireFact(fenced.count === 0 && fakeProviderCalls === 0);
-      requireFact(await outbox.count({ where: { id: fixture.id, organizationId: id('org_cobalt') } }) === 0);
+      requireFact(fenced.count === 0 && fakeProviderCalls === 0, 'STALE_FENCE_FAILED');
+      requireFact(await outbox.count({ where: { id: fixture.id, organizationId: id('org_cobalt') } }) === 0, 'TENANT_FENCE_FAILED');
       throw intentionalRollback;
     });
     throw Error('NATIVE_PRISMA_ROLLBACK_NOT_OBSERVED');
@@ -69,7 +69,7 @@ export async function verifyPrismaTransaction(client, input) {
     if (error !== intentionalRollback) throw error;
   }
   await transaction(async outbox => {
-    requireFact(await outbox.count({ where: selector }) === 0 && fakeProviderCalls === 0);
+    requireFact(await outbox.count({ where: selector }) === 0 && fakeProviderCalls === 0, 'ROLLBACK_STATE_FAILED');
   });
 }
 

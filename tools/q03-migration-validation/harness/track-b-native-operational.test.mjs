@@ -188,7 +188,7 @@ test('generated Prisma client configuration rejects alternate hosts, schemas, ro
   for (const url of [input.url.replace('localhost', 'db.example.invalid'), input.url.replace('%2Fsocket', '%2Fwrong'),
     input.url + '&schema=other', input.url + '&application_name=other',
     input.url.replace(binding.targetRole, binding.controlRole), input.url.replace(binding.target, 'postgres')]) {
-    assert.throws(() => verifyPrismaConnection({ ...input, url }), /PRISMA_VERIFICATION_FAILED/);
+    assert.throws(() => verifyPrismaConnection({ ...input, url }), /PRISMA_URL_REJECTED/);
   }
 });
 
@@ -202,14 +202,14 @@ test('generated query sequence proves rollback and fails before writes on the wr
         $queryRaw: () => [{ verified }],
         hrEmailOutbox: {
           async count({ where }) { return pending?.organizationId === where.organizationId && pending.id === where.id ? 1 : 0; },
-          async create({ data }) { writes++; pending = data; },
+          async create({ data }) { writes++; pending = { ...data, version: BigInt(data.version) }; },
           async findFirst({ where }) { return pending?.id === where.id ? pending : null; },
           async updateMany({ where }) { return { count: pending?.version === where.version ? 1 : 0 }; },
         },
       });
     },
   });
-  await assert.rejects(verifyPrismaTransaction(model(false), prismaInput()), /PRISMA_VERIFICATION_FAILED/);
+  await assert.rejects(verifyPrismaTransaction(model(false), prismaInput()), /PRISMA_SESSION_IDENTITY_REJECTED/);
   assert.equal(writes, 0);
   await verifyPrismaTransaction(model(true), prismaInput());
   assert.equal(writes, 1);
