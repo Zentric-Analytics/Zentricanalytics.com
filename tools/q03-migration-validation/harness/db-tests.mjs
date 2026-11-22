@@ -6,11 +6,15 @@ import {assertTransition} from './evidence-rules.mjs';
 export async function runDatabaseTests(db){
  const results=[];
  async function test(name,fn){await fn();results.push({name,status:'PASS'});}
- async function rejectSQL(name,sql,code){await test(name,async()=>{
+ async function rejectSQL(name,sql,code,{referentialRestrict=false}={}){await test(name,async()=>{
   // Nested exception block rolls back the failed operation; outer rollback removes fixtures.
   const statements=sql.split(';').map(s=>s.trim()).filter(Boolean);
   const target=statements.pop();
-  const statement=`BEGIN; ${statements.join(';')}${statements.length?';':''} DO $q03$ BEGIN BEGIN ${target}; RAISE EXCEPTION USING ERRCODE='ZX001',MESSAGE='Expected rejection did not occur'; EXCEPTION WHEN SQLSTATE '${code}' THEN NULL; END; END $q03$; ROLLBACK;`;
+  // PostgreSQL 18 distinguishes RESTRICT from ordinary foreign-key violations.
+  const exception = referentialRestrict
+    ? "WHEN SQLSTATE '23001' OR SQLSTATE '23503' THEN IF SQLSTATE <> CASE WHEN current_setting('server_version_num')::int >= 180000 THEN '23001' ELSE '23503' END THEN RAISE; END IF;"
+    : `WHEN SQLSTATE '${code}' THEN NULL;`;
+  const statement=`BEGIN; ${statements.join(';')}${statements.length?';':''} DO $q03$ BEGIN BEGIN ${target}; RAISE EXCEPTION USING ERRCODE='ZX001',MESSAGE='Expected rejection did not occur'; EXCEPTION ${exception} END; END $q03$; ROLLBACK;`;
   await db.sql(statement);
  });}
  async function transaction(sql){return db.sql(`BEGIN; ${sql} ROLLBACK;`);}
@@ -93,12 +97,12 @@ export async function runDatabaseTests(db){
  await rejectSQL('same-cycle duplicate boundary rejected',insert('HrEmailOutbox',reservation)
   +insert('HrEmailDispatchEvent',journal('boundary_a',reservation,'RESERVED'))
   +insert('HrEmailDispatchEvent',journal('boundary_b',reservation,'RESERVED',{transitionVersion:2})),'23505');
- await rejectSQL('restrictive journal parent deletion',insert('HrEmailOutbox',jrow)+insert('HrEmailDispatchEvent',event)+`DELETE FROM "HrEmailOutbox" WHERE id=${literal(jrow.id)};`,'23503');
+ await rejectSQL('restrictive journal parent deletion',insert('HrEmailOutbox',jrow)+insert('HrEmailDispatchEvent',event)+`DELETE FROM "HrEmailOutbox" WHERE id=${literal(jrow.id)};`,'23503',{referentialRestrict:true});
  await rejectSQL('global dispatch ID uniqueness across messages',insert('HrEmailOutbox',reservation)+insert('HrEmailOutbox',processing('other_dispatch','INTENT',{dispatchId:reservation.dispatchId})),'23505');
  for(const [table,key] of [['HrAccountInvitation','invitationId'],['HrPasswordResetChallenge','resetChallengeId']]){
   const ref=id(key==='invitationId'?'invite_aurora_valid':'reset_aurora_valid');
   const row=queue(`restrict_${key}`,{template:key==='invitationId'?'hr-account-invitation':'hr-password-reset',[key]:ref,messageExpiresAt:'2099-01-01'});
-  await rejectSQL(`referenced ${table} cannot be deleted`,insert('HrEmailOutbox',row)+`DELETE FROM "${table}" WHERE id=${literal(ref)};`,'23503');
+  await rejectSQL(`referenced ${table} cannot be deleted`,insert('HrEmailOutbox',row)+`DELETE FROM "${table}" WHERE id=${literal(ref)};`,'23503',{referentialRestrict:true});
  }
  for(const phase of ['INTENT','RESERVED','ATTEMPTED'])await test(`actual uncertain recovery transition ${phase}`,async()=>{
   const row=processing(`recover_${phase}`,phase);const sql=insert('HrEmailOutbox',row)
