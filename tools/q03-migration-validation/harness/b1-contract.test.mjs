@@ -3,7 +3,7 @@ import {test} from 'node:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {B1,digest,requireB1Arguments,inputPath,reviewedInputs,authorization,rejectOverrides,credential,sanitize,identity,assertLedger,fixedSQL} from './b1-contract.mjs';
+import {B1,requireB1Arguments,inputPath,reviewedInputs,authorization,rejectOverrides,credential,sanitize,identity,assertLedger,fixedSQL} from './b1-contract.mjs';
 import {assertTarget,assertRunner,verifyHostInputs,superviseB1} from './b1-controller.mjs';
 const HERE=path.dirname(fileURLToPath(import.meta.url)),nonce='a'.repeat(24),cid='b'.repeat(64);
 function auth(){return {unit:B1.unit,run:B1.run,scope:'TRACK_A_ONLY',database:B1.database,image:B1.image,container:B1.container,sourceHashes:['b1-contract.mjs','b1-runner.mjs','b1-controller.mjs','config.mjs','evidence-rules.mjs'].map(file=>({file,sha256:'a'.repeat(64)})),gate1SHA256:'a'.repeat(64),expiresAt:new Date(Date.now()+300000).toISOString(),nonce};}

@@ -5,10 +5,10 @@ import {runnerSpec,assertRunnerIdentity,superviseRunner} from './runner-controll
 import {encodeDisposableCredential,connectivityProof,connectivityPlan} from './connectivity-proof.mjs';
 const cid='a'.repeat(64),other='b'.repeat(64),image='sha256:'+'c'.repeat(64),spec=runnerSpec('versions',image);
 function record(){return {Id:cid,Image:image,Config:{Labels:{'zentric.q03.run':RUN,'zentric.q03.unit':'Q03-A7'},User:'65532:65532',Entrypoint:['/opt/node/bin/node','/opt/harness/runner-entrypoint.mjs'],Cmd:['versions']},HostConfig:{NetworkMode:'none',PidMode:'',ReadonlyRootfs:true,Privileged:false,Init:true,RestartPolicy:{Name:'no'},CapDrop:['ALL'],SecurityOpt:['no-new-privileges'],PortBindings:{},Tmpfs:{'/tmp':'rw','/work':'rw','/var/lib/postgresql':'rw'}},Mounts:[],State:{Running:false,Pid:0}};}
-function fixture(fault){const calls=[];let r=record(),started=false;const driver={
+function fixture(fault){const calls=[];let r=record();const driver={
  create:async s=>{calls.push(['create',s.network]);if(fault==='create')throw Error('CREATE');return fault==='missingId'?'':cid;},
  inspect:async id=>{calls.push(['inspect',id]);if(fault==='substitution')return {...r,Id:other};return structuredClone(r);},
- start:async id=>{calls.push(['start',id]);started=true;r.State={Running:true,Pid:123};if(fault==='start')throw Error('START');},
+ start:async id=>{calls.push(['start',id]);r.State={Running:true,Pid:123};if(fault==='start')throw Error('START');},
  wait:async id=>{calls.push(['wait',id]);if(!r.State.Running)return 0;if(fault==='timeout')return new Promise(()=>{});if(fault==='application')throw Error('APP');r.State={Running:false,Pid:0};return fault==='nonzero'?7:0;},
  stop:async id=>{calls.push(['stop',id]);if(fault==='cleanup')throw Error('STOP');r.State={Running:false,Pid:0};if(fault==='orphan')r.survivingChildren=[456];},
  kill:async id=>{calls.push(['kill',id]);if(fault==='cleanup')throw Error('KILL');r.State={Running:false,Pid:0};},

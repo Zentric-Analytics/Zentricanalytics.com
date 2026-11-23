@@ -6,7 +6,7 @@ import net from 'node:net';
 import childProcess from 'node:child_process';
 import {ROOT,RUN,PREFIX,DATABASES,executionGate,assertDatabase,verifyInputs,assertIdentity,sanitize,TEST_SCOPE} from './config.mjs';
 import {offlinePlan,main} from './run-q03b.mjs';
-import {baseFixturesSQL,legacyFixturesSQL,processing,held,journal,insert,id,COVERAGE} from './fixtures.mjs';
+import {baseFixturesSQL,legacyFixturesSQL,processing,held,journal,insert,COVERAGE} from './fixtures.mjs';
 test('all 72 source snapshots match hashes',()=>assert.equal(verifyInputs(),72));
 test('default mode never authorizes execution',()=>assert.equal(offlinePlan().executionAuthorizedByThisUnit,false));
 for(const args of [[],['--execute'],['--execute','--authorize-run','other'],['--execute','--authorize-run',RUN,'extra']])test(`reject unsafe execution arguments ${args.length}`,()=>assert.throws(()=>executionGate(args),/AUTHORIZATION_REQUIRED/));
