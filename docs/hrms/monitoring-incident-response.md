@@ -4,7 +4,7 @@
 
 - `GET /api/health/live`: process liveness.
 - `GET /api/health/ready`: database-backed readiness; returns 503 on failure.
-- `GET /api/internal/hr/metrics`: bearer-protected operational counters for outbox backlog/failures, failed logins, overdue lifecycle/workflow work and pending document scans.
+- `GET /api/internal/hr/metrics`: bearer-protected operational counters for outbox backlog, failures, and messages held for review, plus failed logins, overdue lifecycle/workflow work and pending document scans.
 
 Recommended alerts:
 
