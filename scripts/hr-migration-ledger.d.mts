@@ -10,4 +10,5 @@ export function assertReleaseMigrationLedger(source: Migration[], ledger: Ledger
 export function verifyReleaseMigrationLedger(
   prisma: { $transaction(action: (tx: LedgerTransaction) => Promise<void>): Promise<void> },
   source: Migration[],
+  environment?: string,
 ): Promise<void>;

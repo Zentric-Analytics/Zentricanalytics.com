@@ -55,3 +55,27 @@ it("checks the database in a read-only transaction and distinguishes a clean fir
   await expect(verifyReleaseMigrationLedger(database(true, true, true), source)).rejects.toThrow("no completed migrations");
   await expect(verifyReleaseMigrationLedger(database(false, true, false), source)).rejects.toThrow("expected public schema");
 });
+
+it("requires the reviewed staging catalog and checks every other ledger entry", async () => {
+  const backfill = { name: "20260730120000_hrms_organization_default_backfill", checksum: "b".repeat(64) };
+  const candidate = [organization, backfill, queue];
+  const original = { ...completed, checksum: historicalChecksum };
+  const appliedBackfill = { ...backfill, finished: true, rolledBack: false };
+  const fingerprint = "03af544db91a3af2cb37f24ab48d0401dfc853128666a8d0ea474b08d2036f94";
+
+  function staging(ledger = [original, appliedBackfill], verifiedShape = true) {
+    const client = database(true, true, true);
+    client.$queryRaw.mockReset()
+      .mockResolvedValueOnce([{ publicSchema: true, hasLedger: true, hasObjects: true }])
+      .mockResolvedValueOnce(ledger)
+      .mockResolvedValueOnce([{ fingerprint: verifiedShape ? fingerprint : "different" }]);
+    return client;
+  }
+
+  await expect(verifyReleaseMigrationLedger(staging(), candidate, "staging")).resolves.toBeUndefined();
+  await expect(verifyReleaseMigrationLedger(staging(), candidate, "production")).rejects.toThrow("checksum differs");
+  await expect(verifyReleaseMigrationLedger(staging([original]), candidate, "staging")).rejects.toThrow("checksum differs");
+  await expect(verifyReleaseMigrationLedger(staging(undefined, false), candidate, "staging")).rejects.toThrow("checksum differs");
+  await expect(verifyReleaseMigrationLedger(staging([original, { ...appliedBackfill, checksum: "changed" }]), candidate, "staging"))
+    .rejects.toThrow(backfill.name);
+});

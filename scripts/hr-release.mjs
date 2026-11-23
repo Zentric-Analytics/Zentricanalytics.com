@@ -14,8 +14,8 @@ report(`HRMS release target environment: ${configuration.appEnv}. Secrets and da
 
 const ledgerClient = new PrismaClient();
 try {
-  await verifyReleaseMigrationLedger(ledgerClient, await readReleaseMigrations());
-  report("PASS release migration ledger matches the applied candidate prefix.");
+  await verifyReleaseMigrationLedger(ledgerClient, await readReleaseMigrations(), configuration.appEnv);
+  report("PASS release migration ledger is compatible with the candidate.");
 } catch (error) {
   const message = error instanceof Error && /^Release [\w .]+$/.test(error.message)
     ? error.message : "Read-only release migration ledger verification failed.";
