@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { PrismaClient } from "@prisma/client";
 import { reconcileHrRolePermissions, runHrBootstrap } from "./hr-bootstrap-lib.mjs";
 import { hrEnvironmentChecks, runHrPreflight } from "./hr-preflight-lib.mjs";
+import { readReleaseMigrations, verifyReleaseMigrationLedger } from "./hr-migration-ledger.mjs";
 
 const report = (message) => console.info(message);
 const configuration = hrEnvironmentChecks(process.env);
@@ -10,6 +11,20 @@ if (configuration.issues.length) {
   process.exit(1);
 }
 report(`HRMS release target environment: ${configuration.appEnv}. Secrets and database location are hidden.`);
+
+const ledgerClient = new PrismaClient();
+try {
+  await verifyReleaseMigrationLedger(ledgerClient, await readReleaseMigrations());
+  report("PASS release migration ledger matches the applied candidate prefix.");
+} catch (error) {
+  const message = error instanceof Error && /^Release [\w .]+$/.test(error.message)
+    ? error.message : "Read-only release migration ledger verification failed.";
+  console.error(`BLOCKED ${message}`);
+  process.exitCode = 1;
+} finally {
+  await ledgerClient.$disconnect();
+}
+if (process.exitCode) process.exit(process.exitCode);
 
 const executable = process.platform === "win32" ? "yarn.cmd" : "yarn";
 const migration = spawnSync(executable, ["prisma", "migrate", "deploy"], { stdio: "inherit", shell: false });

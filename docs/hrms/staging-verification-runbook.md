@@ -52,3 +52,107 @@ Stop workers and user traffic first. Roll back application code to the prior app
 | Privileged and multi-role integration | PASS locally with fictional persistence for administrator MFA, provisioning-draft creation and audit, employee self-service and denials, tenant filtering, payroll visibility, logout, and reset. Actual staging writes and the privileged approval workflow were NOT RUN. | Schedule the existing fictional-data staging matrix under separate write approval. Gate payroll publication and external providers independently. |
 
 Proceed in order. Bind the proposed commit and the current web, cron, and database targets. Close the ingress, migration parity, secrets, recovery and webhook gaps before any release. The three organization import and revision tables exist in staging. Their presence alone leaves application constraints and the historical backfill unverified. Verify restore evidence and a compatible rollback artifact before authorizing the migration-bearing `hr:release` hook. Keep worker and provider activation outside the smoke test unless specifically approved. Stop on target or commit mismatch, failed health or database checks, migration uncertainty, missing recovery evidence, or an unexpected provider invocation. Record the artifact, operator, timestamps, probe status, synthetic role results and redacted alert receipt before requesting promotion.
+
+## Mission 22 staged change packages
+
+### A. Restrict PostgreSQL external ingress
+
+The web service, cron, and database are in the same Oregon Render environment
+(`evm-d8s6nt1o3t8c73eqksu0`). Four other database client sessions in the sampled
+snapshot used private-range addresses and the same login as the read-only
+inspection. This sample establishes neither service attribution nor the
+absence of intermittent maintenance clients. The cron sends an authenticated
+request to the web worker endpoint rather than directly connecting to PostgreSQL
+in its configured command. Confirm its target without disclosing its bearer value.
+
+Before changing ingress, verify the web, release hook, and recovery operator
+targets and roles using redacted connection facts, identify intermittent
+maintenance or backup users, and confirm database readiness through the internal
+path. With separate owner approval, remove `0.0.0.0/0` from
+`dpg-d8s9itj6sc1c73c6vsl0-a`. Use an empty external allowlist if no external
+client is required. Otherwise admit only the independently verified CIDRs
+and note their owners, purpose, and expiry. Verify allowed maintenance and
+internal readiness plus denied external access from a controlled test client.
+Observe scheduled-worker health through metadata and redacted logs without
+triggering delivery. Stop on a dependency failure and restore access to the
+verified affected client. Reinstating broader ingress requires explicit approval.
+[Render external access](https://render.com/docs/postgresql-creating-connecting#restricting-external-access)
+
+### B. Reconcile schema and migrate forward
+
+The staging checksum matches the original organization migration at
+`b8aea93b3ddc32acdb65fdcfcae578129ee7cb3f`. The deployed and candidate files
+contain the same later substantive revision, adding 77 lines of organization
+import/revision DDL and compatibility backfills. Staging has the three tables,
+with 13/8/10 columns and 2/3/3 indexes respectively. Table presence leaves
+constraint and backfill equivalence unproven. Staging lacks the HELD enum
+value and the dispatch journal. Its outbox has 16 columns, five indexes and no
+enabled custom triggers, while the delivery attempt table retains an enabled
+custom trigger.
+
+The release command now checks the exact candidate migration bytes against
+the applied prefix before invoking Prisma. It rejected the observed staging
+ledger and accepted a synthetic matching prefix with two pending migrations.
+Track B validated the queue upgrade on the reviewed local baseline. To resolve
+staging, first compare the catalog and aggregate organization backfill invariants
+on a separately approved isolated restore. Record the provenance of the later
+objects and prepare any required additive DDL or idempotent backfill with
+checks for uniqueness, references, populated legacy fields, and lock duration.
+Authorize and validate a migration-history reconciliation plan separately. Keep
+the 68 historical files intact, preserve the four superseded attempts, and
+avoid replay or ledger edits as a shortcut. Once parity is independently
+resolved, apply the HELD enum migration first and let it commit before the
+queue-contract migration adds fields, checks, triggers and the journal.
+Keep old and new workers quiesced for the migration window under separate
+approval. On failure, stop execution and preserve state. Application rollback
+does not reverse schema or recover data.
+
+### C. Protect operations and prove recovery
+
+The inspection transaction was read-only. Its login can create databases and
+roles, create in `public`, and owns 280 public tables. No direct memberships
+were observed. PUBLIC has CONNECT in the inspected database, has no CREATE in
+the public schema and has no observed table grants there. The web runtime,
+release runner, and maintenance role bindings remain unverified. Confirm each
+binding and its required grants before proposing changes. Move recurring
+inspection to a dedicated role with only needed metadata access and no
+ownership or create privileges. Separate migration ownership from runtime
+privileges, and rehearse grant changes against the isolated copy before
+authorizing a shared change.
+
+Confirm available PITR timestamps, the authorized staging recovery point,
+encrypted independent retention, recovery owner and acceptable RPO/RTO.
+Render recovery creates a new instance and copies the source allowlist, so
+resolve ingress first. Approve a staging-only restore with private access,
+no web or worker binding, and restricted evidence retention. Validate the
+restored catalog and ledger, run the guarded application checks, and record
+measured recovery and data-loss windows. Keep the original instance in place.
+[Render recovery](https://render.com/docs/postgresql-backups)
+
+Verify secret presence and purpose without extracting values. Confirm the
+approved provider and recipient policy, log redaction and retention, and a named
+alert route. Review `/api/health/ready` as the Render HTTP check once health
+behavior is verified and the path change is separately approved. Use
+`/api/health/live` for process liveness and protected metrics for queue health.
+Validate delivery and acknowledgement with a separately approved synthetic
+alert.
+
+### D. Control source publication and staging release
+
+Bind the reviewed candidate SHA, compare it against the freshly verified
+`dev` and `main` tips, and establish GitHub rules, required checks, hooks and
+app-trigger behavior before publication. Render's observed `dev` web and cron
+automatic deploy settings are off. That leaves GitHub and production triggers
+unverified. Publication, integration into `dev`, the migration-bearing deploy,
+cron changes and provider activation each require their own authorization.
+
+For the approved release window, record the previous live web and cron
+artifacts, verify backup and isolated-restore evidence, quiesce dispatch,
+recheck the staging ledger and ingress, and deploy only the exact approved
+candidate. Validate health, restricted role behavior, the new ledger,
+immutable attempts, journal and audit, and a fictional multi-role smoke run.
+Resume scheduled dispatch only after separately approved recipient/provider
+checks. Stop on unexpected schema or role drift, failed readiness, unresolved
+writes, protection loss, or unapproved provider activity. Use the previous web
+artifact only after proving its schema compatibility. Route data recovery
+through the isolated restore procedure.
