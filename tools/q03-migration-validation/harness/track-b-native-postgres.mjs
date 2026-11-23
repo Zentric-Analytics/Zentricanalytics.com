@@ -219,7 +219,7 @@ function requireLedger(rows, expected) {
     'NATIVE_POSTGRES_LEDGER_INCOMPLETE');
 }
 
-async function verifyGeneratedTransaction(binding, approval, secret, tag, signal, continuation) {
+async function verifyGeneratedTransaction(binding, approval, secret, tag, signal, continuation, recordDispatch) {
   const original = await readFile(schemaSource, 'utf8');
   requireFact(original === await readFile(work + '/upgrade/schema.prisma', 'utf8'), 'NATIVE_GENERATOR_SOURCE_CHANGED');
   const generatedSchema = original.replace('provider = "prisma-client-js"',
@@ -235,11 +235,17 @@ async function verifyGeneratedTransaction(binding, approval, secret, tag, signal
     const { Prisma, PrismaClient } = (await import(work + '/generated/index.js')).default;
     requireFact(Prisma.prismaVersion.client === profile.prisma
       && Prisma.prismaVersion.engine === '9b628578b3b7cae625e8c927178f15a170e74a9c', 'NATIVE_PRISMA_VERSION_REJECTED');
-    const { verifyPrismaTransaction } = await import('./track-b-native-prisma-check.mjs');
+    const { verifyPrismaSession, verifyPrismaTransaction } = await import('./track-b-native-prisma-check.mjs');
     const client = new PrismaClient({ datasourceUrl: url.href, log: [] });
     try {
-      await verifyPrismaTransaction(client, { url: url.href, database: profile.target,
-        role: binding.targetRole, marker: binding.serverMarker, tag });
+      const input = { url: url.href, database: profile.target, role: binding.targetRole, marker: binding.serverMarker, tag };
+      if (recordDispatch) {
+        const { verifyDispatchContracts } = await import('./track-b-prisma-dispatch-check.mjs');
+        const { createQueueDispatcher } = await import('/resume/dispatch-engine.mjs');
+        await verifyDispatchContracts(client, createQueueDispatcher, tx => verifyPrismaSession(tx, input), recordDispatch);
+      } else {
+        await verifyPrismaTransaction(client, input);
+      }
     } finally { await client.$disconnect(); }
     return;
   }
@@ -383,7 +389,7 @@ export async function runNativePostgresTrackB(options) {
 
 // Fixed continuation for the confirmed Mission 17 target and its exact stop.
 // This path cannot create, migrate, reseed, or consume a creation reservation.
-async function continueMission18({ binding, approval, secrets, signal }) {
+async function continueRetainedTrackB({ binding, approval, secrets, signal }, dispatchOnly) {
   verifyBinding(binding);
   requireFact(binding.authorizationMode === 'local-synthetic-operator'
     && /^[a-f0-9]{64}$/.test(secrets?.target ?? ''), 'NATIVE_CONTINUATION_BINDING_REJECTED');
@@ -433,6 +439,21 @@ async function continueMission18({ binding, approval, secrets, signal }) {
     catch (error) { if (error.code === 'ENOENT') break; throw error; }
     const rows = prior.trim().split('\n').map(line => JSON.parse(line));
     const stopped = rows.at(-1);
+    if (dispatchOnly && prismaOnly && stopped?.stage === 'final' && stopped.event === 'pass'
+      && stopped.proof?.snapshotDigest === snapshotDigest
+      && rows.some(entry => entry.stage === 'prisma' && entry.event === 'verified' && entry.proof?.generatedClient)) {
+      evidencePath = oldEvidence + '.mission19.jsonl';
+      for (let attempt = 1; attempt <= 3; attempt++) try {
+        const priorDispatch = (await readFile(evidencePath, 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+        requireFact(priorDispatch.at(-1)?.stage === 'prisma' && priorDispatch.at(-1)?.event === 'stop-preserve',
+          'NATIVE_M19_REPLAY_REJECTED');
+        evidencePath = oldEvidence + '.mission19-retry-' + attempt + '.jsonl';
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        break;
+      }
+      break;
+    }
     if (stopped?.stage === 'prisma' && stopped.event === 'stop-preserve'
       && rows.some(entry => entry.stage === 'concurrency' && entry.event === 'verified' && entry.proof?.cases === 7)) {
       prismaOnly = true;
@@ -443,6 +464,7 @@ async function continueMission18({ binding, approval, secrets, signal }) {
     }
     evidencePath = oldEvidence + '.mission18-retry-' + retry + '.jsonl';
   }
+  requireFact(!dispatchOnly || /\.mission19(?:-retry-[1-3])?\.jsonl$/.test(evidencePath), 'NATIVE_M19_CHECKPOINT_REJECTED');
   const counts = await sql(`SELECT (SELECT count(*) FROM "HrEmailOutbox")=${prismaOnly ? 12 : 5}
     AND (SELECT count(*) FROM "HrEmailDeliveryAttempt")=10
     AND (SELECT count(*) FROM "HrAuditEvent")=2
@@ -473,15 +495,16 @@ async function continueMission18({ binding, approval, secrets, signal }) {
     }
     stage = 'prisma';
     await record('begin');
-    await verifyGeneratedTransaction(binding, approval, secrets.target, tag, signal, true);
+    await verifyGeneratedTransaction(binding, approval, secrets.target, tag, signal, true, dispatchOnly ? proof => record('dispatch-contracts', proof) : undefined);
     await record('verified', { generatedClient: true, rollback: true, staleFence: true, tenantScope: true });
     stage = 'final';
-    await record('pass', { snapshotDigest: await preserved() });
+    await record(dispatchOnly ? 'verified-with-blocker' : 'pass', { snapshotDigest: await preserved() });
   } catch (error) {
     const reason = /^NATIVE_[A-Z0-9_]+$/.test(error.message) ? error.message
       : /^(?:ERR_[A-Z0-9_]+|P[0-9]{4})$/.test(error.code ?? '') ? error.code
       : /^(?:PrismaClientInitializationError|PrismaClientValidationError|TypeError)$/.test(error.name) ? error.name : 'UNCLASSIFIED';
-    await record('stop-preserve', { reason });
+    const checkLine = /track-b-prisma-dispatch-check\.mjs:(\d+):\d+/.exec(error.stack ?? '')?.[1];
+    await record('stop-preserve', { reason, checkLine });
     throw Error('NATIVE_MISSION18_STOPPED_PRESERVE');
   } finally { await marker.close(); }
 }
@@ -501,7 +524,8 @@ async function main() {
     const { binding, approval, secrets } = JSON.parse(input);
     input = '';
     const options = { binding, approval, secrets, evidenceDirectory: '/evidence', signal: controller.signal };
-    if (process.argv[2] === 'mission18-behavior' && process.argv.length === 3) await continueMission18(options);
+    if (process.argv[2] === 'mission18-behavior' && process.argv.length === 3) await continueRetainedTrackB(options, false);
+    else if (process.argv[2] === 'mission19-prisma' && process.argv.length === 3) await continueRetainedTrackB(options, true);
     else {
       requireFact(process.argv.length === 2, 'NATIVE_OPERATION_REJECTED');
       await runNativePostgresTrackB(options);

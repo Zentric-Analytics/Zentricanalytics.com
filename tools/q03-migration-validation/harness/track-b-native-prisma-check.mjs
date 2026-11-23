@@ -22,6 +22,22 @@ export function verifyPrismaConnection(input) {
     && options.get('options') === '-c statement_timeout=120000 -c lock_timeout=10000 -c idle_in_transaction_session_timeout=15000', 'URL_REJECTED');
 }
 
+export async function verifyPrismaSession(tx, input) {
+  const rows = await tx.$queryRaw`
+    SELECT current_database() = ${target} AND current_user::text = ${input.role}
+      AND current_user = session_user AND inet_server_addr() IS NULL AND inet_client_addr() IS NULL
+      AND current_setting('server_version_num')::int = ${version}
+      AND current_setting('application_name') = ${input.tag}
+      AND current_setting('zentric.q03_replacement_marker',true) = ${input.marker}
+      AND EXISTS (SELECT 1 FROM pg_database d JOIN pg_roles r ON r.rolname=current_user
+        WHERE d.datname=current_database() AND pg_get_userbyid(d.datdba)='q03_replacement_owner'
+          AND pg_has_role(current_user,d.datdba,'USAGE')
+          AND NOT r.rolsuper AND NOT r.rolcreaterole AND NOT r.rolcreatedb
+          AND NOT r.rolreplication AND NOT r.rolbypassrls) AS verified
+  `;
+  requireFact(rows.length === 1 && rows[0].verified === true, 'SESSION_IDENTITY_REJECTED');
+}
+
 export async function verifyPrismaTransaction(client, input) {
   verifyPrismaConnection(input);
   const fixture = queue('native_prisma_transaction');
@@ -32,23 +48,8 @@ export async function verifyPrismaTransaction(client, input) {
     requireFact(recipient.endsWith('@example.invalid'));
     fakeProviderCalls++;
   };
-  const identity = async tx => {
-    const rows = await tx.$queryRaw`
-      SELECT current_database() = ${target} AND current_user::text = ${input.role}
-        AND current_user = session_user AND inet_server_addr() IS NULL AND inet_client_addr() IS NULL
-        AND current_setting('server_version_num')::int = ${version}
-        AND current_setting('application_name') = ${input.tag}
-        AND current_setting('zentric.q03_replacement_marker',true) = ${input.marker}
-        AND EXISTS (SELECT 1 FROM pg_database d JOIN pg_roles r ON r.rolname=current_user
-          WHERE d.datname=current_database() AND pg_get_userbyid(d.datdba)='q03_replacement_owner'
-            AND pg_has_role(current_user,d.datdba,'USAGE')
-            AND NOT r.rolsuper AND NOT r.rolcreaterole AND NOT r.rolcreatedb
-            AND NOT r.rolreplication AND NOT r.rolbypassrls) AS verified
-    `;
-    requireFact(rows.length === 1 && rows[0].verified === true, 'SESSION_IDENTITY_REJECTED');
-  };
   const transaction = fn => client.$transaction(async tx => {
-    await identity(tx);
+    await verifyPrismaSession(tx, input);
     return fn(tx.hrEmailOutbox);
   }, { maxWait: 3000, timeout: 10_000 });
 

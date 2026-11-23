@@ -221,3 +221,23 @@ The database must be the only bridge peer. The runner shares its network namespa
 The host supervisor inspects exact Docker resources and the prepared runner. The worker has fixed psql operations and staged Prisma deploys, re-verifies the migration ledgers, and uses a generated Prisma client for a fenced transaction and rollback check. Both share an explicit source interlock. Leave it disabled until the protected bindings, artifact availability, provisioning and exact database-write authorization have been independently reviewed and recorded. Build and verify the native runner image from the pinned runtime outside Git before use. The current checkpoint's offline fixtures cannot attest to a real server, client transaction, or approved runner image.
 
 The intended sequence reserves exclusive durable run evidence, proves target absence and baseline identity, creates the exact target once, and applies the 66 historical migrations. Seed and capture five synthetic outbox rows, ten attempts, and two audit rows, then apply the two pinned safety migrations. Compare full before and after snapshots and ledgers, verify catalog behavior, tenant constraints, ownership, fencing, and journal consistency, and run the seven bounded concurrency cases with real Prisma transactions and fake providers. Re-observe the database, role, backend start time, PID, and run tag before cancellation. An unverified outcome stops the run and preserves resources and evidence for review.
+
+## Retained Track B after Mission 19
+
+The creation reservation is consumed. Use the existing native operator's
+read-only observation and reconcile the target ledger, baseline fingerprint,
+historical snapshot, and recorded SQL and concurrency outcomes before planning
+further tests. Keep the retained runner, database, and socket and evidence
+volumes. The latest Mission 19 receipt is the `mission19-retry-3.jsonl` suffix
+in the private evidence volume. Its final result is `verified-with-blocker`.
+
+The generated-client test runs the application dispatcher with the operations
+joined to one disposable transaction and a fake provider. Its rollback
+removed the test-owned queue, credential, audit, journal, and attempt rows.
+The dispatcher attempts to update a delivery attempt on provider acceptance.
+PostgreSQL rejects that update with `Email delivery attempts are immutable`.
+Before another closure test, establish how the application should represent
+attempt completion while preserving the immutability contract and the
+historical migration chain. Keep the local evidence private and retain it
+for the next verified backup. Off-machine backup and active storage
+encryption still require independent verification.
