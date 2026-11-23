@@ -73,8 +73,10 @@ export function createQueueDispatcher(deps:Dependencies){
    if(decision.attemptDelta===1)await tx.hrEmailDeliveryAttempt.create({data:{outboxId:row.id,attemptNumber:updated.attemptCount,status:'PROCESSING',provider:'resend',attemptedAt:at}});
    const recoveredAttempt=type==='RECOVER'&&row.dispatchPhase==='ATTEMPTED'&&updated.status==='HELD';
    if(recoveredAttempt||['PROVIDER_ACCEPTED','PROVIDER_FAILED','PROVIDER_UNCERTAIN'].includes(type)){
-    const attempt=await tx.hrEmailDeliveryAttempt.updateMany({where:{outboxId:row.id,attemptNumber:row.attemptCount,status:'PROCESSING'},data:{status:updated.status,provider:'resend',providerMessageId:options.outcome?.providerMessageId,safeError:type==='PROVIDER_ACCEPTED'?null:'EMAIL_PROVIDER_OUTCOME_REVIEW'}});
-    if(attempt.count!==1)throw new ClaimConflict();
+    // The attempt is immutable evidence of the invocation boundary. The
+    // journal event and linked audit above record its outcome in this transaction.
+    const attempt=await tx.hrEmailDeliveryAttempt.findFirst({where:{outboxId:row.id,attemptNumber:row.attemptCount,status:'PROCESSING'},select:{id:true}});
+    if(!attempt)throw new ClaimConflict();
    }
    return updated;
   });

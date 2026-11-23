@@ -11,7 +11,7 @@ function setup(){
   findFirst:vi.fn(async({where}:{where:Record<string,unknown>})=>structuredClone(state[key].find(r=>matches(r,where))??null)),
   findMany:vi.fn(async({where,take=100}:{where:Record<string,unknown>;take?:number})=>structuredClone(state[key].filter(r=>matches(r,where)).slice(0,take))),
   create:vi.fn(async({data}:{data:Record<string,unknown>})=>{if(key==='journal'&&state.journal.some(r=>r.outboxId===data.outboxId&&r.transitionVersion===data.transitionVersion))throw Error('unique journal version');const row={id:'synthetic_'+(++sequence),...data};state[key].push(row);return structuredClone(row);}),
-  updateMany:vi.fn(async({where,data}:{where:Record<string,unknown>;data:Record<string,unknown>})=>{let count=0;for(const r of state[key])if(matches(r,where)){for(const[k,v]of Object.entries(data)){if(v&&typeof v==='object'&&'increment'in v)r[k]=typeof r[k]==='bigint'?(r[k] as bigint)+BigInt((v as {increment:number}).increment):(r[k] as number)+(v as {increment:number}).increment;else r[k]=v;}count++;}return {count};}),
+  updateMany:vi.fn(async({where,data}:{where:Record<string,unknown>;data:Record<string,unknown>})=>{if(key==='attempts')throw Error('Email delivery attempts are immutable');let count=0;for(const r of state[key])if(matches(r,where)){for(const[k,v]of Object.entries(data)){if(v&&typeof v==='object'&&'increment'in v)r[k]=typeof r[k]==='bigint'?(r[k] as bigint)+BigInt((v as {increment:number}).increment):(r[k] as number)+(v as {increment:number}).increment;else r[k]=v;}count++;}return {count};}),
  };}
  const tx={hrEmailOutbox:table('rows'),hrEmailDispatchEvent:table('journal'),hrEmailDeliveryAttempt:table('attempts'),hrAuditEvent:table('audit'),hrAccountInvitation:{findFirst:vi.fn(async()=>null)},hrPasswordResetChallenge:{findFirst:vi.fn(async()=>null)}};
  const client={...tx,$transaction:async(fn:(t:typeof tx)=>Promise<unknown>)=>{let release!:()=>void;const next=new Promise<void>(r=>release=r),previous=tail;tail=next;await previous;const saved=structuredClone(state);try{return await fn(tx);}catch(e){Object.assign(state,saved);throw e;}finally{release();}}};
@@ -61,7 +61,8 @@ describe('transactional queue integration with synthetic store and fake provider
   await f.engine.processBatch();
   expect(row).toMatchObject({status:'HELD',holdReason:'PROVIDER_OUTCOME_UNCERTAIN',attemptCount:1,dispatchPhase:'ATTEMPTED',providerAcceptedAt:null,deliveredAt:null,version:1n});
   expect(f.state.attempts).toHaveLength(1);
-  expect(attempt).toMatchObject({status:'HELD',safeError:'EMAIL_PROVIDER_OUTCOME_REVIEW'});
+  expect(attempt).toEqual({outboxId:row.id,attemptNumber:1,status:'PROCESSING',provider:'resend',providerMessageId:null});
+  expect(f.tx.hrEmailDeliveryAttempt.updateMany).not.toHaveBeenCalled();
   expect(attempt.providerMessageId).toBeFalsy();
   expect(f.state.journal).toHaveLength(1);
   expect(f.state.journal[0]).toMatchObject({kind:'HELD',reason:'PROVIDER_OUTCOME_UNCERTAIN',auditEventId:f.state.audit[0].id});

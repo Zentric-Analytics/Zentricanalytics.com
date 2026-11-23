@@ -241,3 +241,22 @@ attempt completion while preserving the immutability contract and the
 historical migration chain. Keep the local evidence private and retain it
 for the next verified backup. Off-machine backup and active storage
 encryption still require independent verification.
+
+## Retained Track B after Mission 20
+
+The live application dispatcher records outcomes in the existing append-only
+dispatch journal and links them to the audit event in the same transaction.
+The delivery-attempt row remains the immutable invocation receipt. A matching
+receipt is required before committing an outcome or an attempted recovery.
+
+The retained PostgreSQL runner recorded `mission20.jsonl` in the private
+evidence volume. It verified accepted closure, stale and cross-tenant fencing,
+expired attempted recovery to HELD, duplicate-attempt rejection, no provider
+replay, and rollback. The final ledger and snapshot matched the existing
+68 migrations and 17 preserved rows. The protected baseline passed a separate
+read-only check. Reuse these receipts and the consumed creation reservation.
+
+The local browser fixture and Chrome results are under
+`%LOCALAPPDATA%/ZentricAnalytics/Mission20`. The fixture is process-local and
+uses a loopback-only Next.js server, a fictional test account, and an in-memory
+outbox. Keep it outside deployment and dedicated to local tests.

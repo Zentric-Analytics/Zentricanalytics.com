@@ -75,16 +75,22 @@ export async function verifyDispatchContracts(client, createQueueDispatcher, ver
         return { provider: 'resend', status: 'sent', invoked: true, providerMessageId: run };
       });
       const expired = await fixture('expired', {
-        status: 'PROCESSING', dispatchPhase: 'INTENT', dispatchId: run + '_dispatch',
-        claimId: run + '_owner', claimedAt: new Date(0), claimExpiresAt: new Date(1), attemptCount: 0,
+        status: 'PROCESSING', dispatchPhase: 'ATTEMPTED', dispatchId: run + '_dispatch',
+        claimId: run + '_owner', claimedAt: new Date(0), claimExpiresAt: new Date(1), attemptCount: 1,
+      });
+      const recoveredAttempt = await tx.hrEmailDeliveryAttempt.create({
+        data: { outboxId: expired.id, attemptNumber: 1, status: 'PROCESSING' },
       });
       await dispatcher(failSend, [expired.id]).processBatch();
+      assert.deepEqual(await tx.hrEmailDeliveryAttempt.findUnique({
+        where: { id: recoveredAttempt.id },
+      }), recoveredAttempt);
       const held = await tx.hrEmailOutbox.findUniqueOrThrow({ where: { id: expired.id } });
       assert.equal(held.status, 'HELD');
       assert.equal(held.holdReason, 'PROVIDER_OUTCOME_UNCERTAIN');
       assert.equal(held.version, 1n);
       assert.equal(held.claimId, null);
-      assert.equal(held.attemptCount, 0);
+      assert.equal(held.attemptCount, 1);
       const recovery = await tx.hrEmailDispatchEvent.findFirstOrThrow({
         where: { outboxId: expired.id, transitionVersion: 1n }, include: { auditEvent: true },
       });
@@ -107,15 +113,31 @@ export async function verifyDispatchContracts(client, createQueueDispatcher, ver
       assert.equal((await tx.hrEmailOutbox.findUniqueOrThrow({ where: { id: credential.id } })).holdReason,
         'CREDENTIAL_EXPIRED_OR_UNUSABLE');
       assert.equal(fakeCalls, 0);
+      assert.equal((await delivery.processItem(row.id, organizationId)).delivered, 1);
+      assert.equal(invocationVerified, true);
+      assert.equal((await delivery.processItem(row.id, organizationId)).claimed, 0);
+      assert.equal(fakeCalls, 1);
+      const delivered = await tx.hrEmailOutbox.findUniqueOrThrow({ where: { id: row.id } });
+      assert.equal(delivered.version, 5n);
+      assert.equal(delivered.attemptCount, 1);
+      assert.equal(delivered.claimId, null);
+      const outcome = await tx.hrEmailDispatchEvent.findFirstOrThrow({
+        where: { outboxId: row.id, transitionVersion: 5n }, include: { auditEvent: true },
+      });
+      assert.equal(outcome.kind, 'PROVIDER_ACCEPTED');
+      assert.equal(outcome.dispatchId, delivered.dispatchId);
+      assert.equal(outcome.auditEvent?.entityId, row.id);
+      const attempts = await tx.hrEmailDeliveryAttempt.findMany({ where: { outboxId: row.id } });
+      assert.deepEqual(attempts.map(attempt => attempt.status), ['PROCESSING']);
       try {
-        await delivery.processItem(row.id, organizationId);
+        await tx.hrEmailDeliveryAttempt.create({
+          data: { outboxId: row.id, attemptNumber: 1, status: 'PROCESSING' },
+        });
       } catch (error) {
-        if (!error.message.includes('Email delivery attempts are immutable')) throw error;
-        assert.equal(fakeCalls, 1);
-        assert.equal(invocationVerified, true);
+        if (error.code !== 'P2002') throw error;
         throw rollback;
       }
-      throw Error('NATIVE_M19_IMMUTABLE_ATTEMPT_CONFLICT_NOT_REPRODUCED');
+      throw Error('NATIVE_M20_DUPLICATE_ATTEMPT_ACCEPTED');
     }, { maxWait: 3000, timeout: 20_000 });
   } catch (error) {
     if (error !== rollback) throw error;
@@ -129,7 +151,7 @@ export async function verifyDispatchContracts(client, createQueueDispatcher, ver
     assert.equal(await tx.hrAuditEvent.count({ where: { entityId: outbox } }), 0);
     assert.equal(await tx.hrAccountInvitation.count({ where: { id: credentialId } }), 0);
   }, { maxWait: 3000, timeout: 5000 });
-  await record({ claim: true, cas: true, staleRejected: true, attemptCreated: true, attemptClosure: 'IMMUTABILITY_CONFLICT',
+  await record({ claim: true, cas: true, staleRejected: true, attemptCreated: true, attemptClosure: 'APPEND_ONLY_JOURNAL', duplicateRejected: true, replayPrevented: true,
     auditAndJournal: true, expiredClaimHeld: true, revokedInvitationHeld: true,
     rollback: true, fakeCalls });
 }
