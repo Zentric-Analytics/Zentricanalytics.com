@@ -3,14 +3,19 @@ import { PrismaClient } from "@prisma/client";
 import { reconcileHrRolePermissions, runHrBootstrap } from "./hr-bootstrap-lib.mjs";
 import { hrEnvironmentChecks, runHrPreflight } from "./hr-preflight-lib.mjs";
 import { readReleaseMigrations, verifyReleaseMigrationLedger } from "./hr-migration-ledger.mjs";
+import { acceptsArchivedRestoreForRelease } from "./hr-backup-policy.mjs";
 
 const report = (message) => console.info(message);
-const configuration = hrEnvironmentChecks(process.env);
+const releaseOptions = { allowArchivedRestoreForRelease: true };
+const configuration = hrEnvironmentChecks(process.env, releaseOptions);
 if (configuration.issues.length) {
   configuration.issues.forEach((issue) => console.error(`BLOCKED ${issue}`));
   process.exit(1);
 }
 report(`HRMS release target environment: ${configuration.appEnv}. Secrets and database location are hidden.`);
+if (acceptsArchivedRestoreForRelease(process.env)) {
+  report("PASS owner-approved production release accepted the archived restore drill dated 2026-08-02.");
+}
 
 const ledgerClient = new PrismaClient();
 try {
@@ -50,7 +55,7 @@ try {
     report("PASS HRMS already initialized; bootstrap was skipped and bootstrap secrets were not read.");
   }
   await reconcileHrRolePermissions(prisma, report);
-  const preflight = await runHrPreflight(prisma, process.env, report, { allowInitialMfaEnrollment: created });
+  const preflight = await runHrPreflight(prisma, process.env, report, { ...releaseOptions, allowInitialMfaEnrollment: created });
   if (!preflight.ready) throw new Error("HRMS release preflight failed.");
   if (created) report("INITIALIZATION ONLY Deploy once, enroll privileged MFA immediately, remove bootstrap secrets and HR_BOOTSTRAP_ENABLED, then redeploy.");
 } catch (error) {

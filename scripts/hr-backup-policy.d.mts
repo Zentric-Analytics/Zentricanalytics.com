@@ -7,4 +7,7 @@ export const productionBackupPolicy: Readonly<{
   restoreDrillMaxAgeDays: number;
   disasterRecoveryExerciseMaxAgeDays: number;
 }>;
-export function productionBackupPolicyIssues(env: Record<string, unknown>, now?: number): string[];
+export function acceptsArchivedRestoreForRelease(env: Record<string, unknown>, now?: number): boolean;
+export function productionBackupPolicyIssues(
+  env: Record<string, unknown>, now?: number, options?: { allowArchivedRestoreForRelease?: boolean },
+): string[];

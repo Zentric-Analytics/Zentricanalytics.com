@@ -1,7 +1,7 @@
 import { HR_PERMISSION_KEYS, HR_ROLE_KEYS } from "./hr-bootstrap-lib.mjs";
 import { productionBackupPolicyIssues } from "./hr-backup-policy.mjs";
 
-export function hrEnvironmentChecks(env) {
+export function hrEnvironmentChecks(env, options) {
   const appEnv = String(env.APP_ENV ?? "").trim().toLowerCase();
   const issues = [];
   const protectedEnvironment = ["staging", "production"].includes(appEnv);
@@ -47,13 +47,13 @@ export function hrEnvironmentChecks(env) {
   }
   if (appEnv === "production") {
     if (env.EMAIL_PROVIDER !== "resend" || !env.RESEND_API_KEY) issues.push("Production email delivery must use the configured Resend provider.");
-    issues.push(...productionBackupPolicyIssues(env));
+    issues.push(...productionBackupPolicyIssues(env, undefined, options));
   }
   return { appEnv, issues, emailMode: env.EMAIL_PROVIDER === "resend" && env.RESEND_API_KEY ? "provider configured" : "delivery intentionally disabled or console-only", workerMode: env.EMAIL_WORKER_SECRET ? "configured" : "missing" };
 }
 
 export async function runHrPreflight(prisma, env, report = () => undefined, options = {}) {
-  const configuration = hrEnvironmentChecks(env);
+  const configuration = hrEnvironmentChecks(env, options);
   const issues = [...configuration.issues];
   report(`HRMS preflight target environment: ${configuration.appEnv || "unknown"}. Database location and secrets are hidden.`);
   let organization = null;

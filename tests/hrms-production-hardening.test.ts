@@ -37,6 +37,31 @@ describe("HRMS production hardening", () => {
     expect(productionBackupPolicyIssues({ ...valid, DATABASE_DAILY_BACKUP_RETENTION_DAYS: "89" }, now)).toContain("Daily backup retention must be at least 90 days.");
     expect(productionBackupPolicyIssues({ ...valid, DATABASE_WEEKLY_BACKUP_RETENTION_DAYS: "364" }, now)).toContain("Weekly backup retention must be at least 365 days.");
     expect(productionBackupPolicyIssues({ ...valid, DATABASE_MONTHLY_ARCHIVE_RETENTION_YEARS: "14" }, now)).toContain("Monthly archive retention must be at least 15 years.");
+
+    const releaseDay = Date.parse("2026-11-23T12:00:00Z");
+    const release = {
+      ...valid,
+      APP_ENV: "production",
+      RENDER_SERVICE_ID: "srv-d8s89fbeo5us73e7ljk0",
+      RENDER_GIT_BRANCH: "main",
+      BACKUP_LAST_RESTORE_TEST_AT: "2026-08-02T10:00:00Z",
+    };
+    const releaseOptions = { allowArchivedRestoreForRelease: true };
+    const quarterlyIssue = "A successful isolated restore drill within the last quarter is required.";
+    expect(productionBackupPolicyIssues(release, releaseDay)).toContain(quarterlyIssue);
+    expect(productionBackupPolicyIssues(release, releaseDay, releaseOptions)).toEqual([]);
+    for (const change of [
+      { APP_ENV: "staging" },
+      { RENDER_SERVICE_ID: "unrelated-service" },
+      { RENDER_GIT_BRANCH: "dev" },
+      { BACKUP_LAST_RESTORE_TEST_AT: "2026-08-01T23:59:59Z" },
+      { BACKUP_LAST_RESTORE_TEST_AT: "" },
+    ]) {
+      expect(productionBackupPolicyIssues({ ...release, ...change }, releaseDay, releaseOptions)).toContain(quarterlyIssue);
+    }
+    expect(productionBackupPolicyIssues(release, Date.parse("2026-12-01T00:00:00Z"), releaseOptions)).toContain(quarterlyIssue);
+    expect(productionBackupPolicyIssues({ ...release, BACKUP_LAST_DR_EXERCISE_AT: "" }, releaseDay, releaseOptions))
+      .toContain("A successful disaster-recovery exercise within the last year is required.");
   });
   it("implements RFC-compatible TOTP with a bounded verification window", () => {
     const rfcSecret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";

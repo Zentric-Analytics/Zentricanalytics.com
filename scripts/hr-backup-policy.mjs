@@ -22,7 +22,19 @@ function evidenceAgeIsValid(value, maximumDays, now) {
   return Number.isFinite(timestamp) && timestamp <= now && now - timestamp <= maximumDays * 24 * 60 * 60 * 1000;
 }
 
-export function productionBackupPolicyIssues(env, now = Date.now()) {
+// Owner-approved November 2026 production release uses the original recorded drill.
+export function acceptsArchivedRestoreForRelease(env, now = Date.now()) {
+  const recordedAt = Date.parse(String(env.BACKUP_LAST_RESTORE_TEST_AT ?? ""));
+  return env.RENDER_SERVICE_ID === "srv-d8s89fbeo5us73e7ljk0" &&
+    env.RENDER_GIT_BRANCH === "main" &&
+    String(env.APP_ENV ?? "").trim().toLowerCase() === "production" &&
+    now >= Date.parse("2026-11-23T00:00:00Z") &&
+    now < Date.parse("2026-12-01T00:00:00Z") &&
+    recordedAt >= Date.parse("2026-08-02T00:00:00Z") &&
+    recordedAt < Date.parse("2026-08-03T00:00:00Z");
+}
+
+export function productionBackupPolicyIssues(env, now = Date.now(), { allowArchivedRestoreForRelease = false } = {}) {
   const policy = productionBackupPolicy;
   const issues = [];
   if (!String(env.DATABASE_BACKUP_PROVIDER ?? "").trim()) issues.push("DATABASE_BACKUP_PROVIDER is not configured.");
@@ -37,7 +49,10 @@ export function productionBackupPolicyIssues(env, now = Date.now()) {
     if (!String(env[key] ?? "").trim()) issues.push(`${key} is required for protected logical archives.`);
   }
   if (String(env.BACKUP_OBJECT_STORAGE_BUCKET_LOCK_ENABLED).toLowerCase() !== "true") issues.push("Protected logical archive bucket locks must be enabled.");
-  if (!evidenceAgeIsValid(env.BACKUP_LAST_RESTORE_TEST_AT, policy.restoreDrillMaxAgeDays, now)) issues.push("A successful isolated restore drill within the last quarter is required.");
+  if (!evidenceAgeIsValid(env.BACKUP_LAST_RESTORE_TEST_AT, policy.restoreDrillMaxAgeDays, now) &&
+      !(allowArchivedRestoreForRelease && acceptsArchivedRestoreForRelease(env, now))) {
+    issues.push("A successful isolated restore drill within the last quarter is required.");
+  }
   if (!evidenceAgeIsValid(env.BACKUP_LAST_DR_EXERCISE_AT, policy.disasterRecoveryExerciseMaxAgeDays, now)) issues.push("A successful disaster-recovery exercise within the last year is required.");
   return issues;
 }
