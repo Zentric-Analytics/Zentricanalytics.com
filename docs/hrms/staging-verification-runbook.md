@@ -156,3 +156,39 @@ checks. Stop on unexpected schema or role drift, failed readiness, unresolved
 writes, protection loss, or unapproved provider activity. Use the previous web
 artifact only after proving its schema compatibility. Route data recovery
 through the isolated restore procedure.
+
+## Mission 23 preflight and resume checkpoint
+
+- **Ingress BLOCKED.** Read-only inspection reconfirmed the exact Oregon database
+  and `0.0.0.0/0`. Five client sessions in the new sample used private-range
+  addresses and the inspection login. The web and cron are in the same Render
+  environment. The cron's configured path is an HTTP request to the web
+  worker route. Its database behavior depends on the web runtime. Effective
+  web and migration connection targets, and intermittent maintenance and backup
+  requirements remain unverified. Dashboard sign-in is needed for the
+  administrative path. Confirm these facts and a narrow rollback route before
+  clearing the external list or applying verified CIDRs.
+- **Restore BLOCKED.** The paid source is available. The documented PITR
+  flow copies the source allowlist even when other settings are customized.
+  Clear or restrict ingress first, then verify the exact available recovery
+  point in the Dashboard. Confirm destination isolation from creation,
+  approved cost and retention, and the read-only validation role before
+  creating a single dedicated instance. Keep services, worker schedules,
+  and external providers disconnected. Source availability does not establish
+  a usable recovery timestamp. No instance was created.
+- **Migration FAIL.** The fresh ledger still has 70 rows, including 66 finished
+  in source order and four rolled back. The organization checksum still matches
+  the original artifact. Staging still lacks the HELD enum and dispatch journal.
+  The release guard now also catches completed rows out of order, using a single
+  repeatable-read snapshot for the catalog and ledger. The original organization
+  revision and later backfill remain subject to the Package B restore
+  comparison before the release hook can proceed.
+- **Operational preflight PASS in part.** Liveness and readiness returned 200,
+  and anonymous metrics returned 401. The configured HTTP health path is blank.
+  Render lists scheduled cron success, with delivery, alert routing and backup
+  retention still unverified. The inspection login remains able to create
+  databases and roles. No post-change verification was run.
+
+Resume with the existing Mission 23 approvals once the required connectivity,
+administrative and recovery facts are independently verified. The local
+synthetic runner and protected Track B remain separate from this workflow.

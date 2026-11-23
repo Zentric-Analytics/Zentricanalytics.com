@@ -17,16 +17,17 @@ export async function readReleaseMigrations(directory = migrationsDirectory) {
 
 export function assertReleaseMigrationLedger(source, ledger) {
   const known = new Set(source.map(({ name }) => name));
-  const completed = new Map();
+  const completed = new Set();
   for (const row of ledger) {
     if (!known.has(row.name)) throw new Error("Release ledger contains a migration outside the candidate source.");
     if (row.rolledBack) continue;
     if (!row.finished || completed.has(row.name)) throw new Error(`Release ledger is unresolved at ${row.name}.`);
-    completed.set(row.name, row.checksum);
-  }
-  for (const [index, { name, checksum }] of source.entries()) {
-    if (index < completed.size && !completed.has(name)) throw new Error(`Release ledger is missing predecessor ${name}.`);
-    if (completed.has(name) && completed.get(name) !== checksum) throw new Error(`Release migration checksum differs at ${name}.`);
+    const expected = source[completed.size];
+    if (!expected || expected.name !== row.name) {
+      throw new Error(`Release ledger order differs at ${row.name}. Expected predecessor ${expected?.name ?? "none"}.`);
+    }
+    if (expected.checksum !== row.checksum) throw new Error(`Release migration checksum differs at ${row.name}.`);
+    completed.add(row.name);
   }
 }
 
@@ -48,10 +49,11 @@ export async function verifyReleaseMigrationLedger(prisma, source) {
     const ledger = await tx.$queryRaw`
       SELECT migration_name AS name, checksum, finished_at IS NOT NULL AS finished,
              rolled_back_at IS NOT NULL AS "rolledBack" FROM public._prisma_migrations
+      ORDER BY started_at, migration_name
     `;
     if (catalog.hasObjects && !ledger.some((row) => row.finished && !row.rolledBack)) {
       throw new Error("Release database has objects but no completed migrations.");
     }
     assertReleaseMigrationLedger(source, ledger);
-  });
+  }, { isolationLevel: "RepeatableRead" });
 }
