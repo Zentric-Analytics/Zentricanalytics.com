@@ -192,3 +192,27 @@ through the isolated restore procedure.
 Resume with the existing Mission 23 approvals once the required connectivity,
 administrative and recovery facts are independently verified. The local
 synthetic runner and protected Track B remain separate from this workflow.
+
+### Mission 23 authenticated in-app follow-up
+
+The authenticated Dashboard confirmed the staging workspace, exact database
+identity, and available database-specific networking edit controls. The web
+service's `DATABASE_URL` points to the verified database's unqualified private
+Render endpoint. Render configures `yarn hr:release` on that web service, and
+Prisma and the release command use `DATABASE_URL`. The outbox cron's command
+calls the staging web worker over HTTPS. No secret values are recorded.
+
+The workspace, environment, and database-specific views each displayed a
+broad IPv4 rule. Render combines applicable allowlists by intersection. An
+empty database-specific list is sufficient to deny external database access,
+so parent rules are outside this change. Intermittent external maintenance
+and backup paths remain the ingress decision gate. The archive tool accepts
+its database target at runtime, and repository source cannot identify where
+its last staging invocation ran.
+[Render inbound IP rules](https://render.com/docs/inbound-ip-rules#combining-ip-rules)
+
+The authenticated Recovery form showed a seven-day PITR window and offered
+November 23, 2026 at 02:05 PST as the latest point at the time of inspection.
+Recheck the recovery window, isolation, budget, and retention at execution.
+The form was closed without submitting. The source's broad allowlist remains
+in effect, and no restore target was created.
