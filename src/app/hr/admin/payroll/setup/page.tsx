@@ -4,7 +4,7 @@ import { requirePermission } from "@/lib/hr/permissions/authorize";
 import { approveSalaryRecordAction, assignPayrollComponentAction, createPayrollComponentAction, createPayrollPeriodAction, createSalaryRecordAction } from "./actions";
 
 export default async function PayrollSetupPage() {
-  const auth = await requirePermission("payroll.read");
+  const auth = await requirePermission("payroll.read_salary");
   const organizationId = auth.user.organizationId;
   const [employees, salaries, components, assignments, periods] = await Promise.all([
     prisma.hrEmployee.findMany({ where: { organizationId, employmentStatus: { in: ["ACTIVE", "ON_LEAVE"] } }, orderBy: { employeeNumber: "asc" } }),

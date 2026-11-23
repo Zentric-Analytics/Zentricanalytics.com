@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
+import { hrMfaEnrollmentRequired } from "@/lib/hr/permissions/mfa-policy";
 import { verifyPaymentDestinationVersion } from "@/lib/hr/payroll/unit9-financial-service";
 
 const input=z.object({reason:z.string().trim().min(3).max(500)});
 export async function POST(request:Request,{params}:{params:Promise<{id:string}>}){
   const auth=await getAuthenticatedHrUser(); if(!auth)return NextResponse.json({error:"Unauthorized"},{status:401});
+  if (hrMfaEnrollmentRequired(auth)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if(!auth.permissions.has("payroll.payment.approve"))return NextResponse.json({error:"Forbidden"},{status:403});
   const parsed=input.safeParse(await request.json().catch(()=>null)); if(!parsed.success)return NextResponse.json({error:"Invalid verification decision."},{status:400});
   try{const {id}=await params; return NextResponse.json(await verifyPaymentDestinationVersion(prisma,{organizationId:auth.user.organizationId,userId:auth.user.id,role:auth.roles.join(",")},id,parsed.data.reason));}

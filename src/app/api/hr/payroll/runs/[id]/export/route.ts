@@ -5,13 +5,13 @@ import { appendHrAudit } from "@/lib/hr/audit";
 import { unsealHrCredential } from "@/lib/hr/auth/crypto";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
 import { csvCell } from "@/lib/hr/payroll/engine";
-import { privilegedMfaRequired } from "@/lib/hr/permissions/authorize";
+import { hrMfaEnrollmentRequired } from "@/lib/hr/permissions/mfa-policy";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await getAuthenticatedHrUser();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (privilegedMfaRequired(auth)) return NextResponse.json({ error: "MFA enrollment required" }, { status: 403 });
-  if (!auth.permissions.has("payroll.export")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (hrMfaEnrollmentRequired(auth)) return NextResponse.json({ error: "MFA enrollment required" }, { status: 403 });
+  if (!auth.permissions.has("payroll.export") || !auth.permissions.has("payroll.read_salary")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const type = new URL(request.url).searchParams.get("type") === "bank" ? "bank" : "summary";
   if (type === "bank" && !auth.permissions.has("payroll.read_bank_details")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await params;

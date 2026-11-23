@@ -86,10 +86,11 @@ describe("HRMS payroll", () => {
   it("enforces exact employee payslip ownership and separate bank-export permission", () => {
     const payslip = fs.readFileSync(path.join(process.cwd(), "src/app/api/hr/payroll/payslips/[id]/route.ts"), "utf8");
     const payrollExport = fs.readFileSync(path.join(process.cwd(), "src/app/api/hr/payroll/runs/[id]/export/route.ts"), "utf8");
-    expect(payslip).toContain("auth.user.employee?.id === item.employeeId");
+    expect(payslip).toContain("employeeId: canReadSalary ? undefined : ownEmployeeId");
     expect(payslip).toContain('auth.permissions.has("employee.read_self")');
     expect(payslip).toContain('"Cache-Control": "private, no-store"');
     expect(payrollExport).toContain('auth.permissions.has("payroll.export")');
+    expect(payrollExport).toContain('auth.permissions.has("payroll.read_salary")');
     expect(payrollExport).toContain('auth.permissions.has("payroll.read_bank_details")');
     expect(payrollExport).toContain("unsealHrCredential");
   });

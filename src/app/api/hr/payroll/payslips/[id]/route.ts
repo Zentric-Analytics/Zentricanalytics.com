@@ -3,17 +3,21 @@ import { prisma } from "@/lib/prisma";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
 import { hrObjectStorage } from "@/lib/hr/storage";
-import { privilegedMfaRequired } from "@/lib/hr/permissions/authorize";
+import { hrMfaEnrollmentRequired } from "@/lib/hr/permissions/mfa-policy";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await getAuthenticatedHrUser();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (privilegedMfaRequired(auth)) return NextResponse.json({ error: "MFA enrollment required" }, { status: 403 });
+  if (hrMfaEnrollmentRequired(auth)) return NextResponse.json({ error: "MFA enrollment required" }, { status: 403 });
   const { id } = await params;
-  const item = await prisma.hrPayrollItem.findFirst({ where: { id, organizationId: auth.user.organizationId }, include: { payslip: true } });
+  const ownEmployeeId = auth.permissions.has("employee.read_self") ? auth.user.employee?.id : undefined;
+  const canReadSalary = auth.permissions.has("payroll.read_salary");
+  if (!canReadSalary && !ownEmployeeId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const item = await prisma.hrPayrollItem.findFirst({
+    where: { id, organizationId: auth.user.organizationId, employeeId: canReadSalary ? undefined : ownEmployeeId },
+    select: { id: true, payslip: true },
+  });
   if (!item?.payslip) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const ownPayslip = auth.user.employee?.id === item.employeeId && auth.permissions.has("employee.read_self");
-  if (!ownPayslip && !auth.permissions.has("payroll.read")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const bytes = await hrObjectStorage().get(item.payslip.storageKey);
   await appendHrAudit(prisma, { organizationId: auth.user.organizationId, actorUserId: auth.user.id, actorRole: auth.roles[0], entityType: "HrPayslip", entityId: item.payslip.id, action: "hr.payroll.payslip.downloaded", newValues: { payrollItemId: item.id } });
   const fileName = item.payslip.fileName.replace(/[\r\n"]/g, "_");

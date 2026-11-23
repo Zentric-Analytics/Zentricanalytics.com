@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
+import { hrMfaEnrollmentRequired } from "@/lib/hr/permissions/mfa-policy";
 import { createUnit9Run, listUnit9Runs } from "@/lib/hr/payroll/unit9-service";
 
 const createInput = z.object({
@@ -13,7 +14,7 @@ const createInput = z.object({
 async function payrollActor(permission: "payroll.read" | "payroll.create") {
   const auth = await getAuthenticatedHrUser();
   if (!auth) return null;
-  if (!auth.permissions.has(permission)) return false;
+  if (hrMfaEnrollmentRequired(auth) || !auth.permissions.has(permission)) return false;
   return { organizationId: auth.user.organizationId, userId: auth.user.id, role: auth.roles.join(",") };
 }
 

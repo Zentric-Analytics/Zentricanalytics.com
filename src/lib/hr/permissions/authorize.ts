@@ -4,14 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
 import type { HrPermissionKey } from "./catalog";
 import { supervisedEmployeeIds } from "@/lib/hr/supervisors/scope";
-import { privilegedMfaRequired } from "./mfa-policy";
+import { hrMfaEnrollmentRequired } from "./mfa-policy";
 
 export { privilegedMfaRequired } from "./mfa-policy";
 
 export async function requireAuthenticatedUser(options: { allowMfaEnrollment?: boolean } = {}) {
   const auth = await getAuthenticatedHrUser();
   if (!auth) redirect("/hr/login");
-  if (!options.allowMfaEnrollment && (privilegedMfaRequired(auth) || Boolean(auth.user.mfaSecretEncrypted && !auth.user.mfaEnabled))) redirect("/hr/security");
+  if (!options.allowMfaEnrollment && hrMfaEnrollmentRequired(auth)) redirect("/hr/security");
   return auth;
 }
 

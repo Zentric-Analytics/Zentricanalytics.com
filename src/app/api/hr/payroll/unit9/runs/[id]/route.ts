@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedHrUser } from "@/lib/hr/auth/session";
+import { hrMfaEnrollmentRequired } from "@/lib/hr/permissions/mfa-policy";
 import { appendHrAudit } from "@/lib/hr/audit";
 import { calculateUnit9Run, certifyUnit9Population, decideUnit9Run, finalizeUnit9Run, freezeUnit9Inputs, reviewUnit9Risk } from "@/lib/hr/payroll/unit9-service";
 import { createUnit9PaymentBatch, generateUnit9FinancialOutputs, generateUnit9Payslips } from "@/lib/hr/payroll/unit9-financial-service";
@@ -25,7 +26,7 @@ const actionInput = z.discriminatedUnion("action", [
 async function authFor(permission: string) {
   const auth = await getAuthenticatedHrUser();
   if (!auth) return null;
-  if (!auth.permissions.has(permission)) return false;
+  if (hrMfaEnrollmentRequired(auth) || !auth.permissions.has(permission)) return false;
   return { auth, actor: { organizationId: auth.user.organizationId, userId: auth.user.id, role: auth.roles.join(",") } };
 }
 
@@ -40,7 +41,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     prisma.hrPayrollCertificationIssue.findMany({ where: { organizationId: access.actor.organizationId, payrollRunId: id }, orderBy: { createdAt: "asc" } }),
     prisma.hrPayrollInputSnapshot.findMany({ where: { organizationId: access.actor.organizationId, payrollRunId: id }, select: { id: true, employeeId: true, inputHash: true, certificationStatus: true, frozenAt: true, correlationId: true } }),
     prisma.hrPayrollCalculationAttempt.findMany({ where: { organizationId: access.actor.organizationId, payrollRunId: id }, orderBy: { attemptNumber: "asc" } }),
-    prisma.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: access.actor.organizationId, payrollRunId: id }, select: { id: true, employeeId: true, currency: true, grossEarnings: true, paye: true, employeeDeductions: true, employerContributions: true, adjustments: true, netPay: true, outputHash: true, finalizedAt: true } }),
+    access.auth.permissions.has("payroll.read_salary")
+      ? prisma.hrPayrollAuthoritativeResult.findMany({ where: { organizationId: access.actor.organizationId, payrollRunId: id }, select: { id: true, employeeId: true, currency: true, grossEarnings: true, paye: true, employeeDeductions: true, employerContributions: true, adjustments: true, netPay: true, outputHash: true, finalizedAt: true } })
+      : Promise.resolve([]),
     prisma.hrPayrollReconciliation.findMany({ where: { organizationId: access.actor.organizationId, payrollRunId: id } }),
     prisma.hrPayrollRiskFinding.findMany({ where: { organizationId: access.actor.organizationId, payrollRunId: id } }),
     prisma.hrPayrollRunApproval.findMany({ where: { organizationId: access.actor.organizationId, payrollRunId: id } }),

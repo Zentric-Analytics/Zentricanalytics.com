@@ -44,6 +44,18 @@ describe('alternate application submission preserves consolidated stage flow', (
     expect(tx.hiringStage.createMany).not.toHaveBeenCalled();
     expect(enqueueHrEmail).not.toHaveBeenCalled();
   });
+  it('keeps existing identity and prior applications untouched when an email is submitted again', async () => {
+    const tx = fixture();
+    const trusted = Object.freeze({ id: 'existing-applicant', fullName: 'Original Candidate' });
+    tx.applicant.findFirst.mockResolvedValue(trusted);
+    await submitApplication(tx as never, { ...input, firstName: 'Different', lastName: 'Person', phone: '+15550102030' }, now);
+    expect(tx.applicant.findFirst).toHaveBeenCalledWith({
+      where: { organizationId, normalizedEmail: input.email }, orderBy: { createdAt: 'asc' },
+    });
+    expect(tx.applicant.create).not.toHaveBeenCalled();
+    expect(tx.jobApplication.create).toHaveBeenCalledWith({ data: expect.objectContaining({ applicantId: trusted.id }) });
+    expect(trusted.fullName).toBe('Original Candidate');
+  });
   it.each([{ organizationId: 'other', vacancyId }, { organizationId, vacancyId: 'other' }])('denies cross-scope idempotency reuse', async (scope) => {
     const tx = fixture(); tx.jobApplication.findUnique.mockResolvedValue({ id: 'existing', ...scope });
     await expect(submitApplication(tx as never, input, now)).rejects.toThrow('another application scope');

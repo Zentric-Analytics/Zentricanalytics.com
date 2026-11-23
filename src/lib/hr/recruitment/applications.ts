@@ -4,6 +4,7 @@ import { z } from "zod";
 import { appendHrAudit } from "../audit";
 import { createStageRows } from "@/lib/workflow";
 import { enqueueHrEmail } from "../notifications/outbox";
+import { applicantIdentityFilter } from "./applicant-identity";
 import { assertApplicationTransition, isVacancyAcceptingApplications, type RecruitmentApplicationStatus } from "./states";
 
 export const applicationSubmissionInput = z.object({
@@ -76,13 +77,7 @@ export async function submitApplication(
 
   const normalizedPhone = normalizePhone(input.phone);
   let applicant = await tx.applicant.findFirst({
-    where: {
-      organizationId: input.organizationId,
-      OR: [
-        { normalizedEmail: input.email },
-        ...(normalizedPhone ? [{ normalizedPhone }] : []),
-      ],
-    },
+    where: applicantIdentityFilter({ organizationId: input.organizationId, normalizedEmail: input.email }),
     orderBy: { createdAt: "asc" },
   });
   if (!applicant) {
@@ -91,21 +86,6 @@ export async function submitApplication(
       data: {
         applicantNumber,
         organizationId: input.organizationId,
-        normalizedEmail: input.email,
-        normalizedPhone,
-        fullName: `${input.firstName} ${input.lastName}`,
-        firstName: input.firstName,
-        middleInitial: input.middleInitial,
-        lastName: input.lastName,
-        email: input.email,
-        phone: input.phone,
-        location: input.location,
-      },
-    });
-  } else {
-    applicant = await tx.applicant.update({
-      where: { id: applicant.id },
-      data: {
         normalizedEmail: input.email,
         normalizedPhone,
         fullName: `${input.firstName} ${input.lastName}`,

@@ -104,7 +104,13 @@ export async function finalizeEmployeeProvisioning(
     if (payload.access.sendInvitation) {
       const rawToken = createOpaqueToken();
       const invitation = await tx.hrAccountInvitation.create({ data: { organizationId: input.organizationId, userId: user.id, createdById: input.actorUserId, tokenHash: hashOpaqueToken(rawToken), expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) } });
-      await enqueueHrEmail(tx, { organizationId: input.organizationId, recipient: email, template: "hr-account-invitation", subject: "Set up your Zentric HR account", payload: { invitationId: invitation.id, credentialEnvelope: sealHrCredential(rawToken) }, idempotencyKey: `hr-invitation:${invitation.id}` });
+      await enqueueHrEmail(tx, {
+        organizationId: input.organizationId, recipient: email, template: "hr-account-invitation",
+        subject: "Set up your Zentric HR account",
+        payload: { invitationId: invitation.id, credentialEnvelope: sealHrCredential(rawToken) },
+        invitationId: invitation.id, messageExpiresAt: invitation.expiresAt,
+        idempotencyKey: `hr-invitation:${invitation.id}`,
+      });
     }
   }
 

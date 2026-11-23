@@ -12,7 +12,6 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/lib/hr/auth/session", () => ({ getAuthenticatedHrUser: mocks.session, revokeAllHrSessions: mocks.revokeSessions }));
 vi.mock("@/lib/hr/audit", () => ({ appendHrAudit: mocks.audit }));
-vi.mock("@/lib/hr/permissions/mfa-policy", () => ({ privilegedMfaRequired: () => false }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
   hrUser: { findFirstOrThrow: mocks.target }, hrRole: { findUniqueOrThrow: mocks.role }, $transaction: mocks.transaction,
 } }));

@@ -98,11 +98,11 @@ describe("hiring workflow helpers", () => {
     expect(applicantIdentityFilter({ organizationId: "org-1", normalizedEmail: "  GeneralDeveloper2@ZentricAnalytics.com " })).toEqual({ organizationId: "org-1", normalizedEmail: "generaldeveloper2@zentricanalytics.com" });
   });
 
-  it("refreshes the reusable applicant profile from the latest signed submission", () => {
+  it("stores signed submission details separately from the reusable applicant profile", () => {
     const action = readFileSync(path.join(process.cwd(), "src/app/apply/actions.ts"), "utf8");
     const recruitment = readFileSync(path.join(process.cwd(), "src/lib/hr/recruitment/applications.ts"), "utf8");
     for (const source of [action, recruitment]) {
-      expect(source).toContain("applicant = await tx.applicant.update");
+      expect(source).not.toContain("tx.applicant.update");
       expect(source).toContain("fullName:");
       expect(source).toContain("location:");
     }

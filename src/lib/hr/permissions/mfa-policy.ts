@@ -9,3 +9,10 @@ export function privilegedMfaRequired(auth: {
     && auth.roles.some((role) => HR_PRIVILEGED_MFA_ROLES.includes(role as HrRoleKey))
     && !auth.user.mfaEnabled;
 }
+
+export function hrMfaEnrollmentRequired(auth: {
+  roles: readonly string[];
+  user: { mfaEnabled: boolean; mfaSecretEncrypted?: string | null };
+}) {
+  return privilegedMfaRequired(auth) || Boolean(auth.user.mfaSecretEncrypted && !auth.user.mfaEnabled);
+}

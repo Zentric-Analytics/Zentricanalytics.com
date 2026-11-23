@@ -12,7 +12,7 @@ export default async function ReportsPage() {
   const period = reportPeriod(now.getUTCFullYear());
   const canHr = auth.permissions.has("employee.read_all");
   const canLeave = auth.permissions.has("leave.read_all");
-  const canPayroll = auth.permissions.has("payroll.read");
+  const canPayroll = auth.permissions.has("payroll.read") && auth.permissions.has("payroll.read_salary");
   const canAssets = auth.permissions.has("asset.manage");
   const canWorkflow = auth.permissions.has("workflow.review");
   const [headcount, hires, terminations, assignments, recruitmentGroups, leaveGroups, payrollRuns, assetGroups, workflowGroups, lifecycleDue] = await Promise.all([
