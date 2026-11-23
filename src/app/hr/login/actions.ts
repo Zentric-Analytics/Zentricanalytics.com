@@ -3,7 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { isDatabaseConfigured, prisma } from "@/lib/prisma";
 import { beginHrLogin, completeHrMfaLogin, GENERIC_LOGIN_ERROR } from "@/lib/hr/auth/login";
 import { sealHrCredential, unsealHrCredential } from "@/lib/hr/auth/crypto";
 import { createHrSession } from "@/lib/hr/auth/session";
@@ -17,7 +17,7 @@ async function requestContext() { const requestHeaders = await headers(); const 
 
 export async function hrLoginAction(formData: FormData) {
   const parsed = credentialsSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/hr/login?error=${encodeURIComponent(GENERIC_LOGIN_ERROR)}`);
+  if (!parsed.success || !isDatabaseConfigured()) redirect(`/hr/login?error=${encodeURIComponent(GENERIC_LOGIN_ERROR)}`);
   const organization = await prisma.hrOrganization.findUnique({ where: { slug: "zentric-analytics" }, select: { id: true } });
   if (!organization) redirect(`/hr/login?error=${encodeURIComponent(GENERIC_LOGIN_ERROR)}`);
   const { requestHeaders, ip } = await requestContext();
